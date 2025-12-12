@@ -55,8 +55,8 @@ return [
 
     'typesense' => [
         'enabled' => env('TYPESENSE_SYNC_ENABLED', true),
-        'api_key' => env('TYPESENSE_API_KEY', 'codelabs726809'),
-        'host' => env('TYPESENSE_HOST', '45.140.140.13'),
+        'api_key' => env('TYPESENSE_API_KEY'),
+        'host' => env('TYPESENSE_HOST', 'localhost'),
         'port' => (int) env('TYPESENSE_PORT', 8108),
         'protocol' => env('TYPESENSE_PROTOCOL', 'http'),
         'natural_language_search' => [
