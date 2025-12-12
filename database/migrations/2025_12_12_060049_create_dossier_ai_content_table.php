@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('dossier_external_id')->unique()->comment('External ID of the dossier document');
             $table->text('summary')->nullable()->comment('B1-level summary of the dossier');
             $table->text('enhanced_title')->nullable()->comment('AI-enhanced title for the dossier');
-            $table->jsonb('keywords')->nullable()->comment('Extracted keywords');
+            $table->json('keywords')->nullable()->comment('Extracted keywords');
             $table->text('audio_url')->nullable()->comment('URL to generated audio/podcast file');
             $table->integer('audio_duration_seconds')->nullable()->comment('Duration of audio in seconds');
             $table->timestamp('generated_at')->useCurrent();

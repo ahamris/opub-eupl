@@ -15,7 +15,7 @@ return new class extends Migration
             $table->text('ai_enhanced_title')->nullable()->after('title');
             $table->text('ai_enhanced_description')->nullable()->after('description');
             $table->text('ai_summary')->nullable()->after('content');
-            $table->jsonb('ai_keywords')->nullable()->after('ai_summary');
+            $table->json('ai_keywords')->nullable()->after('ai_summary');
             $table->timestamp('ai_enhanced_at')->nullable()->after('ai_keywords');
         });
     }

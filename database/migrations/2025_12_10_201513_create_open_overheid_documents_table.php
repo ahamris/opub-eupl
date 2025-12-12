@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('category')->nullable()->comment('informatiecategorie');
             $table->string('theme')->nullable()->comment('thema');
             $table->string('organisation')->nullable();
-            $table->jsonb('metadata')->nullable()->comment('Full API response stored as JSON');
+            $table->json('metadata')->nullable()->comment('Full API response stored as JSON');
             $table->timestamp('synced_at')->nullable()->comment('Last successful sync timestamp');
             $table->timestamps();
 
