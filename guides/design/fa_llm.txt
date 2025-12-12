@@ -1,0 +1,824 @@
+# Font Awesome 6.5.2 Implementation Guide
+
+**Complete guide for implementing Font Awesome Free 6.5.2 in Laravel + Tailwind CSS project**
+
+---
+
+## Table of Contents
+
+1. [Overview](#1-overview)
+2. [Installation & Setup](#2-installation--setup)
+3. [Implementation Methods](#3-implementation-methods)
+4. [Icon Families](#4-icon-families)
+5. [Usage Examples](#5-usage-examples)
+6. [Integration with Tailwind CSS](#6-integration-with-tailwind-css)
+7. [Accessibility](#7-accessibility)
+8. [Common Icons Reference](#8-common-icons-reference)
+9. [AI Tool Guidelines](#9-ai-tool-guidelines)
+
+---
+
+## 1. Overview
+
+### 1.1 Font Awesome Version
+
+- **Version**: Font Awesome Free 6.5.2
+- **Location**: `vendor/fontawesome/`
+- **License**: Free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT)
+- **Icon Families**: Solid, Regular, Brands
+
+### 1.2 Available Resources
+
+**CSS Files:**
+- `vendor/fontawesome/css/all.css` - All icon families
+- `vendor/fontawesome/css/all.min.css` - Minified
+- `vendor/fontawesome/css/solid.css` - Solid icons only
+- `vendor/fontawesome/css/regular.css` - Regular icons only
+- `vendor/fontawesome/css/brands.css` - Brand icons only
+
+**JavaScript Files:**
+- `vendor/fontawesome/js/all.js` - All icon families (SVG with JS)
+- `vendor/fontawesome/js/all.min.js` - Minified
+
+**SVG Files:**
+- `vendor/fontawesome/svgs/solid/` - 1,392 solid SVG icons
+- `vendor/fontawesome/svgs/regular/` - 163 regular SVG icons
+- `vendor/fontawesome/svgs/brands/` - 490 brand SVG icons
+
+**Webfonts:**
+- `vendor/fontawesome/webfonts/` - Font files (TTF, WOFF2)
+
+### 1.3 Icon Counts
+
+- **Solid Icons**: 1,392
+- **Regular Icons**: 163
+- **Brand Icons**: 490
+- **Total Free Icons**: ~2,045
+
+---
+
+## 2. Installation & Setup
+
+### 2.1 Current Installation
+
+Font Awesome is already installed in:
+```
+vendor/fontawesome/
+```
+
+### 2.2 Recommended Setup (CSS Method)
+
+**Option 1: Link CSS in Blade Layout**
+
+Add to your main layout file (e.g., `resources/views/layouts/app.blade.php`):
+
+```blade
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@yield('title', 'Open Overheid')</title>
+    
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    {{-- Font Awesome CSS --}}
+    <link rel="stylesheet" href="{{ asset('vendor/fontawesome/css/all.min.css') }}">
+</head>
+<body>
+    @yield('content')
+</body>
+</html>
+```
+
+**Option 2: Import in CSS (Vite/Tailwind)**
+
+Add to `resources/css/app.css`:
+
+```css
+@import 'tailwindcss';
+
+/* Font Awesome */
+@import '../../vendor/fontawesome/css/all.min.css';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+```
+
+**Option 3: Copy to Public Directory**
+
+```bash
+# Copy Font Awesome to public directory
+cp -r vendor/fontawesome public/vendor/fontawesome
+```
+
+Then reference:
+```blade
+<link rel="stylesheet" href="{{ asset('vendor/fontawesome/css/all.min.css') }}">
+```
+
+### 2.3 JavaScript Method (SVG with JS)
+
+If you prefer SVG icons loaded via JavaScript:
+
+```blade
+<script src="{{ asset('vendor/fontawesome/js/all.min.js') }}" defer></script>
+```
+
+**Note**: CSS method is recommended for better performance and SEO.
+
+---
+
+## 3. Implementation Methods
+
+### 3.1 CSS Method (Recommended)
+
+**Pros:**
+- Better performance (fonts cached)
+- Works without JavaScript
+- Better for SEO
+- Smaller initial load
+
+**Cons:**
+- Requires font files
+- Less flexible styling
+
+**Usage:**
+```html
+<i class="fas fa-search"></i>
+<i class="far fa-heart"></i>
+<i class="fab fa-github"></i>
+```
+
+### 3.2 SVG with JS Method
+
+**Pros:**
+- More flexible styling
+- Better for animations
+- No font files needed
+
+**Cons:**
+- Requires JavaScript
+- Larger JavaScript bundle
+- Not SEO-friendly
+
+**Usage:**
+```html
+<i class="fas fa-search"></i>
+```
+
+### 3.3 Inline SVG Method
+
+**Pros:**
+- Full control over styling
+- No external dependencies
+- Best for customizations
+
+**Cons:**
+- More verbose HTML
+- Harder to maintain
+
+**Usage:**
+```html
+<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 512 512">
+  <path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/>
+</svg>
+```
+
+---
+
+## 4. Icon Families
+
+### 4.1 Solid Icons (`fas` or `fa-solid`)
+
+**Class Prefix**: `fas` or `fa-solid`
+
+**Usage:**
+```html
+<i class="fas fa-home"></i>
+<i class="fa-solid fa-user"></i>
+```
+
+**Characteristics:**
+- Filled/solid appearance
+- Most common style
+- 1,392 icons available
+- Font weight: 900
+
+### 4.2 Regular Icons (`far` or `fa-regular`)
+
+**Class Prefix**: `far` or `fa-regular`
+
+**Usage:**
+```html
+<i class="far fa-heart"></i>
+<i class="fa-regular fa-star"></i>
+```
+
+**Characteristics:**
+- Outlined appearance
+- 163 icons available
+- Font weight: 400
+- Not all icons have regular variant
+
+### 4.3 Brand Icons (`fab` or `fa-brands`)
+
+**Class Prefix**: `fab` or `fa-brands`
+
+**Usage:**
+```html
+<i class="fab fa-github"></i>
+<i class="fa-brands fa-twitter"></i>
+```
+
+**Characteristics:**
+- Brand logos
+- 490 icons available
+- Font weight: 400
+- Use only to represent the actual brand
+
+---
+
+## 5. Usage Examples
+
+### 5.1 Basic Icons
+
+```html
+<!-- Solid icon -->
+<i class="fas fa-search"></i>
+
+<!-- Regular icon -->
+<i class="far fa-heart"></i>
+
+<!-- Brand icon -->
+<i class="fab fa-github"></i>
+```
+
+### 5.2 Icon Sizes
+
+```html
+<!-- Default size (1em) -->
+<i class="fas fa-home"></i>
+
+<!-- 2x size -->
+<i class="fas fa-home fa-2x"></i>
+
+<!-- 3x size -->
+<i class="fas fa-home fa-3x"></i>
+
+<!-- 4x size -->
+<i class="fas fa-home fa-4x"></i>
+
+<!-- 5x size -->
+<i class="fas fa-home fa-5x"></i>
+
+<!-- Custom size with Tailwind -->
+<i class="fas fa-home text-2xl"></i>
+<i class="fas fa-home w-6 h-6"></i>
+```
+
+### 5.3 Icon Colors
+
+```html
+<!-- With Tailwind CSS -->
+<i class="fas fa-heart text-red-500"></i>
+<i class="fas fa-star text-yellow-400"></i>
+<i class="fas fa-check text-green-500"></i>
+
+<!-- With inline styles -->
+<i class="fas fa-heart" style="color: #ef4444;"></i>
+```
+
+### 5.4 Icon Animations
+
+```html
+<!-- Spin animation -->
+<i class="fas fa-spinner fa-spin"></i>
+
+<!-- Pulse animation -->
+<i class="fas fa-heart fa-pulse"></i>
+
+<!-- Fade animation -->
+<i class="fas fa-star fa-fade"></i>
+
+<!-- Beat animation -->
+<i class="fas fa-heart fa-beat"></i>
+
+<!-- Bounce animation -->
+<i class="fas fa-bell fa-bounce"></i>
+
+<!-- Shake animation -->
+<i class="fas fa-bell fa-shake"></i>
+```
+
+### 5.5 Icon Rotations
+
+```html
+<!-- Rotate 90 degrees -->
+<i class="fas fa-arrow-right fa-rotate-90"></i>
+
+<!-- Rotate 180 degrees -->
+<i class="fas fa-arrow-right fa-rotate-180"></i>
+
+<!-- Rotate 270 degrees -->
+<i class="fas fa-arrow-right fa-rotate-270"></i>
+
+<!-- Flip horizontal -->
+<i class="fas fa-arrow-right fa-flip-horizontal"></i>
+
+<!-- Flip vertical -->
+<i class="fas fa-arrow-right fa-flip-vertical"></i>
+```
+
+### 5.6 Icon Styling
+
+```html
+<!-- Fixed width (for lists) -->
+<i class="fas fa-home fa-fw"></i>
+
+<!-- Border -->
+<i class="fas fa-star fa-border"></i>
+
+<!-- Pull left -->
+<i class="fas fa-quote-left fa-pull-left"></i>
+
+<!-- Pull right -->
+<i class="fas fa-quote-right fa-pull-right"></i>
+```
+
+### 5.7 Icons in Buttons
+
+```html
+<!-- Button with icon -->
+<button class="bg-primary text-on-primary px-4 py-2 rounded-full 
+               hover:bg-primary/90 focus:outline-2 focus:outline-primary 
+               focus:outline-offset-2 transition-colors min-h-[44px]">
+    <i class="fas fa-search mr-2"></i>
+    Search
+</button>
+
+<!-- Icon-only button (accessible) -->
+<button class="text-on-surface-variant hover:bg-surface-variant
+               focus:outline-2 focus:outline-primary focus:outline-offset-2
+               p-3 rounded-full transition-colors min-h-[44px] min-w-[44px]">
+    <i class="fas fa-times" aria-hidden="true"></i>
+    <span class="sr-only">Close</span>
+</button>
+```
+
+### 5.8 Icons in Links
+
+```html
+<!-- Link with icon -->
+<a href="/search" 
+   class="text-primary hover:underline
+          focus:outline-2 focus:outline-primary focus:outline-offset-2">
+    <i class="fas fa-search mr-2"></i>
+    Search Documents
+</a>
+
+<!-- External link with icon -->
+<a href="https://example.com" 
+   target="_blank"
+   rel="noopener noreferrer"
+   class="text-primary hover:underline">
+    Visit Website
+    <i class="fas fa-external-link-alt ml-2"></i>
+</a>
+```
+
+### 5.9 Icons in Forms
+
+```html
+<!-- Input with icon -->
+<div class="relative">
+    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 
+              text-on-surface-variant pointer-events-none"></i>
+    <input type="search" 
+           class="w-full pl-12 pr-4 py-3 rounded-lg 
+                  border-2 border-outline bg-surface
+                  focus:border-primary focus:outline-2 focus:outline-primary 
+                  focus:outline-offset-2 min-h-[44px]">
+</div>
+
+<!-- Select with icon -->
+<div class="relative">
+    <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 
+              text-on-surface-variant pointer-events-none"></i>
+    <select class="w-full pr-12 pl-4 py-3 rounded-lg 
+                   border-2 border-outline bg-surface
+                   focus:border-primary focus:outline-2 focus:outline-primary 
+                   focus:outline-offset-2 min-h-[44px]">
+        <option>Select option</option>
+    </select>
+</div>
+```
+
+### 5.10 Icons in Lists
+
+```html
+<!-- List with icons -->
+<ul class="space-y-2">
+    <li class="flex items-center gap-3">
+        <i class="fas fa-check text-green-500 fa-fw"></i>
+        <span>Item one</span>
+    </li>
+    <li class="flex items-center gap-3">
+        <i class="fas fa-check text-green-500 fa-fw"></i>
+        <span>Item two</span>
+    </li>
+</ul>
+```
+
+---
+
+## 6. Integration with Tailwind CSS
+
+### 6.1 Using Tailwind Classes
+
+Font Awesome icons work seamlessly with Tailwind CSS:
+
+```html
+<!-- Size with Tailwind -->
+<i class="fas fa-home text-xl"></i>
+<i class="fas fa-home text-2xl"></i>
+<i class="fas fa-home text-3xl"></i>
+
+<!-- Color with Tailwind -->
+<i class="fas fa-heart text-red-500"></i>
+<i class="fas fa-star text-yellow-400"></i>
+
+<!-- Spacing with Tailwind -->
+<button class="flex items-center gap-2">
+    <i class="fas fa-search"></i>
+    <span>Search</span>
+</button>
+```
+
+### 6.2 Custom Tailwind Configuration
+
+You can extend Tailwind to include Font Awesome utilities:
+
+```js
+// tailwind.config.js (if using Tailwind v3)
+module.exports = {
+  theme: {
+    extend: {
+      fontFamily: {
+        'fa': ['Font Awesome 6 Free', 'Font Awesome 6 Brands'],
+      },
+    },
+  },
+}
+```
+
+### 6.3 Combining with Material Design 3
+
+```html
+<!-- Material Design 3 button with Font Awesome icon -->
+<button class="bg-primary text-on-primary 
+               hover:bg-primary/90 active:bg-primary/80
+               focus:outline-2 focus:outline-primary focus:outline-offset-2
+               px-6 py-3 rounded-full font-medium
+               transition-colors duration-200
+               min-h-[44px] flex items-center gap-2">
+    <i class="fas fa-search"></i>
+    <span>Search</span>
+</button>
+```
+
+---
+
+## 7. Accessibility
+
+### 7.1 Decorative Icons
+
+Icons that are purely decorative should be hidden from screen readers:
+
+```html
+<i class="fas fa-star" aria-hidden="true"></i>
+```
+
+### 7.2 Semantic Icons
+
+Icons that convey meaning should have accessible text:
+
+```html
+<!-- Icon with visible text -->
+<button>
+    <i class="fas fa-search" aria-hidden="true"></i>
+    <span>Search</span>
+</button>
+
+<!-- Icon-only button with screen reader text -->
+<button aria-label="Close dialog">
+    <i class="fas fa-times" aria-hidden="true"></i>
+    <span class="sr-only">Close</span>
+</button>
+
+<!-- Icon in link -->
+<a href="/settings" aria-label="Settings">
+    <i class="fas fa-cog" aria-hidden="true"></i>
+    <span class="sr-only">Settings</span>
+</a>
+```
+
+### 7.3 Focus States
+
+Ensure icons in interactive elements have proper focus indicators:
+
+```html
+<button class="focus:outline-2 focus:outline-primary focus:outline-offset-2">
+    <i class="fas fa-heart" aria-hidden="true"></i>
+    <span class="sr-only">Like</span>
+</button>
+```
+
+---
+
+## 8. Common Icons Reference
+
+### 8.1 Navigation Icons
+
+```html
+<i class="fas fa-home"></i>          <!-- Home -->
+<i class="fas fa-arrow-left"></i>    <!-- Back -->
+<i class="fas fa-arrow-right"></i>   <!-- Forward -->
+<i class="fas fa-chevron-left"></i>  <!-- Previous -->
+<i class="fas fa-chevron-right"></i> <!-- Next -->
+<i class="fas fa-bars"></i>          <!-- Menu -->
+<i class="fas fa-times"></i>         <!-- Close -->
+```
+
+### 8.2 Search & Filter Icons
+
+```html
+<i class="fas fa-search"></i>       <!-- Search -->
+<i class="fas fa-filter"></i>       <!-- Filter -->
+<i class="fas fa-sort"></i>         <!-- Sort -->
+<i class="fas fa-sort-up"></i>      <!-- Sort ascending -->
+<i class="fas fa-sort-down"></i>    <!-- Sort descending -->
+```
+
+### 8.3 Document Icons
+
+```html
+<i class="fas fa-file"></i>         <!-- File -->
+<i class="fas fa-file-pdf"></i>     <!-- PDF -->
+<i class="fas fa-file-word"></i>    <!-- Word -->
+<i class="fas fa-file-excel"></i>   <!-- Excel -->
+<i class="fas fa-download"></i>     <!-- Download -->
+<i class="fas fa-upload"></i>       <!-- Upload -->
+<i class="fas fa-print"></i>        <!-- Print -->
+```
+
+### 8.4 Action Icons
+
+```html
+<i class="fas fa-check"></i>        <!-- Check/Success -->
+<i class="fas fa-times"></i>        <!-- Cancel/Error -->
+<i class="fas fa-plus"></i>         <!-- Add -->
+<i class="fas fa-minus"></i>        <!-- Remove -->
+<i class="fas fa-edit"></i>         <!-- Edit -->
+<i class="fas fa-trash"></i>        <!-- Delete -->
+<i class="fas fa-save"></i>         <!-- Save -->
+```
+
+### 8.5 Status Icons
+
+```html
+<i class="fas fa-check-circle"></i> <!-- Success -->
+<i class="fas fa-exclamation-circle"></i> <!-- Warning -->
+<i class="fas fa-times-circle"></i> <!-- Error -->
+<i class="fas fa-info-circle"></i>  <!-- Info -->
+<i class="fas fa-spinner fa-spin"></i> <!-- Loading -->
+```
+
+### 8.6 Social Media Icons (Brands)
+
+```html
+<i class="fab fa-twitter"></i>      <!-- Twitter -->
+<i class="fab fa-facebook"></i>     <!-- Facebook -->
+<i class="fab fa-linkedin"></i>     <!-- LinkedIn -->
+<i class="fab fa-github"></i>       <!-- GitHub -->
+<i class="fab fa-youtube"></i>      <!-- YouTube -->
+```
+
+### 8.7 Date & Time Icons
+
+```html
+<i class="fas fa-calendar"></i>     <!-- Calendar -->
+<i class="fas fa-clock"></i>        <!-- Clock/Time -->
+<i class="fas fa-calendar-alt"></i> <!-- Calendar alternate -->
+```
+
+### 8.8 User Icons
+
+```html
+<i class="fas fa-user"></i>         <!-- User -->
+<i class="fas fa-users"></i>        <!-- Users -->
+<i class="fas fa-user-circle"></i> <!-- User circle -->
+<i class="fas fa-sign-in-alt"></i> <!-- Sign in -->
+<i class="fas fa-sign-out-alt"></i> <!-- Sign out -->
+```
+
+---
+
+## 9. AI Tool Guidelines
+
+### 9.1 Code Generation Rules
+
+When generating HTML with Font Awesome icons, AI tools should:
+
+1. **Always use proper icon classes**:
+   ```html
+   <!-- Good -->
+   <i class="fas fa-search"></i>
+   
+   <!-- Bad -->
+   <i class="fa fa-search"></i>  <!-- Missing style prefix -->
+   ```
+
+2. **Include accessibility attributes**:
+   ```html
+   <!-- Decorative icon -->
+   <i class="fas fa-star" aria-hidden="true"></i>
+   
+   <!-- Semantic icon -->
+   <button aria-label="Search">
+       <i class="fas fa-search" aria-hidden="true"></i>
+       <span class="sr-only">Search</span>
+   </button>
+   ```
+
+3. **Use appropriate icon families**:
+   ```html
+   <!-- Solid (most common) -->
+   <i class="fas fa-home"></i>
+   
+   <!-- Regular (outlined) -->
+   <i class="far fa-heart"></i>
+   
+   <!-- Brands (logos only) -->
+   <i class="fab fa-github"></i>
+   ```
+
+4. **Combine with Tailwind CSS classes**:
+   ```html
+   <i class="fas fa-search text-primary text-xl"></i>
+   ```
+
+5. **Use proper sizing**:
+   ```html
+   <!-- With Font Awesome classes -->
+   <i class="fas fa-home fa-2x"></i>
+   
+   <!-- With Tailwind classes (preferred) -->
+   <i class="fas fa-home text-2xl"></i>
+   ```
+
+6. **Include icons in interactive elements properly**:
+   ```html
+   <button class="flex items-center gap-2 
+                  focus:outline-2 focus:outline-primary focus:outline-offset-2">
+       <i class="fas fa-search" aria-hidden="true"></i>
+       <span>Search</span>
+   </button>
+   ```
+
+### 9.2 Common Patterns
+
+**Search Input:**
+```html
+<div class="relative">
+    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 
+              text-on-surface-variant pointer-events-none" 
+       aria-hidden="true"></i>
+    <input type="search" 
+           class="w-full pl-12 pr-4 py-3 rounded-lg 
+                  border-2 border-outline bg-surface
+                  focus:border-primary focus:outline-2 focus:outline-primary 
+                  focus:outline-offset-2 min-h-[44px]"
+           aria-label="Search">
+</div>
+```
+
+**Icon Button:**
+```html
+<button type="button"
+        class="text-on-surface-variant hover:bg-surface-variant
+               focus:outline-2 focus:outline-primary focus:outline-offset-2
+               p-3 rounded-full transition-colors min-h-[44px] min-w-[44px]"
+        aria-label="Close">
+    <i class="fas fa-times" aria-hidden="true"></i>
+    <span class="sr-only">Close</span>
+</button>
+```
+
+**Status Indicator:**
+```html
+<div class="flex items-center gap-2">
+    <i class="fas fa-check-circle text-green-500" aria-hidden="true"></i>
+    <span>Success</span>
+</div>
+```
+
+**Loading Spinner:**
+```html
+<i class="fas fa-spinner fa-spin text-primary" aria-hidden="true"></i>
+<span class="sr-only">Loading</span>
+```
+
+### 9.3 Validation Checklist
+
+Before finalizing code with Font Awesome icons:
+
+- [ ] Uses correct icon family prefix (`fas`, `far`, or `fab`)
+- [ ] Includes `aria-hidden="true"` for decorative icons
+- [ ] Includes accessible text for semantic icons
+- [ ] Uses proper sizing (Tailwind classes preferred)
+- [ ] Icons in buttons have proper focus states
+- [ ] Icon-only buttons have `aria-label` or screen reader text
+- [ ] Icons are properly aligned with text/content
+
+---
+
+## Quick Reference
+
+### Icon Family Classes
+- `fas` or `fa-solid` - Solid icons (1,392 icons)
+- `far` or `fa-regular` - Regular icons (163 icons)
+- `fab` or `fa-brands` - Brand icons (490 icons)
+
+### Common Icon Names
+- `fa-search` - Search
+- `fa-home` - Home
+- `fa-user` - User
+- `fa-heart` - Heart
+- `fa-star` - Star
+- `fa-check` - Check
+- `fa-times` - Close/Error
+- `fa-arrow-left` - Back
+- `fa-arrow-right` - Forward
+- `fa-download` - Download
+- `fa-upload` - Upload
+- `fa-edit` - Edit
+- `fa-trash` - Delete
+- `fa-calendar` - Calendar
+- `fa-clock` - Time
+
+### Size Classes
+- `fa-1x` - 1em (default)
+- `fa-2x` - 2em
+- `fa-3x` - 3em
+- `fa-4x` - 4em
+- `fa-5x` - 5em
+- Or use Tailwind: `text-xl`, `text-2xl`, etc.
+
+### Animation Classes
+- `fa-spin` - Continuous rotation
+- `fa-pulse` - Pulsing animation
+- `fa-fade` - Fade animation
+- `fa-beat` - Beat animation
+- `fa-bounce` - Bounce animation
+- `fa-shake` - Shake animation
+
+---
+
+## File Locations
+
+**CSS Files:**
+- `vendor/fontawesome/css/all.min.css` - All families (recommended)
+- `vendor/fontawesome/css/solid.min.css` - Solid only
+- `vendor/fontawesome/css/regular.min.css` - Regular only
+- `vendor/fontawesome/css/brands.min.css` - Brands only
+
+**JavaScript Files:**
+- `vendor/fontawesome/js/all.min.js` - SVG with JS method
+
+**SVG Files:**
+- `vendor/fontawesome/svgs/solid/` - Individual SVG files
+- `vendor/fontawesome/svgs/regular/` - Individual SVG files
+- `vendor/fontawesome/svgs/brands/` - Individual SVG files
+
+**Webfonts:**
+- `vendor/fontawesome/webfonts/` - Font files (TTF, WOFF2)
+
+---
+
+## References
+
+- **Font Awesome Website**: https://fontawesome.com
+- **Icon Search**: https://fontawesome.com/icons
+- **Documentation**: https://fontawesome.com/docs
+- **License**: https://fontawesome.com/license/free
+
+---
+
+**Last Updated**: Based on Font Awesome Free 6.5.2
+
+**Note**: This guide is for Font Awesome Free. For Pro features, upgrade to Font Awesome Pro.
+
+

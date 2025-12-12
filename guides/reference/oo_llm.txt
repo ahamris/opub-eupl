@@ -1,0 +1,853 @@
+# oo_llm.txt
+
+Reference architecture & usage guide for the **Open Overheid – openbaarmakingen zoek API** inside our Laravel 12 projects.
+
+## 1. Purpose
+
+We use the Open Overheid search API to discover actively published government documents (Woo).
+
+This file explains **how we architect this integration in Laravel 12** and how AI tools (Cursor, Codeium, etc.) should generate code around it.
+
+The goals:
+
+- One **reusable, testable Laravel service** for all Open Overheid searches.
+
+- Consistent mapping between:
+
+  - our UI (search form / filters),
+
+  - our domain objects,
+
+  - and the remote API.
+
+- Clear constraints for AI so it does **not invent endpoints or parameters**.
+
+- Ability to fetch a **detailed document view** by ID.
+
+- **PostgreSQL synchronization** for real-time local search capabilities.
+
+---
+
+## 2. API overview
+
+### 2.1 Base endpoints
+
+All interactions go through these HTTP GET endpoints:
+
+1. **Search endpoint**
+
+   ```text
+   https://open.overheid.nl/overheid/openbaarmakingen/api/v0/zoek
+   ```
+
+2. **Detail endpoint (single document)**
+
+   ```text
+   https://open.overheid.nl/overheid/openbaarmakingen/api/v0/zoek/{id}
+   ```
+
+   Example:
+
+   ```text
+   https://open.overheid.nl/overheid/openbaarmakingen/api/v0/zoek/oep-0b03c64e8b44a7b0466a809054860a2c77fb628b
+   ```
+
+   Where `{id}` is the **document identifier** returned by the search endpoint (e.g. "oep-…").
+
+We **always** call these endpoints with GET.
+
+---
+
+## 3. Search endpoint – parameters
+
+### 3.1 Core parameters
+
+These parameters are used by our applications:
+
+* `zoektekst` – free text query (string, may be empty).
+
+* `start` – zero-based offset for pagination (integer, required).
+
+* `aantalResultaten` – page size (integer, **MUST** be one of: `10`, `20`, `50`).
+
+### 3.2 Filter parameters
+
+Each filter is optional. Only send it when the user actually set a value.
+
+* `publicatiedatumVan` – start date (string, format `DD-MM-YYYY`).
+
+* `publicatiedatumTot` – end date (string, format `DD-MM-YYYY`).
+
+* `documentsoort` – document type (e.g. `beslisnota`).
+
+* `informatiecategorie` – information category (e.g. `adviezen`).
+
+* `thema` – topic/theme (e.g. `afval`).
+
+* `organisatie` – organisation (e.g. `1Stroom`).
+
+**Important for AI:**
+
+* Do **not** send unknown or random parameters.
+
+* Do **not** assume multi-select unless we explicitly implement it.
+
+  For now each of these is **single-valued** in the query.
+
+### 3.3 Pagination model
+
+We represent pagination in our code as:
+
+* `page` – 1-based index in our UI.
+
+* `perPage` – 10, 20, or 50.
+
+Conversion to API:
+
+```text
+start = (page - 1) * perPage
+aantalResultaten = perPage
+```
+
+AI must always use this formula instead of inventing `page` parameters on the API itself.
+
+---
+
+## 4. Detail endpoint – semantics
+
+### 4.1 Purpose
+
+The **detail endpoint** returns full information about a single document that has been found via the search endpoint.
+
+Typical use: clicking on a search result should open a detail view with all available metadata, links, etc.
+
+### 4.2 Identifier (`id`)
+
+* The `{id}` part in:
+
+  ```text
+  /overheid/openbaarmakingen/api/v0/zoek/{id}
+  ```
+
+  is a unique document identifier such as:
+
+  ```text
+  oep-0b03c64e8b44a7b0466a809054860a2c77fb628b
+  ```
+
+* This ID is returned in the **search results**.
+
+  The exact field name may be `id`, `dcnId`, `plooiIntern`, or similar depending on the API schema.
+
+  We will:
+
+  * Extract that ID from the search result object.
+
+  * Use it for:
+
+    * our own internal route, e.g. `/open-overheid/documents/{id}`,
+
+    * and the call to the detail endpoint.
+
+### 4.3 Usage pattern
+
+1. User performs a search.
+
+2. Search endpoint returns a list of results; each result includes a document identifier (e.g. `oep-...`).
+
+3. Our frontend lists those results; each result links to:
+
+   ```text
+   /open-overheid/documents/{id}
+   ```
+
+4. Our backend controller receives this `{id}` and calls:
+
+   ```text
+   GET https://open.overheid.nl/overheid/openbaarmakingen/api/v0/zoek/{id}
+   ```
+
+5. The response is rendered either:
+
+   * as JSON (for SPA),
+
+   * or passed to a Blade view.
+
+---
+
+## 5. Laravel 12 reference architecture
+
+### 5.1 Layers
+
+We use a simple layered approach:
+
+1. **Controller layer**
+
+   * Accepts HTTP requests from our own frontend.
+
+   * Validates & normalises query parameters into a value object or ID.
+
+2. **Domain/service layer**
+
+   * `OpenOverheidSearchService` – calls remote API (search & detail).
+
+   * `OpenOverheidSyncService` – synchronizes documents to PostgreSQL.
+
+   * `OpenOverheidLocalSearchService` – searches local PostgreSQL database.
+
+   Responsible for:
+
+     * building the search & detail URLs,
+
+     * calling the endpoints via Laravel's HTTP client,
+
+     * handling errors,
+
+     * returning DTOs/arrays.
+
+3. **DTO / Value Objects**
+
+   * `OpenOverheidSearchQuery` – encapsulates all search filters.
+
+   * `OpenOverheidSearchResult` – contains:
+
+     * `items` (array of raw documents / mapped entities),
+
+     * `total` (total hits if provided),
+
+     * `page`, `perPage`,
+
+     * `hasNextPage`, `hasPreviousPage`.
+
+   * `OpenOverheidDocument` – represents a single document returned by the detail endpoint (we can map minimally at first and expand later).
+
+4. **Config**
+
+   * `config/open_overheid.php` with:
+
+     * `base_url` = `'https://open.overheid.nl/overheid/openbaarmakingen/api/v0'`
+
+     * `timeout` (seconds)
+
+     * `sync` settings (batch size, enabled flag)
+
+     * `use_local_search` (prefer local PostgreSQL over API)
+
+   * Environment variables:
+
+     * `OPEN_OVERHEID_BASE_URL`
+
+     * `OPEN_OVERHEID_TIMEOUT`
+
+     * `OPEN_OVERHEID_SYNC_ENABLED`
+
+     * `OPEN_OVERHEID_USE_LOCAL_SEARCH`
+
+### 5.2 Directory & naming conventions
+
+* Controllers: `App\Http\Controllers\OpenOverheid\*`
+
+* Services: `App\Services\OpenOverheid\*`
+
+* DTOs: `App\DataTransferObjects\OpenOverheid\*`
+
+* Models: `App\Models\OpenOverheidDocument`
+
+* Commands: `App\Console\Commands\SyncOpenOverheidDocuments`
+
+* Jobs: `App\Jobs\SyncOpenOverheidDocumentsJob`
+
+* Config: `config/open_overheid.php`
+
+* Tests: `tests/Feature/OpenOverheid/*`, `tests/Unit/OpenOverheid/*`
+
+AI tools should follow these names if they generate new code.
+
+---
+
+## 6. PostgreSQL synchronization architecture
+
+### 6.1 Why sync?
+
+We synchronize Open Overheid documents to our PostgreSQL database to:
+
+* Enable **real-time full-text search** using PostgreSQL's native capabilities.
+
+* Reduce dependency on external API for search operations.
+
+* Improve search performance and reliability.
+
+* Allow offline/backup search capabilities.
+
+### 6.2 Sync strategy
+
+We use a **full sync** approach:
+
+* **Daily scheduled sync** via Laravel's task scheduler.
+
+* Fetch all documents from the search endpoint (paginated).
+
+* For each document, fetch detailed information via the detail endpoint.
+
+* Upsert documents into PostgreSQL (update if exists, insert if new).
+
+* Track `synced_at` timestamp for monitoring.
+
+### 6.3 Database schema
+
+The `open_overheid_documents` table stores:
+
+* `id` – primary key (bigint auto-increment or UUID).
+
+* `external_id` – unique identifier from API (e.g. `oep-...`), indexed.
+
+* `title`, `description`, `content` – text fields for full-text search.
+
+* `publication_date` – date field for filtering.
+
+* `document_type`, `category`, `theme`, `organisation` – filter fields.
+
+* `metadata` – JSONB column storing full API response for flexibility.
+
+* `synced_at` – timestamp of last successful sync.
+
+* `created_at`, `updated_at` – Laravel timestamps.
+
+**Indexes:**
+
+* Unique index on `external_id`.
+
+* Full-text search index on `title`, `description`, `content` (PostgreSQL `tsvector`).
+
+* Indexes on filter fields (`publication_date`, `document_type`, etc.).
+
+### 6.4 Local vs remote search
+
+Our controllers use a **dual search pattern**:
+
+1. **Primary**: `OpenOverheidLocalSearchService` queries PostgreSQL.
+
+2. **Fallback**: `OpenOverheidSearchService` calls remote API if local search is disabled or fails.
+
+This allows:
+
+* Gradual migration to local search.
+
+* Graceful handling of sync failures.
+
+* Testing and development flexibility.
+
+### 6.5 Sync service pattern
+
+The `OpenOverheidSyncService`:
+
+* `syncAll()` – performs full sync:
+
+  1. Fetch all documents via search endpoint (handle pagination).
+
+  2. For each document, fetch detail via detail endpoint.
+
+  3. Upsert into PostgreSQL using `external_id` as unique key.
+
+* `syncDocument(string $id)` – sync single document by ID.
+
+* Handles API errors gracefully (logs, continues with next document).
+
+* Logs sync progress and statistics.
+
+### 6.6 Sync command
+
+Artisan command: `php artisan open-overheid:sync`
+
+* Uses `OpenOverheidSyncService`.
+
+* Provides progress output.
+
+* Reports errors and statistics.
+
+* Optional: `--id={external_id}` to sync single document.
+
+### 6.7 Scheduled sync
+
+Laravel scheduled job runs daily:
+
+* `SyncOpenOverheidDocumentsJob` dispatches the sync process.
+
+* Configured in `routes/console.php` or `app/Console/Kernel.php`.
+
+* Handles failures (logs, optional notifications).
+
+---
+
+## 7. Laravel 12 implementation guidelines
+
+### 7.1 Config file template
+
+```php
+<?php
+
+return [
+    'base_url' => env('OPEN_OVERHEID_BASE_URL', 'https://open.overheid.nl/overheid/openbaarmakingen/api/v0'),
+    'timeout'  => env('OPEN_OVERHEID_TIMEOUT', 10),
+    'sync' => [
+        'enabled' => env('OPEN_OVERHEID_SYNC_ENABLED', true),
+        'batch_size' => env('OPEN_OVERHEID_SYNC_BATCH_SIZE', 50),
+    ],
+    'use_local_search' => env('OPEN_OVERHEID_USE_LOCAL_SEARCH', true),
+];
+```
+
+### 7.2 Search query value object
+
+```php
+<?php
+
+namespace App\DataTransferObjects\OpenOverheid;
+
+class OpenOverheidSearchQuery
+{
+    public function __construct(
+        public readonly ?string $zoektekst = '',
+        public readonly int $page = 1,
+        public readonly int $perPage = 20, // 10, 20, 50
+        public readonly ?string $publicatiedatumVan = null,
+        public readonly ?string $publicatiedatumTot = null,
+        public readonly ?string $documentsoort = null,
+        public readonly ?string $informatiecategorie = null,
+        public readonly ?string $thema = null,
+        public readonly ?string $organisatie = null,
+    ) {}
+
+    public function offset(): int
+    {
+        return ($this->page - 1) * $this->perPage;
+    }
+}
+```
+
+### 7.3 Service class skeleton (search + detail)
+
+```php
+<?php
+
+namespace App\Services\OpenOverheid;
+
+use App\DataTransferObjects\OpenOverheid\OpenOverheidSearchQuery;
+use Illuminate\Support\Facades\Http;
+use RuntimeException;
+
+class OpenOverheidSearchService
+{
+    protected function baseUrl(): string
+    {
+        return rtrim(config('open_overheid.base_url'), '/');
+    }
+
+    /**
+     * Perform a search request.
+     */
+    public function search(OpenOverheidSearchQuery $query): array
+    {
+        $url = $this->baseUrl() . '/zoek';
+        $params = [
+            'zoektekst'        => $query->zoektekst ?? '',
+            'start'            => $query->offset(),
+            'aantalResultaten' => $query->perPage,
+        ];
+
+        if ($query->publicatiedatumVan) {
+            $params['publicatiedatumVan'] = $query->publicatiedatumVan;
+        }
+        if ($query->publicatiedatumTot) {
+            $params['publicatiedatumTot'] = $query->publicatiedatumTot;
+        }
+        if ($query->documentsoort) {
+            $params['documentsoort'] = $query->documentsoort;
+        }
+        if ($query->informatiecategorie) {
+            $params['informatiecategorie'] = $query->informatiecategorie;
+        }
+        if ($query->thema) {
+            $params['thema'] = $query->thema;
+        }
+        if ($query->organisatie) {
+            $params['organisatie'] = $query->organisatie;
+        }
+
+        $response = Http::timeout(config('open_overheid.timeout'))
+            ->get($url, $params);
+
+        if (! $response->successful()) {
+            throw new RuntimeException('Open Overheid API error (search): ' . $response->status());
+        }
+
+        return $response->json(); // raw for now
+    }
+
+    /**
+     * Fetch a single document by its Open Overheid ID (e.g. "oep-...").
+     */
+    public function getDocument(string $id): array
+    {
+        $url = $this->baseUrl() . '/zoek/' . urlencode($id);
+
+        $response = Http::timeout(config('open_overheid.timeout'))
+            ->get($url);
+
+        if (! $response->successful()) {
+            throw new RuntimeException('Open Overheid API error (detail): ' . $response->status());
+        }
+
+        return $response->json(); // raw for now; can be mapped to DTO later
+    }
+}
+```
+
+### 7.4 Local search service skeleton
+
+```php
+<?php
+
+namespace App\Services\OpenOverheid;
+
+use App\DataTransferObjects\OpenOverheid\OpenOverheidSearchQuery;
+use App\Models\OpenOverheidDocument;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+
+class OpenOverheidLocalSearchService
+{
+    /**
+     * Search documents in local PostgreSQL database.
+     */
+    public function search(OpenOverheidSearchQuery $query): array
+    {
+        $builder = OpenOverheidDocument::query();
+
+        // Full-text search on zoektekst
+        if (!empty($query->zoektekst)) {
+            $builder->whereFullText(['title', 'description', 'content'], $query->zoektekst);
+        }
+
+        // Apply filters
+        if ($query->publicatiedatumVan) {
+            $builder->where('publication_date', '>=', $query->publicatiedatumVan);
+        }
+        if ($query->publicatiedatumTot) {
+            $builder->where('publication_date', '<=', $query->publicatiedatumTot);
+        }
+        if ($query->documentsoort) {
+            $builder->where('document_type', $query->documentsoort);
+        }
+        if ($query->informatiecategorie) {
+            $builder->where('category', $query->informatiecategorie);
+        }
+        if ($query->thema) {
+            $builder->where('theme', $query->thema);
+        }
+        if ($query->organisatie) {
+            $builder->where('organisation', $query->organisatie);
+        }
+
+        $results = $builder->paginate($query->perPage, ['*'], 'page', $query->page);
+
+        // Transform to match API response format
+        return [
+            'items' => $results->items(),
+            'total' => $results->total(),
+            'page' => $results->currentPage(),
+            'perPage' => $results->perPage(),
+            'hasNextPage' => $results->hasMorePages(),
+            'hasPreviousPage' => $results->currentPage() > 1,
+        ];
+    }
+}
+```
+
+### 7.5 Controllers (search + detail)
+
+#### Search controller
+
+```php
+<?php
+
+namespace App\Http\Controllers\OpenOverheid;
+
+use App\DataTransferObjects\OpenOverheid\OpenOverheidSearchQuery;
+use App\Http\Controllers\Controller;
+use App\Services\OpenOverheid\OpenOverheidLocalSearchService;
+use App\Services\OpenOverheid\OpenOverheidSearchService;
+use Illuminate\Http\Request;
+
+class SearchController extends Controller
+{
+    public function __construct(
+        private readonly OpenOverheidLocalSearchService $localService,
+        private readonly OpenOverheidSearchService $remoteService
+    ) {}
+
+    public function index(Request $request)
+    {
+        $validated = $request->validate([
+            'q'                   => ['nullable', 'string'],
+            'page'                => ['nullable', 'integer', 'min:1'],
+            'per_page'            => ['nullable', 'integer', 'in:10,20,50'],
+            'publicatiedatum_van' => ['nullable', 'date_format:d-m-Y'],
+            'publicatiedatum_tot' => ['nullable', 'date_format:d-m-Y'],
+            'documentsoort'       => ['nullable', 'string'],
+            'informatiecategorie' => ['nullable', 'string'],
+            'thema'               => ['nullable', 'string'],
+            'organisatie'         => ['nullable', 'string'],
+        ]);
+
+        $query = new OpenOverheidSearchQuery(
+            zoektekst: $validated['q'] ?? '',
+            page: (int)($validated['page'] ?? 1),
+            perPage: (int)($validated['per_page'] ?? 20),
+            publicatiedatumVan: $validated['publicatiedatum_van'] ?? null,
+            publicatiedatumTot: $validated['publicatiedatum_tot'] ?? null,
+            documentsoort: $validated['documentsoort'] ?? null,
+            informatiecategorie: $validated['informatiecategorie'] ?? null,
+            thema: $validated['thema'] ?? null,
+            organisatie: $validated['organisatie'] ?? null,
+        );
+
+        // Use local search if enabled, fallback to remote
+        $useLocal = config('open_overheid.use_local_search', true);
+        $results = $useLocal
+            ? $this->localService->search($query)
+            : $this->remoteService->search($query);
+
+        return response()->json($results);
+    }
+}
+```
+
+#### Detail controller
+
+```php
+<?php
+
+namespace App\Http\Controllers\OpenOverheid;
+
+use App\Http\Controllers\Controller;
+use App\Models\OpenOverheidDocument;
+use App\Services\OpenOverheid\OpenOverheidSearchService;
+use Illuminate\Http\Request;
+
+class DocumentController extends Controller
+{
+    public function __construct(
+        private readonly OpenOverheidSearchService $service
+    ) {}
+
+    /**
+     * Show a single Open Overheid document by its ID (e.g. "oep-...").
+     */
+    public function show(string $id)
+    {
+        // Try local database first
+        $document = OpenOverheidDocument::where('external_id', $id)->first();
+
+        if ($document) {
+            return response()->json($document->toArray());
+        }
+
+        // Fallback to API
+        $document = $this->service->getDocument($id);
+
+        // For an SPA/API:
+        return response()->json($document);
+        // For Blade, instead:
+        // return view('open-overheid.document', ['document' => $document]);
+    }
+}
+```
+
+### 7.6 Routing examples
+
+```php
+// routes/api.php or routes/web.php, depending on usage.
+
+use App\Http\Controllers\OpenOverheid\SearchController;
+use App\Http\Controllers\OpenOverheid\DocumentController;
+
+Route::get('/open-overheid/search', [SearchController::class, 'index']);
+Route::get('/open-overheid/documents/{id}', [DocumentController::class, 'show']);
+```
+
+### 7.7 Sync command example
+
+```php
+<?php
+
+namespace App\Console\Commands;
+
+use App\Services\OpenOverheid\OpenOverheidSyncService;
+use Illuminate\Console\Command;
+
+class SyncOpenOverheidDocuments extends Command
+{
+    protected $signature = 'open-overheid:sync {--id= : Sync a specific document by external ID}';
+    protected $description = 'Synchronize Open Overheid documents to PostgreSQL';
+
+    public function handle(OpenOverheidSyncService $service): int
+    {
+        $id = $this->option('id');
+
+        if ($id) {
+            $this->info("Syncing document: {$id}");
+            $service->syncDocument($id);
+            $this->info('Done!');
+            return self::SUCCESS;
+        }
+
+        $this->info('Starting full sync...');
+        $service->syncAll();
+        $this->info('Sync completed!');
+        return self::SUCCESS;
+    }
+}
+```
+
+---
+
+## 8. Usage patterns
+
+### 8.1 From frontend (search)
+
+* Frontend calls:
+
+  ```text
+  GET /open-overheid/search?q=klimaat&page=1&per_page=50
+  ```
+
+  plus optional filters:
+
+  `&documentsoort=beslisnota&thema=afval`, etc.
+
+* Backend converts this into `OpenOverheidSearchQuery` and calls either:
+
+  * `OpenOverheidLocalSearchService::search()` (primary), or
+
+  * `OpenOverheidSearchService::search()` (fallback).
+
+### 8.2 From frontend (detail)
+
+* Each search result includes a document ID (e.g. `oep-0b03c64e8b44a7b0466a809054860a2c77fb628b`).
+
+* Frontend links to:
+
+  ```text
+  /open-overheid/documents/oep-0b03c64e8b44a7b0466a809054860a2c77fb628b
+  ```
+
+* Backend controller:
+
+  1. Queries local database first.
+
+  2. Falls back to API if not found locally.
+
+  3. Returns the detailed data.
+
+### 8.3 Synchronization
+
+* **Automatic**: Daily via Laravel scheduler.
+
+* **Manual**: `php artisan open-overheid:sync`
+
+* **Single document**: `php artisan open-overheid:sync --id=oep-...`
+
+### 8.4 Caching (optional)
+
+* We may add caching for:
+
+  * frequently used search queries,
+
+  * detailed document responses (they don't change often).
+
+AI should use Laravel's `Cache` facade with sensible TTL when requested.
+
+---
+
+## 9. Error handling & logging
+
+* On non-2xx status codes, the service throws a `RuntimeException`.
+
+* In production we may:
+
+  * log the error with context (URL, query/ID, status, body),
+
+  * return a user-friendly error message from the controller.
+
+* Sync service should:
+
+  * log progress and errors,
+
+  * continue processing other documents if one fails,
+
+  * report statistics at the end.
+
+AI **must not** swallow API errors silently.
+
+---
+
+## 10. Guidelines for AI tools (Cursor, etc.)
+
+When an AI tool sees this file in the repository, it should:
+
+1. **Use the documented endpoints and parameters only.**
+
+   * Base URL: `config('open_overheid.base_url')`.
+
+   * Search: `GET {base_url}/zoek` with the parameters above.
+
+   * Detail: `GET {base_url}/zoek/{id}`.
+
+2. **Respect pagination rules** (`start`, `aantalResultaten`) and date format (`d-m-Y`).
+
+3. **Follow our naming and directory conventions**:
+
+   * Reuse/extend `OpenOverheidSearchService`, `OpenOverheidSyncService`, `OpenOverheidLocalSearchService`, `OpenOverheidSearchQuery`, controllers.
+
+4. **Avoid hardcoding URLs** in controllers or views.
+
+   Always route calls through the service.
+
+5. **Keep everything framework-native**:
+
+   * Laravel `Http` client, `config()`, `env()`, validation, routing.
+
+6. **Be defensive about response structure**.
+
+   If mapping to DTOs, check keys exist and also expose the raw payload when in doubt.
+
+7. **Do not invent fields or IDs**.
+
+   * Use the document identifier exactly as returned by the search endpoint when calling the detail endpoint.
+
+8. **For sync operations**:
+
+   * Always use `OpenOverheidSyncService` for syncing.
+
+   * Handle errors gracefully (log and continue).
+
+   * Use upsert operations (update if exists, insert if new).
+
+9. **For search operations**:
+
+   * Prefer local search if `config('open_overheid.use_local_search')` is true.
+
+   * Fallback to remote API if local search fails or is disabled.
+
+10. **Database operations**:
+
+    * Use Eloquent models for database queries.
+
+    * Leverage PostgreSQL full-text search capabilities.
+
+    * Index filter fields for performance.
+
+---
+
+End of oo_llm.txt
+

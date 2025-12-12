@@ -1,0 +1,169 @@
+# Review: oo_llm_v2.txt
+
+## ✅ WAT IS GOED
+
+1. **Correcte API endpoints** - De endpoints kloppen met de implementatie:
+   - `/zoek` voor search ✓
+   - `/zoek/{id}` voor detail ✓
+
+2. **Correcte parameters** - Alle query parameters komen overeen:
+   - Core: `zoektekst`, `start`, `aantalResultaten` ✓
+   - Filters: alle 6 filters zijn correct gedocumenteerd ✓
+   - Date format `DD-MM-YYYY` klopt met controller validatie ✓
+
+3. **Paginatie logica** - Correct:
+   - `start = (page - 1) * aantalResultaten` ✓
+   - Geen `page` parameter op API zelf ✓
+
+4. **Flexibele JSON schemas** - Goede aanpak:
+   - `additionalProperties: true` maakt het robuust voor variaties ✓
+   - Schemas zijn framework-agnostic (goed voor AI tools) ✓
+
+5. **Duidelijke structuur** - Goed georganiseerd voor AI tools
+
+---
+
+## ⚠️ PROBLEMEN EN VERBETERPUNTEN
+
+### 1. **File Header (regels 1-15)**
+**Probleem:** De file begint met een informele intro tekst die er niet thuishoort:
+```
+Nice, this is the fun part 😄
+Below is a **complete new `oo_llm.txt`** focused on:
+...
+```
+
+**Oplossing:** Verwijder deze intro, begin direct met de titel en doel.
+
+### 2. **Incorrecte Code Block Syntax**
+**Probleem:** Regel 16 en 204 gebruiken `````txt` in plaats van ```json voor JSON schemas.
+
+**Oplossing:** Verander naar ```json voor alle JSON schema blocks.
+
+### 3. **Detail Schema - `creatiedatum` Requirement**
+**Probleem:** Regel 284 zegt `required: ["pid", "creatiedatum"]`, maar:
+- Niet alle documenten hebben `creatiedatum` (sommige hebben alleen `openbaarmakingsdatum`)
+- In de CTER documenten zien we dat sommige documenten `creatiedatum` hebben, andere niet
+
+**Oplossing:** Maak `creatiedatum` optioneel:
+```json
+"required": ["pid"]
+```
+
+### 4. **Search Hit Schema - Te Strikte Requirements**
+**Probleem:** Regel 137-144 vereist veel velden die mogelijk niet altijd aanwezig zijn:
+- `weblocatie` kan null zijn
+- `aanbieder` kan ontbreken in sommige responses
+
+**Oplossing:** Maak meer velden optioneel, alleen `id` en `pid` als required:
+```json
+"required": ["id", "pid"]
+```
+
+### 5. **Ontbrekende Informatie**
+**Probleem:** De guide mist:
+- Informatie over de werkelijke response structuur (is het een array of object?)
+- Voorbeelden van echte API responses
+- Informatie over error responses
+
+**Oplossing:** Voeg toe:
+- Sectie met voorbeeld responses
+- Error handling patterns
+- Link naar bestaande implementatie
+
+### 6. **Inconsistentie met Laravel Implementatie**
+**Probleem:** De guide is framework-agnostic, maar:
+- Jullie hebben al een Laravel implementatie
+- De guide zou kunnen verwijzen naar de bestaande DTOs en Services
+
+**Oplossing:** Voeg sectie toe die linkt naar:
+- `App\DataTransferObjects\OpenOverheid\OpenOverheidSearchQuery`
+- `App\Services\OpenOverheid\OpenOverheidSearchService`
+- `App\Models\OpenOverheidDocument`
+
+### 7. **Detail Document - `versies` Structuur**
+**Probleem:** In de CTER documenten zien we dat `versies` op top-level staat, niet in `document`. De guide heeft dit correct, maar de beschrijving op regel 269 is onduidelijk.
+
+**Oplossing:** Maak duidelijker dat `versies` een top-level array is.
+
+### 8. **Bestand Structuur in `versies`**
+**Probleem:** Regel 547 zegt `required: ["id", "url", "mime-type"]`, maar:
+- In sommige documenten kan `url` ontbreken (sommige hebben alleen `id`)
+- `url` is niet altijd aanwezig in search results
+
+**Oplossing:** Maak `url` optioneel:
+```json
+"required": ["id", "mime-type"]
+```
+
+---
+
+## 💡 AANBEVELINGEN
+
+### 1. **Voeg Voorbeelden Toe**
+Voeg een sectie toe met echte voorbeeld responses:
+```markdown
+## 7. EXAMPLE RESPONSES
+
+### Search Response Example
+[Plaats hier een echt voorbeeld]
+
+### Detail Response Example  
+[Plaats hier een echt voorbeeld]
+```
+
+### 2. **Link naar Implementatie**
+Voeg toe:
+```markdown
+## 8. LARAVEL IMPLEMENTATION
+
+This guide is framework-agnostic, but our Laravel implementation uses:
+- `App\DataTransferObjects\OpenOverheid\OpenOverheidSearchQuery` - Query builder
+- `App\Services\OpenOverheid\OpenOverheidSearchService` - API client
+- `App\Models\OpenOverheidDocument` - Database model
+- `App\Services\OpenOverheid\OpenOverheidLocalSearchService` - Local search
+
+See the actual code for Laravel-specific patterns.
+```
+
+### 3. **Error Handling**
+Voeg sectie toe over error responses en hoe om te gaan met API fouten.
+
+### 4. **ID Handling Duidelijker**
+De guide legt uit dat `id` vaak `_1` suffix heeft, maar dit is niet altijd consistent. Maak dit duidelijker:
+```markdown
+**ID Handling:**
+- Search results: `document.id` = "oep-..._1" (with version suffix)
+- Detail endpoint: Use base ID without suffix
+- Extraction: Either strip `_1` or extract from `pid` URL path
+- Example: "oep-abc123_1" → use "oep-abc123" for detail call
+```
+
+---
+
+## ✅ CONCLUSIE
+
+**Is het correct geschreven?**
+- Grotendeels ja, maar met enkele technische onjuistheden in de schemas
+- De basis informatie klopt met de implementatie
+
+**Is het wijs?**
+- **JA** - De aanpak is goed:
+  - Framework-agnostic schemas zijn handig voor AI tools
+  - `additionalProperties: true` maakt het flexibel
+  - Duidelijke structuur helpt AI tools correcte code te genereren
+  - JSON schemas zijn een goede standaard
+
+**Aanbeveling:**
+- Fix de technische issues (required fields, code block syntax)
+- Verwijder de informele header
+- Voeg voorbeelden en links naar implementatie toe
+- Maak het een "levend document" dat meegroeit met de API
+
+**Prioriteit fixes:**
+1. 🔴 Hoog: Fix code block syntax (```json)
+2. 🔴 Hoog: Fix required fields in schemas
+3. 🟡 Medium: Verwijder informele header
+4. 🟡 Medium: Voeg voorbeelden toe
+5. 🟢 Laag: Link naar Laravel implementatie
+

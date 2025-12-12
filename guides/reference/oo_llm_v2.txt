@@ -1,0 +1,602 @@
+Nice, this is the fun part 😄
+Below is a **complete new `oo_llm.txt`** focused on:
+
+* API overview (search + detail, all filters)
+* A **logical JSON Schema** for:
+
+  * **search results (hit items)**
+  * **detail document response**
+
+I could only directly inspect one detail document via the tools, but combined with the search output and public PLOOI/OO patterns, the schema is intentionally a bit **permissive** (`additionalProperties: true`) so it survives variations between documents.
+
+You can drop this file in your repo so Cursor / IDE AI can “learn” the structure.
+
+---
+
+````txt
+# oo_llm.txt
+Open Overheid – Zoek API
+Reference Architecture & JSON Schema (framework-agnostic)
+
+------------------------------------------------------------
+1. GOAL
+------------------------------------------------------------
+
+We integrate with the Open Overheid “openbaarmakingen” search API.
+
+This file defines:
+
+- The endpoints we use
+- All supported query features (filters + pagination)
+- How to get a detailed document
+- JSON Schemas for:
+  - search result items
+  - detail document responses
+
+This file is meant for humans AND AI assistants (Cursor, Copilot, etc.) so they generate correct code and queries and do NOT invent parameters or shapes.
+
+
+------------------------------------------------------------
+2. ENDPOINTS
+------------------------------------------------------------
+
+Base search endpoint:
+
+  GET https://open.overheid.nl/overheid/openbaarmakingen/api/v0/zoek
+
+Detail endpoint (single document):
+
+  GET https://open.overheid.nl/overheid/openbaarmakingen/api/v0/zoek/{id}
+
+Example detail URL:
+
+  https://open.overheid.nl/overheid/openbaarmakingen/api/v0/zoek/oep-0b03c64e8b44a7b0466a809054860a2c77fb628b
+
+Where `{id}` is the document identifier returned by the search API.
+In search results this often appears as:
+
+  document.id = "oep-..._1"
+  document.pid = "https://open.overheid.nl/documenten/oep-..."
+
+For the detail endpoint we use the **base ID** without suffix:
+- Either strip trailing `_1`
+- Or extract the last path segment from `pid`
+
+
+------------------------------------------------------------
+3. SEARCH QUERY PARAMETERS
+------------------------------------------------------------
+
+Core parameters (always allowed):
+
+- zoektekst           : string (may be empty)
+- start               : integer, 0-based offset
+- aantalResultaten    : integer, MUST be 10, 20 or 50
+
+Filters (all optional, single-valued):
+
+- publicatiedatumVan  : string, format DD-MM-YYYY
+- publicatiedatumTot  : string, format DD-MM-YYYY
+- documentsoort       : string, e.g. "beslisnota"
+- informatiecategorie : string, e.g. "adviezen"
+- thema               : string, e.g. "afval"
+- organisatie         : string, e.g. "1Stroom"
+
+Pagination rule:
+
+  start = (page - 1) * aantalResultaten
+
+There is NO “page” parameter on the API itself. Always use `start`.
+
+
+------------------------------------------------------------
+4. USAGE PATTERNS
+------------------------------------------------------------
+
+SEARCH FLOW
+1. User enters zoektekst and optional filters.
+2. Client calculates `start` from page & page size.
+3. Client calls /zoek with:
+   - zoektekst
+   - start
+   - aantalResultaten
+   - plus any chosen filters
+4. Client processes each hit in the result array/object.
+
+DETAIL FLOW
+1. User clicks a document.
+2. Client takes the document ID (from search result).
+3. Client calls /zoek/{id}.
+4. Client uses detail JSON to show all metadata and file links.
+
+
+------------------------------------------------------------
+5. JSON SCHEMA – SEARCH RESULTS
+------------------------------------------------------------
+
+NOTE:
+- The exact top-level wrapper of the search response may evolve.
+- The important reusable unit is a single “hit” object.
+- Many APIs wrap it like: { "results": [ Hit, Hit, ... ], ... }
+- Others return just an array; you can adapt easily.
+
+We define a generic “hit item” schema `OpenOverheidSearchHit` that models what we saw in the live API.
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.local/open-overheid/search-hit.json",
+  "title": "OpenOverheidSearchHit",
+  "type": "object",
+  "description": "Single result item from the /zoek endpoint.",
+  "required": ["document"],
+  "properties": {
+    "document": {
+      "type": "object",
+      "description": "Basic metadata for a document in the search result.",
+      "required": [
+        "id",
+        "pid",
+        "titel",
+        "openbaarmakingsdatum",
+        "weblocatie",
+        "aanbieder"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Internal search hit ID, often 'oep-..._1'. Use pid-derived base ID for detail calls."
+        },
+        "pid": {
+          "type": "string",
+          "format": "uri",
+          "description": "Persistent identifier; last path segment usually matches the base detail ID."
+        },
+        "titel": {
+          "type": "string",
+          "description": "Human-readable title."
+        },
+        "omschrijving": {
+          "type": ["string", "null"],
+          "description": "Short description if present."
+        },
+        "openbaarmakingsdatum": {
+          "type": "string",
+          "format": "date",
+          "description": "Publication date (YYYY-MM-DD)."
+        },
+        "weblocatie": {
+          "type": ["string", "null"],
+          "format": "uri",
+          "description": "URL to the public HTML page on officielebekendmakingen.nl or similar."
+        },
+        "publisher": {
+          "type": ["string", "null"],
+          "description": "Display name of publishing organisation."
+        },
+        "aanbieder": {
+          "type": "string",
+          "description": "Source system (e.g. 'officielebekendmakingen.nl')."
+        },
+        "mutatiedatumtijd": {
+          "type": ["string", "null"],
+          "format": "date-time",
+          "description": "Last modification timestamp."
+        }
+      },
+      "additionalProperties": true
+    },
+    "bestandsgrootte": {
+      "type": ["string", "null"],
+      "description": "Human-readable file size as presented in search result, e.g. '0.11 MB'."
+    },
+    "aantalPaginas": {
+      "type": ["integer", "null"],
+      "description": "Number of pages if known."
+    },
+    "bestandsType": {
+      "type": ["string", "null"],
+      "description": "MIME type such as 'application/pdf'."
+    }
+  },
+  "additionalProperties": true
+}
+````
+
+A possible top-level schema for the full search response
+(**adapt this once you inspect the real JSON in your project**):
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.local/open-overheid/search-response.json",
+  "title": "OpenOverheidSearchResponse",
+  "oneOf": [
+    {
+      "type": "array",
+      "items": { "$ref": "search-hit.json" }
+    },
+    {
+      "type": "object",
+      "description": "Wrapper style with embedded hits.",
+      "properties": {
+        "resultaten": {
+          "type": "array",
+          "items": { "$ref": "search-hit.json" }
+        },
+        "_embedded": {
+          "type": "object",
+          "properties": {
+            "openbaarmakingen": {
+              "type": "array",
+              "items": { "$ref": "search-hit.json" }
+            }
+          },
+          "additionalProperties": true
+        },
+        "page": {
+          "type": "object",
+          "description": "Optional pagination info.",
+          "properties": {
+            "size": { "type": "integer" },
+            "totalElements": { "type": "integer" },
+            "totalPages": { "type": "integer" },
+            "number": { "type": "integer" }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    }
+  ]
+}
+```
+
+---
+
+6. JSON SCHEMA – DETAIL DOCUMENT
+
+---
+
+The detail endpoint `/zoek/{id}` returns a richer structure.
+Example inspected document (shortened):
+
+* Top-level fields:
+
+  * document        : main metadata block
+  * plooiIntern     : internal technical metadata
+  * documentrelaties: array
+  * versies         : array (with files per version)
+
+Below is a flexible JSON Schema that models what we saw and still allows variations between documents.
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.local/open-overheid/document-detail.json",
+  "title": "OpenOverheidDocumentDetail",
+  "type": "object",
+  "required": ["document"],
+  "properties": {
+    "document": {
+      "type": "object",
+      "description": "Main public metadata of the document.",
+      "required": ["pid", "creatiedatum"],
+      "properties": {
+        "pid": {
+          "type": "string",
+          "format": "uri",
+          "description": "Persistent identifier URL, e.g. https://open.overheid.nl/documenten/oep-..."
+        },
+        "weblocatie": {
+          "type": ["string", "null"],
+          "format": "uri",
+          "description": "Public HTML location (officielebekendmakingen.nl or other)."
+        },
+        "creatiedatum": {
+          "type": "string",
+          "format": "date",
+          "description": "Creation date (YYYY-MM-DD)."
+        },
+        "geldigheid": {
+          "type": "object",
+          "description": "Validity / effective dates.",
+          "properties": {
+            "begindatum": {
+              "type": ["string", "null"],
+              "format": "date-time"
+            },
+            "einddatum": {
+              "type": ["string", "null"],
+              "format": "date-time"
+            }
+          },
+          "additionalProperties": true
+        },
+        "identifiers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of external IDs, such as 'blg-1227065'."
+        },
+        "verantwoordelijke": {
+          "type": "object",
+          "description": "Responsible organisation.",
+          "properties": {
+            "type": { "type": ["string", "null"] },
+            "id":   { "type": ["string", "null"], "format": "uri" },
+            "label": { "type": ["string", "null"] },
+            "bronwaarde": { "type": ["string", "null"] }
+          },
+          "additionalProperties": true
+        },
+        "medeverantwoordelijken": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "publisher": {
+          "type": "object",
+          "description": "Publishing organisation (may be less specific than verantwoordelijke).",
+          "properties": {
+            "id":    { "type": ["string", "null"], "format": "uri" },
+            "label": { "type": ["string", "null"] }
+          },
+          "additionalProperties": true
+        },
+        "opsteller": {
+          "type": "object",
+          "description": "Author / drafting organisation.",
+          "properties": {
+            "type": { "type": ["string", "null"] },
+            "id":   { "type": ["string", "null"], "format": "uri" },
+            "label": { "type": ["string", "null"] },
+            "bronwaarde": { "type": ["string", "null"] }
+          },
+          "additionalProperties": true
+        },
+        "language": {
+          "type": "object",
+          "properties": {
+            "type":  { "type": ["string", "null"] },
+            "id":    { "type": ["string", "null"], "format": "uri" },
+            "label": { "type": ["string", "null"] },
+            "bronwaarde": { "type": ["string", "null"] }
+          },
+          "additionalProperties": true
+        },
+        "onderwerpen": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Simple subject list if present."
+        },
+        "omschrijvingen": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Additional descriptions or synopses."
+        },
+        "titelcollectie": {
+          "type": "object",
+          "description": "Different title variants.",
+          "properties": {
+            "officieleTitel": { "type": ["string", "null"] },
+            "verkorteTitels": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "alternatieveTitels": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          "additionalProperties": true
+        },
+        "classificatiecollectie": {
+          "type": "object",
+          "description": "Classification blocks: document types, themes, categories.",
+          "properties": {
+            "documentsoorten": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type":  { "type": ["string", "null"] },
+                  "id":    { "type": ["string", "null"], "format": "uri" },
+                  "label": { "type": ["string", "null"] }
+                },
+                "additionalProperties": true
+              }
+            },
+            "themas": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id":    { "type": ["string", "null"], "format": "uri" },
+                  "label": { "type": ["string", "null"] }
+                },
+                "additionalProperties": true
+              }
+            },
+            "onderwerpenRonl": {
+              "type": "array",
+              "items": { "type": "object", "additionalProperties": true }
+            },
+            "informatiecategorieen": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id":    { "type": ["string", "null"], "format": "uri" },
+                  "label": { "type": ["string", "null"] }
+                },
+                "additionalProperties": true
+              }
+            },
+            "trefwoorden": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "wooinformatiecategorie": {
+              "type": "array",
+              "items": { "type": "object", "additionalProperties": true }
+            }
+          },
+          "additionalProperties": true
+        },
+        "hasParts": {
+          "type": "array",
+          "items": { "type": "object", "additionalProperties": true }
+        },
+        "documenthandelingen": {
+          "type": "array",
+          "items": { "type": "object", "additionalProperties": true }
+        },
+        "extraMetadata": {
+          "type": "array",
+          "description": "Additional key/value metadata, grouped by prefix.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "prefix": { "type": ["string", "null"] },
+              "velden": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": { "type": "string" },
+                    "values": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "publicatiebestemming": {
+          "type": "array",
+          "items": { "type": "object", "additionalProperties": true }
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "plooiIntern": {
+      "type": "object",
+      "description": "Internal PLOOI / Open Overheid technical metadata.",
+      "required": ["dcnId"],
+      "properties": {
+        "dcnId": {
+          "type": "string",
+          "description": "Internal document ID. Usually matches the base OEP ID used in the detail URL."
+        },
+        "aanbieder": { "type": ["string", "null"] },
+        "extId": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "sourceLabel": { "type": ["string", "null"] },
+        "publicatiestatus": { "type": ["string", "null"] }
+      },
+      "additionalProperties": true
+    },
+
+    "documentrelaties": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": true },
+      "description": "Relations to other documents if available."
+    },
+
+    "versies": {
+      "type": "array",
+      "description": "List of published versions of this document.",
+      "items": {
+        "type": "object",
+        "required": ["nummer"],
+        "properties": {
+          "nummer": {
+            "type": "integer",
+            "description": "Version number."
+          },
+          "oorzaak": {
+            "type": ["string", "null"],
+            "description": "Reason for version (e.g. 'aanlevering')."
+          },
+          "openbaarmakingsdatum": {
+            "type": ["string", "null"],
+            "format": "date"
+          },
+          "mutatiedatumtijd": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "blokkades": {
+            "type": "array",
+            "items": { "type": "object", "additionalProperties": true }
+          },
+          "bestanden": {
+            "type": "array",
+            "description": "Files associated with this version (PDF, HTML, etc.).",
+            "items": {
+              "type": "object",
+              "required": ["id", "url", "mime-type"],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uri",
+                  "description": "Identifier for the file resource."
+                },
+                "gepubliceerd": {
+                  "type": ["boolean", "null"],
+                  "description": "Whether the file is publicly available."
+                },
+                "label": {
+                  "type": ["string", "null"],
+                  "description": "Short label, e.g. 'pdf'."
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri",
+                  "description": "Direct URL to the file (often repository.overheid.nl)."
+                },
+                "mime-type": {
+                  "type": "string",
+                  "description": "MIME type of the file."
+                },
+                "bestandsnaam": {
+                  "type": ["string", "null"],
+                  "description": "Filename as supplied."
+                },
+                "mutatiedatumtijd": {
+                  "type": ["string", "null"],
+                  "format": "date-time"
+                },
+                "grootte": {
+                  "type": ["integer", "null"],
+                  "description": "File size in bytes."
+                },
+                "paginas": {
+                  "type": ["integer", "null"],
+                  "description": "Page count, where applicable."
+                },
+                "hash": {
+                  "type": ["string", "null"],
+                  "description": "Checksum hash of the file."
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}
+```
