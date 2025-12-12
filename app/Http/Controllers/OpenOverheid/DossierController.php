@@ -55,6 +55,21 @@ class DossierController extends Controller
         $organisatie = $validated['organisatie'] ?? null;
 
         try {
+            // Check if required tables exist
+            if (! \Illuminate\Support\Facades\Schema::hasTable('dossier_metadata') ||
+                ! \Illuminate\Support\Facades\Schema::hasTable('dossier_ai_content')) {
+                return view('zoekresultaten', [
+                    'results' => ['items' => collect([]), 'total' => 0],
+                    'query' => (object) $validated,
+                    'documentCount' => 0,
+                    'filters' => $validated,
+                    'filterCounts' => [],
+                    'allFilterOptions' => [],
+                    'error' => 'De dossier-functionaliteit is nog niet beschikbaar. Voer eerst de database migraties uit.',
+                    'isDossier' => true,
+                ]);
+            }
+
             // Use same search query structure as SearchController
             $searchQuery = new \App\DataTransferObjects\OpenOverheid\OpenOverheidSearchQuery(
                 zoektekst: $validated['zoeken'] ?? '',
@@ -240,9 +255,9 @@ class DossierController extends Controller
             \Log::error('Dossier search error', ['error' => $e->getMessage()]);
 
             return view('zoekresultaten', [
-                'results' => ['items' => [], 'total' => 0],
+                'results' => ['items' => collect([]), 'total' => 0],
                 'query' => $searchQuery ?? (object) $validated,
-                'documentCount' => \Illuminate\Support\Facades\Cache::remember('dossier_count_precomputed_processed', 300, fn () => \Illuminate\Support\Facades\DB::table('dossier_metadata')->join('dossier_ai_content', 'dossier_metadata.dossier_external_id', '=', 'dossier_ai_content.dossier_external_id')->whereNotNull('dossier_metadata.computed_at')->whereNotNull('dossier_ai_content.generated_at')->count()),
+                'documentCount' => 0,
                 'filters' => $validated,
                 'filterCounts' => [],
                 'allFilterOptions' => [],
