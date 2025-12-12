@@ -49,9 +49,16 @@ class DocumentController extends Controller
                 ->header('Content-Disposition', 'attachment; filename="'.($jsonData['external_id'] ?? 'document').'.xml"');
         }
 
+        // Get dossier members if document exists in database
+        $dossierMembers = collect();
+        if ($document) {
+            $dossierMembers = $document->getDossierMembers();
+        }
+
         return view('detail', [
             'document' => $document,
             'jsonData' => $jsonData,
+            'dossierMembers' => $dossierMembers,
         ]);
     }
 

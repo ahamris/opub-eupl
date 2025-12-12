@@ -85,6 +85,15 @@ class TypesenseSearchService
             $searchParams['prioritize_exact_match'] = true;
             $searchParams['prioritize_token_position'] = true;
 
+            // Natural language search disabled - Typesense is pure search only
+            // AI search is premium-only feature via chat interface
+            // if (! empty($options['natural_language_search'])) {
+            //     $nlConfig = config('open_overheid.typesense.natural_language_search', []);
+            //     if (! empty($nlConfig['enabled']) && ! empty($nlConfig['model'])) {
+            //         $searchParams['nlq_model'] = $nlConfig['model'];
+            //     }
+            // }
+
             $results = $this->client->collections[$this->collection]
                 ->documents
                 ->search($searchParams);
@@ -102,6 +111,65 @@ class TypesenseSearchService
                 'error' => $e->getMessage(),
             ]);
             throw $e;
+        }
+    }
+
+    /**
+     * Natural language search using Typesense NLSearch
+     *
+     * @param  string  $query  Natural language query
+     * @param  array  $options  Search options
+     */
+    public function naturalLanguageSearch(string $query, array $options = []): array
+    {
+        try {
+            // Check if natural language search model exists
+            $nlConfig = config('open_overheid.typesense.natural_language_search', []);
+
+            if (empty($nlConfig['enabled']) || empty($nlConfig['model'])) {
+                // Fallback to regular search if NL search not configured
+                return $this->search($query, $options);
+            }
+
+            $searchParams = [
+                'q' => $query,
+                'query_by' => 'title,description,content',
+                'per_page' => $options['per_page'] ?? 20,
+                'page' => $options['page'] ?? 1,
+                'nlq_model' => $nlConfig['model'],
+            ];
+
+            // Add filters if provided
+            if (isset($options['filter_by'])) {
+                $searchParams['filter_by'] = $options['filter_by'];
+            }
+
+            // Add sorting
+            if (isset($options['sort_by'])) {
+                $searchParams['sort_by'] = $options['sort_by'];
+            } else {
+                $searchParams['sort_by'] = 'publication_date:desc';
+            }
+
+            $results = $this->client->collections[$this->collection]
+                ->documents
+                ->search($searchParams);
+
+            return [
+                'hits' => $results['hits'] ?? [],
+                'found' => $results['found'] ?? 0,
+                'page' => $results['page'] ?? 1,
+                'search_time_ms' => $results['search_time_ms'] ?? 0,
+                'facet_counts' => $results['facet_counts'] ?? [],
+            ];
+        } catch (\Exception $e) {
+            Log::error('Typesense natural language search error', [
+                'query' => $query,
+                'error' => $e->getMessage(),
+            ]);
+
+            // Fallback to regular search
+            return $this->search($query, $options);
         }
     }
 

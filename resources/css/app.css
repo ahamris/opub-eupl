@@ -1,9 +1,4 @@
-@import 'tailwindcss';
-
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.js';
+@import "tailwindcss";
 
 @theme {
     /* Font Families - Modern Inter font */
@@ -28,13 +23,17 @@
     --color-accent-content: var(--color-blue-600);
     --color-accent-foreground: var(--color-white);
 
-    /* Modern Primary Colors - Vibrant, accessible blue */
-    --color-primary: #0066CC;
-    --color-primary-dark: #0052A3;
+    /* DICTU Primary Colors - From reference image */
+    --color-primary: #16609A;
+    --color-primary-dark: #0f4a75;
     --color-primary-light: #E6F2FF;
     --color-primary-container: #E6F2FF;
     --color-on-primary: #FFFFFF;
-    --color-on-primary-container: #003D7A;
+    --color-on-primary-container: #FFFFFF;
+    
+    /* DICTU Secondary/Highlight Blue */
+    --color-primary-accent: #2B82BA;
+    --color-primary-overlay: #277DA6;
 
     /* Secondary Colors */
     --color-secondary: #625B71;
@@ -54,20 +53,22 @@
     --color-on-error: #FFFFFF;
     --color-on-error-container: #410002;
 
-    /* Surface Colors */
-    --color-surface: #FFFBFE;
-    --color-surface-variant: #E7E0EC;
-    --color-on-surface: #1C1B1F;
-    --color-on-surface-variant: #49454F;
+    /* Surface Colors - DICTU style */
+    --color-surface: #FFFFFF;
+    --color-surface-variant: #F5F5F5;
+    --color-on-surface: #333333;
+    --color-on-surface-variant: #666666;
 
-    /* Outline Colors */
-    --color-outline: #79747E;
-    --color-outline-variant: #CAC4D0;
+    /* Outline Colors - DICTU style */
+    --color-outline: #666666;
+    --color-outline-variant: #E5E5E5;
 
-    /* Modern Color Palette - Outpricing DICTU */
-    --color-nl-blue: #0066CC;
+    /* DICTU Color Palette */
+    --color-nl-blue: #16609A;
     --color-nl-blue-light: #E6F2FF;
-    --color-nl-blue-dark: #0052A3;
+    --color-nl-blue-dark: #0f4a75;
+    --color-nl-blue-accent: #2B82BA;
+    --color-nl-blue-overlay: #277DA6;
     --color-nl-orange: #FF6B35;
     --color-nl-green: #00A651;
     --color-nl-red: #D32F2F;
@@ -84,37 +85,48 @@
     --color-neutral-800: #1A1A1A;
     --color-neutral-900: #0A0A0A;
 
-    /* Material Design 3 Typography Scale */
-    --font-size-display-large: 3.5625rem;
-    /* 57px */
-    --font-size-display-medium: 2.8125rem;
-    /* 45px */
-    --font-size-display-small: 2.25rem;
-    /* 36px */
-    --font-size-headline-large: 2rem;
-    /* 32px */
-    --font-size-headline-medium: 1.75rem;
-    /* 28px */
-    --font-size-headline-small: 1.5rem;
-    /* 24px */
-    --font-size-title-large: 1.375rem;
-    /* 22px */
-    --font-size-title-medium: 1rem;
-    /* 16px */
-    --font-size-title-small: 0.875rem;
-    /* 14px */
-    --font-size-label-large: 0.875rem;
-    /* 14px */
+    /* DICTU-Inspired Typography Scale - 1-2 tandjes kleiner */
+    /* Based on DICTU.nl style, reduced by 1-2 steps for cleaner look */
+    --font-size-display-large: 2.5rem;
+    /* 40px - was 57px */
+    --font-size-display-medium: 2rem;
+    /* 32px - was 45px */
+    --font-size-display-small: 1.75rem;
+    /* 28px - was 36px */
+    --font-size-headline-large: 1.5rem;
+    /* 24px - was 32px */
+    --font-size-headline-medium: 1.375rem;
+    /* 22px - was 28px */
+    --font-size-headline-small: 1.25rem;
+    /* 20px - was 24px */
+    --font-size-title-large: 1.125rem;
+    /* 18px - was 22px */
+    --font-size-title-medium: 0.9375rem;
+    /* 15px - was 16px */
+    --font-size-title-small: 0.8125rem;
+    /* 13px - was 14px */
+    --font-size-label-large: 0.8125rem;
+    /* 13px - was 14px */
     --font-size-label-medium: 0.75rem;
-    /* 12px */
+    /* 12px - unchanged */
     --font-size-label-small: 0.6875rem;
-    /* 11px */
-    --font-size-body-large: 1rem;
-    /* 16px */
-    --font-size-body-medium: 0.875rem;
-    /* 14px */
+    /* 11px - unchanged */
+    --font-size-body-large: 0.9375rem;
+    /* 15px - was 16px */
+    --font-size-body-medium: 0.8125rem;
+    /* 13px - was 14px */
     --font-size-body-small: 0.75rem;
-    /* 12px */
+    /* 12px - unchanged */
+    
+    /* Semantic Typography Classes - DICTU Style */
+    --font-size-h1: var(--font-size-display-large);
+    --font-size-h2: var(--font-size-headline-large);
+    --font-size-h3: var(--font-size-headline-medium);
+    --font-size-h4: var(--font-size-headline-small);
+    --font-size-h5: var(--font-size-title-large);
+    --font-size-h6: var(--font-size-title-medium);
+    --font-size-p: var(--font-size-body-large);
+    --font-size-title: var(--font-size-title-large);
 
     /* Line Heights */
     --line-height-tight: 1.2;
@@ -139,12 +151,14 @@
     --spacing-16: 4rem;
     /* 64dp */
 
-    /* Border Radius */
-    --radius-sm: 0.25rem;
-    --radius-md: 0.5rem;
-    --radius-lg: 0.75rem;
-    --radius-xl: 1rem;
-    --radius-2xl: 1.5rem;
+    /* Border Radius - Minimal for "strak" design (straight edges) */
+    --radius-sm: 0.125rem;
+    --radius-md: 0.125rem;
+    --radius-lg: 0.25rem;
+    --radius-xl: 0.25rem;
+    --radius-2xl: 0.375rem;
+    --radius-3xl: 1.5rem;
+    --radius-4xl: 2rem;
     --radius-full: 9999px;
 
     /* Modern Shadow System - Subtle, elegant */
@@ -193,12 +207,92 @@
     }
 }
 
+/* DICTU-Inspired Typography Utilities - Semantic HTML Elements */
+@layer base {
+    h1 {
+        font-size: var(--font-size-h1);
+        font-weight: 700;
+        line-height: var(--line-height-tight);
+        letter-spacing: -0.02em;
+    }
+    
+    h2 {
+        font-size: var(--font-size-h2);
+        font-weight: 700;
+        line-height: var(--line-height-tight);
+        letter-spacing: -0.01em;
+    }
+    
+    h3 {
+        font-size: var(--font-size-h3);
+        font-weight: 600;
+        line-height: var(--line-height-tight);
+        letter-spacing: -0.01em;
+    }
+    
+    h4 {
+        font-size: var(--font-size-h4);
+        font-weight: 600;
+        line-height: var(--line-height-normal);
+        letter-spacing: -0.01em;
+    }
+    
+    h5 {
+        font-size: var(--font-size-h5);
+        font-weight: 600;
+        line-height: var(--line-height-normal);
+        letter-spacing: -0.01em;
+    }
+    
+    h6 {
+        font-size: var(--font-size-h6);
+        font-weight: 500;
+        line-height: var(--line-height-normal);
+        letter-spacing: 0;
+    }
+    
+    p {
+        font-size: var(--font-size-p);
+        font-weight: 400;
+        line-height: var(--line-height-relaxed);
+        letter-spacing: -0.01em;
+    }
+    
+    .title {
+        font-size: var(--font-size-title);
+        font-weight: 600;
+        line-height: var(--line-height-normal);
+        letter-spacing: -0.01em;
+    }
+}
+
+/* Apple/Google Level: Staggered fade-in animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* Accessibility: Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
     * {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
     }
 }
 

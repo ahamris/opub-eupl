@@ -23,6 +23,11 @@ class OpenOverheidDocument extends Model
         'metadata',
         'synced_at',
         'typesense_synced_at',
+        'ai_enhanced_title',
+        'ai_enhanced_description',
+        'ai_summary',
+        'ai_keywords',
+        'ai_enhanced_at',
     ];
 
     protected $casts = [
@@ -30,6 +35,8 @@ class OpenOverheidDocument extends Model
         'publication_date' => 'date',
         'synced_at' => 'datetime',
         'typesense_synced_at' => 'datetime',
+        'ai_keywords' => 'array',
+        'ai_enhanced_at' => 'datetime',
     ];
 
     /**
@@ -110,6 +117,7 @@ class OpenOverheidDocument extends Model
 
     /**
      * Scope to filter by category.
+     * Normalizes the category before searching to handle variations and case differences.
      */
     public function scopeByCategory(Builder $query, string|array|null $category): Builder
     {
@@ -117,10 +125,38 @@ class OpenOverheidDocument extends Model
             return $query;
         }
 
+        $wooCategoryService = app(\App\Services\OpenOverheid\WooCategoryService::class);
+
         if (is_array($category)) {
-            $query->whereIn('category', $category);
+            // Normalize each category in the array and collect all possible matches
+            $searchTerms = [];
+            foreach ($category as $cat) {
+                $normalized = $wooCategoryService->normalizeCategory($cat) ?? $cat;
+                $searchTerms[] = $normalized;
+                // Also include original in case normalization doesn't match
+                if ($normalized !== $cat) {
+                    $searchTerms[] = $cat;
+                }
+            }
+
+            // Use case-insensitive search with ILIKE
+            $query->where(function ($q) use ($searchTerms) {
+                foreach ($searchTerms as $term) {
+                    $q->orWhere('category', 'ilike', $term);
+                }
+            });
         } else {
-            $query->where('category', $category);
+            // Normalize the category
+            $normalizedCategory = $wooCategoryService->normalizeCategory($category) ?? $category;
+
+            // Use case-insensitive search with ILIKE
+            // Also check original category in case it's already in the correct format
+            $query->where(function ($q) use ($normalizedCategory, $category) {
+                $q->where('category', 'ilike', $normalizedCategory);
+                if ($normalizedCategory !== $category) {
+                    $q->orWhere('category', 'ilike', $category);
+                }
+            });
         }
 
         return $query;
@@ -182,5 +218,105 @@ class OpenOverheidDocument extends Model
         }
 
         return $query;
+    }
+
+    /**
+     * Scope to filter documents that are part of a dossier (have identiteitsgroep relations).
+     */
+    public function scopeInDossier(Builder $query): Builder
+    {
+        return $query->whereRaw(
+            "EXISTS (
+                SELECT 1 
+                FROM jsonb_array_elements(metadata->'documentrelaties') AS rel
+                WHERE rel->>'role' LIKE ?
+            )",
+            ['%identiteitsgroep%']
+        );
+    }
+
+    /**
+     * Count documents that are part of dossiers.
+     * Cached for performance.
+     */
+    public static function countDossiers(): int
+    {
+        return \Illuminate\Support\Facades\Cache::remember('dossier_count_query', 300, function () {
+            return self::inDossier()->count();
+        });
+    }
+
+    /**
+     * Extract external ID from a relation URL.
+     */
+    protected function extractExternalIdFromRelation(string $relationUrl): ?string
+    {
+        // Extract ID from URLs like: https://open.overheid.nl/documenten/oep-ob-...
+        if (preg_match('/\/documenten\/([^\/]+)$/', $relationUrl, $matches)) {
+            return $matches[1];
+        }
+
+        return null;
+    }
+
+    /**
+     * Get all documents in the same dossier (identiteitsgroep).
+     * Returns documents that share the same dossier relation.
+     */
+    public function getDossierMembers(): \Illuminate\Database\Eloquent\Collection
+    {
+        $metadata = $this->metadata ?? [];
+        $documentrelaties = $metadata['documentrelaties'] ?? [];
+
+        if (empty($documentrelaties) || ! is_array($documentrelaties)) {
+            return self::newCollection([]);
+        }
+
+        // Extract all dossier relation IDs (identiteitsgroep)
+        $dossierRelationIds = [];
+        foreach ($documentrelaties as $relation) {
+            $role = $relation['role'] ?? '';
+            $relationUrl = $relation['relation'] ?? '';
+
+            // Check if this is an "identiteitsgroep" relation (dossier grouping)
+            if (str_contains($role, 'identiteitsgroep') && ! empty($relationUrl)) {
+                $relatedId = $this->extractExternalIdFromRelation($relationUrl);
+                if ($relatedId) {
+                    $dossierRelationIds[] = $relatedId;
+                }
+            }
+        }
+
+        if (empty($dossierRelationIds)) {
+            return self::newCollection([]);
+        }
+
+        // Find all documents that have any of these dossier IDs in their relations
+        // We'll use a PostgreSQL JSONB query to search for documents
+        $allDossierIds = array_merge($dossierRelationIds, [$this->external_id]);
+
+        // Build query to find documents that reference any of the dossier IDs
+        // Exclude the current document
+        return self::where('external_id', '!=', $this->external_id)
+            ->where(function ($query) use ($allDossierIds, $dossierRelationIds) {
+                // Find documents that have any of the dossier IDs in their relations
+                foreach ($allDossierIds as $dossierId) {
+                    // Search for documents where the relation URL contains the dossier ID
+                    $query->orWhereRaw(
+                        "EXISTS (
+                            SELECT 1 
+                            FROM jsonb_array_elements(metadata->'documentrelaties') AS rel
+                            WHERE rel->>'relation' LIKE ?
+                        )",
+                        ['%'.$dossierId.'%']
+                    );
+                }
+                // Also find documents by their external_id if they match dossier IDs
+                if (! empty($dossierRelationIds)) {
+                    $query->orWhereIn('external_id', $dossierRelationIds);
+                }
+            })
+            ->orderBy('publication_date', 'desc')
+            ->get();
     }
 }

@@ -645,6 +645,54 @@
                     </button>
                 </div>
 
+                @if(isset($dossierMembers) && $dossierMembers->isNotEmpty())
+                <div class="mt-8 pt-6 border-t border-outline-variant">
+                    <h2 class="text-title-large font-medium mb-4 text-on-surface">Dossier</h2>
+                    <p class="text-body-medium text-on-surface-variant mb-4">
+                        Dit document maakt deel uit van een dossier met {{ $dossierMembers->count() }} gerelateerd{{ $dossierMembers->count() !== 1 ? 'e' : '' }} document{{ $dossierMembers->count() !== 1 ? 'en' : '' }}:
+                    </p>
+                    <div class="space-y-3">
+                        @foreach($dossierMembers as $member)
+                            <a href="/document/{{ $member->external_id }}{{ request()->get('from') ? '?from=' . urlencode(request()->get('from')) : '' }}" 
+                               class="block p-4 rounded-lg border border-outline-variant
+                                      bg-surface hover:bg-surface-variant
+                                      focus:outline-2 focus:outline-primary focus:outline-offset-2
+                                      transition-all duration-200
+                                      group">
+                                <div class="flex items-start justify-between gap-4">
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="text-body-large font-medium text-on-surface group-hover:text-primary transition-colors mb-2 line-clamp-2">
+                                            {{ $member->title ?? 'Geen titel beschikbaar' }}
+                                        </h3>
+                                        <div class="flex flex-wrap gap-3 text-body-small text-on-surface-variant">
+                                            @if($member->document_type)
+                                                <span class="inline-flex items-center gap-1.5">
+                                                    <i class="fas fa-file-alt text-xs" aria-hidden="true"></i>
+                                                    <span>{{ $member->document_type }}</span>
+                                                </span>
+                                            @endif
+                                            @if($member->publication_date)
+                                                <span class="inline-flex items-center gap-1.5">
+                                                    <i class="fas fa-calendar text-xs" aria-hidden="true"></i>
+                                                    <span>{{ $member->publication_date->format('d-m-Y') }}</span>
+                                                </span>
+                                            @endif
+                                            @if($member->organisation)
+                                                <span class="inline-flex items-center gap-1.5">
+                                                    <i class="fas fa-building text-xs" aria-hidden="true"></i>
+                                                    <span>{{ $member->organisation }}</span>
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-on-surface-variant group-hover:text-primary transition-colors mt-1 flex-shrink-0" aria-hidden="true"></i>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
                 @php
                     $publisherOrg = $document->organisation ?? $publisher['label'] ?? null;
                 @endphp

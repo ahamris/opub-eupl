@@ -5,85 +5,168 @@ namespace App\Http\Controllers\OpenOverheid;
 use App\DataTransferObjects\OpenOverheid\OpenOverheidSearchQuery;
 use App\Http\Controllers\Controller;
 use App\Models\OpenOverheidDocument;
+use App\Services\OpenOverheid\FilterCountService;
 use App\Services\OpenOverheid\OpenOverheidLocalSearchService;
 use App\Services\OpenOverheid\OpenOverheidSearchService;
+use App\Services\OpenOverheid\QueryParsingService;
 use Illuminate\Http\Request;
 
 class SearchController extends Controller
 {
     public function __construct(
         private readonly OpenOverheidLocalSearchService $localService,
-        private readonly OpenOverheidSearchService $remoteService
+        private readonly OpenOverheidSearchService $remoteService,
+        private readonly QueryParsingService $queryParsingService,
+        private readonly FilterCountService $filterCountService
     ) {}
 
     public function searchPage(Request $request)
     {
-        $documentCount = OpenOverheidDocument::count();
-
-        // Get recent documents (last 6 published documents)
-        $recentDocuments = OpenOverheidDocument::whereNotNull('publication_date')
-            ->orderBy('publication_date', 'desc')
-            ->limit(6)
-            ->get();
-
-        // Get statistics (cached for 5 minutes)
-        $statistics = \Illuminate\Support\Facades\Cache::remember('open_overheid:statistics', 300, function () {
-            $categoryCount = OpenOverheidDocument::whereNotNull('category')
-                ->distinct('category')
-                ->count('category');
-
-            $themeCount = OpenOverheidDocument::whereNotNull('theme')
-                ->distinct('theme')
-                ->count('theme');
-
-            $organisationCount = OpenOverheidDocument::whereNotNull('organisation')
-                ->distinct('organisation')
-                ->count('organisation');
-
-            // Get top categories by count
-            $topCategories = OpenOverheidDocument::whereNotNull('category')
-                ->selectRaw('category, COUNT(*) as count')
-                ->groupBy('category')
-                ->orderBy('count', 'desc')
-                ->limit(10)
-                ->pluck('count', 'category')
-                ->toArray();
-
-            // Get top themes by count
-            $topThemes = OpenOverheidDocument::whereNotNull('theme')
-                ->selectRaw('theme, COUNT(*) as count')
-                ->groupBy('theme')
-                ->orderBy('count', 'desc')
-                ->limit(10)
-                ->pluck('count', 'theme')
-                ->toArray();
-
-            return [
-                'categoryCount' => $categoryCount,
-                'themeCount' => $themeCount,
-                'organisationCount' => $organisationCount,
-                'topCategories' => $topCategories,
-                'topThemes' => $topThemes,
-            ];
+        // Minimal queries for homepage - only get document count
+        $documentCount = \Illuminate\Support\Facades\Cache::remember('open_overheid:document_count', 300, function () {
+            return OpenOverheidDocument::count();
         });
 
-        $categoryCount = $statistics['categoryCount'];
-        $themeCount = $statistics['themeCount'];
-        $organisationCount = $statistics['organisationCount'];
-        $topCategories = $statistics['topCategories'];
-        $topThemes = $statistics['topThemes'];
+        // Only load statistics if not on homepage (for search results page)
+        if (! request()->routeIs('home')) {
+            // Get statistics (cached for 5 minutes)
+            $statistics = \Illuminate\Support\Facades\Cache::remember('open_overheid:statistics', 300, function () {
+                $categoryCount = OpenOverheidDocument::whereNotNull('category')
+                    ->distinct('category')
+                    ->count('category');
 
+                $themeCount = OpenOverheidDocument::whereNotNull('theme')
+                    ->distinct('theme')
+                    ->count('theme');
+
+                $organisationCount = OpenOverheidDocument::whereNotNull('organisation')
+                    ->distinct('organisation')
+                    ->count('organisation');
+
+                $dossierCount = OpenOverheidDocument::countDossiers();
+
+                // Get top categories by count - normalize categories first and filter out "Onbekend"
+                $wooCategoryService = app(\App\Services\OpenOverheid\WooCategoryService::class);
+                $allCategories = OpenOverheidDocument::whereNotNull('category')
+                    ->where('category', '!=', 'Onbekend')
+                    ->where('category', '!=', 'onbekend')
+                    ->pluck('category')
+                    ->map(function ($category) use ($wooCategoryService) {
+                        $normalized = $wooCategoryService->normalizeCategory($category);
+                        // Filter out "Onbekend" after normalization too
+                        if (empty($normalized) || strtolower(trim($normalized)) === 'onbekend') {
+                            return null;
+                        }
+
+                        return $normalized;
+                    })
+                    ->filter()
+                    ->countBy()
+                    ->sortDesc()
+                    ->take(10)
+                    ->toArray();
+
+                $topCategories = $allCategories;
+
+                // Get top themes by count - filter out "Onbekend"
+                $topThemes = OpenOverheidDocument::whereNotNull('theme')
+                    ->where('theme', '!=', 'Onbekend')
+                    ->where('theme', '!=', 'onbekend')
+                    ->selectRaw('theme, COUNT(*) as count')
+                    ->groupBy('theme')
+                    ->orderBy('count', 'desc')
+                    ->limit(10)
+                    ->pluck('count', 'theme')
+                    ->toArray();
+
+                // Leaderboard: Top organisaties all time
+                $leaderboardAllTime = OpenOverheidDocument::whereNotNull('organisation')
+                    ->selectRaw('organisation, COUNT(*) as count')
+                    ->groupBy('organisation')
+                    ->orderBy('count', 'desc')
+                    ->limit(10)
+                    ->get()
+                    ->map(function ($item) {
+                        return [
+                            'organisation' => $item->organisation,
+                            'count' => $item->count,
+                        ];
+                    })
+                    ->toArray();
+
+                // Leaderboard: Top organisaties deze maand
+                $leaderboardThisMonth = OpenOverheidDocument::whereNotNull('organisation')
+                    ->whereNotNull('publication_date')
+                    ->where('publication_date', '>=', now()->startOfMonth())
+                    ->selectRaw('organisation, COUNT(*) as count')
+                    ->groupBy('organisation')
+                    ->orderBy('count', 'desc')
+                    ->limit(10)
+                    ->get()
+                    ->map(function ($item) {
+                        return [
+                            'organisation' => $item->organisation,
+                            'count' => $item->count,
+                        ];
+                    })
+                    ->toArray();
+
+                // Leaderboard: Top organisaties dit jaar
+                $leaderboardThisYear = OpenOverheidDocument::whereNotNull('organisation')
+                    ->whereNotNull('publication_date')
+                    ->where('publication_date', '>=', now()->startOfYear())
+                    ->selectRaw('organisation, COUNT(*) as count')
+                    ->groupBy('organisation')
+                    ->orderBy('count', 'desc')
+                    ->limit(10)
+                    ->get()
+                    ->map(function ($item) {
+                        return [
+                            'organisation' => $item->organisation,
+                            'count' => $item->count,
+                        ];
+                    })
+                    ->toArray();
+
+                return [
+                    'categoryCount' => $categoryCount,
+                    'themeCount' => $themeCount,
+                    'organisationCount' => $organisationCount,
+                    'dossierCount' => $dossierCount,
+                    'topCategories' => $topCategories,
+                    'topThemes' => $topThemes,
+                    'leaderboardAllTime' => $leaderboardAllTime,
+                    'leaderboardThisMonth' => $leaderboardThisMonth,
+                    'leaderboardThisYear' => $leaderboardThisYear,
+                ];
+            });
+
+            $categoryCount = $statistics['categoryCount'];
+            $themeCount = $statistics['themeCount'];
+            $organisationCount = $statistics['organisationCount'];
+            $topCategories = $statistics['topCategories'];
+            $topThemes = $statistics['topThemes'];
+
+            return view('zoek', [
+                'documentCount' => $documentCount,
+                'statistics' => [
+                    'totalDocuments' => $documentCount,
+                    'categoryCount' => $categoryCount,
+                    'themeCount' => $themeCount,
+                    'organisationCount' => $organisationCount,
+                    'dossierCount' => $statistics['dossierCount'],
+                    'topCategories' => $topCategories,
+                    'topThemes' => $topThemes,
+                    'leaderboardAllTime' => $statistics['leaderboardAllTime'] ?? [],
+                    'leaderboardThisMonth' => $statistics['leaderboardThisMonth'] ?? [],
+                    'leaderboardThisYear' => $statistics['leaderboardThisYear'] ?? [],
+                ],
+            ]);
+        }
+
+        // Homepage - minimal data only
         return view('zoek', [
             'documentCount' => $documentCount,
-            'recentDocuments' => $recentDocuments,
-            'statistics' => [
-                'totalDocuments' => $documentCount,
-                'categoryCount' => $categoryCount,
-                'themeCount' => $themeCount,
-                'organisationCount' => $organisationCount,
-                'topCategories' => $topCategories,
-                'topThemes' => $topThemes,
-            ],
         ]);
     }
 
@@ -120,6 +203,193 @@ class SearchController extends Controller
     public function aboutPage(Request $request)
     {
         return view('over');
+    }
+
+    /**
+     * Chat interface page with natural language search
+     */
+    public function chatPage(Request $request)
+    {
+        $documentCount = \Illuminate\Support\Facades\Cache::remember('open_overheid:document_count', 300, function () {
+            return OpenOverheidDocument::count();
+        });
+
+        return view('chat', [
+            'documentCount' => $documentCount,
+        ]);
+    }
+
+    /**
+     * Natural language search endpoint for chat interface
+     */
+    public function naturalLanguageSearch(Request $request)
+    {
+        $validated = $request->validate([
+            'query' => ['required', 'string', 'max:500'],
+        ]);
+
+        $query = $validated['query'];
+        $limit = min((int) $request->get('limit', 10), 20);
+
+        try {
+            $searchService = app(\App\Services\Typesense\TypesenseSearchService::class);
+
+            // Use natural language search if available, otherwise fallback to regular search
+            $results = $searchService->naturalLanguageSearch($query, [
+                'per_page' => $limit,
+                'page' => 1,
+            ]);
+
+            // Extract original documents for AI context (with full content)
+            // If content is missing from Typesense, fetch from database
+            $documentsForAI = array_map(function ($hit) {
+                $document = $hit['document'] ?? $hit;
+
+                // If content is missing or empty, try to fetch from database
+                if (empty($document['content'] ?? null) && ! empty($document['external_id'] ?? null)) {
+                    $dbDocument = OpenOverheidDocument::where('external_id', $document['external_id'])->first();
+                    if ($dbDocument && ! empty($dbDocument->content)) {
+                        $document['content'] = $dbDocument->content;
+                    }
+                }
+
+                return $document;
+            }, $results['hits'] ?? []);
+
+            // Format results for frontend (without content to keep response size manageable)
+            $formattedHits = array_map(function ($hit) {
+                $document = $hit['document'] ?? $hit;
+
+                // Convert Unix timestamp to ISO date string for frontend
+                $publicationDate = null;
+                if (isset($document['publication_date']) && $document['publication_date'] > 0) {
+                    $publicationDate = date('Y-m-d', $document['publication_date']);
+                }
+
+                return [
+                    'id' => $document['external_id'] ?? $document['id'] ?? null,
+                    'title' => $document['title'] ?? 'Geen titel',
+                    'description' => \Illuminate\Support\Str::limit($document['description'] ?? '', 200),
+                    'publication_date' => $publicationDate,
+                    'document_type' => $document['document_type'] ?? null,
+                    'category' => $document['category'] ?? null,
+                    'formatted_category' => $this->formatCategory($document['category'] ?? null),
+                    'organisation' => $document['organisation'] ?? null,
+                    'theme' => $document['theme'] ?? null,
+                ];
+            }, $results['hits'] ?? []);
+
+            // Generate AI answer based on found documents (use original documents with content)
+            $aiAnswer = null;
+            $sources = [];
+            if (! empty($documentsForAI)) {
+                try {
+                    $geminiService = app(\App\Services\AI\GeminiService::class);
+                    $aiResponse = $geminiService->answerQuestion($query, $documentsForAI);
+                    $aiAnswer = $aiResponse['answer'] ?? null;
+                    $sources = $aiResponse['sources'] ?? [];
+                } catch (\Exception $aiException) {
+                    \Log::warning('AI answer generation failed', [
+                        'query' => $query,
+                        'error' => $aiException->getMessage(),
+                        'trace' => $aiException->getTraceAsString(),
+                    ]);
+                    // Continue without AI answer if generation fails
+                }
+            }
+
+            return response()->json([
+                'hits' => $formattedHits,
+                'found' => $results['found'] ?? 0,
+                'search_time_ms' => $results['search_time_ms'] ?? 0,
+                'query' => $query,
+                'answer' => $aiAnswer,
+                'sources' => $sources,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Natural language search error', [
+                'query' => $query,
+                'error' => $e->getMessage(),
+            ]);
+
+            // Fallback to regular search if natural language search fails
+            try {
+                $results = $searchService->search($query, [
+                    'per_page' => $limit,
+                    'page' => 1,
+                ]);
+
+                // Extract original documents for AI context (with full content)
+                // If content is missing from Typesense, fetch from database
+                $documentsForAI = array_map(function ($hit) {
+                    $document = $hit['document'] ?? $hit;
+
+                    // If content is missing or empty, try to fetch from database
+                    if (empty($document['content'] ?? null) && ! empty($document['external_id'] ?? null)) {
+                        $dbDocument = OpenOverheidDocument::where('external_id', $document['external_id'])->first();
+                        if ($dbDocument && ! empty($dbDocument->content)) {
+                            $document['content'] = $dbDocument->content;
+                        }
+                    }
+
+                    return $document;
+                }, $results['hits'] ?? []);
+
+                $formattedHits = array_map(function ($hit) {
+                    $document = $hit['document'] ?? $hit;
+                    $publicationDate = null;
+                    if (isset($document['publication_date']) && $document['publication_date'] > 0) {
+                        $publicationDate = date('Y-m-d', $document['publication_date']);
+                    }
+
+                    return [
+                        'id' => $document['external_id'] ?? $document['id'] ?? null,
+                        'title' => $document['title'] ?? 'Geen titel',
+                        'description' => \Illuminate\Support\Str::limit($document['description'] ?? '', 200),
+                        'publication_date' => $publicationDate,
+                        'document_type' => $document['document_type'] ?? null,
+                        'category' => $document['category'] ?? null,
+                        'formatted_category' => $this->formatCategory($document['category'] ?? null),
+                        'organisation' => $document['organisation'] ?? null,
+                        'theme' => $document['theme'] ?? null,
+                    ];
+                }, $results['hits'] ?? []);
+
+                // Generate AI answer based on found documents (use original documents with content)
+                $aiAnswer = null;
+                $sources = [];
+                if (! empty($documentsForAI)) {
+                    try {
+                        $geminiService = app(\App\Services\AI\GeminiService::class);
+                        $aiResponse = $geminiService->answerQuestion($query, $documentsForAI);
+                        $aiAnswer = $aiResponse['answer'] ?? null;
+                        $sources = $aiResponse['sources'] ?? [];
+                    } catch (\Exception $aiException) {
+                        \Log::warning('AI answer generation failed (fallback)', [
+                            'query' => $query,
+                            'error' => $aiException->getMessage(),
+                            'trace' => $aiException->getTraceAsString(),
+                        ]);
+                    }
+                }
+
+                return response()->json([
+                    'hits' => $formattedHits,
+                    'found' => $results['found'] ?? 0,
+                    'search_time_ms' => $results['search_time_ms'] ?? 0,
+                    'query' => $query,
+                    'answer' => $aiAnswer,
+                    'sources' => $sources,
+                    'fallback' => true,
+                ]);
+            } catch (\Exception $fallbackException) {
+                return response()->json([
+                    'hits' => [],
+                    'found' => 0,
+                    'error' => 'Search temporarily unavailable',
+                ], 500);
+            }
+        }
     }
 
     /**
@@ -183,8 +453,58 @@ class SearchController extends Controller
                 }
             }
 
+            // Always add a "Search for..." option as first suggestion
+            $searchSuggestion = [
+                'type' => 'search_action',
+                'action' => 'search',
+                'query' => $query,
+                'label' => "Zoeken naar \"{$query}\"",
+                'description' => 'Zoek in alle documenten',
+            ];
+
+            // Add filter suggestions using QueryParsingService
+            $filterSuggestions = $this->queryParsingService->getFilterSuggestions($query, min($limit, 5));
+
+            // Separate documents and filters for better frontend handling
+            $documentSuggestions = array_filter($suggestions, fn ($s) => $s['type'] === 'document' || $s['type'] === 'suggestion');
+            $filterSuggestionsList = $filterSuggestions;
+
+            // Parse query to detect if it's a filter value
+            $parsedQuery = $this->queryParsingService->parseQuery($query);
+
+            // If query matches a filter, add explicit filter option
+            $explicitFilterSuggestion = null;
+            if ($parsedQuery['type'] === 'filter' && isset($parsedQuery['filter_type'])) {
+                $filterTypeLabels = [
+                    'organisatie' => 'Organisatie',
+                    'thema' => 'Thema',
+                    'documentsoort' => 'Documentsoort',
+                    'informatiecategorie' => 'Categorie',
+                ];
+                $filterTypeLabel = $filterTypeLabels[$parsedQuery['filter_type']] ?? $parsedQuery['filter_type'];
+                $explicitFilterSuggestion = [
+                    'type' => 'filter_action',
+                    'action' => 'filter',
+                    'filter_type' => $parsedQuery['filter_type'],
+                    'filter_value' => $query,
+                    'label' => "Filter op {$filterTypeLabel}: \"{$query}\"",
+                    'description' => "Toon alleen documenten met deze {$filterTypeLabel}",
+                ];
+            }
+
+            // Combine: search action first, then explicit filter (if detected), then documents, then other filters
+            $allSuggestions = [$searchSuggestion];
+            if ($explicitFilterSuggestion) {
+                $allSuggestions[] = $explicitFilterSuggestion;
+            }
+            $allSuggestions = array_merge($allSuggestions, array_values($documentSuggestions), $filterSuggestionsList);
+
             return response()->json([
-                'suggestions' => array_slice($suggestions, 0, $limit),
+                'suggestions' => array_slice($allSuggestions, 0, $limit + 2), // +2 for search and filter actions
+                'query_type' => $parsedQuery['type'], // 'search' or 'filter'
+                'is_filter_value' => $parsedQuery['type'] === 'filter',
+                'filter_type' => $parsedQuery['filter_type'] ?? null,
+                'query' => $query, // Include original query for frontend
             ]);
         } catch (\Exception $e) {
             \Log::error('Autocomplete error', ['error' => $e->getMessage()]);
@@ -246,10 +566,14 @@ class SearchController extends Controller
         $query = $request->get('q', '');
         $limit = min((int) $request->get('limit', 5), 10); // Max 10 results for live search
 
+        // If empty query, return total document count for live ticker
         if (empty($query) || strlen($query) < 2) {
+            $totalCount = OpenOverheidDocument::count();
+
             return response()->json([
                 'hits' => [],
                 'found' => 0,
+                'total_found' => $totalCount,
                 'search_time_ms' => 0,
             ]);
         }
@@ -293,9 +617,13 @@ class SearchController extends Controller
 
                 $searchTime = (int) (($results['search_time_ms'] ?? 0) + ((microtime(true) - $startTime) * 1000));
 
+                // Get total document count for live ticker
+                $totalCount = OpenOverheidDocument::count();
+
                 return response()->json([
                     'hits' => $formattedHits,
                     'found' => $results['found'] ?? 0,
+                    'total_found' => $totalCount,
                     'search_time_ms' => $searchTime,
                 ]);
             } catch (\Exception $e) {
@@ -330,9 +658,13 @@ class SearchController extends Controller
 
             $searchTime = (int) ((microtime(true) - $startTime) * 1000);
 
+            // Get total document count for live ticker
+            $totalCount = OpenOverheidDocument::count();
+
             return response()->json([
                 'hits' => $formattedHits,
                 'found' => $results['total'] ?? count($formattedHits),
+                'total_found' => $totalCount,
                 'search_time_ms' => $searchTime,
             ]);
         } catch (\Exception $e) {
@@ -373,6 +705,8 @@ class SearchController extends Controller
             'bestandstype.*' => ['string'],
             'sort' => ['nullable', 'string', 'in:relevance,publication_date,modified_date'],
             'titles_only' => ['nullable', 'boolean'],
+            // Neuro search is now premium-only, handled separately via chat interface
+            // 'neuro_search' => ['nullable', 'boolean'],
         ]);
 
         // Handle beschikbaarSinds date filter
@@ -415,21 +749,37 @@ class SearchController extends Controller
             titlesOnly: ! empty($validated['titles_only']),
         );
 
-        // Use local search if enabled, fallback to remote
-        $useLocal = config('open_overheid.use_local_search', true);
+        // Always try Typesense first (better performance, typo tolerance, faceting)
+        // Fallback to PostgreSQL if Typesense is unavailable
+        // Neuro search is now premium-only feature, removed from regular search
+        // $useNeuroSearch = ! empty($validated['neuro_search']);
+        $useTypesense = config('open_overheid.typesense.enabled', true);
 
         try {
-            $results = $useLocal
-                ? $this->localService->search($query)
-                : $this->remoteService->search($query);
+            // Use Typesense as primary search engine (faster, better search features)
+            // No natural language search - Typesense is pure search only
+            if ($useTypesense) {
+                try {
+                    $results = $this->searchWithTypesense($query, false);
+                } catch (\Exception $typesenseException) {
+                    // If Typesense fails, fallback to PostgreSQL
+                    \Log::warning('Typesense search failed, falling back to PostgreSQL', [
+                        'error' => $typesenseException->getMessage(),
+                    ]);
+                    $results = $this->localService->search($query);
+                }
+            } else {
+                // Typesense disabled, use PostgreSQL directly
+                $results = $this->localService->search($query);
+            }
 
             $documentCount = OpenOverheidDocument::count();
 
-            // Calculate dynamic filter counts based on current results
-            $filterCounts = $this->calculateFilterCounts($query, $validated);
+            // Calculate dynamic filter counts using FilterCountService
+            $filterCounts = $this->filterCountService->calculateFilterCounts($query);
 
             // Get all available filter options for "Toon meer"
-            $allFilterOptions = $this->getAllFilterOptions($query);
+            $allFilterOptions = $this->filterCountService->getAllFilterOptions($query);
 
             return view('zoekresultaten', [
                 'results' => $results,
@@ -440,39 +790,37 @@ class SearchController extends Controller
                 'allFilterOptions' => $allFilterOptions,
             ]);
         } catch (\Exception $e) {
-            // If local search fails and it was enabled, try remote as fallback
-            if ($useLocal) {
-                try {
-                    $results = $this->remoteService->search($query);
-                    $documentCount = OpenOverheidDocument::count();
+            // If both Typesense and local search failed, try remote API as last resort
+            try {
+                $results = $this->remoteService->search($query);
+                $documentCount = OpenOverheidDocument::count();
 
-                    $filterCounts = $this->calculateFilterCounts($query, $validated);
-                    $allFilterOptions = $this->getAllFilterOptions($query);
+                $filterCounts = $this->filterCountService->calculateFilterCounts($query);
+                $allFilterOptions = $this->filterCountService->getAllFilterOptions($query);
 
-                    return view('zoekresultaten', [
-                        'results' => $results,
-                        'query' => $query,
-                        'documentCount' => $documentCount,
-                        'filters' => $validated,
-                        'filterCounts' => $filterCounts,
-                        'allFilterOptions' => $allFilterOptions,
-                    ]);
-                } catch (\Exception $fallbackException) {
-                    $allFilterOptions = $this->getAllFilterOptions($query);
+                return view('zoekresultaten', [
+                    'results' => $results,
+                    'query' => $query,
+                    'documentCount' => $documentCount,
+                    'filters' => $validated,
+                    'filterCounts' => $filterCounts,
+                    'allFilterOptions' => $allFilterOptions,
+                ]);
+            } catch (\Exception $fallbackException) {
+                $allFilterOptions = $this->filterCountService->getAllFilterOptions($query);
 
-                    return view('zoekresultaten', [
-                        'results' => ['items' => [], 'total' => 0],
-                        'query' => $query,
-                        'documentCount' => OpenOverheidDocument::count(),
-                        'filters' => $validated,
-                        'filterCounts' => [],
-                        'allFilterOptions' => $allFilterOptions,
-                        'error' => $fallbackException->getMessage(),
-                    ]);
-                }
+                return view('zoekresultaten', [
+                    'results' => ['items' => [], 'total' => 0],
+                    'query' => $query,
+                    'documentCount' => OpenOverheidDocument::count(),
+                    'filters' => $validated,
+                    'filterCounts' => [],
+                    'allFilterOptions' => $allFilterOptions,
+                    'error' => $fallbackException->getMessage(),
+                ]);
             }
 
-            $allFilterOptions = $this->getAllFilterOptions($query);
+            $allFilterOptions = $this->filterCountService->getAllFilterOptions($query);
 
             return view('zoekresultaten', [
                 'results' => ['items' => [], 'total' => 0],
@@ -548,156 +896,7 @@ class SearchController extends Controller
         }
     }
 
-    /**
-     * Calculate filter counts based on current search results
-     */
-    private function calculateFilterCounts(OpenOverheidSearchQuery $query, array $validated): array
-    {
-        $counts = [
-            'week' => 0,
-            'maand' => 0,
-            'jaar' => 0,
-            'documentsoort' => [],
-            'thema' => [],
-            'organisatie' => [],
-            'informatiecategorie' => [],
-        ];
-
-        try {
-            $baseQuery = OpenOverheidDocument::query();
-
-            // Apply same search text filter if present
-            if (! empty($query->zoektekst)) {
-                $baseQuery->whereFullText(['title', 'description', 'content'], $query->zoektekst);
-            }
-
-            // Calculate date filter counts
-            $now = now();
-            $counts['week'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subWeek())->count();
-            $counts['maand'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subMonth())->count();
-            $counts['jaar'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subYear())->count();
-
-            // Get unique document types from current results
-            $documentTypes = (clone $baseQuery)
-                ->whereNotNull('document_type')
-                ->distinct()
-                ->pluck('document_type')
-                ->filter()
-                ->toArray();
-
-            foreach ($documentTypes as $type) {
-                $counts['documentsoort'][$type] = (clone $baseQuery)
-                    ->where('document_type', $type)
-                    ->count();
-            }
-
-            // Get unique themes from current results
-            $themes = (clone $baseQuery)
-                ->whereNotNull('theme')
-                ->distinct()
-                ->pluck('theme')
-                ->filter()
-                ->toArray();
-
-            foreach ($themes as $theme) {
-                $counts['thema'][$theme] = (clone $baseQuery)
-                    ->where('theme', $theme)
-                    ->count();
-            }
-
-            // Get unique organisations from current results
-            $organisations = (clone $baseQuery)
-                ->whereNotNull('organisation')
-                ->distinct()
-                ->pluck('organisation')
-                ->filter()
-                ->toArray();
-
-            foreach ($organisations as $org) {
-                $counts['organisatie'][$org] = (clone $baseQuery)
-                    ->where('organisation', $org)
-                    ->count();
-            }
-
-            // Get unique categories from current results
-            $categories = (clone $baseQuery)
-                ->whereNotNull('category')
-                ->distinct()
-                ->pluck('category')
-                ->filter()
-                ->toArray();
-
-            foreach ($categories as $category) {
-                $counts['informatiecategorie'][$category] = (clone $baseQuery)
-                    ->where('category', $category)
-                    ->count();
-            }
-        } catch (\Exception $e) {
-            // Return empty counts on error
-        }
-
-        return $counts;
-    }
-
-    /**
-     * Get all available filter options for "Toon meer" functionality
-     */
-    private function getAllFilterOptions(OpenOverheidSearchQuery $query): array
-    {
-        $baseQuery = OpenOverheidDocument::query();
-
-        // Apply same search text filter if present
-        if (! empty($query->zoektekst)) {
-            $baseQuery->whereFullText(['title', 'description', 'content'], $query->zoektekst);
-        }
-
-        // Get all unique document types
-        $allDocumentTypes = (clone $baseQuery)
-            ->whereNotNull('document_type')
-            ->distinct()
-            ->orderBy('document_type')
-            ->pluck('document_type')
-            ->filter()
-            ->values()
-            ->toArray();
-
-        // Get all unique themes
-        $allThemes = (clone $baseQuery)
-            ->whereNotNull('theme')
-            ->distinct()
-            ->orderBy('theme')
-            ->pluck('theme')
-            ->filter()
-            ->values()
-            ->toArray();
-
-        // Get all unique organisations
-        $allOrganisations = (clone $baseQuery)
-            ->whereNotNull('organisation')
-            ->distinct()
-            ->orderBy('organisation')
-            ->pluck('organisation')
-            ->filter()
-            ->values()
-            ->toArray();
-
-        // Get all unique information categories
-        $allCategories = (clone $baseQuery)
-            ->whereNotNull('category')
-            ->distinct()
-            ->orderBy('category')
-            ->pluck('category')
-            ->filter()
-            ->values()
-            ->toArray();
-
-        return [
-            'documentsoort' => $allDocumentTypes,
-            'thema' => $allThemes,
-            'organisatie' => $allOrganisations,
-            'informatiecategorie' => $allCategories,
-        ];
-    }
+    // Note: calculateFilterCounts and getAllFilterOptions methods moved to FilterCountService
 
     /**
      * Format a category name with its article number for display.
@@ -714,5 +913,125 @@ class SearchController extends Controller
         $service = app(\App\Services\OpenOverheid\WooCategoryService::class);
 
         return $service->formatCategoryForDisplay($category);
+    }
+
+    // Note: getFilterSuggestions method moved to QueryParsingService
+
+    /**
+     * Search using Typesense with natural language support
+     */
+    private function searchWithTypesense(OpenOverheidSearchQuery $query, bool $useNaturalLanguage = false): array
+    {
+        $searchService = app(\App\Services\Typesense\TypesenseSearchService::class);
+
+        // Build filter_by string
+        $filters = [];
+        if ($query->documentsoort) {
+            $types = is_array($query->documentsoort) ? $query->documentsoort : [$query->documentsoort];
+            $filters[] = 'document_type:['.implode(',', array_map(fn ($t) => '='.$t, $types)).']';
+        }
+        if ($query->informatiecategorie) {
+            $filters[] = 'category:='.$query->informatiecategorie;
+        }
+        if ($query->thema) {
+            $themes = is_array($query->thema) ? $query->thema : [$query->thema];
+            $filters[] = 'theme:['.implode(',', array_map(fn ($t) => '='.$t, $themes)).']';
+        }
+        if ($query->organisatie) {
+            $orgs = is_array($query->organisatie) ? $query->organisatie : [$query->organisatie];
+            $filters[] = 'organisation:['.implode(',', array_map(fn ($o) => '='.$o, $orgs)).']';
+        }
+        if ($query->publicatiedatumVan || $query->publicatiedatumTot) {
+            $dateFilters = [];
+            if ($query->publicatiedatumVan) {
+                $fromDate = \DateTime::createFromFormat('d-m-Y', $query->publicatiedatumVan);
+                if ($fromDate) {
+                    $dateFilters[] = '>='.$fromDate->getTimestamp();
+                }
+            }
+            if ($query->publicatiedatumTot) {
+                $toDate = \DateTime::createFromFormat('d-m-Y', $query->publicatiedatumTot);
+                if ($toDate) {
+                    $dateFilters[] = '<='.$toDate->getTimestamp();
+                }
+            }
+            if (! empty($dateFilters)) {
+                $filters[] = 'publication_date:['.implode(',', $dateFilters).']';
+            }
+        }
+
+        // Build sort_by
+        $sortBy = 'publication_date:desc';
+        switch ($query->sort) {
+            case 'publication_date':
+                $sortBy = 'publication_date:desc';
+                break;
+            case 'modified_date':
+                $sortBy = 'synced_at:desc';
+                break;
+            case 'relevance':
+            default:
+                $sortBy = 'publication_date:desc';
+                break;
+        }
+
+        // Build search options
+        $options = [
+            'per_page' => $query->perPage,
+            'page' => $query->page,
+            'sort_by' => $sortBy,
+        ];
+
+        if (! empty($filters)) {
+            $options['filter_by'] = implode(' && ', $filters);
+        }
+
+        // Natural language search is disabled - Typesense is pure search only
+        // AI search is premium-only feature via chat interface
+        // if ($useNaturalLanguage) {
+        //     $options['natural_language_search'] = true;
+        // }
+
+        // Search in Typesense
+        $typesenseResults = $searchService->search($query->zoektekst ?? '', $options);
+
+        // Transform Typesense results to match expected format
+        $items = collect($typesenseResults['hits'] ?? [])->map(function ($hit) {
+            $doc = $hit['document'] ?? $hit;
+            $model = \App\Models\OpenOverheidDocument::where('external_id', $doc['external_id'] ?? null)->first();
+
+            // If model exists, return it; otherwise create a fake model-like object
+            if ($model) {
+                return $model;
+            }
+
+            // Create a simple object with necessary properties
+            return (object) [
+                'id' => $doc['id'] ?? null,
+                'external_id' => $doc['external_id'] ?? null,
+                'title' => $doc['title'] ?? 'Geen titel',
+                'description' => $doc['description'] ?? '',
+                'content' => $doc['content'] ?? '',
+                'publication_date' => isset($doc['publication_date']) && $doc['publication_date'] > 0
+                    ? \Carbon\Carbon::createFromTimestamp($doc['publication_date'])
+                    : null,
+                'document_type' => $doc['document_type'] ?? null,
+                'category' => $doc['category'] ?? null,
+                'theme' => $doc['theme'] ?? null,
+                'organisation' => $doc['organisation'] ?? null,
+                'updated_at' => isset($doc['synced_at']) && $doc['synced_at'] > 0
+                    ? \Carbon\Carbon::createFromTimestamp($doc['synced_at'])
+                    : now(),
+            ];
+        });
+
+        return [
+            'items' => $items,
+            'total' => $typesenseResults['found'] ?? 0,
+            'page' => $typesenseResults['page'] ?? $query->page,
+            'perPage' => $query->perPage,
+            'hasNextPage' => ($typesenseResults['page'] ?? $query->page) * $query->perPage < ($typesenseResults['found'] ?? 0),
+            'hasPreviousPage' => ($typesenseResults['page'] ?? $query->page) > 1,
+        ];
     }
 }

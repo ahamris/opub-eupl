@@ -29,12 +29,23 @@ class SyncTypesense extends Command
         $this->info('Syncing documents to Typesense...');
 
         try {
-            $service->syncToTypesense();
-            $this->info('Typesense sync completed successfully!');
+            $result = $service->syncToTypesense($this);
+
+            if ($result['synced'] > 0) {
+                $this->newLine();
+                $this->info('✅ Sync completed!');
+                $this->info("   Synced: {$result['synced']} documents");
+                if ($result['errors'] > 0) {
+                    $this->warn("   Errors: {$result['errors']} documents");
+                }
+            } else {
+                $this->info('No documents to sync.');
+            }
 
             return Command::SUCCESS;
         } catch (\Exception $e) {
             $this->error('Typesense sync failed: '.$e->getMessage());
+            $this->error($e->getTraceAsString());
 
             return Command::FAILURE;
         }

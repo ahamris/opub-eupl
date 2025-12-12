@@ -7,10 +7,12 @@ This directory contains all documentation, guides, and reference materials for t
 ```
 guides/
 ├── design/              # Design system and UI guidelines
-├── installation/        # Installation and setup guides
+├── installation/        # Installation, setup, and deployment guides
 ├── project/             # Project documentation and analysis
 ├── reference/           # Reference documents and specifications
 ├── test/                # Test reports and testing documentation
+├── PROJECT_STRUCTURE.md # Project structure documentation
+├── CLAUDE.md            # Claude AI assistant guidelines
 └── README.md            # This file
 ```
 
@@ -28,24 +30,33 @@ Design system guides and UI/UX documentation:
 
 ### 🔧 Installation (`/installation`)
 
-Installation guides, setup instructions, and dependency information:
+Installation guides, setup instructions, deployment, and dependency information:
 
 - **`INSTALLATION.md`** - One-click installer guide
 - **`DEPENDENCIES.md`** - Complete dependency list
 - **`VPS_SETUP.md`** - VPS setup guide (SSH & GitHub)
 - **`VPS_SETUP_QUICKSTART.md`** - Quick VPS setup guide
 - **`INSTALLER_UPDATE_SUMMARY.md`** - Latest installer updates
+- **`DEPLOYMENT.md`** - Deployment guide
+- **`PRODUCTION_CHECKLIST.md`** - Production deployment checklist
 
 ### 📋 Project (`/project`)
 
-Project documentation, feature analysis, and architecture:
+Project documentation, feature analysis, architecture, and core project documents:
 
-- **`GITHUB_SETUP.md`** - GitHub repository setup guide
-- **`missing-features-analysis.md`** - Comparison with open.minvws.nl and missing features
-- **`MISSING_FEATURES.md`** - Missing features documentation
-- **`missing-pages.md`** - Missing pages documentation
-- **`solutionarchitecture.md`** - Solution architecture documentation
-- **`solutions-architecture-features.md`** - Architecture features and recommendations
+**Core Documents:**
+- **`PID.md`** - Project Initiatief Document
+- **`SA.md`** - Solution Architecture
+- **`WAY_OF_WORK.md`** - Way of Work methodology
+
+**Project Organization:**
+- **`epics/`** - Epic documentation
+- **`features/`** - Feature analysis and requirements
+- **`implementation/`** - Implementation plans and summaries
+- **`reference/`** - Reference documentation (Woo, guidelines)
+- **`setup/`** - Setup and configuration guides
+
+See [`project/README.md`](project/README.md) for detailed structure.
 
 ### 📖 Reference (`/reference`)
 

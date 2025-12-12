@@ -6,101 +6,132 @@
     'documentCount' => 0,
 ])
 
-<div class="relative isolate bg-surface" style="z-index: 1; position: relative;">
-    <svg aria-hidden="true" class="absolute inset-0 -z-10 size-full mask-[radial-gradient(100%_100%_at_top_right,white,transparent)] stroke-outline-variant">
+<div class="relative isolate pt-14 bg-gradient-to-br from-[var(--color-primary-light)] via-white to-[var(--color-primary-light)]/30">
+    <!-- Subtle background pattern -->
+    <svg aria-hidden="true" class="absolute inset-0 -z-10 size-full mask-[radial-gradient(100%_100%_at_top_right,white,transparent)] stroke-[var(--color-primary)]/10">
         <defs>
-            <pattern id="hero-pattern-{{ uniqid() }}" width="200" height="200" x="50%" y="-1" patternUnits="userSpaceOnUse">
-                <path d="M.5 200V.5H200" fill="none" />
+            <pattern id="hero-pattern" width="200" height="200" x="50%" y="-1" patternUnits="userSpaceOnUse">
+                <path d="M100 200V.5M.5 .5H200" fill="none" />
             </pattern>
         </defs>
-        <svg x="50%" y="-1" class="overflow-visible fill-surface-variant">
-            <path d="M-200 0h201v201h-201Z M600 0h201v201h-201Z M-400 600h201v201h-201Z M200 800h201v201h-201Z" stroke-width="0" />
+        <svg x="50%" y="-1" class="overflow-visible fill-[var(--color-primary-light)]/20">
+            <path d="M-100.5 0h201v201h-201Z M699.5 0h201v201h-201Z M499.5 400h201v201h-201Z M-300.5 600h201v201h-201Z" stroke-width="0" />
         </svg>
-        <rect width="100%" height="100%" fill="url(#hero-pattern-{{ uniqid() }})" stroke-width="0" />
+        <rect width="100%" height="100%" fill="url(#hero-pattern)" stroke-width="0" />
     </svg>
-    <div aria-hidden="true" class="absolute top-10 left-[calc(50%-4rem)] -z-10 transform-gpu blur-3xl sm:left-[calc(50%-18rem)] lg:top-[calc(50%-30rem)] lg:left-48 xl:left-[calc(50%-24rem)]">
-        <div style="clip-path: polygon(73.6% 51.7%, 91.7% 11.8%, 100% 46.4%, 97.4% 82.2%, 92.5% 84.9%, 75.7% 64%, 55.3% 47.5%, 46.5% 49.4%, 45% 62.9%, 50.3% 87.2%, 21.3% 64.1%, 0.1% 100%, 5.4% 51.1%, 21.4% 63.9%, 58.9% 0.2%, 73.6% 51.7%)" 
-             class="aspect-1108/632 w-277 bg-gradient-to-r from-primary/30 to-primary/20 opacity-20"></div>
-    </div>
-    <div class="mx-auto max-w-7xl px-6 pt-8 pb-8 sm:pb-12 lg:px-8 lg:pt-12 lg:pb-16" style="position: relative; z-index: 1;">
-        <div class="mx-auto max-w-2xl lg:mx-0 lg:max-w-none" style="position: relative;">
+    
+    <!-- Decorative gradient overlay -->
+    <div aria-hidden="true" class="absolute top-0 right-0 -z-10 w-1/3 h-full bg-gradient-to-l from-[var(--color-primary)]/5 to-transparent"></div>
+    
+    <div class="mx-auto max-w-7xl px-6 pt-40 pb-40 lg:flex lg:items-center lg:gap-x-10 lg:px-8">
+        <!-- Left side: Text content -->
+        <div class="max-w-2xl lg:flex-auto">
             @if($badge || $badgeText)
-            <div class="mb-6">
-                <div class="inline-flex space-x-6">
+            <div class="flex">
+                <div class="relative flex items-center gap-x-4 rounded-full bg-white px-4 py-1 text-[var(--font-size-body-small)] text-[var(--color-on-surface-variant)] ring-1 ring-gray-900/10 hover:ring-gray-900/20 transition-all duration-200">
                     @if($badge)
-                    <span class="rounded-full bg-primary-container px-3 py-1 text-sm/6 font-semibold text-on-primary-container ring-1 ring-primary/20 ring-inset">{{ $badge }}</span>
+                    <span class="font-semibold text-[var(--color-primary)]">{{ $badge }}</span>
+                    @endif
+                    @if($badge && $badgeText)
+                    <span aria-hidden="true" class="h-4 w-px bg-gray-900/10"></span>
                     @endif
                     @if($badgeText)
-                    <span class="inline-flex items-center space-x-2 text-sm/6 font-medium text-on-surface-variant">
-                        <span>{{ $badgeText }}</span>
-                    </span>
+                    <a href="#" class="flex items-center gap-x-1 hover:text-[var(--color-primary)] transition-colors duration-200">
+                        <span aria-hidden="true" class="absolute inset-0"></span>
+                        {{ $badgeText }}
+                        <svg viewBox="0 0 20 20" fill="currentColor" data-slot="icon" aria-hidden="true" class="-mr-2 size-5 text-gray-400">
+                            <path d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
+                        </svg>
+                    </a>
                     @endif
                 </div>
             </div>
             @endif
             
-            <h1 class="text-4xl font-semibold tracking-tight text-pretty text-on-surface sm:text-5xl lg:text-6xl">
+            <h1 class="mt-10 text-[var(--font-size-display-large)] font-bold tracking-[-0.02em] text-pretty text-[var(--color-on-surface)] leading-[var(--line-height-tight)]">
                 {{ $title }}
             </h1>
             
             @if($description)
-            <p class="mt-4 text-base font-medium text-pretty text-on-surface-variant sm:text-lg/7">
-                {{ $description }}
-            </p>
+            <p class="mt-6 text-[var(--font-size-body-large)] font-normal text-pretty text-[var(--color-on-surface-variant)] leading-[var(--line-height-relaxed)]">{{ $description }}</p>
             @endif
             
-            <!-- Live Search Section -->
-            <div class="mt-8 relative search-container" x-data="liveSearch()" style="z-index: 99999 !important; position: relative !important; isolation: isolate !important;" @click.outside="showResults = false">
-                <div class="relative" style="position: relative;">
-                    <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                        <i class="fas fa-search text-on-surface-variant/60" aria-hidden="true"></i>
+            <div class="mt-6 text-[var(--font-size-body-medium)] font-medium text-[var(--color-on-surface-variant)]">
+                <span x-data="liveDocumentCounter({{ $documentCount }})">
+                    <span class="inline-flex items-center gap-2">
+                        <span class="inline-block w-2 h-2 rounded-full bg-[var(--color-primary)] animate-pulse" aria-hidden="true"></span>
+                        <span class="font-semibold text-[var(--color-on-surface)]" x-text="formatNumber(count)"></span>
+                        <span>documenten beschikbaar</span>
+                    </span>
+                </span>
+            </div>
+        </div>
+        
+        <!-- Right side: Search functionality -->
+        <div class="mt-16 sm:mt-24 lg:mt-0 lg:shrink-0 lg:grow">
+            <div class="relative search-container" x-data="liveSearch()" style="z-index: 99999 !important; position: relative !important; isolation: isolate !important;" @click.outside="showResults = false">
+                <div class="rounded-2xl bg-white/95 backdrop-blur-sm p-6 shadow-xl ring-1 ring-[var(--color-primary)]/10 border border-[var(--color-primary)]/5">
+                    <div class="mb-4 flex items-center justify-between">
+                        <p class="text-[var(--font-size-body-medium)] font-medium text-[var(--color-on-surface)]">Slim zoeken met</p>
+                        <a href="{{ route('chat') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-primary)] text-white text-[var(--font-size-body-small)] font-medium hover:bg-[var(--color-primary-dark)] transition-colors duration-200">
+                            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-4">
+                                <path d="M3.5 2.75a.75.75 0 0 0-1.5 0v14.5a.75.75 0 0 0 1.5 0v-4.392l1.657-.348a6.449 6.449 0 0 1 4.271.572 7.948 7.948 0 0 0 5.965.44l2.087-.694a.75.75 0 0 0 .42-.941l-.8-2.385a.75.75 0 0 0-.42-.499l-2.087-.694a7.948 7.948 0 0 0-5.965.44 6.449 6.449 0 0 1-4.271.572L3.5 7.25v-4.5Z" />
+                            </svg>
+                            <span>Chat met AI</span>
+                        </a>
                     </div>
-                    <input 
-                        type="text" 
-                        x-model="query"
-                        @input="handleInput()"
-                        @focus="handleFocus()"
-                        @keydown.escape="showResults = false; query = ''"
-                        @keydown.arrow-down.prevent="navigateResults(1)"
-                        @keydown.arrow-up.prevent="navigateResults(-1)"
-                        @keydown.enter.prevent="selectResult()"
-                        class="w-full pl-12 pr-4 py-4 rounded-xl 
-                               border-2 border-outline bg-surface
-                               text-body-large text-on-surface
-                               focus:border-primary focus:outline-2 focus:outline-primary focus:outline-offset-2
-                               transition-colors duration-200
-                               min-h-[56px]
-                               shadow-lg
-                               placeholder:text-on-surface-variant"
-                        placeholder="Zoek in {{ number_format($documentCount, 0, ',', '.') }} documenten..."
-                        autocomplete="off"
-                        aria-label="Zoek documenten"
-                        :aria-expanded="showResults ? 'true' : 'false'"
-                        aria-haspopup="listbox"
-                        aria-autocomplete="list"
-                    >
-                    <div x-show="loading" class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                        <svg class="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none z-10">
+                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" class="size-5 text-[var(--color-on-surface-variant)]">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m19 19-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                            </svg>
+                        </div>
+                        <input 
+                            type="text" 
+                            x-model="query"
+                            @input="handleInput()"
+                            @focus="handleFocus()"
+                            @keydown.escape="showResults = false; query = ''"
+                            @keydown.arrow-down.prevent="navigateResults(1)"
+                            @keydown.arrow-up.prevent="navigateResults(-1)"
+                            @keydown.enter.prevent="selectResult()"
+                            class="w-full pl-12 pr-12 py-4 rounded-lg
+                                   border-0 bg-white
+                                   text-[var(--font-size-body-large)] text-[var(--color-on-surface)] font-normal
+                                   focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-primary)]
+                                   transition-all duration-200 ease-out
+                                   shadow-sm
+                                   placeholder:text-[var(--color-on-surface-variant)]
+                                   ring-1 ring-inset ring-gray-900/10"
+                            placeholder="Vul je zoekterm in"
+                            autocomplete="off"
+                            aria-label="Zoek documenten"
+                            :aria-expanded="showResults ? 'true' : 'false'"
+                            aria-haspopup="listbox"
+                            aria-autocomplete="list"
+                        >
+                        <div x-show="loading" class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                            <svg class="animate-spin h-5 w-5 text-[var(--color-primary)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </div>
                     </div>
-                </div>
                 
-                <!-- Search Results Dropdown -->
+                <!-- Apple/Google Level: Premium dropdown - Fully contained within hero -->
                 <div 
                     x-show="showResults && (query.length >= 2 || loading)"
                     x-cloak
                     x-transition:enter="transition ease-out duration-200"
-                    x-transition:enter-start="opacity-0 transform scale-95"
-                    x-transition:enter-end="opacity-100 transform scale-100"
+                    x-transition:enter-start="opacity-0 transform translate-y-[-8px]"
+                    x-transition:enter-end="opacity-100 transform translate-y-0"
                     x-transition:leave="transition ease-in duration-150"
-                    x-transition:leave-start="opacity-100 transform scale-100"
-                    x-transition:leave-end="opacity-0 transform scale-95"
-                    class="absolute w-full mt-2 bg-surface rounded-xl shadow-2xl border border-outline-variant max-h-[600px] overflow-y-auto search-dropdown"
+                    x-transition:leave-start="opacity-100 transform translate-y-0"
+                    x-transition:leave-end="opacity-0 transform translate-y-[-8px]"
+                    class="absolute w-full mt-3 bg-white rounded-md shadow-2xl ring-1 ring-gray-900/10 max-h-[500px] overflow-y-auto search-dropdown"
                     role="listbox"
                     @click.stop
-                    style="z-index: 99999 !important; position: absolute !important; top: 100% !important; left: 0 !important; right: 0 !important; margin-top: 0.5rem !important;"
+                    style="z-index: 99999 !important; position: absolute !important; top: calc(100% + 0.75rem) !important; left: 0 !important; right: 0 !important; margin-bottom: 2rem !important;"
                     x-ref="dropdown"
                     x-init="$watch('showResults', value => {
                         if (value && $refs.dropdown) {
@@ -112,28 +143,32 @@
                         }
                     })"
                 >
-                    <!-- Autocomplete Suggestions (Prioritized First) -->
+                    <!-- Autocomplete Suggestions (Prioritized First) - Apple Level -->
                     <template x-if="suggestions.length > 0">
                         <div>
-                            <div class="px-4 py-2 border-b border-outline-variant bg-surface-variant">
-                                <p class="text-xs font-medium text-on-surface-variant uppercase tracking-wide">Suggesties</p>
+                            <div class="px-5 py-3 border-b border-gray-900/10 bg-gray-50">
+                                <p class="text-[var(--font-size-label-small)] font-semibold text-gray-600 uppercase tracking-wider">Suggesties</p>
                             </div>
-                            <ul class="py-1" role="listbox">
+                            <ul class="py-2" role="listbox">
                                 <template x-for="(suggestion, index) in suggestions" :key="index">
                                     <li 
                                         @click="selectSuggestion(suggestion)"
                                         @mouseenter="selectedIndex = index"
-                                        :class="selectedIndex === index ? 'bg-primary-container' : 'hover:bg-surface-variant'"
-                                        class="px-4 py-2.5 cursor-pointer transition-colors duration-150"
+                                        :class="selectedIndex === index ? 'bg-[var(--color-primary-light)]' : 'hover:bg-gray-50'"
+                                        class="px-5 py-3 cursor-pointer transition-all duration-150 ease-out active:scale-[0.98]"
                                         role="option"
                                         :aria-selected="selectedIndex === index"
                                     >
-                                        <div class="flex items-center gap-3">
-                                            <i class="fas fa-lightbulb text-primary shrink-0" aria-hidden="true"></i>
-                                            <div class="flex-1 min-w-0">
-                                                <div class="text-sm font-medium text-on-surface" x-html="suggestion.highlight || suggestion.query"></div>
+                                        <div class="flex items-center gap-4">
+                                            <div class="flex-shrink-0 w-8 h-8 rounded bg-[var(--color-primary-light)] flex items-center justify-center">
+                                                <svg viewBox="0 0 20 20" fill="currentColor" data-slot="icon" aria-hidden="true" class="size-4 text-[var(--color-primary)]">
+                                                    <path d="M10.43 2.3a.75.75 0 0 0-.86 0l-3 1.85a.75.75 0 0 0-.39.58l-.87 3.38A.75.75 0 0 1 4.57 8.5l-.5-.87a.75.75 0 0 0-1.14-.1L1.72 8.9a.75.75 0 0 1-1.1-.64l.35-2.5a.75.75 0 0 0-.43-.75L.84 4.83a.75.75 0 0 1 .28-1.35l2.5-.73a.75.75 0 0 0 .58-.39L5.98.85a.75.75 0 0 1 1.04 0l1.85 3 3.38-.87a.75.75 0 0 1 .75.43l.73 2.5a.75.75 0 0 1-1.35.28l-1.38-1.38a.75.75 0 0 0-1.1.1l.87.5a.75.75 0 1 1-.87 1.26l-3.38.87a.75.75 0 0 1-.39-.58L6.3 4.43a.75.75 0 0 1 .3-.58l2.83-2.55Zm1.14 4.4a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0V7.81l-5.22 5.22a.75.75 0 0 1-1.06-1.06l5.22-5.22h-2.69a.75.75 0 0 1-.75-.75Z" />
+                                                </svg>
                                             </div>
-                                            <i class="fas fa-chevron-right text-on-surface-variant/60 shrink-0 text-xs" aria-hidden="true"></i>
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-[var(--font-size-body-medium)] font-medium text-[var(--color-on-surface)] leading-[var(--line-height-normal)]" x-html="suggestion.highlight || suggestion.query"></div>
+                                            </div>
+                                            <i class="fas fa-chevron-right text-gray-400 shrink-0 text-[var(--font-size-label-small)] transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true"></i>
                                         </div>
                                     </li>
                                 </template>
@@ -141,14 +176,14 @@
                         </div>
                     </template>
                     
-                    <!-- Search Results -->
+                    <!-- Search Results - Apple Level Design -->
                     <template x-if="results.length > 0">
                         <div>
-                            <div class="px-4 py-2 border-b border-outline-variant bg-surface-variant">
-                                <p class="text-xs font-medium text-on-surface-variant">
+                            <div class="px-5 py-3 border-b border-gray-900/10 bg-gray-50">
+                                <p class="text-[var(--font-size-body-medium)] font-semibold text-gray-600">
                                     <span x-text="found"></span> resultaten gevonden
                                     <template x-if="searchTime > 0">
-                                        <span class="text-on-surface-variant/60"> in <span x-text="searchTime"></span>ms</span>
+                                        <span class="text-gray-500"> in <span x-text="searchTime"></span>ms</span>
                                     </template>
                                 </p>
                             </div>
@@ -157,38 +192,38 @@
                                     <li 
                                         @click="goToDetail(result.id)"
                                         @mouseenter="selectedIndex = suggestions.length + index"
-                                        :class="selectedIndex === (suggestions.length + index) ? 'bg-primary-container' : 'hover:bg-surface-variant'"
-                                        class="px-4 py-3 cursor-pointer transition-colors duration-150"
+                                        :class="selectedIndex === (suggestions.length + index) ? 'bg-[var(--color-primary-light)]' : 'hover:bg-gray-50'"
+                        class="px-5 py-4 cursor-pointer transition-all duration-150 ease-out active:scale-[0.98] border-b border-gray-900/10 last:border-b-0"
                                         role="option"
                                         :aria-selected="selectedIndex === (suggestions.length + index)"
                                     >
                                         <div class="flex items-start justify-between gap-4">
                                             <div class="flex-1 min-w-0">
-                                                <div class="flex items-start justify-between gap-2 mb-1">
-                                                    <h3 class="text-base font-semibold text-on-surface truncate flex-1" x-text="result.title"></h3>
+                                                <div class="flex items-start justify-between gap-3 mb-2">
+                                                    <h3 class="text-[var(--font-size-body-medium)] font-semibold text-gray-900 truncate flex-1 leading-[var(--line-height-normal)]" x-text="result.title"></h3>
                                                     <template x-if="result.formatted_category || result.category">
-                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary shrink-0">
+                                                        <span class="inline-flex items-center px-2.5 py-1 rounded text-[var(--font-size-label-small)] font-semibold bg-[var(--color-primary-light)] text-[var(--color-primary)] shrink-0">
                                                             <span x-text="result.formatted_category || result.category"></span>
                                                         </span>
                                                     </template>
                                                 </div>
-                                                <p class="mt-1 text-sm text-on-surface-variant line-clamp-2" x-text="result.description"></p>
-                                                <div class="mt-2 flex items-center gap-4 text-xs text-on-surface-variant/80">
+                                                <p class="mt-1.5 text-[var(--font-size-body-small)] text-gray-600 line-clamp-2 leading-[var(--line-height-normal)]" x-text="result.description"></p>
+                                                <div class="mt-3 flex items-center gap-5 text-[var(--font-size-label-small)] text-gray-500">
                                                     <template x-if="result.organisation">
-                                                        <span class="inline-flex items-center gap-1">
-                                                            <i class="fas fa-building" aria-hidden="true"></i>
-                                                            <span x-text="result.organisation"></span>
+                                                        <span class="inline-flex items-center gap-1.5">
+                                                            <i class="fas fa-building text-[10px]" aria-hidden="true"></i>
+                                                            <span class="tracking-tight" x-text="result.organisation"></span>
                                                         </span>
                                                     </template>
                                                     <template x-if="result.publication_date">
-                                                        <span class="inline-flex items-center gap-1">
-                                                            <i class="fas fa-calendar" aria-hidden="true"></i>
-                                                            <span x-text="formatDate(result.publication_date)"></span>
+                                                        <span class="inline-flex items-center gap-1.5">
+                                                            <i class="fas fa-calendar text-[10px]" aria-hidden="true"></i>
+                                                            <span class="tracking-tight" x-text="formatDate(result.publication_date)"></span>
                                                         </span>
                                                     </template>
                                                 </div>
                                             </div>
-                                            <i class="fas fa-chevron-right text-on-surface-variant/60 shrink-0 mt-1" aria-hidden="true"></i>
+                                            <i class="fas fa-chevron-right text-gray-400 shrink-0 mt-1 text-[var(--font-size-label-small)] transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true"></i>
                                         </div>
                                     </li>
                                 </template>
@@ -198,27 +233,27 @@
                     
                     <!-- Footer with "View all results" -->
                     <template x-if="(suggestions.length > 0 || results.length > 0) && query.length >= 2">
-                        <div class="px-4 py-3 border-t border-outline-variant bg-surface-variant">
+                        <div class="px-5 py-4 border-t border-gray-900/10 bg-gray-50">
                             <a 
                                 :href="'{{ route('zoeken') }}?zoeken=' + encodeURIComponent(query)"
-                                class="text-sm font-medium text-primary hover:underline inline-flex items-center gap-2"
+                                class="text-[var(--font-size-body-medium)] font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition-colors duration-200 inline-flex items-center gap-2 group"
                             >
                                 Bekijk alle resultaten
-                                <i class="fas fa-arrow-right text-xs" aria-hidden="true"></i>
+                                <i class="fas fa-arrow-right text-[var(--font-size-label-small)] transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true"></i>
                             </a>
                         </div>
                     </template>
                     
                     <!-- No Results -->
                     <template x-if="suggestions.length === 0 && results.length === 0 && query.length >= 2 && !loading">
-                        <div class="px-4 py-8 text-center">
-                            <p class="text-sm text-on-surface-variant">Geen resultaten gevonden voor "<span x-text="query"></span>"</p>
+                        <div class="px-5 py-12 text-center">
+                            <p class="text-[var(--font-size-body-medium)] text-gray-600 mb-4">Geen resultaten gevonden voor "<span class="font-medium text-gray-900" x-text="query"></span>"</p>
                             <a 
                                 :href="'{{ route('zoeken') }}?zoeken=' + encodeURIComponent(query)"
-                                class="mt-4 text-sm font-medium text-primary hover:underline inline-flex items-center gap-2"
+                                class="text-[var(--font-size-body-medium)] font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition-colors duration-200 inline-flex items-center gap-2 group"
                             >
                                 Toch zoeken
-                                <i class="fas fa-arrow-right text-xs" aria-hidden="true"></i>
+                                <i class="fas fa-arrow-right text-[var(--font-size-label-small)] transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true"></i>
                             </a>
                         </div>
                     </template>
@@ -247,6 +282,81 @@
 
 @push('scripts')
 <script>
+// Live Document Counter - Updates periodically to show real-time document count
+function liveDocumentCounter(initialCount) {
+    return {
+        count: initialCount,
+        interval: null,
+        
+        init() {
+            // Update every 30 seconds to show live count
+            this.interval = setInterval(() => {
+                this.updateCount();
+            }, 30000);
+            
+            // Initial update after 5 seconds
+            setTimeout(() => {
+                this.updateCount();
+            }, 5000);
+        },
+        
+        async updateCount() {
+            try {
+                const response = await fetch('{{ route("api.live-search") }}?q=&limit=1');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.total_found !== undefined) {
+                        // Smooth transition to new count
+                        const targetCount = data.total_found;
+                        this.animateCount(this.count, targetCount);
+                        
+                        // Update page title if it exists
+                        const titleElement = document.querySelector('title');
+                        if (titleElement && titleElement.__x) {
+                            titleElement.__x.$data.documentCount = targetCount;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to update document count:', error);
+            }
+        },
+        
+        animateCount(from, to) {
+            const duration = 1000;
+            const startTime = Date.now();
+            const difference = to - from;
+            
+            const animate = () => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Easing function for smooth animation
+                const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+                this.count = Math.round(from + (difference * easeOutQuart));
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    this.count = to;
+                }
+            };
+            
+            animate();
+        },
+        
+        formatNumber(num) {
+            return new Intl.NumberFormat('nl-NL').format(num);
+        },
+        
+        destroy() {
+            if (this.interval) {
+                clearInterval(this.interval);
+            }
+        }
+    }
+}
+
 function liveSearch() {
     return {
         query: '',

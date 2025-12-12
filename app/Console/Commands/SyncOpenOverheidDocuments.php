@@ -16,7 +16,8 @@ class SyncOpenOverheidDocuments extends Command
                             {--id= : Sync a specific document by external ID}
                             {--week : Sync documents from this week}
                             {--from= : Start date (DD-MM-YYYY format)}
-                            {--to= : End date (DD-MM-YYYY format)}';
+                            {--to= : End date (DD-MM-YYYY format)}
+                            {--no-retry : Skip retrying failed documents}';
 
     /**
      * The console command description.
@@ -36,7 +37,7 @@ class SyncOpenOverheidDocuments extends Command
             $this->info("Syncing document: {$id}");
             try {
                 $service->syncDocument($id);
-                $this->info('Done!');
+                $this->info('✅ Document synced successfully!');
 
                 return self::SUCCESS;
             } catch (\Exception $e) {
@@ -70,16 +71,39 @@ class SyncOpenOverheidDocuments extends Command
                 $this->line("  To: {$to}");
             }
         } else {
-            $this->info('Starting full sync (all documents)...');
+            $this->info('Syncing documents to PostgreSQL...');
         }
 
         try {
             if ($from || $to || $week) {
-                $service->syncByDateRange($from, $to);
+                $result = $service->syncByDateRange($from, $to, $this);
             } else {
-                $service->syncAll();
+                $result = $service->syncAll($this);
             }
-            $this->info('Sync completed!');
+
+            if ($result['synced'] > 0 || $result['total'] > 0) {
+                $this->newLine();
+                $this->info('✅ Sync completed!');
+                $this->info("   Total: {$result['total']} documents");
+                if (isset($result['created']) && $result['created'] > 0) {
+                    $this->info("   Created: {$result['created']} documents");
+                }
+                if (isset($result['updated']) && $result['updated'] > 0) {
+                    $this->info("   Updated: {$result['updated']} documents");
+                }
+                if (isset($result['skipped']) && $result['skipped'] > 0) {
+                    $this->line("   Skipped: {$result['skipped']} documents (already up-to-date)");
+                }
+                if (isset($result['retried']) && $result['retried'] > 0) {
+                    $this->info("   Retried: {$result['retried']} documents");
+                }
+                if ($result['errors'] > 0) {
+                    $this->warn("   Errors: {$result['errors']} documents");
+                    $this->line('   Check logs for details: storage/logs/laravel.log');
+                }
+            } else {
+                $this->info('No documents to sync.');
+            }
 
             return self::SUCCESS;
         } catch (\Exception $e) {

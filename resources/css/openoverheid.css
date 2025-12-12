@@ -2,16 +2,18 @@
 /* Outpricing DICTU.nl with superior design */
 
 :root {
-    /* Modern Color System */
-    --oo-primary: #0066CC;
-    --oo-primary-dark: #0052A3;
+    /* DICTU Color System */
+    --oo-primary: #16609A;
+    --oo-primary-dark: #0f4a75;
     --oo-primary-light: #E6F2FF;
+    --oo-primary-accent: #2B82BA;
+    --oo-primary-overlay: #277DA6;
     --oo-surface: #FFFFFF;
     --oo-surface-variant: #F5F5F5;
-    --oo-on-surface: #1A1A1A;
-    --oo-on-surface-variant: #4A4A4A;
-    --oo-outline: #E5E5E5;
-    --oo-outline-variant: #D4D4D4;
+    --oo-on-surface: #333333;
+    --oo-on-surface-variant: #666666;
+    --oo-outline: #666666;
+    --oo-outline-variant: #E5E5E5;
     
     /* Spacing System - 8px grid */
     --oo-space-xs: 0.5rem;   /* 8px */

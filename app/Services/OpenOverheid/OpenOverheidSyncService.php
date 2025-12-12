@@ -29,23 +29,52 @@ class OpenOverheidSyncService
      *
      * @param  string|null  $from  Start date (DD-MM-YYYY format)
      * @param  string|null  $to  End date (DD-MM-YYYY format)
+     * @param  \Illuminate\Console\Command|null  $command
+     * @return array{total: int, synced: int, errors: int}
      */
-    public function syncByDateRange(?string $from = null, ?string $to = null): void
+    public function syncByDateRange(?string $from = null, ?string $to = null, $command = null): array
     {
         if (! config('open_overheid.sync.enabled', true)) {
             Log::info('Open Overheid sync is disabled');
+            if ($command) {
+                $command->info('Open Overheid sync is disabled.');
+            }
 
-            return;
+            return ['total' => 0, 'synced' => 0, 'errors' => 0];
         }
 
         $dateRange = $from && $to ? "{$from} to {$to}" : ($from ? "from {$from}" : ($to ? "until {$to}" : 'all'));
         Log::info("Starting Open Overheid sync for date range: {$dateRange}");
+
+        // First, get total count for progress bar
+        $firstQuery = new OpenOverheidSearchQuery(
+            zoektekst: '',
+            page: 1,
+            perPage: 50,
+            publicatiedatumVan: $from,
+            publicatiedatumTot: $to,
+        );
+
+        $firstResponse = $this->searchService->search($firstQuery);
+        $totalResults = $firstResponse['totaal'] ?? $firstResponse['total'] ?? 0;
+
+        if ($command) {
+            $command->info("Found {$totalResults} documents to sync.");
+            $command->newLine();
+        }
 
         $page = 1;
         $perPage = 50; // Use maximum page size for efficiency
         $totalSynced = 0;
         $totalErrors = 0;
         $hasMorePages = true;
+        $processed = 0;
+
+        if ($command && $totalResults > 0) {
+            $bar = $command->getOutput()->createProgressBar($totalResults);
+            $bar->setFormat(' %current%/%max% [%bar%] %percent:3s%% %elapsed:6s% %memory:6s%');
+            $bar->start();
+        }
 
         while ($hasMorePages) {
             try {
@@ -77,6 +106,12 @@ class OpenOverheidSyncService
                         if (! $externalId) {
                             Log::warning('Open Overheid item missing ID', ['item' => $item]);
                             $totalErrors++;
+                            $processed++;
+
+                            if ($command) {
+                                $this->updateProgressBar($bar, $processed, $totalResults, $totalErrors, $command, $totalSkipped);
+                                $bar->advance();
+                            }
 
                             continue;
                         }
@@ -85,25 +120,59 @@ class OpenOverheidSyncService
                         $documentData = $this->searchService->getDocument($externalId);
 
                         // Sync the document
-                        $this->upsertDocument($externalId, $documentData);
-                        $totalSynced++;
+                        $result = $this->upsertDocument($externalId, $documentData);
 
-                        // Log progress every 10 documents
-                        if ($totalSynced % 10 === 0) {
-                            Log::info("Open Overheid sync progress: {$totalSynced} documents synced");
+                        if ($result === 'created') {
+                            $totalCreated++;
+                            $totalSynced++;
+                        } elseif ($result === 'updated') {
+                            $totalUpdated++;
+                            $totalSynced++;
+                        } elseif ($result === 'skipped') {
+                            $totalSkipped++;
+                        }
+
+                        $processed++;
+
+                        // Update progress bar
+                        if ($command) {
+                            $this->updateProgressBar($bar, $processed, $totalResults, $totalErrors, $command, $totalSkipped);
+                            $bar->advance();
                         }
                     } catch (\Exception $e) {
+                        $externalId = $this->extractExternalId($document ?? $item);
+
+                        // Enhanced error logging
                         Log::error('Open Overheid sync error for document', [
-                            'item' => $item,
-                            'exception' => $e->getMessage(),
+                            'external_id' => $externalId,
+                            'error' => $e->getMessage(),
+                            'error_class' => get_class($e),
+                            'file' => $e->getFile(),
+                            'line' => $e->getLine(),
+                            'trace' => $e->getTraceAsString(),
                         ]);
+
+                        // Store failed document for retry
+                        if ($externalId) {
+                            $failedDocuments[] = [
+                                'external_id' => $externalId,
+                                'error' => $e->getMessage(),
+                                'error_class' => get_class($e),
+                            ];
+                        }
+
                         $totalErrors++;
+                        $processed++;
+
+                        if ($command) {
+                            $this->updateProgressBar($bar, $processed, $totalResults, $totalErrors, $command, $totalSkipped);
+                            $bar->advance();
+                        }
                         // Continue with next document
                     }
                 }
 
                 // Check if there are more pages
-                $totalResults = $response['totaal'] ?? $response['total'] ?? 0;
                 $hasMorePages = count($items) === $perPage && ($page * $perPage) < $totalResults;
 
                 $page++;
@@ -111,6 +180,9 @@ class OpenOverheidSyncService
                 Log::error('Open Overheid sync error on page', [
                     'page' => $page,
                     'exception' => $e->getMessage(),
+                    'error_class' => get_class($e),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
                 ]);
                 $totalErrors++;
                 $hasMorePages = false; // Stop on page-level errors
@@ -118,32 +190,132 @@ class OpenOverheidSyncService
             }
         }
 
+        if ($command && $totalResults > 0) {
+            $bar->finish();
+            $command->newLine();
+            // Clear the custom message line
+            $command->getOutput()->write("\r\033[K");
+            $command->newLine();
+        }
+
+        // Retry failed documents if any
+        $retriedCount = 0;
+        if (! empty($failedDocuments) && $command && ! $command->option('no-retry')) {
+            $command->info('Retrying '.count($failedDocuments).' failed documents...');
+            $command->newLine();
+
+            $retryBar = $command->getOutput()->createProgressBar(count($failedDocuments));
+            $retryBar->setFormat(' %current%/%max% [%bar%] %percent:3s%% %elapsed:6s%');
+            $retryBar->start();
+
+            foreach ($failedDocuments as $failed) {
+                try {
+                    $documentData = $this->searchService->getDocument($failed['external_id']);
+                    $result = $this->upsertDocument($failed['external_id'], $documentData);
+
+                    if ($result !== 'skipped') {
+                        $retriedCount++;
+                        $totalSynced++;
+                        if ($result === 'created') {
+                            $totalCreated++;
+                        } elseif ($result === 'updated') {
+                            $totalUpdated++;
+                        }
+                    } else {
+                        $totalSkipped++;
+                    }
+                    $totalErrors--;
+                } catch (\Exception $e) {
+                    Log::error('Open Overheid retry failed for document', [
+                        'external_id' => $failed['external_id'],
+                        'original_error' => $failed['error'],
+                        'retry_error' => $e->getMessage(),
+                        'error_class' => get_class($e),
+                    ]);
+                }
+                $retryBar->advance();
+            }
+
+            $retryBar->finish();
+            $command->newLine(2);
+
+            if ($retriedCount > 0) {
+                $command->info("✅ Retried and synced {$retriedCount} documents successfully.");
+            }
+        }
+
         Log::info('Open Overheid sync completed', [
             'date_range' => $dateRange,
             'total_synced' => $totalSynced,
+            'total_created' => $totalCreated,
+            'total_updated' => $totalUpdated,
+            'total_skipped' => $totalSkipped,
             'total_errors' => $totalErrors,
+            'retried_count' => $retriedCount,
         ]);
+
+        return [
+            'total' => $totalResults,
+            'synced' => $totalSynced,
+            'created' => $totalCreated,
+            'updated' => $totalUpdated,
+            'skipped' => $totalSkipped,
+            'errors' => $totalErrors,
+            'retried' => $retriedCount,
+        ];
     }
 
     /**
      * Perform a full sync of all documents.
      * Fetches all documents from the search endpoint and syncs each one.
+     *
+     * @param  \Illuminate\Console\Command|null  $command
+     * @return array{total: int, synced: int, errors: int}
      */
-    public function syncAll(): void
+    public function syncAll($command = null): array
     {
         if (! config('open_overheid.sync.enabled', true)) {
             Log::info('Open Overheid sync is disabled');
+            if ($command) {
+                $command->info('Open Overheid sync is disabled.');
+            }
 
-            return;
+            return ['total' => 0, 'synced' => 0, 'errors' => 0];
         }
 
         Log::info('Starting Open Overheid full sync');
 
+        // First, get total count for progress bar
+        $firstQuery = new OpenOverheidSearchQuery(
+            zoektekst: '',
+            page: 1,
+            perPage: 50,
+        );
+
+        $firstResponse = $this->searchService->search($firstQuery);
+        $totalResults = $firstResponse['totaal'] ?? $firstResponse['total'] ?? 0;
+
+        if ($command) {
+            $command->info("Found {$totalResults} documents to sync.");
+            $command->newLine();
+        }
+
         $page = 1;
         $perPage = 50; // Use maximum page size for efficiency
         $totalSynced = 0;
+        $totalCreated = 0;
+        $totalUpdated = 0;
+        $totalSkipped = 0;
         $totalErrors = 0;
         $hasMorePages = true;
+        $processed = 0;
+        $failedDocuments = []; // Track failed documents for retry
+
+        if ($command && $totalResults > 0) {
+            $bar = $command->getOutput()->createProgressBar($totalResults);
+            $bar->setFormat(' %current%/%max% [%bar%] %percent:3s%% %elapsed:6s% %memory:6s%');
+            $bar->start();
+        }
 
         while ($hasMorePages) {
             try {
@@ -173,6 +345,12 @@ class OpenOverheidSyncService
                         if (! $externalId) {
                             Log::warning('Open Overheid item missing ID', ['item' => $item]);
                             $totalErrors++;
+                            $processed++;
+
+                            if ($command) {
+                                $this->updateProgressBar($bar, $processed, $totalResults, $totalErrors, $command, $totalSkipped);
+                                $bar->advance();
+                            }
 
                             continue;
                         }
@@ -181,25 +359,59 @@ class OpenOverheidSyncService
                         $documentData = $this->searchService->getDocument($externalId);
 
                         // Sync the document
-                        $this->upsertDocument($externalId, $documentData);
-                        $totalSynced++;
+                        $result = $this->upsertDocument($externalId, $documentData);
 
-                        // Log progress every 10 documents
-                        if ($totalSynced % 10 === 0) {
-                            Log::info("Open Overheid sync progress: {$totalSynced} documents synced");
+                        if ($result === 'created') {
+                            $totalCreated++;
+                            $totalSynced++;
+                        } elseif ($result === 'updated') {
+                            $totalUpdated++;
+                            $totalSynced++;
+                        } elseif ($result === 'skipped') {
+                            $totalSkipped++;
+                        }
+
+                        $processed++;
+
+                        // Update progress bar
+                        if ($command) {
+                            $this->updateProgressBar($bar, $processed, $totalResults, $totalErrors, $command, $totalSkipped);
+                            $bar->advance();
                         }
                     } catch (\Exception $e) {
+                        $externalId = $this->extractExternalId($document ?? $item);
+
+                        // Enhanced error logging
                         Log::error('Open Overheid sync error for document', [
-                            'item' => $item,
-                            'exception' => $e->getMessage(),
+                            'external_id' => $externalId,
+                            'error' => $e->getMessage(),
+                            'error_class' => get_class($e),
+                            'file' => $e->getFile(),
+                            'line' => $e->getLine(),
+                            'trace' => $e->getTraceAsString(),
                         ]);
+
+                        // Store failed document for retry
+                        if ($externalId) {
+                            $failedDocuments[] = [
+                                'external_id' => $externalId,
+                                'error' => $e->getMessage(),
+                                'error_class' => get_class($e),
+                            ];
+                        }
+
                         $totalErrors++;
+                        $processed++;
+
+                        if ($command) {
+                            $this->updateProgressBar($bar, $processed, $totalResults, $totalErrors, $command, $totalSkipped);
+                            $bar->advance();
+                        }
                         // Continue with next document
                     }
                 }
 
                 // Check if there are more pages
-                $totalResults = $response['totaal'] ?? $response['total'] ?? 0;
                 $hasMorePages = count($items) === $perPage && ($page * $perPage) < $totalResults;
 
                 $page++;
@@ -207,6 +419,9 @@ class OpenOverheidSyncService
                 Log::error('Open Overheid sync error on page', [
                     'page' => $page,
                     'exception' => $e->getMessage(),
+                    'error_class' => get_class($e),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
                 ]);
                 $totalErrors++;
                 $hasMorePages = false; // Stop on page-level errors
@@ -214,10 +429,78 @@ class OpenOverheidSyncService
             }
         }
 
+        if ($command && $totalResults > 0) {
+            $bar->finish();
+            $command->newLine();
+            // Clear the custom message line
+            $command->getOutput()->write("\r\033[K");
+            $command->newLine();
+        }
+
+        // Retry failed documents if any
+        $retriedCount = 0;
+        if (! empty($failedDocuments) && $command && ! $command->option('no-retry')) {
+            $command->info('Retrying '.count($failedDocuments).' failed documents...');
+            $command->newLine();
+
+            $retryBar = $command->getOutput()->createProgressBar(count($failedDocuments));
+            $retryBar->setFormat(' %current%/%max% [%bar%] %percent:3s%% %elapsed:6s%');
+            $retryBar->start();
+
+            foreach ($failedDocuments as $failed) {
+                try {
+                    $documentData = $this->searchService->getDocument($failed['external_id']);
+                    $result = $this->upsertDocument($failed['external_id'], $documentData);
+
+                    if ($result !== 'skipped') {
+                        $retriedCount++;
+                        $totalSynced++;
+                        if ($result === 'created') {
+                            $totalCreated++;
+                        } elseif ($result === 'updated') {
+                            $totalUpdated++;
+                        }
+                    } else {
+                        $totalSkipped++;
+                    }
+                    $totalErrors--;
+                } catch (\Exception $e) {
+                    Log::error('Open Overheid retry failed for document', [
+                        'external_id' => $failed['external_id'],
+                        'original_error' => $failed['error'],
+                        'retry_error' => $e->getMessage(),
+                        'error_class' => get_class($e),
+                    ]);
+                }
+                $retryBar->advance();
+            }
+
+            $retryBar->finish();
+            $command->newLine(2);
+
+            if ($retriedCount > 0) {
+                $command->info("✅ Retried and synced {$retriedCount} documents successfully.");
+            }
+        }
+
         Log::info('Open Overheid sync completed', [
             'total_synced' => $totalSynced,
+            'total_created' => $totalCreated,
+            'total_updated' => $totalUpdated,
+            'total_skipped' => $totalSkipped,
             'total_errors' => $totalErrors,
+            'retried_count' => $retriedCount,
         ]);
+
+        return [
+            'total' => $totalResults,
+            'synced' => $totalSynced,
+            'created' => $totalCreated,
+            'updated' => $totalUpdated,
+            'skipped' => $totalSkipped,
+            'errors' => $totalErrors,
+            'retried' => $retriedCount,
+        ];
     }
 
     /**
@@ -240,8 +523,10 @@ class OpenOverheidSyncService
     /**
      * Upsert document data to the database.
      * Maps the detail endpoint response structure to our database fields.
+     *
+     * @return string 'created'|'updated'|'skipped'
      */
-    protected function upsertDocument(string $externalId, array $documentData): void
+    protected function upsertDocument(string $externalId, array $documentData): string
     {
         $document = $documentData['document'] ?? [];
         $plooiIntern = $documentData['plooiIntern'] ?? [];
@@ -249,7 +534,17 @@ class OpenOverheidSyncService
         $classificatie = $document['classificatiecollectie'] ?? [];
 
         // Extract title from titelcollectie.officieleTitel
+        // Truncate to 1000 characters to prevent database errors (title column is varchar(1000))
         $title = $document['titelcollectie']['officieleTitel'] ?? null;
+        if ($title && mb_strlen($title) > 1000) {
+            $originalLength = mb_strlen($title);
+            $title = mb_substr($title, 0, 1000);
+            Log::warning('Open Overheid title truncated', [
+                'external_id' => $externalId,
+                'original_length' => $originalLength,
+                'truncated_length' => 1000,
+            ]);
+        }
 
         // Extract publication date from first version's openbaarmakingsdatum
         $publicationDate = null;
@@ -302,11 +597,44 @@ class OpenOverheidSyncService
             'synced_at' => now(),
         ];
 
-        // Upsert the document
-        OpenOverheidDocument::updateOrCreate(
-            ['external_id' => $externalId],
-            $data
-        );
+        // Check if document already exists
+        $existing = OpenOverheidDocument::where('external_id', $externalId)->first();
+
+        if ($existing) {
+            // Check if data has changed (compare key fields)
+            $hasChanged = $existing->title !== $title
+                || $existing->description !== $description
+                || $existing->publication_date?->format('Y-m-d') !== $publicationDate
+                || $existing->document_type !== $documentType
+                || $existing->category !== $category
+                || $existing->theme !== $theme
+                || $existing->organisation !== $organisation;
+
+            if (! $hasChanged) {
+                // Document exists and hasn't changed - skip
+                return 'skipped';
+            }
+
+            // Document exists but has changed - update
+            $existing->update($data);
+
+            // Dispatch job to pre-compute dossier metadata if this is a dossier document
+            if ($this->isDossierDocument($existing)) {
+                \App\Jobs\PrecomputeDossierMetadataJob::dispatch($externalId);
+            }
+
+            return 'updated';
+        }
+
+        // New document - create
+        $newDocument = OpenOverheidDocument::create($data);
+
+        // Dispatch job to pre-compute dossier metadata if this is a dossier document
+        if ($this->isDossierDocument($newDocument)) {
+            \App\Jobs\PrecomputeDossierMetadataJob::dispatch($externalId);
+        }
+
+        return 'created';
     }
 
     /**
@@ -353,5 +681,67 @@ class OpenOverheidSyncService
 
             return null;
         }
+    }
+
+    /**
+     * Update progress bar with error count, skipped count, and ETA in colors
+     */
+    protected function updateProgressBar($bar, int $processed, int $total, int $errors, $command, int $skipped = 0): void
+    {
+        if ($processed === 0 || ! $command) {
+            return;
+        }
+
+        // Calculate ETA based on average time per document
+        $elapsed = time() - $bar->getStartTime();
+        $eta = $elapsed > 0 && $processed > 0 && $processed < $total
+            ? (int) (($elapsed / $processed) * ($total - $processed))
+            : 0;
+
+        $etaFormatted = $eta > 0 ? gmdate('H:i:s', $eta) : '--:--:--';
+
+        // Build status line with colors (on a new line below progress bar)
+        $statusLine = "\n"; // Move to new line
+        $statusLine .= "\033[K"; // Clear line
+
+        // Skipped in blue/cyan
+        if ($skipped > 0) {
+            $statusLine .= "\033[36mSkipped: {$skipped}\033[0m  ";
+        }
+
+        // Errors in red
+        if ($errors > 0) {
+            $statusLine .= "\033[31mErrors: {$errors}\033[0m  ";
+        }
+
+        // ETA in orange/yellow (38;5;208 = orange)
+        $statusLine .= "\033[38;5;208mETA: {$etaFormatted}\033[0m";
+
+        // Move cursor back up one line
+        $statusLine .= "\033[1A";
+
+        $command->getOutput()->write($statusLine);
+    }
+
+    /**
+     * Check if a document is part of a dossier (has identiteitsgroep relations).
+     */
+    protected function isDossierDocument(OpenOverheidDocument $document): bool
+    {
+        $metadata = $document->metadata ?? [];
+        $documentrelaties = $metadata['documentrelaties'] ?? [];
+
+        if (empty($documentrelaties) || ! is_array($documentrelaties)) {
+            return false;
+        }
+
+        foreach ($documentrelaties as $relation) {
+            $role = $relation['role'] ?? '';
+            if (str_contains($role, 'identiteitsgroep')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

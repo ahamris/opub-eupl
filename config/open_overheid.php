@@ -57,8 +57,31 @@ return [
         'enabled' => env('TYPESENSE_SYNC_ENABLED', true),
         'api_key' => env('TYPESENSE_API_KEY'),
         'host' => env('TYPESENSE_HOST', 'localhost'),
-        'port' => env('TYPESENSE_PORT', 8108),
+        'port' => (int) env('TYPESENSE_PORT', 8108),
         'protocol' => env('TYPESENSE_PROTOCOL', 'http'),
+        'natural_language_search' => [
+            'enabled' => env('TYPESENSE_NL_SEARCH_ENABLED', false),
+            'model' => env('TYPESENSE_NL_SEARCH_MODEL', ''),
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Gemini AI Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for Google Gemini API integration.
+    | Used for dossier enhancement, summaries, and audio generation.
+    |
+    */
+
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+        'model' => env('GEMINI_MODEL', 'gemini-2.0-flash-exp'),
+        'tts_model' => env('GEMINI_TTS_MODEL', 'gemini-2.5-flash-tts'),
+        'cache_ttl' => (int) env('GEMINI_CACHE_TTL', 2592000), // 30 days
+        'max_retries' => (int) env('GEMINI_MAX_RETRIES', 3),
+        'timeout' => (int) env('GEMINI_TIMEOUT', 30),
     ],
 
 ];
