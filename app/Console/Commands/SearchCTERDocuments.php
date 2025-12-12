@@ -48,13 +48,14 @@ class SearchCTERDocuments extends Command
         foreach ($searchTerms as $term) {
             $this->info("Zoeken naar: {$term}...");
 
+            $likeOp = config('database.default') === 'pgsql' ? 'ilike' : 'like';
             $documents = OpenOverheidDocument::query()
-                ->where(function ($query) use ($term) {
-                    $query->where('title', 'ilike', "%{$term}%")
-                        ->orWhere('description', 'ilike', "%{$term}%")
-                        ->orWhere('content', 'ilike', "%{$term}%")
-                        ->orWhere('theme', 'ilike', "%{$term}%")
-                        ->orWhere('category', 'ilike', "%{$term}%");
+                ->where(function ($query) use ($term, $likeOp) {
+                    $query->where('title', $likeOp, "%{$term}%")
+                        ->orWhere('description', $likeOp, "%{$term}%")
+                        ->orWhere('content', $likeOp, "%{$term}%")
+                        ->orWhere('theme', $likeOp, "%{$term}%")
+                        ->orWhere('category', $likeOp, "%{$term}%");
                 })
                 ->get();
 

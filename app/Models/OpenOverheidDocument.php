@@ -127,6 +127,10 @@ class OpenOverheidDocument extends Model
 
         $wooCategoryService = app(\App\Services\OpenOverheid\WooCategoryService::class);
 
+        // Determine the correct case-insensitive comparison operator
+        $isPostgres = config('database.default') === 'pgsql';
+        $likeOperator = $isPostgres ? 'ilike' : 'like';
+
         if (is_array($category)) {
             // Normalize each category in the array and collect all possible matches
             $searchTerms = [];
@@ -139,22 +143,22 @@ class OpenOverheidDocument extends Model
                 }
             }
 
-            // Use case-insensitive search with ILIKE
-            $query->where(function ($q) use ($searchTerms) {
+            // Use case-insensitive search
+            $query->where(function ($q) use ($searchTerms, $likeOperator) {
                 foreach ($searchTerms as $term) {
-                    $q->orWhere('category', 'ilike', $term);
+                    $q->orWhere('category', $likeOperator, $term);
                 }
             });
         } else {
             // Normalize the category
             $normalizedCategory = $wooCategoryService->normalizeCategory($category) ?? $category;
 
-            // Use case-insensitive search with ILIKE
+            // Use case-insensitive search
             // Also check original category in case it's already in the correct format
-            $query->where(function ($q) use ($normalizedCategory, $category) {
-                $q->where('category', 'ilike', $normalizedCategory);
+            $query->where(function ($q) use ($normalizedCategory, $category, $likeOperator) {
+                $q->where('category', $likeOperator, $normalizedCategory);
                 if ($normalizedCategory !== $category) {
-                    $q->orWhere('category', 'ilike', $category);
+                    $q->orWhere('category', $likeOperator, $category);
                 }
             });
         }
@@ -225,13 +229,20 @@ class OpenOverheidDocument extends Model
      */
     public function scopeInDossier(Builder $query): Builder
     {
+        if (config('database.default') === 'pgsql') {
+            return $query->whereRaw(
+                "EXISTS (
+                    SELECT 1 
+                    FROM jsonb_array_elements(metadata->'documentrelaties') AS rel
+                    WHERE rel->>'role' LIKE ?
+                )",
+                ['%identiteitsgroep%']
+            );
+        }
+
+        // MariaDB/MySQL: Use JSON_SEARCH to find identiteitsgroep in metadata
         return $query->whereRaw(
-            "EXISTS (
-                SELECT 1 
-                FROM jsonb_array_elements(metadata->'documentrelaties') AS rel
-                WHERE rel->>'role' LIKE ?
-            )",
-            ['%identiteitsgroep%']
+            "JSON_SEARCH(metadata, 'one', '%identiteitsgroep%', NULL, '$.documentrelaties[*].role') IS NOT NULL"
         );
     }
 
@@ -297,19 +308,29 @@ class OpenOverheidDocument extends Model
 
         // Build query to find documents that reference any of the dossier IDs
         // Exclude the current document
+        $isPostgres = config('database.default') === 'pgsql';
+
         return self::where('external_id', '!=', $this->external_id)
-            ->where(function ($query) use ($allDossierIds, $dossierRelationIds) {
+            ->where(function ($query) use ($allDossierIds, $dossierRelationIds, $isPostgres) {
                 // Find documents that have any of the dossier IDs in their relations
                 foreach ($allDossierIds as $dossierId) {
-                    // Search for documents where the relation URL contains the dossier ID
-                    $query->orWhereRaw(
-                        "EXISTS (
-                            SELECT 1 
-                            FROM jsonb_array_elements(metadata->'documentrelaties') AS rel
-                            WHERE rel->>'relation' LIKE ?
-                        )",
-                        ['%'.$dossierId.'%']
-                    );
+                    if ($isPostgres) {
+                        // PostgreSQL: Use jsonb_array_elements
+                        $query->orWhereRaw(
+                            "EXISTS (
+                                SELECT 1 
+                                FROM jsonb_array_elements(metadata->'documentrelaties') AS rel
+                                WHERE rel->>'relation' LIKE ?
+                            )",
+                            ['%'.$dossierId.'%']
+                        );
+                    } else {
+                        // MariaDB/MySQL: Use JSON_SEARCH
+                        $query->orWhereRaw(
+                            "JSON_SEARCH(metadata, 'one', ?, NULL, '$.documentrelaties[*].relation') IS NOT NULL",
+                            ['%'.$dossierId.'%']
+                        );
+                    }
                 }
                 // Also find documents by their external_id if they match dossier IDs
                 if (! empty($dossierRelationIds)) {

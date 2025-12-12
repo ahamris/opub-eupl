@@ -99,7 +99,8 @@ class DossierController extends Controller
             // Apply search query filters
             if (! empty($validated['zoeken'])) {
                 if (! empty($validated['titles_only'])) {
-                    $baseQuery->where('title', 'ilike', '%'.$validated['zoeken'].'%');
+                    $likeOp = config('database.default') === 'pgsql' ? 'ilike' : 'like';
+                    $baseQuery->where('title', $likeOp, '%'.$validated['zoeken'].'%');
                 } else {
                     $baseQuery->whereFullText(['title', 'description', 'content'], $validated['zoeken']);
                 }
@@ -281,13 +282,24 @@ class DossierController extends Controller
             if (! empty($validated['zoeken'])) {
                 // Join with documents for text search
                 $metadataQuery->join('open_overheid_documents', 'dossier_metadata.dossier_external_id', '=', 'open_overheid_documents.external_id');
+                $likeOp = config('database.default') === 'pgsql' ? 'ilike' : 'like';
                 if (! empty($validated['titles_only'])) {
-                    $metadataQuery->where('open_overheid_documents.title', 'ilike', '%'.$validated['zoeken'].'%');
+                    $metadataQuery->where('open_overheid_documents.title', $likeOp, '%'.$validated['zoeken'].'%');
                 } else {
-                    $metadataQuery->whereRaw(
-                        "open_overheid_documents.search_vector @@ plainto_tsquery('dutch', ?)",
-                        [$validated['zoeken']]
-                    );
+                    if (config('database.default') === 'pgsql') {
+                        $metadataQuery->whereRaw(
+                            "open_overheid_documents.search_vector @@ plainto_tsquery('dutch', ?)",
+                            [$validated['zoeken']]
+                        );
+                    } else {
+                        // MariaDB/MySQL fallback: use LIKE search
+                        $searchTerm = '%'.$validated['zoeken'].'%';
+                        $metadataQuery->where(function ($q) use ($searchTerm) {
+                            $q->where('open_overheid_documents.title', 'like', $searchTerm)
+                              ->orWhere('open_overheid_documents.description', 'like', $searchTerm)
+                              ->orWhere('open_overheid_documents.content', 'like', $searchTerm);
+                        });
+                    }
                 }
             }
 
@@ -311,13 +323,24 @@ class DossierController extends Controller
             // Apply search filter if present
             if (! empty($validated['zoeken'])) {
                 $metadataCountQuery->join('open_overheid_documents', 'dossier_metadata.dossier_external_id', '=', 'open_overheid_documents.external_id');
+                $likeOp = config('database.default') === 'pgsql' ? 'ilike' : 'like';
                 if (! empty($validated['titles_only'])) {
-                    $metadataCountQuery->where('open_overheid_documents.title', 'ilike', '%'.$validated['zoeken'].'%');
+                    $metadataCountQuery->where('open_overheid_documents.title', $likeOp, '%'.$validated['zoeken'].'%');
                 } else {
-                    $metadataCountQuery->whereRaw(
-                        "open_overheid_documents.search_vector @@ plainto_tsquery('dutch', ?)",
-                        [$validated['zoeken']]
-                    );
+                    if (config('database.default') === 'pgsql') {
+                        $metadataCountQuery->whereRaw(
+                            "open_overheid_documents.search_vector @@ plainto_tsquery('dutch', ?)",
+                            [$validated['zoeken']]
+                        );
+                    } else {
+                        // MariaDB/MySQL fallback: use LIKE search
+                        $searchTerm = '%'.$validated['zoeken'].'%';
+                        $metadataCountQuery->where(function ($q) use ($searchTerm) {
+                            $q->where('open_overheid_documents.title', 'like', $searchTerm)
+                              ->orWhere('open_overheid_documents.description', 'like', $searchTerm)
+                              ->orWhere('open_overheid_documents.content', 'like', $searchTerm);
+                        });
+                    }
                 }
             }
 

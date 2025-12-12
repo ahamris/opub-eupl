@@ -87,7 +87,8 @@ class ThemaController extends Controller
             // Apply search query filters
             if (! empty($query->zoektekst)) {
                 if (! empty($query->titlesOnly)) {
-                    $baseQuery->where('title', 'ilike', '%'.$query->zoektekst.'%');
+                    $likeOp = config('database.default') === 'pgsql' ? 'ilike' : 'like';
+                    $baseQuery->where('title', $likeOp, '%'.$query->zoektekst.'%');
                 } else {
                     $baseQuery->whereFullText(['title', 'description', 'content'], $query->zoektekst);
                 }

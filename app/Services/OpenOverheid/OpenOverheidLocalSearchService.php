@@ -20,8 +20,9 @@ class OpenOverheidLocalSearchService
             if (! empty($query->zoektekst)) {
                 // If titles_only is set, only search in title using LIKE for exact column matching
                 if (! empty($query->titlesOnly)) {
-                    // Use ILIKE for case-insensitive search on title column only
-                    $builder->where('title', 'ilike', '%'.$query->zoektekst.'%');
+                    // Use case-insensitive search on title column only
+                    $likeOp = config('database.default') === 'pgsql' ? 'ilike' : 'like';
+                    $builder->where('title', $likeOp, '%'.$query->zoektekst.'%');
                 } else {
                     $builder->whereFullText(['title', 'description', 'content'], $query->zoektekst);
                 }
