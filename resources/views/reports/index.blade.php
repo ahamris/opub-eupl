@@ -138,9 +138,9 @@
                     </div>
                     <div class="space-y-4 max-h-96 overflow-y-auto">
                         @php
-                            $maxOrgCount = max(array_column($documentsPerOrganisation, 'count'));
+                            $maxOrgCount = !empty($documentsPerOrganisation) ? max(array_column($documentsPerOrganisation, 'count')) : 0;
                         @endphp
-                        @foreach(array_slice($documentsPerOrganisation, 0, 10) as $item)
+                        @forelse(array_slice($documentsPerOrganisation, 0, 10) as $item)
                         <div class="flex items-center gap-4">
                             <div class="flex-1 min-w-0">
                                 <p class="text-body-medium font-medium text-on-surface mb-1 truncate">{{ $item['organisation'] }}</p>
@@ -152,7 +152,9 @@
                                 <p class="text-headline-small font-bold text-primary">{{ number_format($item['count'], 0, ',', '.') }}</p>
                             </div>
                         </div>
-                        @endforeach
+                        @empty
+                        <p class="text-body-medium text-on-surface-variant/70">Geen gegevens beschikbaar voor deze periode.</p>
+                        @endforelse
                     </div>
                 </div>
 
@@ -167,9 +169,9 @@
                     <div class="space-y-4 max-h-96 overflow-y-auto">
                         @php
                             $wooCategoryService = app(\App\Services\OpenOverheid\WooCategoryService::class);
-                            $maxCategoryCount = max(array_column($documentsPerCategory, 'count'));
+                            $maxCategoryCount = !empty($documentsPerCategory) ? max(array_column($documentsPerCategory, 'count')) : 0;
                         @endphp
-                        @foreach($documentsPerCategory as $item)
+                        @forelse($documentsPerCategory as $item)
                             @php
                                 $formattedCategory = $wooCategoryService->formatCategoryForDisplay($item['category']) ?? $item['category'];
                             @endphp
@@ -184,7 +186,9 @@
                                 <p class="text-headline-small font-bold text-primary">{{ number_format($item['count'], 0, ',', '.') }}</p>
                             </div>
                         </div>
-                        @endforeach
+                        @empty
+                        <p class="text-body-medium text-on-surface-variant/70">Geen gegevens beschikbaar voor deze periode.</p>
+                        @endforelse
                     </div>
                 </div>
             </div>
