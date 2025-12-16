@@ -771,8 +771,12 @@ class SearchController extends Controller
                     $results = $this->searchWithTypesense($query, false);
                     
                     // Extract facet counts from Typesense results
-                    if (isset($results['facet_counts'])) {
+                    if (isset($results['facet_counts']) && ! empty($results['facet_counts'])) {
                         $facetCounts = $results['facet_counts'];
+                        \Log::debug('Typesense facets received', [
+                            'facet_count' => count($facetCounts),
+                            'facets' => array_keys(array_column($facetCounts, 'field_name')),
+                        ]);
                         // Convert Typesense facets to filter counts format
                         $filterCounts = $this->convertTypesenseFacetsToFilterCounts($facetCounts, $query);
                         
@@ -791,6 +795,15 @@ class SearchController extends Controller
                             $filterCounts['jaar'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subYear())->count();
                         } catch (\Exception $dateException) {
                             \Log::warning('Date filter counts failed', ['error' => $dateException->getMessage()]);
+                        }
+                    } else {
+                        // Typesense search succeeded but no facets returned - fallback to FilterCountService
+                        \Log::warning('Typesense search succeeded but no facet_counts returned, using FilterCountService fallback');
+                        try {
+                            $filterCounts = $this->filterCountService->calculateFilterCounts($query);
+                        } catch (\Exception $e) {
+                            \Log::warning('FilterCountService failed', ['error' => $e->getMessage()]);
+                            $filterCounts = [];
                         }
                     }
                 } catch (\Exception $typesenseException) {
@@ -1134,9 +1147,14 @@ class SearchController extends Controller
         ];
 
         // Typesense returns facets as an array of objects: [{field_name: "document_type", counts: [{value: "...", count: 123}]}]
-        if (is_array($facetCounts)) {
+        if (is_array($facetCounts) && ! empty($facetCounts)) {
             foreach ($facetCounts as $facetGroup) {
-                $fieldName = $facetGroup['field_name'] ?? null;
+                // Handle both array format and object format
+                if (! is_array($facetGroup)) {
+                    continue;
+                }
+
+                $fieldName = $facetGroup['field_name'] ?? $facetGroup['fieldName'] ?? null;
                 $countsArray = $facetGroup['counts'] ?? [];
 
                 if (! $fieldName || empty($countsArray)) {
@@ -1154,6 +1172,9 @@ class SearchController extends Controller
 
                 if ($countKey) {
                     foreach ($countsArray as $facet) {
+                        if (! is_array($facet)) {
+                            continue;
+                        }
                         $value = $facet['value'] ?? null;
                         $count = $facet['count'] ?? 0;
                         if ($value && $count > 0) {
@@ -1162,6 +1183,11 @@ class SearchController extends Controller
                     }
                 }
             }
+        } else {
+            \Log::warning('Typesense facet_counts is empty or invalid', [
+                'facet_counts' => $facetCounts,
+                'type' => gettype($facetCounts),
+            ]);
         }
 
         return $counts;
