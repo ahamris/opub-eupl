@@ -13,8 +13,8 @@ class ReportController
     public function index(Request $request): \Illuminate\View\View
     {
         // Get period filters (default to current year)
-        $year = $request->get('jaar', now()->year);
-        $quarter = $request->get('kwartaal');
+        $year = (int) $request->get('jaar', now()->year);
+        $quarter = $request->get('kwartaal') ? (int) $request->get('kwartaal') : null;
 
         // Calculate date range based on filters
         $startDate = $quarter

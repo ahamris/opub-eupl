@@ -13,7 +13,7 @@ return [
 
     'base_url' => env('OPEN_OVERHEID_BASE_URL', 'https://open.overheid.nl/overheid/openbaarmakingen/api/v0'),
 
-    'timeout' => env('OPEN_OVERHEID_TIMEOUT', 10),
+    'timeout' => env('OPEN_OVERHEID_TIMEOUT', 30), // Increased from 10 to 30 seconds for slow API responses
 
     /*
     |--------------------------------------------------------------------------

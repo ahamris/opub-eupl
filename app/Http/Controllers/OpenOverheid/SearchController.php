@@ -643,6 +643,11 @@ class SearchController extends Controller
             $results = $this->localService->search($searchQuery);
             $items = $results['items'] ?? collect();
 
+            // Ensure $items is a collection
+            if (! $items instanceof \Illuminate\Support\Collection) {
+                $items = collect($items);
+            }
+
             $formattedHits = array_map(function ($item) {
                 return [
                     'id' => $item->external_id ?? $item->id ?? null,
@@ -654,7 +659,7 @@ class SearchController extends Controller
                     'formatted_category' => $this->formatCategory($item->category ?? null),
                     'organisation' => $item->organisation ?? null,
                 ];
-            }, $items->items->toArray() ?? []);
+            }, $items->toArray());
 
             $searchTime = (int) ((microtime(true) - $startTime) * 1000);
 
