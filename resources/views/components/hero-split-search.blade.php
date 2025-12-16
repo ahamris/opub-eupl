@@ -67,7 +67,7 @@
         <!-- Right side: Search functionality -->
         <div class="mt-16 sm:mt-24 lg:mt-0 lg:shrink-0 lg:grow">
             <div class="relative z-9999 isolate" x-data="liveSearch()" @click.outside="showResults = false">
-                <div class="mx-auto max-w-md rounded-md bg-white p-6 shadow-xl ring-1 ring-gray-900/10 dark:bg-gray-900 dark:ring-white/10">
+                <div class="mx-auto rounded-md bg-white p-6 shadow-xl ring-1 ring-gray-900/10 dark:bg-gray-900 dark:ring-white/10">
                     <div class="mb-4 flex items-center justify-between gap-3">
                         <p class="text-sm font-medium text-gray-900 dark:text-white">Slim zoeken met</p>
                         <a href="{{ route('chat') }}" class="inline-flex items-center gap-2 rounded-md bg-[var(--color-primary)] px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[var(--color-primary-dark)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
