@@ -6,12 +6,14 @@ use App\DataTransferObjects\OpenOverheid\OpenOverheidSearchQuery;
 use App\Http\Controllers\Controller;
 use App\Models\OpenOverheidDocument;
 use App\Services\OpenOverheid\OpenOverheidLocalSearchService;
+use App\Services\OpenOverheid\FilterCountService;
 use Illuminate\Http\Request;
 
 class ThemaController extends Controller
 {
     public function __construct(
-        private readonly OpenOverheidLocalSearchService $localService
+        private readonly OpenOverheidLocalSearchService $localService,
+        private readonly FilterCountService $filterCountService
     ) {}
 
     /**
@@ -80,61 +82,81 @@ class ThemaController extends Controller
         );
 
         try {
-            // Get base query for themes only
-            $baseQuery = OpenOverheidDocument::whereNotNull('theme')
-                ->where('theme', '!=', 'Onbekend');
+            // Use Typesense as primary search engine (much faster with 600k+ records)
+            $useTypesense = config('open_overheid.typesense.enabled', true);
+            $filterCounts = [];
+            $allFilterOptions = [];
 
-            // Apply search query filters
-            if (! empty($query->zoektekst)) {
-                if (! empty($query->titlesOnly)) {
-                    $likeOp = config('database.default') === 'pgsql' ? 'ilike' : 'like';
-                    $baseQuery->where('title', $likeOp, '%'.$query->zoektekst.'%');
-                } else {
-                    $baseQuery->whereFullText(['title', 'description', 'content'], $query->zoektekst);
+            if ($useTypesense) {
+                try {
+                    // Use Typesense search with theme filter
+                    $results = $this->searchWithTypesense($query, true); // true = themes only
+                    
+                    // Extract facet counts from Typesense results
+                    if (isset($results['facet_counts']) && ! empty($results['facet_counts'])) {
+                        $filterCounts = $this->convertTypesenseFacetsToFilterCounts($results['facet_counts'], $query);
+                        
+                        // Calculate date filter counts separately
+                        try {
+                            $now = now();
+                            $baseQuery = OpenOverheidDocument::whereNotNull('theme')
+                                ->where('theme', '!=', 'Onbekend');
+                            if (! empty($query->zoektekst)) {
+                                $baseQuery->whereFullText(['title', 'description', 'content'], $query->zoektekst);
+                            }
+                            $baseQuery->dateRange($query->publicatiedatumVan, $query->publicatiedatumTot);
+                            
+                            $filterCounts['week'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subWeek())->count();
+                            $filterCounts['maand'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subMonth())->count();
+                            $filterCounts['jaar'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subYear())->count();
+                        } catch (\Exception $dateException) {
+                            \Log::warning('Date filter counts failed in ThemaController', ['error' => $dateException->getMessage()]);
+                        }
+                    } else {
+                        // Fallback to FilterCountService if no facets
+                        try {
+                            $baseQuery = OpenOverheidDocument::whereNotNull('theme')->where('theme', '!=', 'Onbekend');
+                            $filterCounts = $this->calculateFilterCounts($baseQuery, $validated);
+                        } catch (\Exception $e) {
+                            \Log::warning('FilterCountService failed in ThemaController', ['error' => $e->getMessage()]);
+                            $filterCounts = [];
+                        }
+                    }
+                    
+                    // Get filter options using FilterCountService
+                    try {
+                        $allFilterOptions = $this->filterCountService->getAllFilterOptions($query);
+                    } catch (\Exception $e) {
+                        \Log::warning('getAllFilterOptions failed in ThemaController', ['error' => $e->getMessage()]);
+                        $allFilterOptions = [];
+                    }
+                    
+                    $formattedResults = $results;
+                } catch (\Exception $typesenseException) {
+                    // Fallback to PostgreSQL if Typesense fails
+                    \Log::warning('Typesense search failed in ThemaController, falling back to PostgreSQL', [
+                        'error' => $typesenseException->getMessage(),
+                    ]);
+                    $formattedResults = $this->searchWithPostgreSQL($query, $validated);
+                    $filterCounts = $this->calculateFilterCounts(
+                        OpenOverheidDocument::whereNotNull('theme')->where('theme', '!=', 'Onbekend'),
+                        $validated
+                    );
+                    $allFilterOptions = $this->getAllFilterOptions(
+                        OpenOverheidDocument::whereNotNull('theme')->where('theme', '!=', 'Onbekend')
+                    );
                 }
+            } else {
+                // Typesense disabled, use PostgreSQL
+                $formattedResults = $this->searchWithPostgreSQL($query, $validated);
+                $baseQuery = OpenOverheidDocument::whereNotNull('theme')->where('theme', '!=', 'Onbekend');
+                $filterCounts = $this->calculateFilterCounts($baseQuery, $validated);
+                $allFilterOptions = $this->getAllFilterOptions($baseQuery);
             }
-
-            $baseQuery->dateRange($query->publicatiedatumVan, $query->publicatiedatumTot);
-            $baseQuery->byDocumentType($query->documentsoort);
-            $baseQuery->byCategory($query->informatiecategorie);
-            $baseQuery->byTheme($query->thema);
-            $baseQuery->byOrganisation($query->organisatie);
-
-            // Apply sorting
-            switch ($query->sort ?? 'relevance') {
-                case 'publication_date':
-                    $baseQuery->orderBy('publication_date', 'desc');
-                    break;
-                case 'modified_date':
-                    $baseQuery->orderBy('updated_at', 'desc');
-                    break;
-                case 'relevance':
-                default:
-                    $baseQuery->orderBy('publication_date', 'desc');
-                    break;
-            }
-
-            $results = $baseQuery->paginate($query->perPage, ['*'], 'page', (int) ($validated['pagina'] ?? 1));
-
-            // Transform to match API response format
-            $formattedResults = [
-                'items' => $results->items(),
-                'total' => $results->total(),
-                'page' => $results->currentPage(),
-                'perPage' => $results->perPage(),
-                'hasNextPage' => $results->hasMorePages(),
-                'hasPreviousPage' => $results->currentPage() > 1,
-            ];
 
             $documentCount = OpenOverheidDocument::whereNotNull('theme')
                 ->where('theme', '!=', 'Onbekend')
                 ->count();
-
-            // Calculate filter counts based on current results (only for themes domain)
-            $filterCounts = $this->calculateFilterCounts($baseQuery, $validated);
-
-            // Get all available filter options for "Toon meer"
-            $allFilterOptions = $this->getAllFilterOptions($baseQuery);
 
             return view('themas.index', [
                 'results' => $formattedResults,
@@ -160,7 +182,224 @@ class ThemaController extends Controller
     }
 
     /**
-     * Calculate filter counts based on current search results (themes domain only).
+     * Search using Typesense (optimized for themes)
+     */
+    private function searchWithTypesense(OpenOverheidSearchQuery $query, bool $themesOnly = false): array
+    {
+        $searchService = app(\App\Services\Typesense\TypesenseSearchService::class);
+
+        // Build filter_by string - always filter for themes only
+        $filters = ['theme:!=Onbekend'];
+        if ($themesOnly) {
+            $filters[] = 'theme:!=null';
+        }
+
+        if ($query->documentsoort) {
+            $types = is_array($query->documentsoort) ? $query->documentsoort : [$query->documentsoort];
+            $filters[] = 'document_type:['.implode(',', array_map(fn ($t) => '='.$t, $types)).']';
+        }
+        if ($query->informatiecategorie) {
+            $filters[] = 'category:='.$query->informatiecategorie;
+        }
+        if ($query->thema) {
+            $themes = is_array($query->thema) ? $query->thema : [$query->thema];
+            $filters[] = 'theme:['.implode(',', array_map(fn ($t) => '='.$t, $themes)).']';
+        }
+        if ($query->organisatie) {
+            $orgs = is_array($query->organisatie) ? $query->organisatie : [$query->organisatie];
+            $filters[] = 'organisation:['.implode(',', array_map(fn ($o) => '='.$o, $orgs)).']';
+        }
+        if ($query->publicatiedatumVan || $query->publicatiedatumTot) {
+            $dateFilters = [];
+            if ($query->publicatiedatumVan) {
+                $fromDate = \DateTime::createFromFormat('d-m-Y', $query->publicatiedatumVan);
+                if ($fromDate) {
+                    $dateFilters[] = '>='.$fromDate->getTimestamp();
+                }
+            }
+            if ($query->publicatiedatumTot) {
+                $toDate = \DateTime::createFromFormat('d-m-Y', $query->publicatiedatumTot);
+                if ($toDate) {
+                    $dateFilters[] = '<='.$toDate->getTimestamp();
+                }
+            }
+            if (! empty($dateFilters)) {
+                $filters[] = 'publication_date:['.implode(',', $dateFilters).']';
+            }
+        }
+
+        // Build sort_by
+        $sortBy = 'publication_date:desc';
+        switch ($query->sort) {
+            case 'publication_date':
+                $sortBy = 'publication_date:desc';
+                break;
+            case 'modified_date':
+                $sortBy = 'synced_at:desc';
+                break;
+            case 'relevance':
+            default:
+                $sortBy = 'publication_date:desc';
+                break;
+        }
+
+        $options = [
+            'per_page' => $query->perPage,
+            'page' => $query->page,
+            'sort_by' => $sortBy,
+            'facet_by' => 'document_type,theme,organisation,category',
+            'max_facet_values' => 500,
+        ];
+
+        if (! empty($filters)) {
+            $options['filter_by'] = implode(' && ', $filters);
+        }
+
+        $typesenseResults = $searchService->search($query->zoektekst ?? '', $options);
+
+        // Transform Typesense results
+        $items = collect($typesenseResults['hits'] ?? [])->map(function ($hit) {
+            $doc = $hit['document'] ?? $hit;
+            $model = \App\Models\OpenOverheidDocument::where('external_id', $doc['external_id'] ?? null)->first();
+
+            if ($model) {
+                return $model;
+            }
+
+            return (object) [
+                'id' => $doc['id'] ?? null,
+                'external_id' => $doc['external_id'] ?? null,
+                'title' => $doc['title'] ?? 'Geen titel',
+                'description' => $doc['description'] ?? '',
+                'content' => $doc['content'] ?? '',
+                'publication_date' => isset($doc['publication_date']) && $doc['publication_date'] > 0
+                    ? \Carbon\Carbon::createFromTimestamp($doc['publication_date'])
+                    : null,
+                'document_type' => $doc['document_type'] ?? null,
+                'category' => $doc['category'] ?? null,
+                'theme' => $doc['theme'] ?? null,
+                'organisation' => $doc['organisation'] ?? null,
+                'updated_at' => isset($doc['synced_at']) && $doc['synced_at'] > 0
+                    ? \Carbon\Carbon::createFromTimestamp($doc['synced_at'])
+                    : now(),
+            ];
+        });
+
+        return [
+            'items' => $items,
+            'total' => $typesenseResults['found'] ?? 0,
+            'page' => $typesenseResults['page'] ?? $query->page,
+            'perPage' => $query->perPage,
+            'hasNextPage' => ($typesenseResults['page'] ?? $query->page) * $query->perPage < ($typesenseResults['found'] ?? 0),
+            'hasPreviousPage' => ($typesenseResults['page'] ?? $query->page) > 1,
+            'facet_counts' => $typesenseResults['facet_counts'] ?? [],
+        ];
+    }
+
+    /**
+     * Search using PostgreSQL (fallback)
+     */
+    private function searchWithPostgreSQL(OpenOverheidSearchQuery $query, array $validated): array
+    {
+        $baseQuery = OpenOverheidDocument::whereNotNull('theme')
+            ->where('theme', '!=', 'Onbekend');
+
+        if (! empty($query->zoektekst)) {
+            if (! empty($query->titlesOnly)) {
+                $likeOp = config('database.default') === 'pgsql' ? 'ilike' : 'like';
+                $baseQuery->where('title', $likeOp, '%'.$query->zoektekst.'%');
+            } else {
+                $baseQuery->whereFullText(['title', 'description', 'content'], $query->zoektekst);
+            }
+        }
+
+        $baseQuery->dateRange($query->publicatiedatumVan, $query->publicatiedatumTot);
+        $baseQuery->byDocumentType($query->documentsoort);
+        $baseQuery->byCategory($query->informatiecategorie);
+        $baseQuery->byTheme($query->thema);
+        $baseQuery->byOrganisation($query->organisatie);
+
+        switch ($query->sort ?? 'relevance') {
+            case 'publication_date':
+                $baseQuery->orderBy('publication_date', 'desc');
+                break;
+            case 'modified_date':
+                $baseQuery->orderBy('updated_at', 'desc');
+                break;
+            case 'relevance':
+            default:
+                $baseQuery->orderBy('publication_date', 'desc');
+                break;
+        }
+
+        $results = $baseQuery->paginate($query->perPage, ['*'], 'page', (int) ($validated['pagina'] ?? 1));
+
+        return [
+            'items' => $results->items(),
+            'total' => $results->total(),
+            'page' => $results->currentPage(),
+            'perPage' => $results->perPage(),
+            'hasNextPage' => $results->hasMorePages(),
+            'hasPreviousPage' => $results->currentPage() > 1,
+        ];
+    }
+
+    /**
+     * Convert Typesense facet_counts to filter counts format
+     */
+    private function convertTypesenseFacetsToFilterCounts(array $facetCounts, OpenOverheidSearchQuery $query): array
+    {
+        $counts = [
+            'week' => 0,
+            'maand' => 0,
+            'jaar' => 0,
+            'documentsoort' => [],
+            'thema' => [],
+            'organisatie' => [],
+            'informatiecategorie' => [],
+        ];
+
+        if (is_array($facetCounts) && ! empty($facetCounts)) {
+            foreach ($facetCounts as $facetGroup) {
+                if (! is_array($facetGroup)) {
+                    continue;
+                }
+
+                $fieldName = $facetGroup['field_name'] ?? $facetGroup['fieldName'] ?? null;
+                $countsArray = $facetGroup['counts'] ?? [];
+
+                if (! $fieldName || empty($countsArray)) {
+                    continue;
+                }
+
+                $countKey = match ($fieldName) {
+                    'document_type' => 'documentsoort',
+                    'theme' => 'thema',
+                    'organisation' => 'organisatie',
+                    'category' => 'informatiecategorie',
+                    default => null,
+                };
+
+                if ($countKey) {
+                    foreach ($countsArray as $facet) {
+                        if (! is_array($facet)) {
+                            continue;
+                        }
+                        $value = $facet['value'] ?? null;
+                        $count = $facet['count'] ?? 0;
+                        if ($value && $count > 0) {
+                            $counts[$countKey][$value] = $count;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $counts;
+    }
+
+    /**
+     * Calculate filter counts using optimized GROUP BY queries (fallback)
      */
     private function calculateFilterCounts($baseQuery, array $validated): array
     {
@@ -181,64 +420,51 @@ class ThemaController extends Controller
             $counts['maand'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subMonth())->count();
             $counts['jaar'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subYear())->count();
 
-            // Get unique document types
-            $documentTypes = (clone $baseQuery)
+            // OPTIMIZED: Use GROUP BY queries instead of N+1 queries
+            $maxResults = 500;
+
+            // Get document type counts in a single GROUP BY query
+            $counts['documentsoort'] = (clone $baseQuery)
                 ->whereNotNull('document_type')
-                ->distinct()
-                ->pluck('document_type')
-                ->filter()
+                ->selectRaw('document_type, COUNT(*) as count')
+                ->groupBy('document_type')
+                ->orderByDesc('count')
+                ->limit($maxResults)
+                ->pluck('count', 'document_type')
                 ->toArray();
 
-            foreach ($documentTypes as $type) {
-                $counts['documentsoort'][$type] = (clone $baseQuery)
-                    ->where('document_type', $type)
-                    ->count();
-            }
-
-            // Get unique themes (only from themes domain)
-            $themes = (clone $baseQuery)
+            // Get theme counts in a single GROUP BY query
+            $counts['thema'] = (clone $baseQuery)
                 ->whereNotNull('theme')
                 ->where('theme', '!=', 'Onbekend')
-                ->distinct()
-                ->pluck('theme')
-                ->filter()
+                ->selectRaw('theme, COUNT(*) as count')
+                ->groupBy('theme')
+                ->orderByDesc('count')
+                ->limit($maxResults)
+                ->pluck('count', 'theme')
                 ->toArray();
 
-            foreach ($themes as $theme) {
-                $counts['thema'][$theme] = (clone $baseQuery)
-                    ->where('theme', $theme)
-                    ->count();
-            }
-
-            // Get unique organisations
-            $organisations = (clone $baseQuery)
+            // Get organisation counts in a single GROUP BY query
+            $counts['organisatie'] = (clone $baseQuery)
                 ->whereNotNull('organisation')
-                ->distinct()
-                ->pluck('organisation')
-                ->filter()
+                ->selectRaw('organisation, COUNT(*) as count')
+                ->groupBy('organisation')
+                ->orderByDesc('count')
+                ->limit($maxResults)
+                ->pluck('count', 'organisation')
                 ->toArray();
 
-            foreach ($organisations as $org) {
-                $counts['organisatie'][$org] = (clone $baseQuery)
-                    ->where('organisation', $org)
-                    ->count();
-            }
-
-            // Get unique categories
-            $categories = (clone $baseQuery)
+            // Get category counts in a single GROUP BY query
+            $counts['informatiecategorie'] = (clone $baseQuery)
                 ->whereNotNull('category')
-                ->distinct()
-                ->pluck('category')
-                ->filter()
+                ->selectRaw('category, COUNT(*) as count')
+                ->groupBy('category')
+                ->orderByDesc('count')
+                ->limit($maxResults)
+                ->pluck('count', 'category')
                 ->toArray();
-
-            foreach ($categories as $category) {
-                $counts['informatiecategorie'][$category] = (clone $baseQuery)
-                    ->where('category', $category)
-                    ->count();
-            }
         } catch (\Exception $e) {
-            // Return empty counts on error
+            \Log::warning('calculateFilterCounts failed in ThemaController', ['error' => $e->getMessage()]);
         }
 
         return $counts;
