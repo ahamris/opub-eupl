@@ -101,65 +101,13 @@ class DossierController extends Controller
                 }
             );
 
-            // Use local search service but filter to dossiers only
-            // The GIN index on metadata->'documentrelaties' speeds this up significantly
-            // IMPORTANT: Only show dossiers that have been fully processed (metadata + AI-content)
-            $baseQuery = OpenOverheidDocument::inDossier()
-                ->select('open_overheid_documents.*')
-                ->join('dossier_metadata', 'open_overheid_documents.external_id', '=', 'dossier_metadata.dossier_external_id')
-                ->join('dossier_ai_content', 'open_overheid_documents.external_id', '=', 'dossier_ai_content.dossier_external_id')
-                ->whereNotNull('dossier_metadata.computed_at')
-                ->whereNotNull('dossier_ai_content.generated_at');
-
-            // Apply search query filters
-            if (! empty($validated['zoeken'])) {
-                if (! empty($validated['titles_only'])) {
-                    $likeOp = config('database.default') === 'pgsql' ? 'ilike' : 'like';
-                    $baseQuery->where('title', $likeOp, '%'.$validated['zoeken'].'%');
-                } else {
-                    $baseQuery->whereFullText(['title', 'description', 'content'], $validated['zoeken']);
-                }
-            }
-
-            $baseQuery->dateRange($publicatiedatumVan, $publicatiedatumTot);
-
-            // Filter by status using metadata (already joined)
-            if (! empty($validated['status'])) {
-                $baseQuery->where('dossier_metadata.status', $validated['status']);
-            }
-
-            // Filter by category using metadata
-            if (! empty($validated['informatiecategorie'])) {
-                $baseQuery->where('dossier_metadata.category', $validated['informatiecategorie']);
-            }
-
-            // Filter by organisation using metadata
-            if (! empty($organisatie)) {
-                $orgArray = is_array($organisatie) ? $organisatie : [$organisatie];
-                $baseQuery->whereIn('dossier_metadata.organisation', $orgArray);
-            }
-
-            // Filter by theme using metadata
-            if (! empty($validated['thema'])) {
-                $thema = is_array($validated['thema']) ? $validated['thema'] : [$validated['thema']];
-                $baseQuery->whereIn('dossier_metadata.theme', $thema);
-            }
-
-            // Apply sorting - use pre-computed latest_publication_date
-            switch ($validated['sort'] ?? 'relevance') {
-                case 'publication_date':
-                    $baseQuery->orderBy('dossier_metadata.latest_publication_date', 'desc');
-                    break;
-                case 'modified_date':
-                    $baseQuery->orderBy('open_overheid_documents.updated_at', 'desc');
-                    break;
-                case 'relevance':
-                default:
-                    $baseQuery->orderBy('dossier_metadata.latest_publication_date', 'desc');
-                    break;
-            }
-
-            $results = $baseQuery->paginate((int) ($validated['per_page'] ?? 20), ['*'], 'page', (int) ($validated['pagina'] ?? 1));
+            // Use Typesense as primary search engine (much faster with 600k+ records)
+            $useTypesense = config('open_overheid.typesense.enabled', true);
+            
+            // For dossiers, use PostgreSQL with optimized queries (dossier_metadata is already optimized)
+            // Typesense doesn't have dossier_metadata, so we'd need complex filtering
+            // The dossier_metadata table is already pre-computed and fast
+            $results = $this->searchDossiersWithPostgreSQL($searchQuery, $validated, $publicatiedatumVan, $publicatiedatumTot, $organisatie);
 
             // Get pre-computed metadata for all dossiers in this page (FAST - single query)
             $externalIds = $results->getCollection()->pluck('external_id')->toArray();
@@ -235,11 +183,11 @@ class DossierController extends Controller
                 'hasPreviousPage' => $results->currentPage() > 1,
             ];
 
-            // Calculate filter counts based on current results (only for dossiers domain)
-            $filterCounts = $this->calculateFilterCounts($baseQuery, $validated);
+            // Calculate filter counts using optimized queries (dossier_metadata table)
+            $filterCounts = $this->calculateFilterCounts($validated);
 
             // Get all available filter options for "Toon meer"
-            $allFilterOptions = $this->getAllFilterOptions($baseQuery);
+            $allFilterOptions = $this->getAllFilterOptions();
 
             // Use same view as /zoeken but pass 'isDossier' flag
             return view('zoekresultaten', [
@@ -268,9 +216,168 @@ class DossierController extends Controller
     }
 
     /**
-     * Calculate filter counts based on current search results (dossiers domain only).
+     * Search dossiers using Typesense
      */
-    private function calculateFilterCounts($baseQuery, array $validated): array
+    private function searchDossiersWithTypesense(\App\DataTransferObjects\OpenOverheid\OpenOverheidSearchQuery $query, array $validated): array
+    {
+        $searchService = app(\App\Services\Typesense\TypesenseSearchService::class);
+
+        // Build filter_by - we need to filter for dossier documents
+        // Note: Typesense doesn't know about dossier_metadata, so we search all documents
+        // and filter by the inDossier() condition in PHP after getting results
+        $filters = [];
+
+        if ($query->informatiecategorie) {
+            $filters[] = 'category:='.$query->informatiecategorie;
+        }
+        if ($query->thema) {
+            $themes = is_array($query->thema) ? $query->thema : [$query->thema];
+            $filters[] = 'theme:['.implode(',', array_map(fn ($t) => '='.$t, $themes)).']';
+        }
+        if ($query->organisatie) {
+            $orgs = is_array($query->organisatie) ? $query->organisatie : [$query->organisatie];
+            $filters[] = 'organisation:['.implode(',', array_map(fn ($o) => '='.$o, $orgs)).']';
+        }
+        if ($query->publicatiedatumVan || $query->publicatiedatumTot) {
+            $dateFilters = [];
+            if ($query->publicatiedatumVan) {
+                $fromDate = \DateTime::createFromFormat('d-m-Y', $query->publicatiedatumVan);
+                if ($fromDate) {
+                    $dateFilters[] = '>='.$fromDate->getTimestamp();
+                }
+            }
+            if ($query->publicatiedatumTot) {
+                $toDate = \DateTime::createFromFormat('d-m-Y', $query->publicatiedatumTot);
+                if ($toDate) {
+                    $dateFilters[] = '<='.$toDate->getTimestamp();
+                }
+            }
+            if (! empty($dateFilters)) {
+                $filters[] = 'publication_date:['.implode(',', $dateFilters).']';
+            }
+        }
+
+        $sortBy = 'publication_date:desc';
+        switch ($query->sort) {
+            case 'publication_date':
+                $sortBy = 'publication_date:desc';
+                break;
+            case 'modified_date':
+                $sortBy = 'synced_at:desc';
+                break;
+            case 'relevance':
+            default:
+                $sortBy = 'publication_date:desc';
+                break;
+        }
+
+        $options = [
+            'per_page' => $query->perPage * 2, // Get more results to filter for dossiers
+            'page' => $query->page,
+            'sort_by' => $sortBy,
+            'facet_by' => 'theme,organisation,category',
+            'max_facet_values' => 500,
+        ];
+
+        if (! empty($filters)) {
+            $options['filter_by'] = implode(' && ', $filters);
+        }
+
+        $typesenseResults = $searchService->search($query->zoektekst ?? '', $options);
+
+        // Filter to only dossier documents
+        $dossierExternalIds = \Illuminate\Support\Facades\DB::table('dossier_metadata')
+            ->join('dossier_ai_content', 'dossier_metadata.dossier_external_id', '=', 'dossier_ai_content.dossier_external_id')
+            ->whereNotNull('dossier_metadata.computed_at')
+            ->whereNotNull('dossier_ai_content.generated_at')
+            ->pluck('dossier_external_id')
+            ->toArray();
+
+        $items = collect($typesenseResults['hits'] ?? [])
+            ->map(function ($hit) {
+                $doc = $hit['document'] ?? $hit;
+                return \App\Models\OpenOverheidDocument::where('external_id', $doc['external_id'] ?? null)->first();
+            })
+            ->filter()
+            ->filter(function ($doc) use ($dossierExternalIds) {
+                return in_array($doc->external_id, $dossierExternalIds);
+            })
+            ->take($query->perPage);
+
+        return [
+            'items' => $items,
+            'total' => min($typesenseResults['found'] ?? 0, count($dossierExternalIds)),
+            'page' => $typesenseResults['page'] ?? $query->page,
+            'perPage' => $query->perPage,
+            'hasNextPage' => ($typesenseResults['page'] ?? $query->page) * $query->perPage < count($dossierExternalIds),
+            'hasPreviousPage' => ($typesenseResults['page'] ?? $query->page) > 1,
+            'facet_counts' => $typesenseResults['facet_counts'] ?? [],
+        ];
+    }
+
+    /**
+     * Search dossiers using PostgreSQL (fallback)
+     */
+    private function searchDossiersWithPostgreSQL(
+        \App\DataTransferObjects\OpenOverheid\OpenOverheidSearchQuery $query,
+        array $validated,
+        ?string $publicatiedatumVan,
+        ?string $publicatiedatumTot,
+        $organisatie
+    ) {
+        $baseQuery = OpenOverheidDocument::inDossier()
+            ->select('open_overheid_documents.*')
+            ->join('dossier_metadata', 'open_overheid_documents.external_id', '=', 'dossier_metadata.dossier_external_id')
+            ->join('dossier_ai_content', 'open_overheid_documents.external_id', '=', 'dossier_ai_content.dossier_external_id')
+            ->whereNotNull('dossier_metadata.computed_at')
+            ->whereNotNull('dossier_ai_content.generated_at');
+
+        if (! empty($validated['zoeken'])) {
+            if (! empty($validated['titles_only'])) {
+                $likeOp = config('database.default') === 'pgsql' ? 'ilike' : 'like';
+                $baseQuery->where('title', $likeOp, '%'.$validated['zoeken'].'%');
+            } else {
+                $baseQuery->whereFullText(['title', 'description', 'content'], $validated['zoeken']);
+            }
+        }
+
+        $baseQuery->dateRange($publicatiedatumVan, $publicatiedatumTot);
+
+        if (! empty($validated['status'])) {
+            $baseQuery->where('dossier_metadata.status', $validated['status']);
+        }
+        if (! empty($validated['informatiecategorie'])) {
+            $baseQuery->where('dossier_metadata.category', $validated['informatiecategorie']);
+        }
+        if (! empty($organisatie)) {
+            $orgArray = is_array($organisatie) ? $organisatie : [$organisatie];
+            $baseQuery->whereIn('dossier_metadata.organisation', $orgArray);
+        }
+        if (! empty($validated['thema'])) {
+            $thema = is_array($validated['thema']) ? $validated['thema'] : [$validated['thema']];
+            $baseQuery->whereIn('dossier_metadata.theme', $thema);
+        }
+
+        switch ($validated['sort'] ?? 'relevance') {
+            case 'publication_date':
+                $baseQuery->orderBy('dossier_metadata.latest_publication_date', 'desc');
+                break;
+            case 'modified_date':
+                $baseQuery->orderBy('open_overheid_documents.updated_at', 'desc');
+                break;
+            case 'relevance':
+            default:
+                $baseQuery->orderBy('dossier_metadata.latest_publication_date', 'desc');
+                break;
+        }
+
+        return $baseQuery->paginate((int) ($validated['per_page'] ?? 20), ['*'], 'page', (int) ($validated['pagina'] ?? 1));
+    }
+
+    /**
+     * Calculate filter counts using optimized GROUP BY queries (dossiers domain only).
+     */
+    private function calculateFilterCounts(array $validated): array
     {
         $counts = [
             'week' => 0,
@@ -359,51 +466,39 @@ class DossierController extends Controller
                 }
             }
 
-            // Get unique organisations from metadata
-            $organisations = (clone $metadataCountQuery)
+            // OPTIMIZED: Use GROUP BY queries instead of N+1 queries
+            $maxResults = 500;
+
+            // Get organisation counts in a single GROUP BY query
+            $counts['organisatie'] = (clone $metadataCountQuery)
                 ->whereNotNull('organisation')
-                ->distinct()
-                ->pluck('organisation')
-                ->filter()
-                ->unique()
+                ->selectRaw('organisation, COUNT(*) as count')
+                ->groupBy('organisation')
+                ->orderByDesc('count')
+                ->limit($maxResults)
+                ->pluck('count', 'organisation')
                 ->toArray();
 
-            foreach ($organisations as $org) {
-                $counts['organisatie'][$org] = (clone $metadataCountQuery)
-                    ->where('organisation', $org)
-                    ->count();
-            }
-
-            // Get unique categories from metadata
-            $categories = (clone $metadataCountQuery)
+            // Get category counts in a single GROUP BY query
+            $counts['informatiecategorie'] = (clone $metadataCountQuery)
                 ->whereNotNull('category')
-                ->distinct()
-                ->pluck('category')
-                ->filter()
-                ->unique()
+                ->selectRaw('category, COUNT(*) as count')
+                ->groupBy('category')
+                ->orderByDesc('count')
+                ->limit($maxResults)
+                ->pluck('count', 'category')
                 ->toArray();
 
-            foreach ($categories as $category) {
-                $counts['informatiecategorie'][$category] = (clone $metadataCountQuery)
-                    ->where('category', $category)
-                    ->count();
-            }
-
-            // Get unique themes from metadata
-            $themes = (clone $metadataCountQuery)
+            // Get theme counts in a single GROUP BY query
+            $counts['thema'] = (clone $metadataCountQuery)
                 ->whereNotNull('theme')
                 ->where('theme', '!=', 'Onbekend')
-                ->distinct()
-                ->pluck('theme')
-                ->filter()
-                ->unique()
+                ->selectRaw('theme, COUNT(*) as count')
+                ->groupBy('theme')
+                ->orderByDesc('count')
+                ->limit($maxResults)
+                ->pluck('count', 'theme')
                 ->toArray();
-
-            foreach ($themes as $theme) {
-                $counts['thema'][$theme] = (clone $metadataCountQuery)
-                    ->where('theme', $theme)
-                    ->count();
-            }
         } catch (\Exception $e) {
             // Return empty counts on error
         }
@@ -416,7 +511,7 @@ class DossierController extends Controller
      * Uses pre-computed metadata table for FAST queries.
      * Only includes dossiers that are fully processed (metadata + AI-content).
      */
-    private function getAllFilterOptions($baseQuery): array
+    private function getAllFilterOptions(): array
     {
         // Use pre-computed metadata table (FAST!)
         // Only include dossiers that are fully processed
