@@ -53,10 +53,15 @@ class FilterCountService
         $counts['maand'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subMonth())->count();
         $counts['jaar'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subYear())->count();
 
-        // Get unique document types from current results
+        // Limit unique values to prevent memory exhaustion and too many queries
+        $maxUniqueValues = 500;
+
+        // Get unique document types from current results (limited)
         $documentTypes = (clone $baseQuery)
             ->whereNotNull('document_type')
+            ->select('document_type')
             ->distinct()
+            ->limit($maxUniqueValues)
             ->pluck('document_type')
             ->filter()
             ->toArray();
@@ -67,10 +72,12 @@ class FilterCountService
                 ->count();
         }
 
-        // Get unique themes from current results
+        // Get unique themes from current results (limited)
         $themes = (clone $baseQuery)
             ->whereNotNull('theme')
+            ->select('theme')
             ->distinct()
+            ->limit($maxUniqueValues)
             ->pluck('theme')
             ->filter()
             ->toArray();
@@ -81,10 +88,12 @@ class FilterCountService
                 ->count();
         }
 
-        // Get unique organisations from current results
+        // Get unique organisations from current results (limited)
         $organisations = (clone $baseQuery)
             ->whereNotNull('organisation')
+            ->select('organisation')
             ->distinct()
+            ->limit($maxUniqueValues)
             ->pluck('organisation')
             ->filter()
             ->toArray();
@@ -95,10 +104,12 @@ class FilterCountService
                 ->count();
         }
 
-        // Get unique categories from current results
+        // Get unique categories from current results (limited)
         $categories = (clone $baseQuery)
             ->whereNotNull('category')
+            ->select('category')
             ->distinct()
+            ->limit($maxUniqueValues)
             ->pluck('category')
             ->filter()
             ->toArray();
@@ -183,41 +194,44 @@ class FilterCountService
                 }
             }
         } else {
-            // Fallback for non-PostgreSQL: process in PHP
-            $documents = (clone $baseQuery)
+            // Fallback for non-PostgreSQL: process in PHP using chunking to avoid memory issues
+            $fileTypeCounts = [];
+            
+            (clone $baseQuery)
                 ->whereNotNull('metadata')
-                ->get();
+                ->select('metadata')
+                ->chunk(1000, function ($documents) use (&$fileTypeCounts, $fileTypeMapping) {
+                    foreach ($documents as $document) {
+                        $metadata = $document->metadata;
+                        if (! is_array($metadata)) {
+                            continue;
+                        }
 
-            foreach ($documents as $document) {
-                $metadata = $document->metadata;
-                if (! is_array($metadata)) {
-                    continue;
-                }
+                        // Get first version's first bestand
+                        $firstVersion = $metadata['versies'][0] ?? null;
+                        if (! $firstVersion || ! isset($firstVersion['bestanden']) || empty($firstVersion['bestanden'])) {
+                            continue;
+                        }
 
-                // Get first version's first bestand
-                $firstVersion = $metadata['versies'][0] ?? null;
-                if (! $firstVersion || ! isset($firstVersion['bestanden']) || empty($firstVersion['bestanden'])) {
-                    continue;
-                }
+                        $firstBestand = $firstVersion['bestanden'][0] ?? null;
+                        if (! $firstBestand) {
+                            continue;
+                        }
 
-                $firstBestand = $firstVersion['bestanden'][0] ?? null;
-                if (! $firstBestand) {
-                    continue;
-                }
+                        $mimeType = $firstBestand['mime-type'] ?? null;
+                        if (! $mimeType) {
+                            continue;
+                        }
 
-                $mimeType = $firstBestand['mime-type'] ?? null;
-                if (! $mimeType) {
-                    continue;
-                }
-
-                $matchedLabel = $this->mapMimeTypeToLabel($mimeType, $fileTypeMapping);
-                if ($matchedLabel) {
-                    if (! isset($fileTypeCounts[$matchedLabel])) {
-                        $fileTypeCounts[$matchedLabel] = 0;
+                        $matchedLabel = $this->mapMimeTypeToLabel($mimeType, $fileTypeMapping);
+                        if ($matchedLabel) {
+                            if (! isset($fileTypeCounts[$matchedLabel])) {
+                                $fileTypeCounts[$matchedLabel] = 0;
+                            }
+                            $fileTypeCounts[$matchedLabel]++;
+                        }
                     }
-                    $fileTypeCounts[$matchedLabel]++;
-                }
-            }
+                });
         }
 
         return $fileTypeCounts;
@@ -284,41 +298,53 @@ class FilterCountService
             $baseQuery->whereFullText(['title', 'description', 'content'], $query->zoektekst);
         }
 
-        // Get all unique document types
+        // Use select() to only get the columns we need, reducing memory usage
+        // Limit to reasonable number of unique values to prevent memory exhaustion
+        $limit = 1000; // Maximum unique values per filter type
+
+        // Get all unique document types (limit to prevent memory issues)
         $allDocumentTypes = (clone $baseQuery)
             ->whereNotNull('document_type')
+            ->select('document_type')
             ->distinct()
             ->orderBy('document_type')
+            ->limit($limit)
             ->pluck('document_type')
             ->filter()
             ->values()
             ->toArray();
 
-        // Get all unique themes
+        // Get all unique themes (limit to prevent memory issues)
         $allThemes = (clone $baseQuery)
             ->whereNotNull('theme')
+            ->select('theme')
             ->distinct()
             ->orderBy('theme')
+            ->limit($limit)
             ->pluck('theme')
             ->filter()
             ->values()
             ->toArray();
 
-        // Get all unique organisations
+        // Get all unique organisations (limit to prevent memory issues)
         $allOrganisations = (clone $baseQuery)
             ->whereNotNull('organisation')
+            ->select('organisation')
             ->distinct()
             ->orderBy('organisation')
+            ->limit($limit)
             ->pluck('organisation')
             ->filter()
             ->values()
             ->toArray();
 
-        // Get all unique information categories
+        // Get all unique information categories (limit to prevent memory issues)
         $allCategories = (clone $baseQuery)
             ->whereNotNull('category')
+            ->select('category')
             ->distinct()
             ->orderBy('category')
+            ->limit($limit)
             ->pluck('category')
             ->filter()
             ->values()

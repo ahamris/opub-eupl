@@ -781,10 +781,21 @@ class SearchController extends Controller
             $documentCount = OpenOverheidDocument::count();
 
             // Calculate dynamic filter counts using FilterCountService
-            $filterCounts = $this->filterCountService->calculateFilterCounts($query);
+            // Wrap in try-catch to prevent crashes if service fails
+            try {
+                $filterCounts = $this->filterCountService->calculateFilterCounts($query);
+            } catch (\Exception $e) {
+                \Log::warning('FilterCountService failed', ['error' => $e->getMessage()]);
+                $filterCounts = [];
+            }
 
             // Get all available filter options for "Toon meer"
-            $allFilterOptions = $this->filterCountService->getAllFilterOptions($query);
+            try {
+                $allFilterOptions = $this->filterCountService->getAllFilterOptions($query);
+            } catch (\Exception $e) {
+                \Log::warning('getAllFilterOptions failed', ['error' => $e->getMessage()]);
+                $allFilterOptions = [];
+            }
 
             return view('zoekresultaten', [
                 'results' => $results,
@@ -795,13 +806,30 @@ class SearchController extends Controller
                 'allFilterOptions' => $allFilterOptions,
             ]);
         } catch (\Exception $e) {
+            \Log::error('Search failed (both Typesense and PostgreSQL)', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
             // If both Typesense and local search failed, try remote API as last resort
             try {
                 $results = $this->remoteService->search($query);
                 $documentCount = OpenOverheidDocument::count();
 
-                $filterCounts = $this->filterCountService->calculateFilterCounts($query);
-                $allFilterOptions = $this->filterCountService->getAllFilterOptions($query);
+                // Safely get filter counts and options
+                try {
+                    $filterCounts = $this->filterCountService->calculateFilterCounts($query);
+                } catch (\Exception $filterException) {
+                    \Log::warning('FilterCountService failed in fallback', ['error' => $filterException->getMessage()]);
+                    $filterCounts = [];
+                }
+
+                try {
+                    $allFilterOptions = $this->filterCountService->getAllFilterOptions($query);
+                } catch (\Exception $filterException) {
+                    \Log::warning('getAllFilterOptions failed in fallback', ['error' => $filterException->getMessage()]);
+                    $allFilterOptions = [];
+                }
 
                 return view('zoekresultaten', [
                     'results' => $results,
@@ -812,16 +840,26 @@ class SearchController extends Controller
                     'allFilterOptions' => $allFilterOptions,
                 ]);
             } catch (\Exception $fallbackException) {
-                $allFilterOptions = $this->filterCountService->getAllFilterOptions($query);
+                \Log::error('All search methods failed', [
+                    'primary_error' => $e->getMessage(),
+                    'fallback_error' => $fallbackException->getMessage(),
+                ]);
+
+                // Safely get filter options even if everything else fails
+                try {
+                    $allFilterOptions = $this->filterCountService->getAllFilterOptions($query);
+                } catch (\Exception $filterException) {
+                    $allFilterOptions = [];
+                }
 
                 return view('zoekresultaten', [
-                    'results' => ['items' => [], 'total' => 0],
+                    'results' => ['items' => collect([]), 'total' => 0],
                     'query' => $query,
                     'documentCount' => OpenOverheidDocument::count(),
                     'filters' => $validated,
                     'filterCounts' => [],
                     'allFilterOptions' => $allFilterOptions,
-                    'error' => $fallbackException->getMessage(),
+                    'error' => 'Er is een fout opgetreden bij het zoeken. Probeer het later opnieuw.',
                 ]);
             }
 
