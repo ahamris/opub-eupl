@@ -69,11 +69,14 @@ class TypesenseSearchService
                 $searchParams['sort_by'] = 'publication_date:desc';
             }
 
-            // Add facets
+            // Add facets for filter counts - include all filterable fields
             if (isset($options['facet_by'])) {
                 $searchParams['facet_by'] = $options['facet_by'];
             } else {
-                $searchParams['facet_by'] = 'document_type,theme,organisation';
+                // Include all filterable fields for facet counts
+                $searchParams['facet_by'] = 'document_type,theme,organisation,category';
+                // Also add max_facet_values to get more accurate counts
+                $searchParams['max_facet_values'] = 500;
             }
 
             // Enable hybrid search (keyword + semantic) if embeddings are available

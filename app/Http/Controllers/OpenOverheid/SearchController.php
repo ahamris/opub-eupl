@@ -761,33 +761,67 @@ class SearchController extends Controller
         $useTypesense = config('open_overheid.typesense.enabled', true);
 
         try {
-            // Use Typesense as primary search engine (faster, better search features)
+            // Use Typesense as PRIMARY search engine (faster, better search features, includes facets)
             // No natural language search - Typesense is pure search only
+            $filterCounts = [];
+            $facetCounts = null;
+
             if ($useTypesense) {
                 try {
                     $results = $this->searchWithTypesense($query, false);
+                    
+                    // Extract facet counts from Typesense results
+                    if (isset($results['facet_counts'])) {
+                        $facetCounts = $results['facet_counts'];
+                        // Convert Typesense facets to filter counts format
+                        $filterCounts = $this->convertTypesenseFacetsToFilterCounts($facetCounts, $query);
+                        
+                        // Calculate date filter counts separately (Typesense doesn't provide date facets)
+                        // Use a lightweight query for date counts
+                        try {
+                            $now = now();
+                            $baseQuery = OpenOverheidDocument::query();
+                            if (! empty($query->zoektekst)) {
+                                $baseQuery->whereFullText(['title', 'description', 'content'], $query->zoektekst);
+                            }
+                            $baseQuery->dateRange($query->publicatiedatumVan, $query->publicatiedatumTot);
+                            
+                            $filterCounts['week'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subWeek())->count();
+                            $filterCounts['maand'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subMonth())->count();
+                            $filterCounts['jaar'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subYear())->count();
+                        } catch (\Exception $dateException) {
+                            \Log::warning('Date filter counts failed', ['error' => $dateException->getMessage()]);
+                        }
+                    }
                 } catch (\Exception $typesenseException) {
                     // If Typesense fails, fallback to PostgreSQL
                     \Log::warning('Typesense search failed, falling back to PostgreSQL', [
                         'error' => $typesenseException->getMessage(),
                     ]);
                     $results = $this->localService->search($query);
+                    
+                    // Use FilterCountService for PostgreSQL fallback
+                    try {
+                        $filterCounts = $this->filterCountService->calculateFilterCounts($query);
+                    } catch (\Exception $e) {
+                        \Log::warning('FilterCountService failed', ['error' => $e->getMessage()]);
+                        $filterCounts = [];
+                    }
                 }
             } else {
                 // Typesense disabled, use PostgreSQL directly
                 $results = $this->localService->search($query);
+                
+                // Use FilterCountService for PostgreSQL
+                try {
+                    $filterCounts = $this->filterCountService->calculateFilterCounts($query);
+                } catch (\Exception $e) {
+                    \Log::warning('FilterCountService failed', ['error' => $e->getMessage()]);
+                    $filterCounts = [];
+                }
             }
 
             $documentCount = OpenOverheidDocument::count();
-
-            // Calculate dynamic filter counts using FilterCountService
-            // Wrap in try-catch to prevent crashes if service fails
-            try {
-                $filterCounts = $this->filterCountService->calculateFilterCounts($query);
-            } catch (\Exception $e) {
-                \Log::warning('FilterCountService failed', ['error' => $e->getMessage()]);
-                $filterCounts = [];
-            }
 
             // Get all available filter options for "Toon meer"
             try {
@@ -1023,6 +1057,9 @@ class SearchController extends Controller
             'per_page' => $query->perPage,
             'page' => $query->page,
             'sort_by' => $sortBy,
+            // Request facets for all filterable fields to get counts
+            'facet_by' => 'document_type,theme,organisation,category',
+            'max_facet_values' => 500, // Get up to 500 facet values for accurate counts
         ];
 
         if (! empty($filters)) {
@@ -1075,6 +1112,58 @@ class SearchController extends Controller
             'perPage' => $query->perPage,
             'hasNextPage' => ($typesenseResults['page'] ?? $query->page) * $query->perPage < ($typesenseResults['found'] ?? 0),
             'hasPreviousPage' => ($typesenseResults['page'] ?? $query->page) > 1,
+            'facet_counts' => $typesenseResults['facet_counts'] ?? [], // Include facet counts from Typesense
         ];
+    }
+
+    /**
+     * Convert Typesense facet_counts to the format expected by FilterCountService
+     * Typesense returns facets as an array of objects with field_name and counts
+     */
+    private function convertTypesenseFacetsToFilterCounts(array $facetCounts, OpenOverheidSearchQuery $query): array
+    {
+        $counts = [
+            'week' => 0, // Will be calculated separately
+            'maand' => 0, // Will be calculated separately
+            'jaar' => 0, // Will be calculated separately
+            'documentsoort' => [],
+            'thema' => [],
+            'organisatie' => [],
+            'informatiecategorie' => [],
+            'bestandstype' => [], // Not available in Typesense, will be empty
+        ];
+
+        // Typesense returns facets as an array of objects: [{field_name: "document_type", counts: [{value: "...", count: 123}]}]
+        if (is_array($facetCounts)) {
+            foreach ($facetCounts as $facetGroup) {
+                $fieldName = $facetGroup['field_name'] ?? null;
+                $countsArray = $facetGroup['counts'] ?? [];
+
+                if (! $fieldName || empty($countsArray)) {
+                    continue;
+                }
+
+                // Map Typesense field names to our filter count keys
+                $countKey = match ($fieldName) {
+                    'document_type' => 'documentsoort',
+                    'theme' => 'thema',
+                    'organisation' => 'organisatie',
+                    'category' => 'informatiecategorie',
+                    default => null,
+                };
+
+                if ($countKey) {
+                    foreach ($countsArray as $facet) {
+                        $value = $facet['value'] ?? null;
+                        $count = $facet['count'] ?? 0;
+                        if ($value && $count > 0) {
+                            $counts[$countKey][$value] = $count;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $counts;
     }
 }
