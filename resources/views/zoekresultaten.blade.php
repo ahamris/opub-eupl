@@ -1333,8 +1333,9 @@
                             currentValues.forEach(val => url.searchParams.append(filter + '[]', val));
                         }
                     });
-                    const searchUrl = url.toString().replace(window.location.origin, '');
-                    html += `<a href="${searchUrl}" 
+                    // Trigger live search instead of redirecting
+                    html += `<a href="#" 
+                        onclick="event.preventDefault(); triggerLiveSearchFromSuggestion('${escapeHtml(action.query)}'); return false;"
                         class="block px-4 py-3 hover:bg-[var(--color-primary-light)]/30 transition-colors border-b border-[var(--color-outline-variant)] unified-search-item bg-[var(--color-primary)]/5"
                         data-index="${itemIndex++}">
                         <div class="flex items-center gap-3">
@@ -1518,6 +1519,83 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // Trigger live search from quick action suggestion
+        async function triggerLiveSearchFromSuggestion(query) {
+            if (!query || !unifiedSearchInput) return;
+            
+            // Update input value
+            unifiedSearchInput.value = query;
+            
+            // Show loading state
+            if (unifiedSearchResults) {
+                unifiedSearchResults.innerHTML = '<div class="px-4 py-3 text-sm text-[var(--color-on-surface-variant)]"><i class="fas fa-spinner fa-spin mr-2"></i>Zoeken...</div>';
+                unifiedSearchResults.classList.remove('hidden');
+            }
+            
+            try {
+                // Fetch live search results from Typesense
+                const liveSearchEndpoint = '{{ route("api.live-search") }}';
+                const response = await fetch(`${liveSearchEndpoint}?q=${encodeURIComponent(query)}&limit=20`);
+                const data = await response.json();
+                
+                if (data.hits && data.hits.length > 0) {
+                    // Render results in dropdown
+                    let html = `<div class="px-4 py-2 border-b border-gray-100 bg-gray-50/60">
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                            <span>${data.found || 0}</span> resultaten gevonden
+                            ${data.search_time_ms ? `<span class="text-gray-400"> in ${data.search_time_ms}ms</span>` : ''}
+                        </p>
+                    </div>`;
+                    
+                    html += '<ul class="py-1" role="listbox">';
+                    data.hits.forEach((hit, index) => {
+                        html += `<li 
+                            onclick="window.location.href='/open-overheid/documents/${hit.id}'"
+                            class="px-4 py-3 cursor-pointer transition-colors duration-100 border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
+                            role="option">
+                            <div class="flex items-start gap-3">
+                                <i class="fas fa-file-alt text-gray-400 mt-1 flex-shrink-0"></i>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-sm font-medium text-gray-900 mb-1">${escapeHtml(hit.title || 'Geen titel')}</div>
+                                    ${hit.description ? `<div class="text-xs text-gray-500 line-clamp-2">${escapeHtml(hit.description)}</div>` : ''}
+                                    <div class="text-xs text-gray-400 mt-1">${hit.document_type || ''} ${hit.publication_date ? '• ' + hit.publication_date : ''}</div>
+                                </div>
+                            </div>
+                        </li>`;
+                    });
+                    html += '</ul>';
+                    
+                    // Add "View all results" link
+                    const searchUrl = new URL(window.location.href);
+                    searchUrl.searchParams.set('zoeken', query);
+                    searchUrl.searchParams.set('pagina', '1');
+                    html += `<div class="px-4 py-3 border-t border-gray-100 bg-gray-50/60">
+                        <a href="${searchUrl.toString()}" class="text-sm font-medium text-[var(--color-primary)] hover:underline flex items-center gap-2">
+                            <span>Alle resultaten bekijken</span>
+                            <i class="fas fa-arrow-right text-xs"></i>
+                        </a>
+                    </div>`;
+                    
+                    if (unifiedSearchResults) {
+                        unifiedSearchResults.innerHTML = html;
+                        unifiedSearchResults.classList.remove('hidden');
+                    }
+                } else {
+                    // No results
+                    if (unifiedSearchResults) {
+                        unifiedSearchResults.innerHTML = `<div class="px-4 py-3 text-sm text-[var(--color-on-surface-variant)]">
+                            Geen resultaten gevonden voor "${escapeHtml(query)}"
+                        </div>`;
+                    }
+                }
+            } catch (error) {
+                console.error('Live search error:', error);
+                if (unifiedSearchResults) {
+                    unifiedSearchResults.innerHTML = '<div class="px-4 py-3 text-sm text-[var(--color-on-surface-variant)]">Fout bij zoeken</div>';
+                }
+            }
         }
 
         // Neuro search removed - now premium-only via chat interface

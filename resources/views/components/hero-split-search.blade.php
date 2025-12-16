@@ -431,8 +431,10 @@ function liveSearch() {
                 // If suggestion has an ID, go directly to the document
                 this.goToDetail(suggestion.id);
             } else if (suggestion.query) {
-                // Otherwise, search for the suggestion query
-                window.location.href = `{{ route('zoeken') }}?zoeken=${encodeURIComponent(suggestion.query)}`;
+                // Update search input with suggestion query and trigger live search
+                this.query = suggestion.query;
+                // Trigger live search immediately
+                this.search();
             }
         },
         
