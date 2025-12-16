@@ -39,7 +39,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8">
             <!-- Sidebar Filters -->
             <aside class="lg:sticky lg:top-8 h-fit" aria-label="Zoekfilters">
-                <div class="bg-white rounded-2xl p-6 shadow-sm border border-[var(--color-outline-variant)]">
+                <div class="bg-white rounded-md p-6 shadow-sm border border-[var(--color-outline-variant)]">
                     <h2 class="text-[var(--font-size-headline-small)] font-semibold mb-6 text-[var(--color-on-surface)] pb-4 border-b border-[var(--color-outline-variant)]">
                         Verfijn zoekopdracht
                     </h2>
@@ -67,7 +67,7 @@
                                         {{ !request('beschikbaarSinds') ? 'checked' : '' }}
                                         onchange="document.getElementById('filter-form').submit()"
                                         class="w-4 h-4 border border-[var(--color-outline)] 
-                                               focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2
+                                               focus:outline-none
                                                cursor-pointer text-[var(--color-primary)]
                                                checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                transition-all duration-200"
@@ -85,7 +85,7 @@
                                         {{ request('beschikbaarSinds') === 'week' ? 'checked' : '' }}
                                         onchange="document.getElementById('filter-form').submit()"
                                         class="w-4 h-4 border border-[var(--color-outline)] 
-                                               focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2
+                                               focus:outline-none
                                                cursor-pointer text-[var(--color-primary)]
                                                checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                transition-all duration-200"
@@ -104,7 +104,7 @@
                                         {{ request('beschikbaarSinds') === 'maand' ? 'checked' : '' }}
                                         onchange="document.getElementById('filter-form').submit()"
                                         class="w-4 h-4 border border-[var(--color-outline)] 
-                                               focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2
+                                               focus:outline-none
                                                cursor-pointer text-[var(--color-primary)]
                                                checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                transition-all duration-200"
@@ -123,7 +123,7 @@
                                         {{ request('beschikbaarSinds') === 'jaar' ? 'checked' : '' }}
                                         onchange="document.getElementById('filter-form').submit()"
                                         class="w-4 h-4 border border-[var(--color-outline)] 
-                                               focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2
+                                               focus:outline-none
                                                cursor-pointer text-[var(--color-primary)]
                                                checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                transition-all duration-200"
@@ -142,7 +142,7 @@
                                         {{ request('beschikbaarSinds') === 'zelf' || request('publicatiedatum_van') || request('publicatiedatum_tot') ? 'checked' : '' }}
                                         onchange="toggleCustomDateRange()"
                                         class="w-4 h-4 border border-[var(--color-outline)] 
-                                               focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2
+                                               focus:outline-none
                                                cursor-pointer text-[var(--color-primary)]
                                                checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                transition-all duration-200"
@@ -165,9 +165,9 @@
                                             placeholder="dd-mm-jjjj"
                                             pattern="\d{2}-\d{2}-\d{4}"
                                             onchange="document.getElementById('filter-form').submit()"
-                                            class="flex-1 px-3 py-2 rounded-lg border-2 border-[var(--color-outline)] bg-white
+                                            class="flex-1 px-3 py-2 rounded-md border-2 border-[var(--color-outline)] bg-white
                                                    text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]
-                                                   focus:border-[var(--color-primary)] focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2
+                                                   focus:outline-none focus:border-[var(--color-primary)]
                                                    transition-colors duration-200
                                                    min-h-[44px] max-w-[150px]"
                                         />
@@ -184,9 +184,9 @@
                                             placeholder="dd-mm-jjjj"
                                             pattern="\d{2}-\d{2}-\d{4}"
                                             onchange="document.getElementById('filter-form').submit()"
-                                            class="flex-1 px-3 py-2 rounded-lg border-2 border-[var(--color-outline)] bg-white
+                                            class="flex-1 px-3 py-2 rounded-md border-2 border-[var(--color-outline)] bg-white
                                                    text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]
-                                                   focus:border-[var(--color-primary)] focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2
+                                                   focus:outline-none focus:border-[var(--color-primary)]
                                                    transition-colors duration-200
                                                    min-h-[44px] max-w-[150px]"
                                         />
@@ -212,7 +212,7 @@
                                         {{ !$selectedStatus ? 'checked' : '' }}
                                         onchange="document.getElementById('filter-form').submit()"
                                         class="w-4 h-4 border border-[var(--color-outline)] 
-                                               focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2
+                                               focus:outline-none
                                                cursor-pointer text-[var(--color-primary)]
                                                checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                transition-all duration-200"
@@ -230,7 +230,7 @@
                                         {{ $selectedStatus === 'actief' ? 'checked' : '' }}
                                         onchange="document.getElementById('filter-form').submit()"
                                         class="w-4 h-4 border border-[var(--color-outline)] 
-                                               focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2
+                                               focus:outline-none
                                                cursor-pointer text-[var(--color-primary)]
                                                checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                transition-all duration-200"
@@ -249,7 +249,7 @@
                                         {{ $selectedStatus === 'gesloten' ? 'checked' : '' }}
                                         onchange="document.getElementById('filter-form').submit()"
                                         class="w-4 h-4 border border-[var(--color-outline)] 
-                                               focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2
+                                               focus:outline-none
                                                cursor-pointer text-[var(--color-primary)]
                                                checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                transition-all duration-200"
@@ -283,7 +283,7 @@
                                             {{ $selectedCategory === $category ? 'checked' : '' }}
                                             onchange="document.getElementById('filter-form').submit()"
                                             class="w-4 h-4 border border-[var(--color-outline)] 
-                                                   focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2
+                                                   focus:outline-none
                                                    cursor-pointer text-[var(--color-primary)]
                                                    checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                    transition-all duration-200"
@@ -306,7 +306,7 @@
                                                 {{ $selectedCategory === $category ? 'checked' : '' }}
                                                 onchange="document.getElementById('filter-form').submit()"
                                                 class="w-4 h-4 border border-[var(--color-outline)] 
-                                                       focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2
+                                                       focus:outline-none
                                                        cursor-pointer text-[var(--color-primary)]
                                                        checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                        transition-all duration-200"
@@ -323,7 +323,7 @@
                                     onclick="toggleFilterSection('informatiecategorie-more', 'informatiecategorie-toggle')"
                                     id="informatiecategorie-toggle"
                                     class="text-[var(--color-primary)] font-medium text-[var(--font-size-body-medium)] hover:underline 
-                                           focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2 rounded-sm">
+                                           focus:outline-none rounded-md">
                                     Toon meer
                                 </button>
                                 @endif
@@ -333,7 +333,7 @@
                                         type="button" 
                                         onclick="document.getElementById('categorie-none').checked = true; document.getElementById('filter-form').submit();"
                                         class="text-[var(--color-primary)] font-medium text-[var(--font-size-body-small)] hover:underline 
-                                               focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2 rounded-sm">
+                                               focus:outline-none rounded-md">
                                         <i class="fas fa-times text-xs" aria-hidden="true"></i> Categorie wissen
                                     </button>
                                 </div>
@@ -371,7 +371,7 @@
                                             {{ in_array($type, $selectedTypes) ? 'checked' : '' }}
                                             onchange="document.getElementById('filter-form').submit()"
                                             class="w-4 h-4 rounded border border-[var(--color-outline)] 
-                                                   focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2
+                                                   focus:outline-none
                                                    cursor-pointer text-[var(--color-primary)]
                                                    checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                    transition-all duration-200"
@@ -394,7 +394,7 @@
                                                 {{ in_array($type, $selectedTypes) ? 'checked' : '' }}
                                                 onchange="document.getElementById('filter-form').submit()"
                                                 class="w-4 h-4 rounded border border-[var(--color-outline)] 
-                                                       focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2
+                                                       focus:outline-none
                                                        cursor-pointer text-[var(--color-primary)]
                                                        checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                        transition-all duration-200"
@@ -411,7 +411,7 @@
                                     onclick="toggleFilterSection('documentsoort-more', 'documentsoort-toggle')"
                                     id="documentsoort-toggle"
                                     class="text-[var(--color-primary)] font-medium text-[var(--font-size-body-medium)] hover:underline 
-                                           focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2 rounded-sm">
+                                           focus:outline-none rounded-md">
                                     Toon meer
                                 </button>
                                 @endif
@@ -444,7 +444,7 @@
                                             {{ in_array($label, $selectedFileTypes) ? 'checked' : '' }}
                                             onchange="document.getElementById('filter-form').submit()"
                                             class="w-4 h-4 rounded border border-[var(--color-outline)] 
-                                                   focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2
+                                                   focus:outline-none
                                                    cursor-pointer text-[var(--color-primary)]
                                                    checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                    transition-all duration-200"
@@ -458,7 +458,7 @@
                                 <button 
                                     type="button" 
                                     class="text-[var(--color-primary)] font-medium text-[var(--font-size-body-medium)] hover:underline 
-                                           focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2 rounded-sm">
+                                           focus:outline-none rounded-md">
                                     Toon meer
                                 </button>
                             </div>
@@ -485,7 +485,7 @@
                                             {{ in_array($theme, $selectedThemes) ? 'checked' : '' }}
                                             onchange="document.getElementById('filter-form').submit()"
                                             class="w-4 h-4 rounded border border-[var(--color-outline)] 
-                                                   focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2
+                                                   focus:outline-none
                                                    cursor-pointer text-[var(--color-primary)]
                                                    checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                    transition-all duration-200"
@@ -508,7 +508,7 @@
                                                 {{ in_array($theme, $selectedThemes) ? 'checked' : '' }}
                                                 onchange="document.getElementById('filter-form').submit()"
                                                 class="w-4 h-4 rounded border border-[var(--color-outline)] 
-                                                       focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2
+                                                       focus:outline-none
                                                        cursor-pointer text-[var(--color-primary)]
                                                        checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                        transition-all duration-200"
@@ -525,7 +525,7 @@
                                     onclick="toggleFilterSection('thema-more', 'thema-toggle')"
                                     id="thema-toggle"
                                     class="text-[var(--color-primary)] font-medium text-[var(--font-size-body-medium)] hover:underline 
-                                           focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2 rounded-sm">
+                                           focus:outline-none rounded-md">
                                     Toon meer
                                 </button>
                                 @endif
@@ -553,7 +553,7 @@
                                             {{ in_array($org, $selectedOrgs) ? 'checked' : '' }}
                                             onchange="document.getElementById('filter-form').submit()"
                                             class="w-4 h-4 rounded border border-[var(--color-outline)] 
-                                                   focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2
+                                                   focus:outline-none
                                                    cursor-pointer text-[var(--color-primary)]
                                                    checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                    transition-all duration-200"
@@ -576,7 +576,7 @@
                                                 {{ in_array($org, $selectedOrgs) ? 'checked' : '' }}
                                                 onchange="document.getElementById('filter-form').submit()"
                                                 class="w-4 h-4 rounded border border-[var(--color-outline)] 
-                                                       focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2
+                                                       focus:outline-none
                                                        cursor-pointer text-[var(--color-primary)]
                                                        checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                        transition-all duration-200"
@@ -593,7 +593,7 @@
                                     onclick="toggleFilterSection('organisatie-more', 'organisatie-toggle')"
                                     id="organisatie-toggle"
                                     class="text-[var(--color-primary)] font-medium text-[var(--font-size-body-medium)] hover:underline 
-                                           focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2 rounded-sm">
+                                           focus:outline-none rounded-md">
                                     Toon meer
                                 </button>
                                 @endif
@@ -659,7 +659,7 @@
                 @endphp
                 
                 <!-- Unified Search & Active Filters Card -->
-                <div class="bg-white rounded-2xl shadow-sm border border-[var(--color-outline-variant)] divide-y divide-[var(--color-outline-variant)]">
+                <div class="bg-white rounded-md shadow-sm border border-[var(--color-outline-variant)] divide-y divide-[var(--color-outline-variant)]">
                     <!-- Unified Search (Documents & Filters) -->
                     <div class="p-4">
                         <label for="unified-search" class="block text-sm font-medium text-[var(--color-on-surface)] mb-2">
@@ -674,12 +674,12 @@
                                 placeholder="Zoek {{ isset($isDossier) ? 'dossiers' : 'documenten' }} of filter op organisatie, thema..."
                                 leadingIcon="fas fa-search"
                                 autocomplete="off"
-                                class="block w-full pr-3 py-2.5 rounded-lg border-2 border-[var(--color-outline)] bg-white
+                                class="block w-full pr-3 py-2.5 rounded-md border-2 border-[var(--color-outline)] bg-white
                                        text-sm text-[var(--color-on-surface)] placeholder-[var(--color-on-surface-variant)]
-                                       focus:border-[var(--color-primary)] focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2
+                                       focus:outline-none focus:border-[var(--color-primary)]
                                        transition-colors duration-200"
                             />
-                            <div id="unified-search-results" class="absolute z-50 mt-1 w-full bg-white rounded-lg shadow-xl border border-[var(--color-outline-variant)] hidden max-h-96 overflow-auto">
+                            <div id="unified-search-results" class="absolute z-50 mt-1 w-full bg-white rounded-md shadow-sm border border-[var(--color-outline-variant)] hidden max-h-96 overflow-auto">
                                 <!-- Results populated by JavaScript -->
                             </div>
                         </div>
@@ -712,10 +712,10 @@
                                     }
                                 @endphp
                                 <a href="{{ $removeUrl }}" 
-                                   class="inline-flex items-center gap-2 px-4 py-2 rounded-full 
+                                   class="inline-flex items-center gap-2 px-4 py-2 rounded-md 
                                           bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
                                           hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
-                                          focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2
+                                          focus:outline-none
                                           transition-all duration-200 font-medium text-sm
                                           group"
                                    title="Verwijder filter: {{ $filter['label'] }}">
@@ -724,10 +724,10 @@
                                 </a>
                             @endforeach
                             <a href="{{ isset($isDossier) ? route('dossiers.index') : route('zoeken') }}" 
-                               class="inline-flex items-center gap-2 px-4 py-2 rounded-full 
+                               class="inline-flex items-center gap-2 px-4 py-2 rounded-md 
                                       bg-[var(--color-surface-variant)] text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]
                                       hover:bg-[var(--color-surface-variant)]/80
-                                      focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2
+                                                                      focus:outline-none
                                       transition-all duration-200 font-medium text-sm
                                       ml-auto">
                                 <i class="fas fa-times-circle text-sm" aria-hidden="true"></i>
@@ -739,7 +739,7 @@
                 </div>
                 
                 <!-- Results Header -->
-                <div class="bg-white rounded-2xl p-6 shadow-sm border border-[var(--color-outline-variant)]">
+                <div class="bg-white rounded-md p-6 shadow-sm border border-[var(--color-outline-variant)]">
                     <div class="flex items-center justify-between gap-3 flex-nowrap overflow-x-auto">
                         <h2 class="text-lg font-medium text-[var(--color-on-surface)] truncate flex-shrink min-w-0">
                             {{ isset($isDossier) ? 'Dossiers' : 'Zoekresultaten' }} {{ (($results['page'] ?? 1) - 1) * ($results['perPage'] ?? 20) + 1 }}-{{ min(($results['page'] ?? 1) * ($results['perPage'] ?? 20), $results['total'] ?? 0) }} van de {{ number_format($results['total'] ?? 0, 0, ',', '.') }} {{ isset($isDossier) ? 'dossiers' : 'resultaten' }}
@@ -748,9 +748,9 @@
                             <span class="text-sm text-[var(--color-on-surface-variant)] whitespace-nowrap">Sorteer:</span>
                             <select 
                                 name="sort" 
-                                class="px-3 py-1.5 rounded-lg border-2 border-[var(--color-outline)] bg-white
+                                class="px-3 py-1.5 rounded-md border-2 border-[var(--color-outline)] bg-white
                                        text-sm text-[var(--color-on-surface)]
-                                       focus:border-[var(--color-primary)] focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2
+                                       focus:outline-none focus:border-[var(--color-primary)]
                                        transition-colors duration-200
                                        min-h-[40px] cursor-pointer"
                                 onchange="updateSort(this.value)"
@@ -762,21 +762,21 @@
                             <span class="text-sm text-[var(--color-on-surface-variant)] whitespace-nowrap ml-2">Aantal:</span>
                             <div class="flex gap-1">
                                 <a href="{{ request()->fullUrlWithQuery(['per_page' => 10, 'pagina' => 1]) }}" 
-                                   class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 min-h-[40px] min-w-[40px] flex items-center justify-center
+                                   class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 min-h-[40px] min-w-[40px] flex items-center justify-center
                                           {{ request('per_page', 20) == 10 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-sm' : 'text-[var(--color-primary)] hover:bg-[var(--color-primary-container)] border border-[var(--color-outline-variant)]' }}
-                                          focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2">
+                                          focus:outline-none">
                                     10
                                 </a>
                                 <a href="{{ request()->fullUrlWithQuery(['per_page' => 20, 'pagina' => 1]) }}" 
-                                   class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 min-h-[40px] min-w-[40px] flex items-center justify-center
+                                   class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 min-h-[40px] min-w-[40px] flex items-center justify-center
                                           {{ request('per_page', 20) == 20 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-sm' : 'text-[var(--color-primary)] hover:bg-[var(--color-primary-container)] border border-[var(--color-outline-variant)]' }}
-                                          focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2">
+                                          focus:outline-none">
                                     20
                                 </a>
                                 <a href="{{ request()->fullUrlWithQuery(['per_page' => 50, 'pagina' => 1]) }}" 
-                                   class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 min-h-[40px] min-w-[40px] flex items-center justify-center
+                                   class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 min-h-[40px] min-w-[40px] flex items-center justify-center
                                           {{ request('per_page', 20) == 50 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-sm' : 'text-[var(--color-primary)] hover:bg-[var(--color-primary-container)] border border-[var(--color-outline-variant)]' }}
-                                          focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2">
+                                          focus:outline-none">
                                     50
                                 </a>
                             </div>
@@ -786,7 +786,7 @@
                 
                 <!-- Error Message -->
                 @if(isset($error))
-                    <div class="bg-error-container text-on-error-container p-4 rounded-2xl border border-error" role="alert">
+                    <div class="bg-error-container text-on-error-container p-4 rounded-md border border-error" role="alert">
                         <p class="text-[var(--font-size-body-medium)] text-error font-medium">
                             Er is een fout opgetreden: {{ $error }}
                         </p>
@@ -795,13 +795,13 @@
                 
                 <!-- Results List -->
                 @if(empty($results['items']))
-                    <div class="bg-white rounded-2xl p-12 text-center border border-[var(--color-outline-variant)]">
+                    <div class="bg-white rounded-md p-12 text-center border border-[var(--color-outline-variant)]">
                         <p class="text-[var(--font-size-body-large)] text-[var(--color-on-surface-variant)] mb-2">Geen resultaten gevonden.</p>
                         <p class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface-variant)]">Probeer andere zoekwoorden of filters aan te passen.</p>
                     </div>
                 @else
                     <!-- Simple List with Heading - Tailwind UI Style -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-[var(--color-outline-variant)] overflow-hidden">
+                    <div class="bg-white rounded-md shadow-sm border border-[var(--color-outline-variant)] overflow-hidden">
                         <div class="px-6 py-4 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-variant)]/30">
                             <h3 class="text-sm font-semibold text-[var(--color-on-surface)]">
                                 {{ isset($isDossier) ? 'Dossiers' : 'Documenten' }}
@@ -817,8 +817,8 @@
                                                     <div class="flex items-start justify-between gap-2 mb-1">
                                                         <a href="{{ isset($isDossier) ? route('dossiers.show', $item->external_id) : '/open-overheid/documents/' . $item->external_id }}" 
                                                            class="text-sm font-medium text-[var(--color-on-surface)] block
-                                                                  hover:text-[var(--color-primary)] focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2
-                                                                  transition-colors duration-200 rounded-sm flex-1">
+                                                                  hover:text-[var(--color-primary)] focus:outline-none
+                                                                  transition-colors duration-200 rounded-md flex-1">
                                                             @if(isset($isDossier) && isset($item->ai_enhanced_title) && !empty($item->ai_enhanced_title))
                                                                 <span class="inline-flex items-center gap-1.5">
                                                                     <span>{!! $searchQuery ? highlightSearchTerms($item->ai_enhanced_title, $searchQuery) : $item->ai_enhanced_title !!}</span>
@@ -830,10 +830,10 @@
                                                         </a>
                                                         @if($item->category)
                                                             <a href="{{ isset($isDossier) ? route('dossiers.index') : route('zoeken') }}?informatiecategorie={{ urlencode($item->category) }}{{ request('zoeken') ? '&zoeken=' . urlencode(request('zoeken')) : '' }}" 
-                                                               class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium 
+                                                               class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium 
                                                                       bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
                                                                       hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
-                                                                      focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2
+                                                                      focus:outline-none
                                                                       transition-all duration-200 shrink-0"
                                                                title="Filter op {{ $item->formatted_category ?? $item->category }}">
                                                                 {{ $item->formatted_category ?? $item->category }}
@@ -848,7 +848,7 @@
                                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md
                                                               bg-[var(--color-primary)]/5 text-[var(--color-primary)] border border-[var(--color-primary)]/20
                                                               hover:bg-[var(--color-primary)]/10 hover:border-[var(--color-primary)]/30
-                                                              focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2
+                                                              focus:outline-none
                                                               transition-all duration-200 text-xs font-medium
                                                               group shrink-0"
                                                        title="Bekijk op open.overheid.nl">
@@ -933,7 +933,7 @@
                                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md 
                                                               bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
                                                               hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
-                                                              focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2
+                                                              focus:outline-none
                                                               transition-all duration-200 font-medium text-xs
                                                               group"
                                                        title="Filter op {{ $item->organisation }}">
@@ -970,14 +970,14 @@
                                                     @endif
                                                 @endif
                                             </div>
-                                            @if($item->metadata && isset($item->metadata['document']['weblocatie']))
+                                            @if(isset($item->metadata) && isset($item->metadata['document']['weblocatie']))
                                                 <div class="mt-3">
                                                     <a href="{{ $item->metadata['document']['weblocatie'] }}" 
                                                        target="_blank" 
                                                        rel="noopener noreferrer"
                                                        class="text-[var(--color-primary)] font-medium text-sm inline-flex items-center gap-1.5
-                                                              hover:underline focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2
-                                                              transition-all duration-200 rounded-sm">
+                                                              hover:underline focus:outline-none
+                                                              transition-all duration-200 rounded-md">
                                                         Open via officielebekendmakingen.nl
                                                         <i class="fas fa-external-link-alt text-xs" aria-hidden="true"></i>
                                                     </a>
@@ -992,84 +992,118 @@
                     
                     <!-- Pagination -->
                     @if(($results['total'] ?? 0) > ($results['perPage'] ?? 20))
-                        <nav class="flex items-center justify-center gap-2 flex-wrap" aria-label="Paginatie">
-                            @if(($results['hasPreviousPage'] ?? false))
-                                <a href="{{ request()->fullUrlWithQuery(['pagina' => ($results['page'] ?? 1) - 1]) }}" 
-                                   class="px-4 py-2 rounded-full text-sm text-[var(--color-primary)]
-                                          hover:bg-[var(--color-primary-container)] focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2
-                                          transition-colors duration-200 min-h-[44px] min-w-[44px] flex items-center justify-center"
-                                   aria-label="Vorige pagina">
-                                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
-                                </a>
-                            @else
-                                <span class="px-4 py-2 rounded-full text-sm text-[var(--color-on-surface-variant)] 
-                                            min-h-[44px] min-w-[44px] flex items-center justify-center" 
-                                      aria-disabled="true"
-                                      aria-label="Vorige pagina">
-                                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
-                                </span>
-                            @endif
-                            
-                            @php
-                                $currentPage = $results['page'] ?? 1;
-                                $totalPages = ceil(($results['total'] ?? 0) / ($results['perPage'] ?? 20));
-                                $showPages = 5;
-                                $startPage = max(1, $currentPage - floor($showPages / 2));
-                                $endPage = min($totalPages, $startPage + $showPages - 1);
-                            @endphp
-                            
-                            @if($startPage > 1)
-                                <a href="{{ request()->fullUrlWithQuery(['pagina' => 1]) }}" 
-                                   class="px-4 py-2 rounded-full text-sm text-[var(--color-primary)]
-                                          hover:bg-[var(--color-primary-container)] focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2
-                                          transition-colors duration-200 min-h-[44px] min-w-[44px] flex items-center justify-center">
-                                    1
-                                </a>
-                                @if($startPage > 2)
-                                    <span class="px-4 py-2 text-sm text-[var(--color-on-surface-variant)]">...</span>
+                        @php
+                            $currentPage = $results['page'] ?? 1;
+                            $perPage = $results['perPage'] ?? 20;
+                            $total = $results['total'] ?? 0;
+                            $totalPages = ceil($total / $perPage);
+                            $startItem = (($currentPage - 1) * $perPage) + 1;
+                            $endItem = min($currentPage * $perPage, $total);
+                            $showPages = 5;
+                            $startPage = max(1, $currentPage - floor($showPages / 2));
+                            $endPage = min($totalPages, $startPage + $showPages - 1);
+                        @endphp
+                        <div class="flex items-center justify-between border-t border-[var(--color-outline-variant)] bg-[var(--color-surface)] px-4 py-3 sm:px-6 dark:border-white/10 dark:bg-transparent">
+                            <!-- Mobile: Previous/Next -->
+                            <div class="flex flex-1 justify-between sm:hidden">
+                                @if(($results['hasPreviousPage'] ?? false))
+                                    <a href="{{ request()->fullUrlWithQuery(['pagina' => $currentPage - 1]) }}" 
+                                       class="relative inline-flex items-center rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)] px-4 py-2 text-sm font-medium text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)] dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10">
+                                        Vorige
+                                    </a>
+                                @else
+                                    <span class="relative inline-flex items-center rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)] px-4 py-2 text-sm font-medium text-[var(--color-on-surface-variant)] opacity-50 cursor-not-allowed dark:border-white/10 dark:bg-white/5 dark:text-gray-400">
+                                        Vorige
+                                    </span>
                                 @endif
-                            @endif
-                            
-                            @for($i = $startPage; $i <= $endPage; $i++)
-                                <a 
-                                    href="{{ request()->fullUrlWithQuery(['pagina' => $i]) }}" 
-                                    class="px-4 py-2 rounded-full text-sm transition-colors duration-200
-                                           min-h-[44px] min-w-[44px] flex items-center justify-center
-                                           focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2
-                                           {{ $i == $currentPage ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)]' : 'text-[var(--color-primary)] hover:bg-[var(--color-primary-container)]' }}">
-                                    {{ $i }}
-                                </a>
-                            @endfor
-                            
-                            @if($endPage < $totalPages)
-                                @if($endPage < $totalPages - 1)
-                                    <span class="px-4 py-2 text-sm text-[var(--color-on-surface-variant)]">...</span>
+                                @if(($results['hasNextPage'] ?? false))
+                                    <a href="{{ request()->fullUrlWithQuery(['pagina' => $currentPage + 1]) }}" 
+                                       class="relative ml-3 inline-flex items-center rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)] px-4 py-2 text-sm font-medium text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)] dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10">
+                                        Volgende
+                                    </a>
+                                @else
+                                    <span class="relative ml-3 inline-flex items-center rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)] px-4 py-2 text-sm font-medium text-[var(--color-on-surface-variant)] opacity-50 cursor-not-allowed dark:border-white/10 dark:bg-white/5 dark:text-gray-400">
+                                        Volgende
+                                    </span>
                                 @endif
-                                <a href="{{ request()->fullUrlWithQuery(['pagina' => $totalPages]) }}" 
-                                   class="px-4 py-2 rounded-full text-sm text-[var(--color-primary)]
-                                          hover:bg-[var(--color-primary-container)] focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2
-                                          transition-colors duration-200 min-h-[44px] min-w-[44px] flex items-center justify-center">
-                                    {{ $totalPages }}
-                                </a>
-                            @endif
-                            
-                            @if(($results['hasNextPage'] ?? false))
-                                <a href="{{ request()->fullUrlWithQuery(['pagina' => ($results['page'] ?? 1) + 1]) }}" 
-                                   class="px-4 py-2 rounded-full text-sm text-[var(--color-primary)]
-                                          hover:bg-[var(--color-primary-container)] focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2
-                                          transition-colors duration-200 min-h-[44px] min-w-[44px] flex items-center justify-center"
-                                   aria-label="Volgende pagina">
-                                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
-                                </a>
-                            @else
-                                <span class="px-4 py-2 rounded-full text-sm text-[var(--color-on-surface-variant)] 
-                                            min-h-[44px] min-w-[44px] flex items-center justify-center" 
-                                      aria-disabled="true"
-                                      aria-label="Volgende pagina">
-                                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
-                                </span>
-                            @endif
-                        </nav>
+                            </div>
+                            <!-- Desktop: Showing text + Page numbers -->
+                            <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                                <div>
+                                    <p class="text-sm text-[var(--color-on-surface-variant)] dark:text-gray-300">
+                                        Toont
+                                        <span class="font-medium text-[var(--color-on-surface)]">{{ number_format($startItem, 0, ',', '.') }}</span>
+                                        tot
+                                        <span class="font-medium text-[var(--color-on-surface)]">{{ number_format($endItem, 0, ',', '.') }}</span>
+                                        van
+                                        <span class="font-medium text-[var(--color-on-surface)]">{{ number_format($total, 0, ',', '.') }}</span>
+                                        resultaten
+                                    </p>
+                                </div>
+                                <div>
+                                    <nav aria-label="Paginatie" class="isolate inline-flex -space-x-px rounded-md shadow-sm dark:shadow-none">
+                                        @if(($results['hasPreviousPage'] ?? false))
+                                            <a href="{{ request()->fullUrlWithQuery(['pagina' => $currentPage - 1]) }}" 
+                                               class="relative inline-flex items-center rounded-md px-2 py-2 text-[var(--color-on-surface-variant)]  hover:bg-[var(--color-surface-variant)] focus:z-20 focus:outline-none  dark:hover:bg-white/5">
+                                                <span class="sr-only">Vorige</span>
+                                                <i class="fas fa-chevron-left text-sm" aria-hidden="true"></i>
+                                            </a>
+                                        @else
+                                            <span class="relative inline-flex items-center rounded-md px-2 py-2 text-[var(--color-on-surface-variant)]  opacity-50 cursor-not-allowed ">
+                                                <span class="sr-only">Vorige</span>
+                                                <i class="fas fa-chevron-left text-sm" aria-hidden="true"></i>
+                                            </span>
+                                        @endif
+                                        
+                                        @if($startPage > 1)
+                                            <a href="{{ request()->fullUrlWithQuery(['pagina' => 1]) }}" 
+                                               class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-[var(--color-on-surface)]  hover:bg-[var(--color-surface-variant)] focus:z-20 focus:outline-none dark:text-gray-200  dark:hover:bg-white/5">
+                                                1
+                                            </a>
+                                            @if($startPage > 2)
+                                                <span class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-[var(--color-on-surface-variant)]  focus:outline-none dark:text-gray-400 ">...</span>
+                                            @endif
+                                        @endif
+                                        
+                                        @for($i = $startPage; $i <= $endPage; $i++)
+                                            @if($i == $currentPage)
+                                                <a href="#" aria-current="page" class="relative z-10 inline-flex items-center bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-[var(--color-on-primary)] focus:z-20 focus-visible:outline-none dark:bg-[var(--color-primary)] dark:focus-visible:outline-none">
+                                                    {{ $i }}
+                                                </a>
+                                            @else
+                                                <a href="{{ request()->fullUrlWithQuery(['pagina' => $i]) }}" 
+                                                   class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-[var(--color-on-surface)]  hover:bg-[var(--color-surface-variant)] focus:z-20 focus:outline-none dark:text-gray-200  dark:hover:bg-white/5">
+                                                    {{ $i }}
+                                                </a>
+                                            @endif
+                                        @endfor
+                                        
+                                        @if($endPage < $totalPages)
+                                            @if($endPage < $totalPages - 1)
+                                                <span class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-[var(--color-on-surface-variant)]  focus:outline-none dark:text-gray-400 ">...</span>
+                                            @endif
+                                            <a href="{{ request()->fullUrlWithQuery(['pagina' => $totalPages]) }}" 
+                                               class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-[var(--color-on-surface)]  hover:bg-[var(--color-surface-variant)] focus:z-20 focus:outline-none dark:text-gray-200  dark:hover:bg-white/5">
+                                                {{ $totalPages }}
+                                            </a>
+                                        @endif
+                                        
+                                        @if(($results['hasNextPage'] ?? false))
+                                            <a href="{{ request()->fullUrlWithQuery(['pagina' => $currentPage + 1]) }}" 
+                                               class="relative inline-flex items-center rounded-md px-2 py-2 text-[var(--color-on-surface-variant)]  hover:bg-[var(--color-surface-variant)] focus:z-20 focus:outline-none  dark:hover:bg-white/5">
+                                                <span class="sr-only">Volgende</span>
+                                                <i class="fas fa-chevron-right text-sm" aria-hidden="true"></i>
+                                            </a>
+                                        @else
+                                            <span class="relative inline-flex items-center rounded-md px-2 py-2 text-[var(--color-on-surface-variant)]  opacity-50 cursor-not-allowed ">
+                                                <span class="sr-only">Volgende</span>
+                                                <i class="fas fa-chevron-right text-sm" aria-hidden="true"></i>
+                                            </span>
+                                        @endif
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
                     @endif
                 @endif
             </div>

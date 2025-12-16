@@ -45,10 +45,10 @@
             @if($autocomplete) autocomplete="{{ $autocomplete }}" @endif
             @if($error) aria-invalid="true" aria-describedby="{{ $inputId }}-error" @endif
             {{ $attributes->merge([
-                'class' => 'block w-full rounded-md bg-white px-3 py-2 text-base text-[var(--color-on-surface)] outline-1 -outline-offset-1 outline-[var(--color-outline-variant)] placeholder:text-[var(--color-on-surface-variant)] focus:outline-2 focus:-outline-offset-2 focus:outline-[var(--color-primary)] sm:text-sm/6 dark:bg-white/5 dark:text-[var(--color-on-surface)] dark:outline-white/10 dark:placeholder:text-[var(--color-on-surface-variant)] dark:focus:outline-[var(--color-primary)]' . 
+                'class' => 'block w-full rounded-md bg-[var(--color-surface)] px-3 py-2 text-base text-[var(--color-on-surface)] border border-[var(--color-outline-variant)] placeholder:text-[var(--color-on-surface-variant)] focus:outline-none focus:border-[var(--color-primary)] sm:text-sm/6 dark:bg-white/5 dark:text-[var(--color-on-surface)] dark:border-white/10 dark:placeholder:text-[var(--color-on-surface-variant)] dark:focus:border-[var(--color-primary)]' . 
                 ($leadingIcon ? ' pl-10' : '') . 
                 ($trailingIcon ? ' pr-10' : '') .
-                ($error ? ' border-red-300 focus:outline-red-500' : '')
+                ($error ? ' border-red-300 focus:border-red-500' : '')
             ])->except(['label', 'leadingIcon', 'trailingIcon', 'error', 'type', 'name', 'id', 'value', 'placeholder', 'required', 'autocomplete']) }}
         />
         
