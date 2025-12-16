@@ -803,51 +803,62 @@ class SearchController extends Controller
             $facetCounts = null;
 
             if ($useTypesense) {
+                // IMPORTANT: Typesense is MANDATORY when enabled - NO database fallback!
+                // All search results MUST come from Typesense, not database
                 try {
                     $results = $this->searchWithTypesense($query, false);
-                    
-                    // Extract facet counts from Typesense results
-                    if (isset($results['facet_counts']) && ! empty($results['facet_counts'])) {
-                        $facetCounts = $results['facet_counts'];
-                        \Log::debug('Typesense facets received', [
-                            'facet_count' => count($facetCounts),
-                            'facets' => array_keys(array_column($facetCounts, 'field_name')),
-                        ]);
-                        // Convert Typesense facets to filter counts format
-                        $filterCounts = $this->convertTypesenseFacetsToFilterCounts($facetCounts, $query);
-                        
-                        // Calculate date filter counts using Typesense (not database!)
-                        // Make lightweight Typesense queries with same filters + date range
-                        $filterCounts['week'] = $this->getDateFilterCountFromTypesense($query, 'week');
-                        $filterCounts['maand'] = $this->getDateFilterCountFromTypesense($query, 'maand');
-                        $filterCounts['jaar'] = $this->getDateFilterCountFromTypesense($query, 'jaar');
-                    } else {
-                        // Typesense search succeeded but no facets returned - fallback to FilterCountService
-                        \Log::warning('Typesense search succeeded but no facet_counts returned, using FilterCountService fallback');
-                        try {
-                            $filterCounts = $this->filterCountService->calculateFilterCounts($query);
-                        } catch (\Exception $e) {
-                            \Log::warning('FilterCountService failed', ['error' => $e->getMessage()]);
-                            $filterCounts = [];
-                        }
-                    }
                 } catch (\Exception $typesenseException) {
-                    // If Typesense fails, fallback to PostgreSQL
-                    \Log::warning('Typesense search failed, falling back to PostgreSQL', [
+                    // Typesense failed - show error instead of falling back to database
+                    \Log::error('Typesense search failed - cannot use database fallback', [
                         'error' => $typesenseException->getMessage(),
+                        'query' => $query->zoektekst ?? '',
                     ]);
-                    $results = $this->localService->search($query);
                     
-                    // Use FilterCountService for PostgreSQL fallback
-                    try {
-                        $filterCounts = $this->filterCountService->calculateFilterCounts($query);
-                    } catch (\Exception $e) {
-                        \Log::warning('FilterCountService failed', ['error' => $e->getMessage()]);
-                        $filterCounts = [];
-                    }
+                    // Return error view instead of falling back to database
+                    return view('zoekresultaten', [
+                        'results' => ['items' => collect([]), 'total' => 0],
+                        'query' => $query,
+                        'documentCount' => 0,
+                        'filters' => $validated,
+                        'filterCounts' => [],
+                        'allFilterOptions' => [],
+                        'error' => 'Zoeken is momenteel niet beschikbaar. Probeer het later opnieuw.',
+                    ]);
+                }
+                
+                // Extract facet counts from Typesense results
+                if (isset($results['facet_counts']) && ! empty($results['facet_counts'])) {
+                    $facetCounts = $results['facet_counts'];
+                    \Log::debug('Typesense facets received', [
+                        'facet_count' => count($facetCounts),
+                        'facets' => array_keys(array_column($facetCounts, 'field_name')),
+                    ]);
+                    // Convert Typesense facets to filter counts format
+                    $filterCounts = $this->convertTypesenseFacetsToFilterCounts($facetCounts, $query);
+                    
+                    // Calculate date filter counts using Typesense (not database!)
+                    // Make lightweight Typesense queries with same filters + date range
+                    $filterCounts['week'] = $this->getDateFilterCountFromTypesense($query, 'week');
+                    $filterCounts['maand'] = $this->getDateFilterCountFromTypesense($query, 'maand');
+                    $filterCounts['jaar'] = $this->getDateFilterCountFromTypesense($query, 'jaar');
+                } else {
+                    // Typesense search succeeded but no facets returned
+                    \Log::warning('Typesense search succeeded but no facet_counts returned');
+                    // Use empty filter counts - don't fall back to database!
+                    $filterCounts = [
+                        'week' => 0,
+                        'maand' => 0,
+                        'jaar' => 0,
+                        'documentsoort' => [],
+                        'thema' => [],
+                        'organisatie' => [],
+                        'informatiecategorie' => [],
+                        'bestandstype' => [],
+                    ];
                 }
             } else {
-                // Typesense disabled, use PostgreSQL directly
+                // Typesense disabled in config - use PostgreSQL (only if explicitly disabled)
+                \Log::info('Typesense disabled in config, using PostgreSQL fallback');
                 $results = $this->localService->search($query);
                 
                 // Use FilterCountService for PostgreSQL

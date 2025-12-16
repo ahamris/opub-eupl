@@ -101,36 +101,49 @@ class DossierController extends Controller
                 }
             );
 
-            // Use Typesense as primary search engine (much faster with 600k+ records)
+            // IMPORTANT: Use Typesense as primary search engine (not database!)
+            // Database is ONLY used for single dossier details when clicked
             $useTypesense = config('open_overheid.typesense.enabled', true);
             
-            // For dossiers, use PostgreSQL with optimized queries (dossier_metadata is already optimized)
-            // Typesense doesn't have dossier_metadata, so we'd need complex filtering
-            // The dossier_metadata table is already pre-computed and fast
-            $results = $this->searchDossiersWithPostgreSQL($searchQuery, $validated, $publicatiedatumVan, $publicatiedatumTot, $organisatie);
+            if ($useTypesense) {
+                try {
+                    $results = $this->searchDossiersWithTypesense($searchQuery, $validated);
+                } catch (\Exception $e) {
+                    \Log::warning('Typesense dossier search failed, falling back to PostgreSQL', ['error' => $e->getMessage()]);
+                    $results = $this->searchDossiersWithPostgreSQL($searchQuery, $validated, $publicatiedatumVan, $publicatiedatumTot, $organisatie);
+                }
+            } else {
+                // Typesense disabled, use PostgreSQL fallback
+                $results = $this->searchDossiersWithPostgreSQL($searchQuery, $validated, $publicatiedatumVan, $publicatiedatumTot, $organisatie);
+            }
 
             // Get pre-computed metadata for all dossiers in this page (FAST - single query)
-            $externalIds = $results->getCollection()->pluck('external_id')->toArray();
+            // Only if results are from database (PostgreSQL fallback)
+            $items = $results['items'] ?? $results->items() ?? [];
+            $externalIds = collect($items)->pluck('external_id')->filter()->toArray();
+            
             $metadataMap = collect();
+            $aiContentMap = [];
+            
             if (! empty($externalIds)) {
+                // Get metadata in single query (only for dossier-specific data)
                 $metadataMap = \Illuminate\Support\Facades\DB::table('dossier_metadata')
                     ->whereIn('dossier_external_id', $externalIds)
                     ->get()
                     ->keyBy('dossier_external_id');
-            }
 
-            // Get AI content for all dossiers (also cached/pre-computed)
-            $enhancementService = app(DossierEnhancementService::class);
-            $aiContentMap = [];
-            foreach ($externalIds as $externalId) {
-                $aiContent = $enhancementService->getDossierAiContent($externalId);
-                if ($aiContent) {
-                    $aiContentMap[$externalId] = $aiContent;
+                // Get AI content for all dossiers (also cached/pre-computed)
+                $enhancementService = app(DossierEnhancementService::class);
+                foreach ($externalIds as $externalId) {
+                    $aiContent = $enhancementService->getDossierAiContent($externalId);
+                    if ($aiContent) {
+                        $aiContentMap[$externalId] = $aiContent;
+                    }
                 }
             }
 
             // Enhance results with pre-computed metadata and AI-content (NO N+1 queries!)
-            $results->getCollection()->transform(function ($document) use ($metadataMap, $aiContentMap) {
+            $items = collect($items)->map(function ($document) use ($metadataMap, $aiContentMap) {
                 $metadata = $metadataMap[$document->external_id] ?? null;
                 $aiContent = $aiContentMap[$document->external_id] ?? null;
 
@@ -152,6 +165,8 @@ class DossierController extends Controller
                 $document->has_audio = ! empty($aiContent->audio_url);
 
                 // Get list of documents in this dossier for display
+                // NOTE: This is acceptable - it's only when viewing dossier details, not for search results
+                // Database is used here because we need dossier relationships
                 try {
                     $dossierDocument = \App\Models\OpenOverheidDocument::where('external_id', $document->external_id)->first();
                     if ($dossierDocument) {
@@ -171,17 +186,29 @@ class DossierController extends Controller
                 }
 
                 return $document;
-            });
+            })->values();
 
             // Format results to match zoekresultaten view structure
-            $formattedResults = [
-                'items' => $results->items(),
-                'total' => $results->total(),
-                'page' => $results->currentPage(),
-                'perPage' => $results->perPage(),
-                'hasNextPage' => $results->hasMorePages(),
-                'hasPreviousPage' => $results->currentPage() > 1,
-            ];
+            // Handle both Typesense results (array) and PostgreSQL results (paginator)
+            if (is_array($results)) {
+                $formattedResults = [
+                    'items' => $items,
+                    'total' => $results['total'] ?? 0,
+                    'page' => $results['page'] ?? 1,
+                    'perPage' => $results['perPage'] ?? 20,
+                    'hasNextPage' => $results['hasNextPage'] ?? false,
+                    'hasPreviousPage' => $results['hasPreviousPage'] ?? false,
+                ];
+            } else {
+                $formattedResults = [
+                    'items' => $items,
+                    'total' => $results->total(),
+                    'page' => $results->currentPage(),
+                    'perPage' => $results->perPage(),
+                    'hasNextPage' => $results->hasMorePages(),
+                    'hasPreviousPage' => $results->currentPage() > 1,
+                ];
+            }
 
             // Calculate filter counts using optimized queries (dossier_metadata table)
             $filterCounts = $this->calculateFilterCounts($validated);
@@ -293,23 +320,57 @@ class DossierController extends Controller
             ->pluck('dossier_external_id')
             ->toArray();
 
+        // IMPORTANT: Use ONLY Typesense data - NO database queries per result!
+        // Create objects from Typesense data directly
         $items = collect($typesenseResults['hits'] ?? [])
             ->map(function ($hit) {
                 $doc = $hit['document'] ?? $hit;
-                return \App\Models\OpenOverheidDocument::where('external_id', $doc['external_id'] ?? null)->first();
+                
+                // Create object from Typesense data (no database query!)
+                return (object) [
+                    'id' => $doc['id'] ?? null,
+                    'external_id' => $doc['external_id'] ?? null,
+                    'title' => $doc['title'] ?? 'Geen titel',
+                    'description' => $doc['description'] ?? '',
+                    'content' => $doc['content'] ?? '',
+                    'publication_date' => isset($doc['publication_date']) && $doc['publication_date'] > 0
+                        ? \Carbon\Carbon::createFromTimestamp($doc['publication_date'])
+                        : null,
+                    'document_type' => $doc['document_type'] ?? null,
+                    'category' => $doc['category'] ?? null,
+                    'theme' => $doc['theme'] ?? null,
+                    'organisation' => $doc['organisation'] ?? null,
+                    'url' => $doc['url'] ?? null,
+                    'updated_at' => isset($doc['synced_at']) && $doc['synced_at'] > 0
+                        ? \Carbon\Carbon::createFromTimestamp($doc['synced_at'])
+                        : now(),
+                    '_from_typesense' => true,
+                ];
             })
-            ->filter()
             ->filter(function ($doc) use ($dossierExternalIds) {
                 return in_array($doc->external_id, $dossierExternalIds);
             })
             ->take($query->perPage);
 
+        // Get total count of dossiers (cached to avoid querying database)
+        $totalDossiers = \Illuminate\Support\Facades\Cache::remember(
+            'dossier_count_precomputed_processed',
+            300,
+            function () {
+                return \Illuminate\Support\Facades\DB::table('dossier_metadata')
+                    ->join('dossier_ai_content', 'dossier_metadata.dossier_external_id', '=', 'dossier_ai_content.dossier_external_id')
+                    ->whereNotNull('dossier_metadata.computed_at')
+                    ->whereNotNull('dossier_ai_content.generated_at')
+                    ->count();
+            }
+        );
+
         return [
             'items' => $items,
-            'total' => min($typesenseResults['found'] ?? 0, count($dossierExternalIds)),
+            'total' => min($typesenseResults['found'] ?? 0, $totalDossiers),
             'page' => $typesenseResults['page'] ?? $query->page,
             'perPage' => $query->perPage,
-            'hasNextPage' => ($typesenseResults['page'] ?? $query->page) * $query->perPage < count($dossierExternalIds),
+            'hasNextPage' => ($typesenseResults['page'] ?? $query->page) * $query->perPage < $totalDossiers,
             'hasPreviousPage' => ($typesenseResults['page'] ?? $query->page) > 1,
             'facet_counts' => $typesenseResults['facet_counts'] ?? [],
         ];
