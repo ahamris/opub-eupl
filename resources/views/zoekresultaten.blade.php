@@ -1658,65 +1658,33 @@
                     throw new Error(data.message || 'Search failed');
                 }
                 
+                // Store search state for pagination
+                currentSearchState = {
+                    query: query,
+                    filters: {},
+                    perPage: data.per_page || 20
+                };
+                
+                // Preserve existing filters in state
+                const currentUrl = new URL(window.location.href);
+                ['beschikbaarSinds', 'publicatiedatum_van', 'publicatiedatum_tot', 'sort'].forEach(filter => {
+                    const val = currentUrl.searchParams.get(filter);
+                    if (val) currentSearchState.filters[filter] = val;
+                });
+                ['documentsoort', 'thema', 'organisatie', 'informatiecategorie'].forEach(filter => {
+                    const vals = currentUrl.searchParams.getAll(filter + '[]');
+                    if (vals.length > 0) currentSearchState.filters[filter] = vals;
+                });
+                
                 // Update URL without reload
                 const newUrl = new URL(window.location.href);
                 newUrl.searchParams.set('zoeken', query);
                 newUrl.searchParams.set('pagina', '1');
                 history.pushState({}, '', newUrl.toString());
                 
-                // Render results
+                // Render results with pagination using shared function
                 if (resultsArea) {
-                    if (data.hits && data.hits.length > 0) {
-                        let html = `
-                            <div class="mb-4 flex items-center justify-between">
-                                <p class="text-sm text-[var(--color-on-surface-variant)]">
-                                    <span class="font-semibold">${data.found.toLocaleString('nl-NL')}</span> resultaten gevonden
-                                    <span class="text-xs text-gray-400 ml-2">(${data.search_time_ms}ms)</span>
-                                </p>
-                            </div>
-                            <div class="space-y-4">
-                        `;
-                        
-                        data.hits.forEach(hit => {
-                            html += `
-                                <article class="bg-white rounded-lg border border-[var(--color-outline-variant)] p-4 hover:shadow-md transition-shadow">
-                                    <a href="/open-overheid/documents/${hit.id}" class="block">
-                                        <h3 class="text-lg font-semibold text-[var(--color-on-surface)] mb-2 hover:text-[var(--color-primary)]">
-                                            ${escapeHtml(hit.title || 'Geen titel')}
-                                        </h3>
-                                        ${hit.description ? `<p class="text-sm text-[var(--color-on-surface-variant)] mb-3 line-clamp-2">${escapeHtml(hit.description)}</p>` : ''}
-                                        <div class="flex flex-wrap gap-2 text-xs text-[var(--color-on-surface-variant)]">
-                                            ${hit.document_type ? `<span class="bg-[var(--color-surface-variant)] px-2 py-1 rounded">${escapeHtml(hit.document_type)}</span>` : ''}
-                                            ${hit.organisation ? `<span class="bg-[var(--color-surface-variant)] px-2 py-1 rounded">${escapeHtml(hit.organisation)}</span>` : ''}
-                                            ${hit.publication_date ? `<span class="text-gray-400">${hit.publication_date}</span>` : ''}
-                                        </div>
-                                    </a>
-                                </article>
-                            `;
-                        });
-                        
-                        html += '</div>';
-                        
-                        // Pagination
-                        if (data.total_pages > 1) {
-                            html += `
-                                <div class="mt-6 flex items-center justify-center gap-2">
-                                    <span class="text-sm text-[var(--color-on-surface-variant)]">
-                                        Pagina ${data.page} van ${data.total_pages}
-                                    </span>
-                                </div>
-                            `;
-                        }
-                        
-                        resultsArea.innerHTML = html;
-                    } else {
-                        resultsArea.innerHTML = `
-                            <div class="text-center py-12">
-                                <i class="fas fa-search text-4xl text-gray-300 mb-4"></i>
-                                <p class="text-[var(--color-on-surface-variant)]">Geen resultaten gevonden voor "${escapeHtml(query)}"</p>
-                            </div>
-                        `;
-                    }
+                    renderSearchResults(resultsArea, data);
                 }
                 
                 // Update filter counts if available
@@ -1747,6 +1715,229 @@
                 });
             }
             // Similar for other filter types...
+        }
+        
+        // Render pagination HTML
+        function renderPagination(currentPage, totalPages, perPage) {
+            if (totalPages <= 1) return '';
+            
+            const hasPrevious = currentPage > 1;
+            const hasNext = currentPage < totalPages;
+            
+            // Calculate page range (show max 5 pages around current)
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, currentPage + 2);
+            
+            // Adjust range to always show 5 pages if possible
+            if (endPage - startPage < 4) {
+                if (startPage === 1) {
+                    endPage = Math.min(totalPages, 5);
+                } else if (endPage === totalPages) {
+                    startPage = Math.max(1, totalPages - 4);
+                }
+            }
+            
+            let html = `
+                <nav class="mt-8 flex items-center justify-between border-t border-[var(--color-outline-variant)] bg-white px-4 py-3 sm:px-6 rounded-b-lg" aria-label="Pagination">
+                    <div class="hidden sm:block">
+                        <p class="text-sm text-[var(--color-on-surface-variant)]">
+                            Pagina <span class="font-semibold">${currentPage}</span> van <span class="font-semibold">${totalPages}</span>
+                        </p>
+                    </div>
+                    <div class="flex flex-1 justify-between sm:justify-end gap-2">
+            `;
+            
+            // Previous button
+            if (hasPrevious) {
+                html += `
+                    <button onclick="loadPage(${currentPage - 1})" 
+                            class="relative inline-flex items-center rounded-md border border-[var(--color-outline-variant)] bg-white px-3 py-2 text-sm font-medium text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)]">
+                        <i class="fas fa-chevron-left mr-1"></i> Vorige
+                    </button>
+                `;
+            }
+            
+            // Page numbers (desktop only)
+            html += `<div class="hidden sm:flex gap-1">`;
+            
+            if (startPage > 1) {
+                html += `
+                    <button onclick="loadPage(1)" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)] rounded-md">1</button>
+                `;
+                if (startPage > 2) {
+                    html += `<span class="relative inline-flex items-center px-4 py-2 text-sm text-[var(--color-on-surface-variant)]">...</span>`;
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                if (i === currentPage) {
+                    html += `
+                        <span class="relative inline-flex items-center px-4 py-2 text-sm font-semibold bg-[var(--color-primary)] text-white rounded-md">${i}</span>
+                    `;
+                } else {
+                    html += `
+                        <button onclick="loadPage(${i})" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)] rounded-md">${i}</button>
+                    `;
+                }
+            }
+            
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    html += `<span class="relative inline-flex items-center px-4 py-2 text-sm text-[var(--color-on-surface-variant)]">...</span>`;
+                }
+                html += `
+                    <button onclick="loadPage(${totalPages})" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)] rounded-md">${totalPages}</button>
+                `;
+            }
+            
+            html += `</div>`;
+            
+            // Next button
+            if (hasNext) {
+                html += `
+                    <button onclick="loadPage(${currentPage + 1})" 
+                            class="relative inline-flex items-center rounded-md border border-[var(--color-outline-variant)] bg-white px-3 py-2 text-sm font-medium text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)]">
+                        Volgende <i class="fas fa-chevron-right ml-1"></i>
+                    </button>
+                `;
+            }
+            
+            html += `</div></nav>`;
+            return html;
+        }
+        
+        // Store current search state for pagination
+        let currentSearchState = {
+            query: '',
+            filters: {},
+            perPage: 20
+        };
+        
+        // Load specific page via AJAX
+        async function loadPage(page) {
+            const resultsArea = document.getElementById('search-results-area');
+            if (resultsArea) {
+                resultsArea.innerHTML = `
+                    <div class="flex items-center justify-center py-12">
+                        <div class="text-center">
+                            <i class="fas fa-spinner fa-spin text-3xl text-[var(--color-primary)] mb-4"></i>
+                            <p class="text-[var(--color-on-surface-variant)]">Pagina ${page} laden...</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            try {
+                const fastSearchEndpoint = '{{ route("api.fast-search") }}';
+                const params = new URLSearchParams({
+                    page: page,
+                    per_page: currentSearchState.perPage,
+                });
+                
+                if (currentSearchState.query) {
+                    params.set('q', currentSearchState.query);
+                }
+                
+                // Add stored filters
+                Object.entries(currentSearchState.filters).forEach(([key, values]) => {
+                    if (Array.isArray(values)) {
+                        values.forEach(v => params.append(key, v));
+                    } else if (values) {
+                        params.set(key, values);
+                    }
+                });
+                
+                const response = await fetch(`${fastSearchEndpoint}?${params.toString()}`);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.message || 'Failed to load page');
+                }
+                
+                // Update URL
+                const newUrl = new URL(window.location.href);
+                newUrl.searchParams.set('pagina', page.toString());
+                history.pushState({}, '', newUrl.toString());
+                
+                // Render results with pagination
+                renderSearchResults(resultsArea, data);
+                
+                // Scroll to top of results
+                resultsArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+            } catch (error) {
+                console.error('Page load error:', error);
+                if (resultsArea) {
+                    resultsArea.innerHTML = `
+                        <div class="text-center py-12">
+                            <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+                            <p class="text-red-600">Fout bij laden van pagina. Probeer het opnieuw.</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        // Shared function to render search results with pagination
+        function renderSearchResults(container, data) {
+            if (data.hits && data.hits.length > 0) {
+                let html = `
+                    <!-- Results Header -->
+                    <div class="bg-white rounded-md p-6 shadow-sm border border-[var(--color-outline-variant)]">
+                        <div class="flex items-center justify-between gap-3">
+                            <h2 class="text-lg font-medium text-[var(--color-on-surface)]">
+                                Zoekresultaten ${((data.page - 1) * data.per_page) + 1}-${Math.min(data.page * data.per_page, data.found)} van de ${data.found.toLocaleString('nl-NL')} resultaten
+                            </h2>
+                            <span class="text-xs text-gray-400">${data.search_time_ms}ms</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Results List -->
+                    <div class="bg-white rounded-md shadow-sm border border-[var(--color-outline-variant)] overflow-hidden">
+                        <div class="px-6 py-4 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-variant)]/30">
+                            <h3 class="text-sm font-semibold text-[var(--color-on-surface)]">Documenten</h3>
+                        </div>
+                        <ul role="list" class="divide-y divide-[var(--color-outline-variant)]">
+                `;
+                
+                data.hits.forEach(hit => {
+                    html += `
+                        <li class="px-6 py-5 hover:bg-[var(--color-surface-variant)]/30 transition-colors duration-150">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="flex-1 min-w-0">
+                                    <a href="/open-overheid/documents/${hit.id}" 
+                                       class="text-sm font-medium text-[var(--color-on-surface)] hover:text-[var(--color-primary)] hover:underline">
+                                        ${escapeHtml(hit.title || 'Geen titel')}
+                                    </a>
+                                    ${hit.description ? `<p class="text-sm text-[var(--color-on-surface-variant)] mt-1 line-clamp-2">${escapeHtml(hit.description)}</p>` : ''}
+                                    <div class="flex flex-wrap gap-2 mt-2 text-xs">
+                                        ${hit.document_type ? `<span class="bg-[var(--color-surface-variant)] text-[var(--color-on-surface-variant)] px-2 py-1 rounded">${escapeHtml(hit.document_type)}</span>` : ''}
+                                        ${hit.organisation ? `<span class="bg-[var(--color-surface-variant)] text-[var(--color-on-surface-variant)] px-2 py-1 rounded">${escapeHtml(hit.organisation)}</span>` : ''}
+                                        ${hit.publication_date ? `<span class="text-gray-400"><i class="far fa-calendar-alt mr-1"></i>${hit.publication_date}</span>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    `;
+                });
+                
+                html += `</ul>`;
+                
+                // Add pagination
+                html += renderPagination(data.page, data.total_pages, data.per_page);
+                
+                html += `</div>`;
+                
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = `
+                    <div class="bg-white rounded-md p-12 text-center border border-[var(--color-outline-variant)]">
+                        <i class="fas fa-search text-4xl text-gray-300 mb-4"></i>
+                        <p class="text-[var(--color-on-surface-variant)] mb-2">Geen resultaten gevonden.</p>
+                        <p class="text-sm text-[var(--color-on-surface-variant)]">Probeer andere zoekwoorden of filters aan te passen.</p>
+                    </div>
+                `;
+            }
         }
         
         // Apply filter via AJAX (lightning fast)
@@ -1792,6 +1983,15 @@
                     throw new Error(data.message || 'Filter failed');
                 }
                 
+                // Store search state for pagination
+                currentSearchState = {
+                    query: currentQuery,
+                    filters: {
+                        [filterType]: filterValue
+                    },
+                    perPage: data.per_page || 20
+                };
+                
                 // Update URL
                 const newUrl = new URL(window.location.href);
                 newUrl.searchParams.set('pagina', '1');
@@ -1799,47 +1999,9 @@
                 newUrl.searchParams.append(urlParamName, filterValue);
                 history.pushState({}, '', newUrl.toString());
                 
-                // Render results
-                if (resultsArea && data.hits) {
-                    if (data.hits.length > 0) {
-                        let html = `
-                            <div class="mb-4 flex items-center justify-between">
-                                <p class="text-sm text-[var(--color-on-surface-variant)]">
-                                    <span class="font-semibold">${data.found.toLocaleString('nl-NL')}</span> resultaten gevonden
-                                    <span class="text-xs text-gray-400 ml-2">(${data.search_time_ms}ms)</span>
-                                </p>
-                            </div>
-                            <div class="space-y-4">
-                        `;
-                        
-                        data.hits.forEach(hit => {
-                            html += `
-                                <article class="bg-white rounded-lg border border-[var(--color-outline-variant)] p-4 hover:shadow-md transition-shadow">
-                                    <a href="/open-overheid/documents/${hit.id}" class="block">
-                                        <h3 class="text-lg font-semibold text-[var(--color-on-surface)] mb-2 hover:text-[var(--color-primary)]">
-                                            ${escapeHtml(hit.title || 'Geen titel')}
-                                        </h3>
-                                        ${hit.description ? `<p class="text-sm text-[var(--color-on-surface-variant)] mb-3 line-clamp-2">${escapeHtml(hit.description)}</p>` : ''}
-                                        <div class="flex flex-wrap gap-2 text-xs text-[var(--color-on-surface-variant)]">
-                                            ${hit.document_type ? `<span class="bg-[var(--color-surface-variant)] px-2 py-1 rounded">${escapeHtml(hit.document_type)}</span>` : ''}
-                                            ${hit.organisation ? `<span class="bg-[var(--color-surface-variant)] px-2 py-1 rounded">${escapeHtml(hit.organisation)}</span>` : ''}
-                                            ${hit.publication_date ? `<span class="text-gray-400">${hit.publication_date}</span>` : ''}
-                                        </div>
-                                    </a>
-                                </article>
-                            `;
-                        });
-                        
-                        html += '</div>';
-                        resultsArea.innerHTML = html;
-                    } else {
-                        resultsArea.innerHTML = `
-                            <div class="text-center py-12">
-                                <i class="fas fa-search text-4xl text-gray-300 mb-4"></i>
-                                <p class="text-[var(--color-on-surface-variant)]">Geen resultaten gevonden voor dit filter</p>
-                            </div>
-                        `;
-                    }
+                // Render results with pagination using shared function
+                if (resultsArea) {
+                    renderSearchResults(resultsArea, data);
                 }
                 
             } catch (error) {
