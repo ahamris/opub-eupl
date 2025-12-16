@@ -604,7 +604,7 @@
             </aside>
             
             <!-- Results Section -->
-            <div class="space-y-6">
+            <div id="search-results-area" class="space-y-6">
                 <!-- Active Filters Ribbons -->
                 @php
                     $activeFilters = [];
@@ -1359,9 +1359,9 @@
                         'documentsoort': 'Documentsoort',
                         'informatiecategorie': 'Categorie'
                     };
-                    const paramName = action.filter_type === 'informatiecategorie' ? action.filter_type : `${action.filter_type}[]`;
-                    const filterUrl = `${searchRoute}?${paramName}=${encodeURIComponent(action.filter_value)}&pagina=1`;
-                    html += `<a href="${filterUrl}" 
+                    // Use AJAX for filter actions too
+                    html += `<a href="#" 
+                        onclick="event.preventDefault(); applyFilterViaAjax('${action.filter_type}', '${escapeHtml(action.filter_value)}'); return false;"
                         class="block px-4 py-3 hover:bg-[var(--color-primary-light)]/30 transition-colors border-b border-[var(--color-outline-variant)] unified-search-item bg-blue-50"
                         data-index="${itemIndex++}">
                         <div class="flex items-center gap-3">
@@ -1521,79 +1521,253 @@
             return div.innerHTML;
         }
 
-        // Trigger live search from quick action suggestion
+        // LIGHTNING FAST search - uses fast-search API and updates page via AJAX
         async function triggerLiveSearchFromSuggestion(query) {
-            if (!query || !unifiedSearchInput) return;
+            if (!query) return;
             
             // Update input value
-            unifiedSearchInput.value = query;
+            if (unifiedSearchInput) {
+                unifiedSearchInput.value = query;
+            }
             
-            // Show loading state
+            // Hide dropdown
             if (unifiedSearchResults) {
-                unifiedSearchResults.innerHTML = '<div class="px-4 py-3 text-sm text-[var(--color-on-surface-variant)]"><i class="fas fa-spinner fa-spin mr-2"></i>Zoeken...</div>';
-                unifiedSearchResults.classList.remove('hidden');
+                unifiedSearchResults.classList.add('hidden');
+            }
+            
+            // Show loading state in results area
+            const resultsArea = document.getElementById('search-results-area');
+            if (resultsArea) {
+                resultsArea.innerHTML = `
+                    <div class="flex items-center justify-center py-12">
+                        <div class="text-center">
+                            <i class="fas fa-spinner fa-spin text-3xl text-[var(--color-primary)] mb-4"></i>
+                            <p class="text-[var(--color-on-surface-variant)]">Zoeken naar "${escapeHtml(query)}"...</p>
+                        </div>
+                    </div>
+                `;
             }
             
             try {
-                // Fetch live search results from Typesense
-                const liveSearchEndpoint = '{{ route("api.live-search") }}';
-                const response = await fetch(`${liveSearchEndpoint}?q=${encodeURIComponent(query)}&limit=20`);
+                // Use LIGHTNING FAST search API - single Typesense query
+                const fastSearchEndpoint = '{{ route("api.fast-search") }}';
+                const params = new URLSearchParams({
+                    q: query,
+                    page: 1,
+                    per_page: 20,
+                });
+                
+                // Preserve existing filters
+                const currentUrl = new URL(window.location.href);
+                ['beschikbaarSinds', 'publicatiedatum_van', 'publicatiedatum_tot', 'sort'].forEach(filter => {
+                    const val = currentUrl.searchParams.get(filter);
+                    if (val) params.set(filter, val);
+                });
+                // Handle array params
+                ['documentsoort[]', 'thema[]', 'organisatie[]', 'informatiecategorie[]'].forEach(filter => {
+                    currentUrl.searchParams.getAll(filter).forEach(val => params.append(filter, val));
+                });
+                
+                const response = await fetch(`${fastSearchEndpoint}?${params.toString()}`);
                 const data = await response.json();
                 
-                if (data.hits && data.hits.length > 0) {
-                    // Render results in dropdown
-                    let html = `<div class="px-4 py-2 border-b border-gray-100 bg-gray-50/60">
-                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                            <span>${data.found || 0}</span> resultaten gevonden
-                            ${data.search_time_ms ? `<span class="text-gray-400"> in ${data.search_time_ms}ms</span>` : ''}
-                        </p>
-                    </div>`;
-                    
-                    html += '<ul class="py-1" role="listbox">';
-                    data.hits.forEach((hit, index) => {
-                        html += `<li 
-                            onclick="window.location.href='/open-overheid/documents/${hit.id}'"
-                            class="px-4 py-3 cursor-pointer transition-colors duration-100 border-b border-gray-100 last:border-b-0 hover:bg-gray-50"
-                            role="option">
-                            <div class="flex items-start gap-3">
-                                <i class="fas fa-file-alt text-gray-400 mt-1 flex-shrink-0"></i>
-                                <div class="flex-1 min-w-0">
-                                    <div class="text-sm font-medium text-gray-900 mb-1">${escapeHtml(hit.title || 'Geen titel')}</div>
-                                    ${hit.description ? `<div class="text-xs text-gray-500 line-clamp-2">${escapeHtml(hit.description)}</div>` : ''}
-                                    <div class="text-xs text-gray-400 mt-1">${hit.document_type || ''} ${hit.publication_date ? '• ' + hit.publication_date : ''}</div>
-                                </div>
+                if (!data.success) {
+                    throw new Error(data.message || 'Search failed');
+                }
+                
+                // Update URL without reload
+                const newUrl = new URL(window.location.href);
+                newUrl.searchParams.set('zoeken', query);
+                newUrl.searchParams.set('pagina', '1');
+                history.pushState({}, '', newUrl.toString());
+                
+                // Render results
+                if (resultsArea) {
+                    if (data.hits && data.hits.length > 0) {
+                        let html = `
+                            <div class="mb-4 flex items-center justify-between">
+                                <p class="text-sm text-[var(--color-on-surface-variant)]">
+                                    <span class="font-semibold">${data.found.toLocaleString('nl-NL')}</span> resultaten gevonden
+                                    <span class="text-xs text-gray-400 ml-2">(${data.search_time_ms}ms)</span>
+                                </p>
                             </div>
-                        </li>`;
-                    });
-                    html += '</ul>';
-                    
-                    // Add "View all results" link
-                    const searchUrl = new URL(window.location.href);
-                    searchUrl.searchParams.set('zoeken', query);
-                    searchUrl.searchParams.set('pagina', '1');
-                    html += `<div class="px-4 py-3 border-t border-gray-100 bg-gray-50/60">
-                        <a href="${searchUrl.toString()}" class="text-sm font-medium text-[var(--color-primary)] hover:underline flex items-center gap-2">
-                            <span>Alle resultaten bekijken</span>
-                            <i class="fas fa-arrow-right text-xs"></i>
-                        </a>
-                    </div>`;
-                    
-                    if (unifiedSearchResults) {
-                        unifiedSearchResults.innerHTML = html;
-                        unifiedSearchResults.classList.remove('hidden');
-                    }
-                } else {
-                    // No results
-                    if (unifiedSearchResults) {
-                        unifiedSearchResults.innerHTML = `<div class="px-4 py-3 text-sm text-[var(--color-on-surface-variant)]">
-                            Geen resultaten gevonden voor "${escapeHtml(query)}"
-                        </div>`;
+                            <div class="space-y-4">
+                        `;
+                        
+                        data.hits.forEach(hit => {
+                            html += `
+                                <article class="bg-white rounded-lg border border-[var(--color-outline-variant)] p-4 hover:shadow-md transition-shadow">
+                                    <a href="/open-overheid/documents/${hit.id}" class="block">
+                                        <h3 class="text-lg font-semibold text-[var(--color-on-surface)] mb-2 hover:text-[var(--color-primary)]">
+                                            ${escapeHtml(hit.title || 'Geen titel')}
+                                        </h3>
+                                        ${hit.description ? `<p class="text-sm text-[var(--color-on-surface-variant)] mb-3 line-clamp-2">${escapeHtml(hit.description)}</p>` : ''}
+                                        <div class="flex flex-wrap gap-2 text-xs text-[var(--color-on-surface-variant)]">
+                                            ${hit.document_type ? `<span class="bg-[var(--color-surface-variant)] px-2 py-1 rounded">${escapeHtml(hit.document_type)}</span>` : ''}
+                                            ${hit.organisation ? `<span class="bg-[var(--color-surface-variant)] px-2 py-1 rounded">${escapeHtml(hit.organisation)}</span>` : ''}
+                                            ${hit.publication_date ? `<span class="text-gray-400">${hit.publication_date}</span>` : ''}
+                                        </div>
+                                    </a>
+                                </article>
+                            `;
+                        });
+                        
+                        html += '</div>';
+                        
+                        // Pagination
+                        if (data.total_pages > 1) {
+                            html += `
+                                <div class="mt-6 flex items-center justify-center gap-2">
+                                    <span class="text-sm text-[var(--color-on-surface-variant)]">
+                                        Pagina ${data.page} van ${data.total_pages}
+                                    </span>
+                                </div>
+                            `;
+                        }
+                        
+                        resultsArea.innerHTML = html;
+                    } else {
+                        resultsArea.innerHTML = `
+                            <div class="text-center py-12">
+                                <i class="fas fa-search text-4xl text-gray-300 mb-4"></i>
+                                <p class="text-[var(--color-on-surface-variant)]">Geen resultaten gevonden voor "${escapeHtml(query)}"</p>
+                            </div>
+                        `;
                     }
                 }
+                
+                // Update filter counts if available
+                if (data.filter_counts) {
+                    updateFilterCounts(data.filter_counts);
+                }
+                
             } catch (error) {
-                console.error('Live search error:', error);
-                if (unifiedSearchResults) {
-                    unifiedSearchResults.innerHTML = '<div class="px-4 py-3 text-sm text-[var(--color-on-surface-variant)]">Fout bij zoeken</div>';
+                console.error('Fast search error:', error);
+                if (resultsArea) {
+                    resultsArea.innerHTML = `
+                        <div class="text-center py-12">
+                            <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+                            <p class="text-red-600">Fout bij zoeken. Probeer het opnieuw.</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        // Update filter counts dynamically
+        function updateFilterCounts(counts) {
+            // Update documentsoort counts
+            if (counts.documentsoort) {
+                Object.entries(counts.documentsoort).forEach(([value, count]) => {
+                    const countEl = document.querySelector(`[data-filter-count="documentsoort-${value}"]`);
+                    if (countEl) countEl.textContent = `(${count})`;
+                });
+            }
+            // Similar for other filter types...
+        }
+        
+        // Apply filter via AJAX (lightning fast)
+        async function applyFilterViaAjax(filterType, filterValue) {
+            // Hide dropdown
+            if (unifiedSearchResults) {
+                unifiedSearchResults.classList.add('hidden');
+            }
+            
+            // Show loading state
+            const resultsArea = document.getElementById('search-results-area');
+            if (resultsArea) {
+                resultsArea.innerHTML = `
+                    <div class="flex items-center justify-center py-12">
+                        <div class="text-center">
+                            <i class="fas fa-spinner fa-spin text-3xl text-[var(--color-primary)] mb-4"></i>
+                            <p class="text-[var(--color-on-surface-variant)]">Filter toepassen...</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            try {
+                const fastSearchEndpoint = '{{ route("api.fast-search") }}';
+                const params = new URLSearchParams({
+                    page: 1,
+                    per_page: 20,
+                });
+                
+                // Get current search query
+                const currentUrl = new URL(window.location.href);
+                const currentQuery = currentUrl.searchParams.get('zoeken') || '';
+                if (currentQuery) params.set('q', currentQuery);
+                
+                // Add the new filter
+                const paramName = filterType === 'informatiecategorie' ? filterType : filterType;
+                params.set(paramName, filterValue);
+                
+                const response = await fetch(`${fastSearchEndpoint}?${params.toString()}`);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.message || 'Filter failed');
+                }
+                
+                // Update URL
+                const newUrl = new URL(window.location.href);
+                newUrl.searchParams.set('pagina', '1');
+                const urlParamName = filterType === 'informatiecategorie' ? filterType : `${filterType}[]`;
+                newUrl.searchParams.append(urlParamName, filterValue);
+                history.pushState({}, '', newUrl.toString());
+                
+                // Render results
+                if (resultsArea && data.hits) {
+                    if (data.hits.length > 0) {
+                        let html = `
+                            <div class="mb-4 flex items-center justify-between">
+                                <p class="text-sm text-[var(--color-on-surface-variant)]">
+                                    <span class="font-semibold">${data.found.toLocaleString('nl-NL')}</span> resultaten gevonden
+                                    <span class="text-xs text-gray-400 ml-2">(${data.search_time_ms}ms)</span>
+                                </p>
+                            </div>
+                            <div class="space-y-4">
+                        `;
+                        
+                        data.hits.forEach(hit => {
+                            html += `
+                                <article class="bg-white rounded-lg border border-[var(--color-outline-variant)] p-4 hover:shadow-md transition-shadow">
+                                    <a href="/open-overheid/documents/${hit.id}" class="block">
+                                        <h3 class="text-lg font-semibold text-[var(--color-on-surface)] mb-2 hover:text-[var(--color-primary)]">
+                                            ${escapeHtml(hit.title || 'Geen titel')}
+                                        </h3>
+                                        ${hit.description ? `<p class="text-sm text-[var(--color-on-surface-variant)] mb-3 line-clamp-2">${escapeHtml(hit.description)}</p>` : ''}
+                                        <div class="flex flex-wrap gap-2 text-xs text-[var(--color-on-surface-variant)]">
+                                            ${hit.document_type ? `<span class="bg-[var(--color-surface-variant)] px-2 py-1 rounded">${escapeHtml(hit.document_type)}</span>` : ''}
+                                            ${hit.organisation ? `<span class="bg-[var(--color-surface-variant)] px-2 py-1 rounded">${escapeHtml(hit.organisation)}</span>` : ''}
+                                            ${hit.publication_date ? `<span class="text-gray-400">${hit.publication_date}</span>` : ''}
+                                        </div>
+                                    </a>
+                                </article>
+                            `;
+                        });
+                        
+                        html += '</div>';
+                        resultsArea.innerHTML = html;
+                    } else {
+                        resultsArea.innerHTML = `
+                            <div class="text-center py-12">
+                                <i class="fas fa-search text-4xl text-gray-300 mb-4"></i>
+                                <p class="text-[var(--color-on-surface-variant)]">Geen resultaten gevonden voor dit filter</p>
+                            </div>
+                        `;
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Filter apply error:', error);
+                if (resultsArea) {
+                    resultsArea.innerHTML = `
+                        <div class="text-center py-12">
+                            <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+                            <p class="text-red-600">Fout bij toepassen filter. Probeer het opnieuw.</p>
+                        </div>
+                    `;
                 }
             }
         }
@@ -1606,3 +1780,4 @@
         });
     </script>
 @endsection
+

@@ -829,18 +829,16 @@ class SearchController extends Controller
                 // Extract facet counts from Typesense results
                 if (isset($results['facet_counts']) && ! empty($results['facet_counts'])) {
                     $facetCounts = $results['facet_counts'];
-                    \Log::debug('Typesense facets received', [
-                        'facet_count' => count($facetCounts),
-                        'facets' => array_keys(array_column($facetCounts, 'field_name')),
-                    ]);
                     // Convert Typesense facets to filter counts format
                     $filterCounts = $this->convertTypesenseFacetsToFilterCounts($facetCounts, $query);
                     
-                    // Calculate date filter counts using Typesense (not database!)
-                    // Make lightweight Typesense queries with same filters + date range
-                    $filterCounts['week'] = $this->getDateFilterCountFromTypesense($query, 'week');
-                    $filterCounts['maand'] = $this->getDateFilterCountFromTypesense($query, 'maand');
-                    $filterCounts['jaar'] = $this->getDateFilterCountFromTypesense($query, 'jaar');
+                    // SKIP expensive date filter count queries for faster initial load
+                    // Date counts can be loaded lazily via AJAX if needed
+                    // Instead, use the total result count as an estimate
+                    $totalResults = $results['total'] ?? 0;
+                    $filterCounts['week'] = $totalResults > 0 ? '~' : 0;
+                    $filterCounts['maand'] = $totalResults > 0 ? '~' : 0;
+                    $filterCounts['jaar'] = $totalResults > 0 ? '~' : 0;
                 } else {
                     // Typesense search succeeded but no facets returned
                     \Log::warning('Typesense search succeeded but no facet_counts returned');
@@ -891,13 +889,16 @@ class SearchController extends Controller
             });
 
             // Get all available filter options for "Toon meer"
-            // Note: This still uses database for now, but could be optimized to use Typesense facets
-            // For 600k+ records, this is acceptable as it's cached and only used for "Show more" dropdown
-            try {
-                $allFilterOptions = $this->filterCountService->getAllFilterOptions($query);
-            } catch (\Exception $e) {
-                \Log::warning('getAllFilterOptions failed', ['error' => $e->getMessage()]);
-                $allFilterOptions = [];
+            // Use Typesense facets instead of database queries for speed
+            // Extract unique values from facet counts
+            $allFilterOptions = [];
+            if (! empty($filterCounts)) {
+                $allFilterOptions = [
+                    'documentsoort' => array_keys($filterCounts['documentsoort'] ?? []),
+                    'thema' => array_keys($filterCounts['thema'] ?? []),
+                    'organisatie' => array_keys($filterCounts['organisatie'] ?? []),
+                    'informatiecategorie' => array_keys($filterCounts['informatiecategorie'] ?? []),
+                ];
             }
 
             return view('zoekresultaten', [
@@ -1043,6 +1044,218 @@ class SearchController extends Controller
     }
 
     // Note: calculateFilterCounts and getAllFilterOptions methods moved to FilterCountService
+
+    /**
+     * LIGHTNING FAST search API - Single Typesense query, returns JSON
+     * Use this for AJAX-based search instead of full page reload
+     */
+    public function fastSearch(Request $request)
+    {
+        // Get raw parameters to handle both array syntax (documentsoort[]) and regular
+        $q = $request->input('q', '');
+        $page = (int) $request->input('page', 1);
+        $perPage = (int) $request->input('per_page', 20);
+        $sort = $request->input('sort', 'relevance');
+        $beschikbaarSinds = $request->input('beschikbaarSinds');
+        $publicatiedatumVan = $request->input('publicatiedatum_van');
+        $publicatiedatumTot = $request->input('publicatiedatum_tot');
+        
+        // Handle array filters (accept both documentsoort[] and documentsoort)
+        $documentsoort = $request->input('documentsoort', []);
+        $thema = $request->input('thema', []);
+        $organisatie = $request->input('organisatie', []);
+        $informatiecategorie = $request->input('informatiecategorie');
+        
+        // Ensure arrays
+        if (! is_array($documentsoort)) $documentsoort = $documentsoort ? [$documentsoort] : [];
+        if (! is_array($thema)) $thema = $thema ? [$thema] : [];
+        if (! is_array($organisatie)) $organisatie = $organisatie ? [$organisatie] : [];
+        
+        $validated = [
+            'q' => $q,
+            'page' => max(1, $page),
+            'per_page' => in_array($perPage, [10, 20, 50]) ? $perPage : 20,
+            'documentsoort' => $documentsoort,
+            'thema' => $thema,
+            'organisatie' => $organisatie,
+            'informatiecategorie' => $informatiecategorie,
+            'publicatiedatum_van' => $publicatiedatumVan,
+            'publicatiedatum_tot' => $publicatiedatumTot,
+            'beschikbaarSinds' => $beschikbaarSinds,
+            'sort' => $sort,
+        ];
+
+        $startTime = microtime(true);
+
+        // Handle beschikbaarSinds date filter
+        $publicatiedatumVan = $validated['publicatiedatum_van'] ?? null;
+        $publicatiedatumTot = $validated['publicatiedatum_tot'] ?? null;
+
+        if (! empty($validated['beschikbaarSinds'])) {
+            $now = now();
+            switch ($validated['beschikbaarSinds']) {
+                case 'week':
+                    $publicatiedatumVan = $now->copy()->subWeek()->format('d-m-Y');
+                    break;
+                case 'maand':
+                    $publicatiedatumVan = $now->copy()->subMonth()->format('d-m-Y');
+                    break;
+                case 'jaar':
+                    $publicatiedatumVan = $now->copy()->subYear()->format('d-m-Y');
+                    break;
+            }
+        }
+
+        try {
+            $searchService = app(\App\Services\Typesense\TypesenseSearchService::class);
+            
+            // Build filters for Typesense
+            $filters = [];
+            
+            if (! empty($validated['documentsoort'])) {
+                $types = is_array($validated['documentsoort']) ? $validated['documentsoort'] : [$validated['documentsoort']];
+                $types = array_filter(array_map('trim', $types));
+                if (! empty($types)) {
+                    $escapedTypes = array_map(fn($t) => '=' . str_replace(['"', "'"], '', $t), $types);
+                    $filters[] = 'document_type:[' . implode(',', $escapedTypes) . ']';
+                }
+            }
+            
+            if (! empty($validated['informatiecategorie'])) {
+                $category = is_array($validated['informatiecategorie']) ? $validated['informatiecategorie'][0] : $validated['informatiecategorie'];
+                $category = str_replace(['"', "'"], '', trim($category));
+                if (! empty($category)) {
+                    $filters[] = 'category:=' . $category;
+                }
+            }
+            
+            if (! empty($validated['thema'])) {
+                $themes = is_array($validated['thema']) ? $validated['thema'] : [$validated['thema']];
+                $themes = array_filter(array_map('trim', $themes));
+                if (! empty($themes)) {
+                    $escapedThemes = array_map(fn($t) => '=' . str_replace(['"', "'"], '', $t), $themes);
+                    $filters[] = 'theme:[' . implode(',', $escapedThemes) . ']';
+                }
+            }
+            
+            if (! empty($validated['organisatie'])) {
+                $orgs = is_array($validated['organisatie']) ? $validated['organisatie'] : [$validated['organisatie']];
+                $orgs = array_filter(array_map('trim', $orgs));
+                if (! empty($orgs)) {
+                    $escapedOrgs = array_map(fn($o) => '=' . str_replace(['"', "'"], '', $o), $orgs);
+                    $filters[] = 'organisation:[' . implode(',', $escapedOrgs) . ']';
+                }
+            }
+            
+            // Date filters
+            if ($publicatiedatumVan || $publicatiedatumTot) {
+                $dateFilters = [];
+                if ($publicatiedatumVan) {
+                    $fromDate = \DateTime::createFromFormat('d-m-Y', $publicatiedatumVan);
+                    if ($fromDate) {
+                        $dateFilters[] = '>=' . $fromDate->getTimestamp();
+                    }
+                }
+                if ($publicatiedatumTot) {
+                    $toDate = \DateTime::createFromFormat('d-m-Y', $publicatiedatumTot);
+                    if ($toDate) {
+                        $dateFilters[] = '<=' . $toDate->getTimestamp();
+                    }
+                }
+                if (! empty($dateFilters)) {
+                    $filters[] = 'publication_date:[' . implode(',', $dateFilters) . ']';
+                }
+            }
+
+            // Sort
+            $sortBy = 'publication_date:desc';
+            if (($validated['sort'] ?? 'relevance') === 'modified_date') {
+                $sortBy = 'synced_at:desc';
+            }
+
+            // Single Typesense query with facets
+            $options = [
+                'per_page' => (int) ($validated['per_page'] ?? 20),
+                'page' => (int) ($validated['page'] ?? 1),
+                'sort_by' => $sortBy,
+                'facet_by' => 'document_type,theme,organisation,category',
+                'max_facet_values' => 100, // Limit facets for speed
+            ];
+
+            if (! empty($filters)) {
+                $options['filter_by'] = implode(' && ', $filters);
+            }
+
+            // SINGLE Typesense query - this is the only query we make!
+            $results = $searchService->search($validated['q'] ?? '', $options);
+
+            $searchTime = (int) ((microtime(true) - $startTime) * 1000);
+
+            // Format hits
+            $hits = array_map(function ($hit) {
+                $doc = $hit['document'] ?? $hit;
+                return [
+                    'id' => $doc['external_id'] ?? $doc['id'] ?? null,
+                    'title' => $doc['title'] ?? 'Geen titel',
+                    'description' => \Illuminate\Support\Str::limit($doc['description'] ?? '', 200),
+                    'publication_date' => isset($doc['publication_date']) && $doc['publication_date'] > 0
+                        ? date('d-m-Y', $doc['publication_date'])
+                        : null,
+                    'document_type' => $doc['document_type'] ?? null,
+                    'category' => $doc['category'] ?? null,
+                    'theme' => $doc['theme'] ?? null,
+                    'organisation' => $doc['organisation'] ?? null,
+                    'url' => $doc['url'] ?? null,
+                ];
+            }, $results['hits'] ?? []);
+
+            // Convert facets to filter counts
+            $filterCounts = [
+                'documentsoort' => [],
+                'thema' => [],
+                'organisatie' => [],
+                'informatiecategorie' => [],
+            ];
+
+            foreach ($results['facet_counts'] ?? [] as $facet) {
+                $fieldName = $facet['field_name'] ?? null;
+                $countKey = match ($fieldName) {
+                    'document_type' => 'documentsoort',
+                    'theme' => 'thema',
+                    'organisation' => 'organisatie',
+                    'category' => 'informatiecategorie',
+                    default => null,
+                };
+                if ($countKey) {
+                    foreach ($facet['counts'] ?? [] as $count) {
+                        if (! empty($count['value']) && ($count['count'] ?? 0) > 0) {
+                            $filterCounts[$countKey][$count['value']] = $count['count'];
+                        }
+                    }
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'hits' => $hits,
+                'found' => $results['found'] ?? 0,
+                'page' => $results['page'] ?? 1,
+                'per_page' => (int) ($validated['per_page'] ?? 20),
+                'total_pages' => ceil(($results['found'] ?? 0) / (int) ($validated['per_page'] ?? 20)),
+                'filter_counts' => $filterCounts,
+                'search_time_ms' => $searchTime,
+                'typesense_time_ms' => $results['search_time_ms'] ?? 0,
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Fast search failed', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'error' => 'Search failed',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
 
     /**
      * Format a category name with its article number for display.

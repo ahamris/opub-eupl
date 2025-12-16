@@ -20,6 +20,7 @@ Route::get('/new', [SearchController::class, 'newLandingPage'])->name('new');
 Route::get('/over', [SearchController::class, 'aboutPage'])->name('over');
 Route::get('/chat', [SearchController::class, 'chatPage'])->name('chat');
 Route::get('/api/live-search', [SearchController::class, 'liveSearch'])->name('api.live-search');
+Route::get('/api/fast-search', [SearchController::class, 'fastSearch'])->name('api.fast-search');
 Route::get('/api/autocomplete', [SearchController::class, 'autocomplete'])->name('api.autocomplete');
 Route::post('/api/natural-language-search', [SearchController::class, 'naturalLanguageSearch'])->name('api.natural-language-search');
 Route::get('/verwijzingen', [SearchController::class, 'referencesPage'])->name('verwijzingen');

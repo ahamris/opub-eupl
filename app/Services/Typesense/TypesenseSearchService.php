@@ -10,20 +10,28 @@ class TypesenseSearchService
     protected Client $client;
 
     protected string $collection = 'open_overheid_documents';
+    
+    // Singleton client instance for connection reuse
+    protected static ?Client $sharedClient = null;
 
     public function __construct()
     {
-        $config = config('open_overheid.typesense', []);
+        // Reuse existing client connection for speed
+        if (self::$sharedClient === null) {
+            $config = config('open_overheid.typesense', []);
 
-        $this->client = new Client([
-            'api_key' => $config['api_key'] ?? env('TYPESENSE_API_KEY'),
-            'nodes' => [[
-                'host' => $config['host'] ?? env('TYPESENSE_HOST', 'localhost'),
-                'port' => (int) ($config['port'] ?? env('TYPESENSE_PORT', 8108)),
-                'protocol' => $config['protocol'] ?? env('TYPESENSE_PROTOCOL', 'http'),
-            ]],
-            'connection_timeout_seconds' => 10, // Increased timeout for complex queries with multiple filters
-        ]);
+            self::$sharedClient = new Client([
+                'api_key' => $config['api_key'] ?? env('TYPESENSE_API_KEY'),
+                'nodes' => [[
+                    'host' => $config['host'] ?? env('TYPESENSE_HOST', 'localhost'),
+                    'port' => (int) ($config['port'] ?? env('TYPESENSE_PORT', 8108)),
+                    'protocol' => $config['protocol'] ?? env('TYPESENSE_PROTOCOL', 'http'),
+                ]],
+                'connection_timeout_seconds' => 5, // Reduced timeout for fast failure
+            ]);
+        }
+        
+        $this->client = self::$sharedClient;
     }
 
     /**
@@ -42,6 +50,14 @@ class TypesenseSearchService
                 'page' => $options['page'] ?? 1,
             ];
 
+            // SPEED OPTIMIZATIONS
+            // Set search cutoff for fast responses
+            $searchParams['search_cutoff_ms'] = $options['search_cutoff_ms'] ?? 100;
+            
+            // Limit highlight for speed
+            $searchParams['highlight_full_fields'] = 'title';
+            $searchParams['snippet_threshold'] = 30;
+            
             // Enable typo tolerance for better search experience
             if (! isset($options['typo_tolerance'])) {
                 $searchParams['typo_tolerance'] = 'auto';
@@ -75,9 +91,9 @@ class TypesenseSearchService
             } else {
                 // Include all filterable fields for facet counts
                 $searchParams['facet_by'] = 'document_type,theme,organisation,category';
-                // Also add max_facet_values to get more accurate counts
-                $searchParams['max_facet_values'] = 500;
             }
+            // Limit facet values for speed (100 is enough for most UI dropdowns)
+            $searchParams['max_facet_values'] = $options['max_facet_values'] ?? 100;
 
             // Enable hybrid search (keyword + semantic) if embeddings are available
             // Typesense supports automatic semantic search when query vectors are provided
