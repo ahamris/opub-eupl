@@ -73,11 +73,11 @@
     $testimonials = !empty($testimonials) ? $testimonials : $defaultTestimonials;
 @endphp
 
-<div class="bg-[var(--color-surface)] py-24 sm:py-32 dark:bg-gray-900">
+<div class="bg-[var(--color-surface)] py-24 sm:py-32">
         <div class="mx-auto max-w-7xl px-6 lg:px-8">
         <div class="max-w-2xl">
-            <h2 class="text-base/7 font-semibold text-[var(--color-primary)] dark:text-[var(--color-primary-light)]">Testimonials</h2>
-            <p class="mt-2 text-4xl font-semibold tracking-tight text-balance text-[var(--color-on-surface-variant)]900 sm:text-5xl dark:text-white">
+            <h2 class="text-base/7 font-semibold text-[var(--color-primary)]">Testimonials</h2>
+            <p class="mt-2 text-4xl font-semibold tracking-tight text-balance text-[var(--color-on-surface)] sm:text-5xl">
                 Wat gebruikers van ons platform vinden
             </p>
         </div>
@@ -85,22 +85,22 @@
             <div class="-mt-8 sm:-mx-4 sm:columns-2 sm:text-[0] lg:columns-3">
                 @foreach($testimonials as $testimonial)
                 <div class="pt-8 sm:inline-block sm:w-full sm:px-4">
-                    <figure class="rounded-md bg-gray-50 p-8 text-sm/6 dark:bg-[var(--color-surface)]/2.5">
-                        <blockquote class="text-[var(--color-on-surface-variant)]900 dark:text-[var(--color-on-surface-variant)]100">
+                    <figure class="rounded-md bg-[var(--color-surface)] border border-[var(--color-outline-variant)] p-8 text-sm">
+                        <blockquote class="text-[var(--color-on-surface)]">
                             <p>"{{ $testimonial['quote'] }}"</p>
                         </blockquote>
                         <figcaption class="mt-6 flex items-center gap-x-4">
                             <img
                                 src="{{ $testimonial['avatar'] }}"
                                 alt="{{ $testimonial['author'] }}"
-                                class="size-10 rounded-full bg-gray-50 dark:bg-gray-800"
+                                class="size-10 rounded-full bg-[var(--color-surface-variant)]"
                                 loading="lazy"
                             />
                             <div>
-                                <div class="font-semibold text-[var(--color-on-surface-variant)]900 dark:text-white">
+                                <div class="font-semibold text-[var(--color-on-surface)]">
                                     {{ $testimonial['author'] }}
                                 </div>
-                                <div class="text-[var(--color-on-surface-variant)]600 dark:text-[var(--color-on-surface-variant)]400">
+                                <div class="text-[var(--color-on-surface-variant)]">
                                     {{ $testimonial['role'] }}{{ $testimonial['organization'] ? ' bij ' . $testimonial['organization'] : '' }}
                                 </div>
                             </div>

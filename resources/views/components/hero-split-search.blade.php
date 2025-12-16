@@ -6,57 +6,63 @@
     'documentCount' => 0,
 ])
 
-<div class="relative isolate pt-14 bg-white">
-    <!-- Subtle background pattern (slightly more visible but still light) -->
-    <svg aria-hidden="true" class="absolute inset-0 -z-10 size-full mask-[radial-gradient(100%_100%_at_top_right,white,transparent)] stroke-gray-200 dark:stroke-white/10">
+<div class="relative isolate bg-white">
+    <!-- Soft gradient overlay -->
+    <div class="absolute inset-0 -z-10 bg-gradient-to-br from-[var(--color-primary-light)]/20 via-white to-[var(--color-primary-light)]/10"></div>
+    <div class="absolute inset-0 -z-10 bg-gradient-to-tr from-transparent via-[var(--color-primary-light)]/5 to-[var(--color-primary)]/5"></div>
+    
+    <!-- Subtle background pattern -->
+    <svg aria-hidden="true" class="absolute inset-0 -z-10 size-full mask-[radial-gradient(100%_100%_at_top_right,white,transparent)] stroke-[var(--color-outline-variant)]/20">
         <defs>
             <pattern id="hero-pattern" width="200" height="200" x="50%" y="-1" patternUnits="userSpaceOnUse">
                 <path d="M100 200V.5M.5 .5H200" fill="none" />
             </pattern>
         </defs>
-        <svg x="50%" y="-1" class="overflow-visible fill-gray-50 dark:fill-gray-800/50">
+        <svg x="50%" y="-1" class="overflow-visible fill-[var(--color-surface-variant)]/30">
             <path d="M-100.5 0h201v201h-201Z M699.5 0h201v201h-201Z M499.5 400h201v201h-201Z M-300.5 600h201v201h-201Z" stroke-width="0" />
         </svg>
         <rect width="100%" height="100%" fill="url(#hero-pattern)" stroke-width="0" />
     </svg>
+    
+    <!-- Decorative gradient blob -->
+    <div aria-hidden="true" class="absolute inset-x-0 top-0 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-20">
+        <div style="clip-path: polygon(73.6% 51.7%, 91.7% 11.8%, 100% 46.4%, 97.4% 82.2%, 92.5% 84.9%, 75.7% 64%, 55.3% 47.5%, 46.5% 49.4%, 45% 62.9%, 50.3% 87.2%, 21.3% 64.1%, 0.1% 100%, 5.4% 51.1%, 21.4% 63.9%, 58.9% 0.2%, 73.6% 51.7%)" class="relative left-[calc(50%-11rem)] aspect-1155/678 w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[var(--color-primary-light)]/40 to-[var(--color-primary)]/20 opacity-50 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"></div>
+    </div>
 
-    <div class="mx-auto max-w-7xl px-6 pt-40 pb-40 lg:flex lg:items-center lg:gap-x-10 lg:px-8">
+    <div class="mx-auto max-w-7xl px-6 pt-24 pb-24 sm:pt-32 sm:pb-32 lg:grid lg:grid-cols-12 lg:gap-x-12 lg:items-center lg:px-8 lg:pt-40 lg:pb-40">
         <!-- Left side: Text content -->
-        <div class="max-w-2xl lg:flex-auto">
+        <div class="mx-auto max-w-2xl lg:col-span-5 lg:mx-0 xl:col-span-6">
             @if($badge || $badgeText)
-            <div class="flex">
-                <div class="relative flex items-center gap-x-4 rounded-full bg-white px-4 py-1 text-[var(--font-size-body-small)] text-[var(--color-on-surface-variant)] ring-1 ring-gray-900/10 hover:ring-gray-900/20 transition-all duration-200">
+            <div class="mb-8">
+                <div class="inline-flex items-center gap-x-3 rounded-full bg-white px-4 py-1.5 text-sm text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)] shadow-sm">
                     @if($badge)
                     <span class="font-semibold text-[var(--color-primary)]">{{ $badge }}</span>
                     @endif
                     @if($badge && $badgeText)
-                    <span aria-hidden="true" class="h-4 w-px bg-gray-900/10"></span>
+                    <span aria-hidden="true" class="h-4 w-px bg-[var(--color-outline-variant)]"></span>
                     @endif
                     @if($badgeText)
-                    <a href="#" class="flex items-center gap-x-1 hover:text-[var(--color-primary)] transition-colors duration-200">
-                        <span aria-hidden="true" class="absolute inset-0"></span>
+                    <a href="#" class="flex items-center gap-x-1.5 hover:text-[var(--color-primary)] transition-colors duration-200">
                         {{ $badgeText }}
-                        <svg viewBox="0 0 20 20" fill="currentColor" data-slot="icon" aria-hidden="true" class="-mr-2 size-5 text-gray-400">
-                            <path d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
-                        </svg>
+                        <i class="fas fa-arrow-right text-xs" aria-hidden="true"></i>
                     </a>
                     @endif
                 </div>
             </div>
             @endif
             
-            <h1 class="mt-10 text-[var(--font-size-display-large)] font-bold tracking-[-0.02em] text-pretty text-[var(--color-on-surface)] leading-[var(--line-height-tight)]">
+            <h1 class="text-4xl font-semibold tracking-tight text-pretty text-[var(--color-on-surface)] sm:text-5xl lg:text-6xl">
                 {{ $title }}
             </h1>
             
             @if($description)
-            <p class="mt-6 text-[var(--font-size-body-large)] font-normal text-pretty text-[var(--color-on-surface-variant)] leading-[var(--line-height-relaxed)]">{{ $description }}</p>
+            <p class="mt-6 text-lg font-medium text-pretty text-[var(--color-on-surface-variant)] sm:text-xl/8">{{ $description }}</p>
             @endif
             
-            <div class="mt-6 text-[var(--font-size-body-medium)] font-medium text-[var(--color-on-surface-variant)]">
-                <span x-data="liveDocumentCounter({{ $documentCount }})">
-                    <span class="inline-flex items-center gap-2">
-                        <span class="inline-block w-2 h-2 rounded-full bg-[var(--color-primary)] animate-pulse" aria-hidden="true"></span>
+            <div class="mt-8 flex items-center gap-x-2 text-sm font-medium text-[var(--color-on-surface-variant)]">
+                <span class="inline-flex items-center gap-2">
+                    <span class="inline-block w-2 h-2 rounded-full bg-[var(--color-primary)] animate-pulse" aria-hidden="true"></span>
+                    <span x-data="liveDocumentCounter({{ $documentCount }})">
                         <span class="font-semibold text-[var(--color-on-surface)]" x-text="formatNumber(count)"></span>
                         <span>documenten beschikbaar</span>
                     </span>
@@ -65,19 +71,28 @@
         </div>
         
         <!-- Right side: Search functionality -->
-        <div class="mt-16 sm:mt-24 lg:mt-0 lg:shrink-0 lg:grow">
-            <div class="relative z-9999 isolate" x-data="liveSearch()" @click.outside="showResults = false">
-                <div class="mx-auto rounded-md bg-white p-6 shadow-xl ring-1 ring-gray-900/10 dark:bg-gray-900 dark:ring-white/10">
-                    <div class="mb-4 flex items-center justify-between gap-3">
-                        <p class="text-sm font-medium text-gray-900 dark:text-white">Slim zoeken met</p>
-                        <a href="{{ route('chat') }}" class="inline-flex items-center gap-2 rounded-md bg-[var(--color-primary)] px-3.5 py-1.5 text-xs font-semibold text-[var(--color-on-primary)] shadow-xs hover:bg-[var(--color-primary-dark)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
-                            <i class="fas fa-comments text-[0.9rem]" aria-hidden="true"></i>
-                            <span>Chat met AI</span>
-                        </a>
+        <div class="mx-auto mt-16 w-full max-w-2xl lg:col-span-7 lg:mx-0 lg:mt-0 xl:col-span-6">
+            <div class="relative isolate" x-data="liveSearch()" @click.outside="showResults = false">
+                <!-- Enhanced Search Card -->
+                <div class="rounded-md bg-white p-8 border border-[var(--color-outline-variant)] shadow-sm">
+                    <!-- Header Section -->
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between gap-4 mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-[var(--color-on-surface)]">Slim zoeken</h3>
+                                <p class="mt-1 text-sm text-[var(--color-on-surface-variant)]">Zoek snel in alle documenten</p>
+                            </div>
+                            <a href="{{ route('chat') }}" class="inline-flex items-center gap-2 rounded-md bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-[var(--color-on-primary)] hover:bg-[var(--color-primary-dark)] focus:outline-none transition-colors duration-200 whitespace-nowrap">
+                                <i class="fas fa-comments" aria-hidden="true"></i>
+                                <span>Chat met AI</span>
+                            </a>
+                        </div>
                     </div>
-                    <div class="relative mt-2">
-                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10">
-                            <i class="fas fa-search text-[var(--color-on-surface-variant)] dark:text-[var(--color-on-surface-variant)] text-sm" aria-hidden="true"></i>
+                    
+                    <!-- Enhanced Search Input -->
+                    <div class="relative">
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 z-10">
+                            <i class="fas fa-search text-[var(--color-on-surface-variant)] text-base" aria-hidden="true"></i>
                         </div>
                         <input 
                             type="text" 
@@ -88,20 +103,40 @@
                             @keydown.arrow-down.prevent="navigateResults(1)"
                             @keydown.arrow-up.prevent="navigateResults(-1)"
                             @keydown.enter.prevent="selectResult()"
-                            class="block w-full rounded-md bg-white px-3 py-2 pl-10 pr-10 text-base text-[var(--color-on-surface)] outline-1 -outline-offset-1 outline-[var(--color-outline-variant)] placeholder:text-[var(--color-on-surface-variant)] focus:outline-2 focus:-outline-offset-2 focus:outline-[var(--color-primary)] sm:text-sm/6 dark:bg-white/5 dark:text-[var(--color-on-surface)] dark:outline-white/10 dark:placeholder:text-[var(--color-on-surface-variant)] dark:focus:outline-[var(--color-primary)]"
-                            placeholder="Zoek in alle documenten"
+                            class="block w-full rounded-md bg-white px-4 py-3.5 pl-12 pr-12 text-base text-[var(--color-on-surface)] border-2 border-[var(--color-outline-variant)] placeholder:text-[var(--color-on-surface-variant)] focus:outline-none focus:border-[var(--color-primary)] transition-all duration-200"
+                            placeholder="Zoek in alle documenten..."
                             autocomplete="off"
                             aria-label="Zoek documenten"
                             :aria-expanded="showResults ? 'true' : 'false'"
                             aria-haspopup="listbox"
                             aria-autocomplete="list"
                         >
-                        <div x-show="loading" class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 z-10">
-                            <i class="fas fa-circle-notch animate-spin text-[var(--color-primary)] dark:text-[var(--color-primary)] text-sm" aria-hidden="true"></i>
+                        <div x-show="loading" class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 z-10">
+                            <i class="fas fa-circle-notch animate-spin text-[var(--color-primary)] text-base" aria-hidden="true"></i>
                         </div>
                     </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="mt-6">
+                        <p class="text-xs font-medium text-[var(--color-on-surface-variant)] mb-3 uppercase tracking-wide">Populaire zoekopdrachten</p>
+                        <div class="flex flex-wrap gap-2">
+                            <a href="{{ route('themas.index') }}" class="inline-flex items-center gap-1.5 rounded-md bg-[var(--color-primary-light)]/50 px-3 py-1.5 text-xs font-medium text-[var(--color-primary)] hover:bg-[var(--color-primary-light)] transition-colors duration-200 border border-[var(--color-primary)]/20">
+                                <i class="fas fa-tags text-[10px]" aria-hidden="true"></i>
+                                <span>Thema's</span>
+                            </a>
+                            <a href="{{ route('dossiers.index') }}" class="inline-flex items-center gap-1.5 rounded-md bg-[var(--color-primary-light)]/50 px-3 py-1.5 text-xs font-medium text-[var(--color-primary)] hover:bg-[var(--color-primary-light)] transition-colors duration-200 border border-[var(--color-primary)]/20">
+                                <i class="fas fa-folder text-[10px]" aria-hidden="true"></i>
+                                <span>Dossiers</span>
+                            </a>
+                            <a href="{{ route('reports.index') }}" class="inline-flex items-center gap-1.5 rounded-md bg-[var(--color-primary-light)]/50 px-3 py-1.5 text-xs font-medium text-[var(--color-primary)] hover:bg-[var(--color-primary-light)] transition-colors duration-200 border border-[var(--color-primary)]/20">
+                                <i class="fas fa-chart-bar text-[10px]" aria-hidden="true"></i>
+                                <span>Rapporten</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
                 
-                <!-- Dropdown: matches input width, minimal & clean -->
+                <!-- Dropdown Results -->
                 <div
                     x-show="showResults && (query.length >= 2 || loading)"
                     x-cloak
@@ -111,30 +146,30 @@
                     x-transition:leave="transition ease-in duration-100"
                     x-transition:leave-start="opacity-100 translate-y-0"
                     x-transition:leave-end="opacity-0 translate-y-1"
-                    class="absolute inset-x-0 top-full left-0 right-0 mt-2 bg-white rounded-md shadow-lg ring-1 ring-gray-900/5 border border-gray-100 max-h-80 overflow-y-auto z-[99999]"
+                    class="absolute inset-x-0 top-full mt-2 bg-white rounded-md border border-[var(--color-outline-variant)] shadow-lg max-h-96 overflow-y-auto z-[99999]"
                     role="listbox"
                     @click.stop
                 >
-                    <!-- Autocomplete Suggestions (Prioritized First) - Apple Level -->
+                    <!-- Autocomplete Suggestions -->
                     <template x-if="suggestions.length > 0">
                         <div>
-                            <div class="px-4 py-2 border-b border-gray-100 bg-gray-50/60">
-                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Suggesties</p>
+                            <div class="px-4 py-2.5 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-variant)]">
+                                <p class="text-xs font-semibold text-[var(--color-on-surface-variant)] uppercase tracking-wide">Suggesties</p>
                             </div>
                             <ul class="py-1" role="listbox">
                                 <template x-for="(suggestion, index) in suggestions" :key="index">
                                     <li 
                                         @click="selectSuggestion(suggestion)"
                                         @mouseenter="selectedIndex = index"
-                                        :class="selectedIndex === index ? 'bg-gray-50' : 'hover:bg-gray-50'"
-                                        class="px-4 py-2 cursor-pointer transition-colors duration-100"
+                                        :class="selectedIndex === index ? 'bg-[var(--color-primary)]/10' : 'hover:bg-[var(--color-primary)]/10'"
+                                        class="px-4 py-2.5 cursor-pointer transition-colors duration-150"
                                         role="option"
                                         :aria-selected="selectedIndex === index"
                                     >
                                         <div class="flex items-center gap-3">
                                             <i class="fas fa-bolt text-xs text-[var(--color-primary)] flex-shrink-0" aria-hidden="true"></i>
                                             <div class="flex-1 min-w-0">
-                                                <div class="text-sm font-medium text-gray-900 leading-snug" x-html="suggestion.highlight || suggestion.query"></div>
+                                                <div class="text-sm font-medium text-[var(--color-on-surface)] leading-snug" x-html="suggestion.highlight || suggestion.query"></div>
                                             </div>
                                         </div>
                                     </li>
@@ -143,14 +178,14 @@
                         </div>
                     </template>
                     
-                    <!-- Search Results - Apple Level Design -->
+                    <!-- Search Results -->
                     <template x-if="results.length > 0">
                         <div>
-                            <div class="px-4 py-2 border-b border-gray-100 bg-gray-50/60">
-                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                                    <span x-text="found"></span> resultaten gevonden
+                            <div class="px-4 py-2.5 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-variant)]">
+                                <p class="text-xs font-semibold text-[var(--color-on-surface-variant)] uppercase tracking-wide">
+                                    <span x-text="found"></span> resultaten
                                     <template x-if="searchTime > 0">
-                                        <span class="text-gray-400"> in <span x-text="searchTime"></span>ms</span>
+                                        <span class="text-[var(--color-on-surface-variant)]/70 font-normal"> in <span x-text="searchTime"></span>ms</span>
                                     </template>
                                 </p>
                             </div>
@@ -159,23 +194,23 @@
                                     <li 
                                         @click="goToDetail(result.id)"
                                         @mouseenter="selectedIndex = suggestions.length + index"
-                                        :class="selectedIndex === (suggestions.length + index) ? 'bg-gray-50' : 'hover:bg-gray-50'"
-                                        class="px-4 py-3 cursor-pointer transition-colors duration-100 border-b border-gray-100 last:border-b-0"
+                                        :class="selectedIndex === (suggestions.length + index) ? 'bg-[var(--color-primary)]/10' : 'hover:bg-[var(--color-primary)]/10'"
+                                        class="px-4 py-3 cursor-pointer transition-colors duration-150 border-b border-[var(--color-outline-variant)] last:border-b-0"
                                         role="option"
                                         :aria-selected="selectedIndex === (suggestions.length + index)"
                                     >
                                         <div class="flex items-start justify-between gap-4">
                                             <div class="flex-1 min-w-0">
                                                 <div class="flex items-start justify-between gap-3 mb-1.5">
-                                                    <h3 class="text-sm font-medium text-gray-900 truncate flex-1 leading-snug" x-text="result.title"></h3>
+                                                    <h3 class="text-sm font-medium text-[var(--color-on-surface)] truncate flex-1 leading-snug" x-text="result.title"></h3>
                                                     <template x-if="result.formatted_category || result.category">
-                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-[var(--color-primary-light)] text-[var(--color-primary)] shrink-0">
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-[var(--color-primary-light)] text-[var(--color-primary)] shrink-0 border border-[var(--color-primary)]/20">
                                                             <span x-text="result.formatted_category || result.category"></span>
                                                         </span>
                                                     </template>
                                                 </div>
-                                                <p class="mt-1 text-xs text-gray-600 line-clamp-2 leading-snug" x-text="result.description"></p>
-                                                <div class="mt-2 flex items-center gap-4 text-[11px] text-gray-500">
+                                                <p class="mt-1 text-xs text-[var(--color-on-surface-variant)] line-clamp-2 leading-snug" x-text="result.description"></p>
+                                                <div class="mt-2 flex items-center gap-4 text-[11px] text-[var(--color-on-surface-variant)]">
                                                     <template x-if="result.organisation">
                                                         <span class="inline-flex items-center gap-1.5">
                                                             <i class="fas fa-building text-[10px]" aria-hidden="true"></i>
@@ -190,7 +225,7 @@
                                                     </template>
                                                 </div>
                                             </div>
-                                            <i class="fas fa-chevron-right text-gray-300 shrink-0 mt-1 text-xs" aria-hidden="true"></i>
+                                            <i class="fas fa-chevron-right text-[var(--color-outline-variant)] shrink-0 mt-1 text-xs" aria-hidden="true"></i>
                                         </div>
                                     </li>
                                 </template>
@@ -198,9 +233,9 @@
                         </div>
                     </template>
                     
-                    <!-- Footer with "View all results" -->
+                    <!-- Footer: View all results -->
                     <template x-if="(suggestions.length > 0 || results.length > 0) && query.length >= 2">
-                        <div class="px-4 py-3 border-t border-gray-100 bg-gray-50/80">
+                        <div class="px-4 py-3 border-t border-[var(--color-outline-variant)] bg-[var(--color-surface-variant)]">
                             <a 
                                 :href="'{{ route('zoeken') }}?zoeken=' + encodeURIComponent(query)"
                                 class="text-sm font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition-colors duration-150 inline-flex items-center gap-2 group"
@@ -214,7 +249,7 @@
                     <!-- No Results -->
                     <template x-if="suggestions.length === 0 && results.length === 0 && query.length >= 2 && !loading">
                         <div class="px-4 py-6 text-center text-sm">
-                            <p class="text-gray-600 mb-3">Geen resultaten gevonden voor "<span class="font-medium text-gray-900" x-text="query"></span>"</p>
+                            <p class="text-[var(--color-on-surface-variant)] mb-3">Geen resultaten gevonden voor "<span class="font-medium text-[var(--color-on-surface)]" x-text="query"></span>"</p>
                             <a 
                                 :href="'{{ route('zoeken') }}?zoeken=' + encodeURIComponent(query)"
                                 class="text-sm font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition-colors duration-150 inline-flex items-center gap-2 group"
@@ -229,7 +264,6 @@
         </div>
     </div>
 </div>
-
 
 @push('scripts')
 <script>

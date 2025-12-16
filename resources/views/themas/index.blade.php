@@ -10,18 +10,37 @@
 @endphp
 
 @section('content')
+    <!-- Header Section -->
+    <div class="bg-[var(--color-primary-light)] py-16 sm:py-24">
+        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+            <!-- Breadcrumb -->
+            @if(!empty($breadcrumbs ?? []))
+            <div class="mb-8">
+                <x-breadcrumbs :items="$breadcrumbs" />
+            </div>
+            @endif
+            
+            <div class="mx-auto max-w-2xl lg:mx-0">
+                <p class="text-base/7 font-semibold text-[var(--color-primary)]">Verken documenten op onderwerp</p>
+                <h1 class="mt-2 text-4xl font-semibold tracking-tight text-[var(--color-on-surface)] sm:text-5xl">Thema's</h1>
+                <p class="mt-6 text-lg font-medium text-pretty text-[var(--color-on-surface-variant)] sm:text-xl/8">
+                    Zoek documenten op onderwerp zoals ruimtelijke ordening, onderwijs of zorg. Verken alle thema's en vind gerelateerde documenten.
+                </p>
+            </div>
+        </div>
+    </div>
 
     <!-- Main Content -->
-    <section class="max-w-7xl mx-auto w-full px-4 py-8">
+    <main class="flex-1 max-w-7xl mx-auto w-full px-6 lg:px-8 pt-10 pb-20">
         <div class="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8">
             <!-- Sidebar Filters -->
-            <aside class="lg:sticky lg:top-8 h-fit" aria-label="Zoekfilters">
-                <div class="bg-[var(--color-surface)] rounded-md p-6 shadow-sm border border-[var(--color-outline-variant)]">
-                    <h2 class="text-[var(--font-size-headline-large)] font-medium mb-6 text-[var(--color-on-surface)] pb-4 border-b border-[var(--color-outline-variant)]">
+            <aside class="lg:sticky lg:top-[88px] h-fit lg:z-40" aria-label="Zoekfilters">
+                <div class="bg-[var(--color-surface)] rounded-md p-6 border border-[var(--color-outline-variant)]">
+                    <h2 class="text-base font-semibold mb-6 text-[var(--color-on-surface)] pb-4 border-b border-[var(--color-outline-variant)]">
                         Verfijn zoekopdracht
                     </h2>
                     
-                    <form action="{{ route('themas.index') }}" method="GET" id="filter-form" class="space-y-6">
+                    <form action="{{ route('themas.index') }}" method="GET" id="filter-form" class="space-y-6" onsubmit="convertDateInputsToFormat(event)">
                         <input type="hidden" name="sort" id="hidden-sort" value="{{ request('sort', 'relevance') }}">
                         <input type="hidden" name="per_page" id="hidden-per-page" value="{{ request('per_page', 20) }}">
                         
@@ -34,12 +53,11 @@
                                 label="Zoekwoorden"
                                 value="{{ request('zoeken') }}"
                                 placeholder="Zoekwoorden..."
-                                class="w-full px-4 py-3 rounded-md 
-                                       border-2 border-[var(--color-outline)] bg-[var(--color-surface)]
-                                       text-[var(--font-size-body-large)] text-[var(--color-on-surface)]
+                                class="w-full px-3 py-2 rounded-md 
+                                       border border-[var(--color-outline-variant)] bg-[var(--color-surface)]
+                                       text-sm text-[var(--color-on-surface)]
                                        focus:outline-none focus:border-[var(--color-primary)]
-                                       transition-colors duration-200
-                                       min-h-[44px]"
+                                       transition-colors duration-200"
                             />
                             <div class="flex items-center gap-3">
                                 <input 
@@ -51,41 +69,37 @@
                                     class="w-4 h-4 rounded border border-[var(--color-outline)]
                                                focus:outline-none
                                                cursor-pointer text-[var(--color-primary)]
-                                               checked:bg-[var(--color-primary)] checked:border-primary
-                                               transition-all duration-200" 
-                                           focus:outline-none
-                                           cursor-pointer min-h-[44px] min-w-[44px]"
+                                               checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
+                                               transition-all duration-200"
                                 >
-                                <label for="sidebar-titles-only" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer">
+                                <label for="sidebar-titles-only" class="text-sm text-[var(--color-on-surface)] cursor-pointer">
                                     Zoek alleen in titels
                                 </label>
                             </div>
                             <button 
                                 type="submit" 
                                 class="w-full bg-[var(--color-primary)] text-[var(--color-on-primary)] 
-                                       hover:bg-[var(--color-primary)]/90 active:bg-[var(--color-primary)]/80
+                                       hover:bg-[var(--color-primary-dark)]
                                        focus:outline-none
-                                       px-4 py-3 rounded-md font-medium
-                                       transition-colors duration-200
-                                       min-h-[44px]">
+                                       px-4 py-2 rounded-md font-medium text-sm
+                                       transition-colors duration-200">
                                 Zoeken
                             </button>
                             <button 
                                 type="button" 
                                 onclick="window.location.href='{{ route('themas.index') }}'"
-                                class="w-full border-2 border-[var(--color-outline)] text-[var(--color-primary)]
-                                       hover:bg-[var(--color-primary)]-container
+                                class="w-full border border-[var(--color-outline-variant)] text-[var(--color-primary)]
+                                       hover:bg-[var(--color-primary)]/10
                                        focus:outline-none
-                                       px-4 py-3 rounded-md font-medium
-                                       transition-colors duration-200
-                                       min-h-[44px]">
+                                       px-4 py-2 rounded-md font-medium text-sm
+                                       transition-colors duration-200">
                                 Selectie wissen
                             </button>
                         </div>
                         
                         <!-- Date Filter -->
                         <div class="space-y-3">
-                            <h3 class="text-[var(--font-size-headline-medium)] font-medium text-[var(--color-on-surface)]">Datum beschikbaar</h3>
+                            <h3 class="text-sm font-semibold text-[var(--color-on-surface)]">Datum beschikbaar</h3>
                             <div class="space-y-2">
                                 <div class="flex items-center gap-3">
                                     <input 
@@ -98,10 +112,10 @@
                                         class="w-4 h-4 border border-[var(--color-outline)] 
                                                focus:outline-none
                                                cursor-pointer text-[var(--color-primary)]
-                                               checked:bg-[var(--color-primary)] checked:border-primary
+                                               checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                transition-all duration-200"
                                     >
-                                    <label for="datum-geen" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
+                                    <label for="datum-geen" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                         Geen periode
                                     </label>
                                 </div>
@@ -116,13 +130,13 @@
                                         class="w-4 h-4 border border-[var(--color-outline)] 
                                                focus:outline-none
                                                cursor-pointer text-[var(--color-primary)]
-                                               checked:bg-[var(--color-primary)] checked:border-primary
+                                               checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                transition-all duration-200"
                                     >
-                                    <label for="datum-week" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
+                                    <label for="datum-week" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                         Afgelopen week
                                     </label>
-                                    <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant" id="count-week">({{ $filterCounts['week'] ?? 0 }})</span>
+                                    <span class="text-sm text-[var(--color-on-surface-variant)]" id="count-week">({{ $filterCounts['week'] ?? 0 }})</span>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <input 
@@ -135,13 +149,13 @@
                                         class="w-4 h-4 border border-[var(--color-outline)] 
                                                focus:outline-none
                                                cursor-pointer text-[var(--color-primary)]
-                                               checked:bg-[var(--color-primary)] checked:border-primary
+                                               checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                transition-all duration-200"
                                     >
-                                    <label for="datum-maand" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
+                                    <label for="datum-maand" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                         Afgelopen maand
                                     </label>
-                                    <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant" id="count-maand">({{ $filterCounts['maand'] ?? 0 }})</span>
+                                    <span class="text-sm text-[var(--color-on-surface-variant)]" id="count-maand">({{ $filterCounts['maand'] ?? 0 }})</span>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <input 
@@ -154,13 +168,13 @@
                                         class="w-4 h-4 border border-[var(--color-outline)] 
                                                focus:outline-none
                                                cursor-pointer text-[var(--color-primary)]
-                                               checked:bg-[var(--color-primary)] checked:border-primary
+                                               checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                transition-all duration-200"
                                     >
-                                    <label for="datum-jaar" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
+                                    <label for="datum-jaar" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                         Afgelopen jaar
                                     </label>
-                                    <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant" id="count-jaar">({{ $filterCounts['jaar'] ?? 0 }})</span>
+                                    <span class="text-sm text-[var(--color-on-surface-variant)]" id="count-jaar">({{ $filterCounts['jaar'] ?? 0 }})</span>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <input 
@@ -173,51 +187,45 @@
                                         class="w-4 h-4 border border-[var(--color-outline)] 
                                                focus:outline-none
                                                cursor-pointer text-[var(--color-primary)]
-                                               checked:bg-[var(--color-primary)] checked:border-primary
+                                               checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                transition-all duration-200"
                                     >
-                                    <label for="datum-zelf" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
+                                    <label for="datum-zelf" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                         Aangepaste periode
                                     </label>
                                 </div>
                                 <!-- Custom Date Range Inputs -->
                                 <div id="custom-date-range" class="space-y-3 mt-3 pl-7 {{ request('beschikbaarSinds') === 'zelf' || (request('publicatiedatum_van') && !request('beschikbaarSinds')) || (request('publicatiedatum_tot') && !request('beschikbaarSinds')) ? '' : 'hidden' }}">
-                                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                                        <label for="publicatiedatum_van" class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant whitespace-nowrap">
-                                            Vanaf (dd-mm-jjjj):
+                                    <div class="flex flex-col gap-2">
+                                        <label for="publicatiedatum_van" class="text-sm font-medium text-[var(--color-on-surface)]">
+                                            Vanaf
                                         </label>
-                                        <x-input 
-                                            type="text"
+                                        <input 
+                                            type="date"
                                             name="publicatiedatum_van"
                                             id="publicatiedatum_van"
-                                            value="{{ request('publicatiedatum_van') }}"
-                                            placeholder="dd-mm-jjjj"
-                                            pattern="\d{2}-\d{2}-\d{4}"
+                                            value="{{ request('publicatiedatum_van') ? (function($date) { try { return \Carbon\Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d'); } catch(\Exception $e) { return $date; } })(request('publicatiedatum_van')) : '' }}"
                                             onchange="document.getElementById('filter-form').submit()"
-                                            class="flex-1 px-3 py-2 rounded-md border-2 border-[var(--color-outline)] bg-[var(--color-surface)]
-                                                   text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]
+                                            class="w-full px-3 py-2 rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)]
+                                                   text-sm text-[var(--color-on-surface)]
                                                    focus:outline-none focus:border-[var(--color-primary)]
-                                                   transition-colors duration-200
-                                                   min-h-[44px] max-w-[150px]"
+                                                   transition-colors duration-200"
                                         />
                                     </div>
-                                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                                        <label for="publicatiedatum_tot" class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant whitespace-nowrap">
-                                            Tot en met (dd-mm-jjjj):
+                                    <div class="flex flex-col gap-2">
+                                        <label for="publicatiedatum_tot" class="text-sm font-medium text-[var(--color-on-surface)]">
+                                            Tot en met
                                         </label>
-                                        <x-input 
-                                            type="text"
+                                        <input 
+                                            type="date"
                                             name="publicatiedatum_tot"
                                             id="publicatiedatum_tot"
-                                            value="{{ request('publicatiedatum_tot') }}"
-                                            placeholder="dd-mm-jjjj"
-                                            pattern="\d{2}-\d{2}-\d{4}"
+                                            value="{{ request('publicatiedatum_tot') ? (function($date) { try { return \Carbon\Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d'); } catch(\Exception $e) { return $date; } })(request('publicatiedatum_tot')) : '' }}"
                                             onchange="document.getElementById('filter-form').submit()"
-                                            class="flex-1 px-3 py-2 rounded-md border-2 border-[var(--color-outline)] bg-[var(--color-surface)]
-                                                   text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]
+                                            class="w-full px-3 py-2 rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)]
+                                                   text-sm text-[var(--color-on-surface)]
                                                    focus:outline-none focus:border-[var(--color-primary)]
-                                                   transition-colors duration-200
-                                                   min-h-[44px] max-w-[150px]"
+                                                   transition-colors duration-200"
                                         />
                                     </div>
                                 </div>
@@ -226,7 +234,7 @@
                         
                         <!-- Information Category Filter (Woo Informatiecategorie) -->
                         <div class="space-y-3">
-                            <h3 class="text-[var(--font-size-headline-medium)] font-medium text-[var(--color-on-surface)]">Informatiecategorie</h3>
+                            <h3 class="text-sm font-semibold text-[var(--color-on-surface)]">Informatiecategorie</h3>
                             <div class="space-y-2">
                                 @php
                                     $allCategories = $allFilterOptions['informatiecategorie'] ?? [];
@@ -246,13 +254,13 @@
                                             class="w-4 h-4 border border-[var(--color-outline)] 
                                                    focus:outline-none
                                                    cursor-pointer text-[var(--color-primary)]
-                                                   checked:bg-[var(--color-primary)] checked:border-primary
+                                                   checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                    transition-all duration-200"
                                         >
-                                        <label for="categorie-{{ md5($category) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
+                                        <label for="categorie-{{ md5($category) }}" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                             {{ $category }}
                                         </label>
-                                        <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">({{ $filterCounts['informatiecategorie'][$category] ?? 0 }})</span>
+                                        <span class="text-sm text-[var(--color-on-surface-variant)]">({{ $filterCounts['informatiecategorie'][$category] ?? 0 }})</span>
                                     </div>
                                 @endforeach
                                 @if(!empty($hiddenCategories))
@@ -269,13 +277,13 @@
                                                 class="w-4 h-4 border border-[var(--color-outline)] 
                                                        focus:outline-none
                                                        cursor-pointer text-[var(--color-primary)]
-                                                       checked:bg-[var(--color-primary)] checked:border-primary
+                                                       checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                        transition-all duration-200"
                                             >
-                                            <label for="categorie-{{ md5($category) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
+                                            <label for="categorie-{{ md5($category) }}" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                                 {{ $category }}
                                             </label>
-                                            <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">({{ $filterCounts['informatiecategorie'][$category] ?? 0 }})</span>
+                                            <span class="text-sm text-[var(--color-on-surface-variant)]">({{ $filterCounts['informatiecategorie'][$category] ?? 0 }})</span>
                                         </div>
                                     @endforeach
                                 </div>
@@ -283,8 +291,8 @@
                                     type="button" 
                                     onclick="toggleFilterSection('informatiecategorie-more', 'informatiecategorie-toggle')"
                                     id="informatiecategorie-toggle"
-                                    class="text-[var(--color-primary)] font-medium text-[var(--font-size-body-medium)] hover:underline 
-                                           focus:outline-none rounded-md">
+                                    class="text-sm text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] font-medium 
+                                           focus:outline-none transition-colors duration-200">
                                     Toon meer
                                 </button>
                                 @endif
@@ -293,8 +301,8 @@
                                     <button 
                                         type="button" 
                                         onclick="document.getElementById('categorie-none').checked = true; document.getElementById('filter-form').submit();"
-                                        class="text-[var(--color-primary)] font-medium text-[var(--font-size-body-small)] hover:underline 
-                                               focus:outline-none rounded-md">
+                                        class="text-xs text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] font-medium 
+                                               focus:outline-none transition-colors duration-200 inline-flex items-center gap-1">
                                         <i class="fas fa-times text-xs" aria-hidden="true"></i> Categorie wissen
                                     </button>
                                 </div>
@@ -313,7 +321,7 @@
                         
                         <!-- Document Type Filter -->
                         <div class="space-y-3">
-                            <h3 class="text-[var(--font-size-headline-medium)] font-medium text-[var(--color-on-surface)]">Documentsoort</h3>
+                            <h3 class="text-sm font-semibold text-[var(--color-on-surface)]">Documentsoort</h3>
                             <div class="space-y-2">
                                 @php
                                     $allDocumentTypes = $allFilterOptions['documentsoort'] ?? [];
@@ -333,13 +341,13 @@
                                             class="w-4 h-4 rounded border border-[var(--color-outline)] 
                                                    focus:outline-none
                                                    cursor-pointer text-[var(--color-primary)]
-                                                   checked:bg-[var(--color-primary)] checked:border-primary
+                                                   checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                    transition-all duration-200"
                                         >
-                                        <label for="soort-{{ str_replace(' ', '-', strtolower($type)) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
+                                        <label for="soort-{{ str_replace(' ', '-', strtolower($type)) }}" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                             {{ $type }}
                                         </label>
-                                        <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">({{ $filterCounts['documentsoort'][$type] ?? 0 }})</span>
+                                        <span class="text-sm text-[var(--color-on-surface-variant)]">({{ $filterCounts['documentsoort'][$type] ?? 0 }})</span>
                                     </div>
                                 @endforeach
                                 @if(!empty($hiddenTypes))
@@ -356,13 +364,13 @@
                                                 class="w-4 h-4 rounded border border-[var(--color-outline)] 
                                                        focus:outline-none
                                                        cursor-pointer text-[var(--color-primary)]
-                                                       checked:bg-[var(--color-primary)] checked:border-primary
+                                                       checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                        transition-all duration-200"
                                             >
-                                            <label for="soort-{{ str_replace(' ', '-', strtolower($type)) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
+                                            <label for="soort-{{ str_replace(' ', '-', strtolower($type)) }}" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                                 {{ $type }}
                                             </label>
-                                            <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">({{ $filterCounts['documentsoort'][$type] ?? 0 }})</span>
+                                            <span class="text-sm text-[var(--color-on-surface-variant)]">({{ $filterCounts['documentsoort'][$type] ?? 0 }})</span>
                                         </div>
                                     @endforeach
                                 </div>
@@ -370,8 +378,8 @@
                                     type="button" 
                                     onclick="toggleFilterSection('documentsoort-more', 'documentsoort-toggle')"
                                     id="documentsoort-toggle"
-                                    class="text-[var(--color-primary)] font-medium text-[var(--font-size-body-medium)] hover:underline 
-                                           focus:outline-none rounded-md">
+                                    class="text-sm text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] font-medium 
+                                           focus:outline-none transition-colors duration-200">
                                     Toon meer
                                 </button>
                                 @endif
@@ -380,7 +388,7 @@
                         
                         <!-- File Type Filter -->
                         <div class="space-y-3">
-                            <h3 class="text-[var(--font-size-headline-medium)] font-medium text-[var(--color-on-surface)]">Type bronbestand</h3>
+                            <h3 class="text-sm font-semibold text-[var(--color-on-surface)]">Type bronbestand</h3>
                             <div class="space-y-2">
                                 @php
                                     $fileTypes = [
@@ -405,19 +413,19 @@
                                             class="w-4 h-4 rounded border border-[var(--color-outline)] 
                                                    focus:outline-none
                                                    cursor-pointer text-[var(--color-primary)]
-                                                   checked:bg-[var(--color-primary)] checked:border-primary
+                                                   checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                    transition-all duration-200"
                                         >
-                                        <label for="bestandstype-{{ strtolower(str_replace([' ', '-'], ['', ''], $label)) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
+                                        <label for="bestandstype-{{ strtolower(str_replace([' ', '-'], ['', ''], $label)) }}" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                             {{ $label }}
                                         </label>
-                                        <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">({{ $filterCounts['bestandstype'][$label] ?? 0 }})</span>
+                                        <span class="text-sm text-[var(--color-on-surface-variant)]">({{ $filterCounts['bestandstype'][$label] ?? 0 }})</span>
                                     </div>
                                 @endforeach
                                 <button 
                                     type="button" 
-                                    class="text-[var(--color-primary)] font-medium text-[var(--font-size-body-medium)] hover:underline 
-                                           focus:outline-none rounded-md">
+                                    class="text-sm text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] font-medium 
+                                           focus:outline-none transition-colors duration-200">
                                     Toon meer
                                 </button>
                             </div>
@@ -425,7 +433,7 @@
                         
                         <!-- Theme Filter -->
                         <div class="space-y-3">
-                            <h3 class="text-[var(--font-size-headline-medium)] font-medium text-[var(--color-on-surface)]">Thema</h3>
+                            <h3 class="text-sm font-semibold text-[var(--color-on-surface)]">Thema</h3>
                             <div class="space-y-2">
                                 @php
                                     $allThemes = $allFilterOptions['thema'] ?? [];
@@ -445,13 +453,13 @@
                                             class="w-4 h-4 rounded border border-[var(--color-outline)] 
                                                    focus:outline-none
                                                    cursor-pointer text-[var(--color-primary)]
-                                                   checked:bg-[var(--color-primary)] checked:border-primary
+                                                   checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                    transition-all duration-200"
                                         >
-                                        <label for="thema-{{ str_replace(' ', '-', strtolower($theme)) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
+                                        <label for="thema-{{ str_replace(' ', '-', strtolower($theme)) }}" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                             {{ $theme }}
                                         </label>
-                                        <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">({{ $filterCounts['thema'][$theme] ?? 0 }})</span>
+                                        <span class="text-sm text-[var(--color-on-surface-variant)]">({{ $filterCounts['thema'][$theme] ?? 0 }})</span>
                                     </div>
                                 @endforeach
                                 @if(!empty($hiddenThemes))
@@ -468,13 +476,13 @@
                                                 class="w-4 h-4 rounded border border-[var(--color-outline)] 
                                                        focus:outline-none
                                                        cursor-pointer text-[var(--color-primary)]
-                                                       checked:bg-[var(--color-primary)] checked:border-primary
+                                                       checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                        transition-all duration-200"
                                             >
-                                            <label for="thema-{{ str_replace(' ', '-', strtolower($theme)) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
+                                            <label for="thema-{{ str_replace(' ', '-', strtolower($theme)) }}" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                                 {{ $theme }}
                                             </label>
-                                            <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">({{ $filterCounts['thema'][$theme] ?? 0 }})</span>
+                                            <span class="text-sm text-[var(--color-on-surface-variant)]">({{ $filterCounts['thema'][$theme] ?? 0 }})</span>
                                         </div>
                                     @endforeach
                                 </div>
@@ -482,8 +490,8 @@
                                     type="button" 
                                     onclick="toggleFilterSection('thema-more', 'thema-toggle')"
                                     id="thema-toggle"
-                                    class="text-[var(--color-primary)] font-medium text-[var(--font-size-body-medium)] hover:underline 
-                                           focus:outline-none rounded-md">
+                                    class="text-sm text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] font-medium 
+                                           focus:outline-none transition-colors duration-200">
                                     Toon meer
                                 </button>
                                 @endif
@@ -492,7 +500,7 @@
                         
                         <!-- Organisation Filter -->
                         <div class="space-y-3">
-                            <h3 class="text-[var(--font-size-headline-medium)] font-medium text-[var(--color-on-surface)]">Organisatie</h3>
+                            <h3 class="text-sm font-semibold text-[var(--color-on-surface)]">Organisatie</h3>
                             <div class="space-y-2">
                                 @php
                                     $allOrganisations = $allFilterOptions['organisatie'] ?? [];
@@ -512,13 +520,13 @@
                                             class="w-4 h-4 rounded border border-[var(--color-outline)] 
                                                    focus:outline-none
                                                    cursor-pointer text-[var(--color-primary)]
-                                                   checked:bg-[var(--color-primary)] checked:border-primary
+                                                   checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                    transition-all duration-200"
                                         >
-                                        <label for="org-{{ md5($org) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
+                                        <label for="org-{{ md5($org) }}" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                             {{ $org }}
                                         </label>
-                                        <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">({{ number_format($filterCounts['organisatie'][$org] ?? 0, 0, ',', '.') }})</span>
+                                        <span class="text-sm text-[var(--color-on-surface-variant)]">({{ number_format($filterCounts['organisatie'][$org] ?? 0, 0, ',', '.') }})</span>
                                     </div>
                                 @endforeach
                                 @if(!empty($hiddenOrgs))
@@ -535,13 +543,13 @@
                                                 class="w-4 h-4 rounded border border-[var(--color-outline)] 
                                                        focus:outline-none
                                                        cursor-pointer text-[var(--color-primary)]
-                                                       checked:bg-[var(--color-primary)] checked:border-primary
+                                                       checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
                                                        transition-all duration-200"
                                             >
-                                            <label for="org-{{ md5($org) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
+                                            <label for="org-{{ md5($org) }}" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                                 {{ $org }}
                                             </label>
-                                            <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">({{ number_format($filterCounts['organisatie'][$org] ?? 0, 0, ',', '.') }})</span>
+                                            <span class="text-sm text-[var(--color-on-surface-variant)]">({{ number_format($filterCounts['organisatie'][$org] ?? 0, 0, ',', '.') }})</span>
                                         </div>
                                     @endforeach
                                 </div>
@@ -549,8 +557,8 @@
                                     type="button" 
                                     onclick="toggleFilterSection('organisatie-more', 'organisatie-toggle')"
                                     id="organisatie-toggle"
-                                    class="text-[var(--color-primary)] font-medium text-[var(--font-size-body-medium)] hover:underline 
-                                           focus:outline-none rounded-md">
+                                    class="text-sm text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] font-medium 
+                                           focus:outline-none transition-colors duration-200">
                                     Toon meer
                                 </button>
                                 @endif
@@ -609,29 +617,29 @@
                 @endphp
                 
                 <!-- Quick Filter & Active Filters Card -->
-                <div class="bg-[var(--color-surface)] rounded-md shadow-sm border border-[var(--color-outline-variant)] divide-y divide-[var(--color-outline-variant)]">
+                <div class="bg-[var(--color-surface)] rounded-md border border-[var(--color-outline-variant)] divide-y divide-[var(--color-outline-variant)]">
                     <!-- Quick Filter Combobox -->
-                    <div class="p-6">
-                        <label for="quick-filter" class="block text-[var(--font-size-label-medium)] font-medium text-[var(--color-on-surface)] mb-3">
+                    <div class="p-4">
+                        <label for="quick-filter" class="block text-sm font-medium text-[var(--color-on-surface)] mb-2">
                             Snel filteren
                         </label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <i class="fas fa-search text-[var(--color-on-surface)]-variant" aria-hidden="true"></i>
+                                <i class="fas fa-search text-[var(--color-on-surface-variant)]" aria-hidden="true"></i>
                             </div>
                             <input 
                                 type="text" 
                                 id="quick-filter"
                                 name="quick-filter"
                                 placeholder="Type om te filteren op thema..."
-                                class="block w-full pl-10 pr-3 py-3 rounded-md border-2 border-[var(--color-outline)] bg-[var(--color-surface)]
-                                       text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] placeholder:text-[var(--color-on-surface-variant)]
+                                class="block w-full pl-10 pr-3 py-2 rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)]
+                                       text-sm text-[var(--color-on-surface)] placeholder:text-[var(--color-on-surface-variant)]
                                        focus:outline-none focus:border-[var(--color-primary)]
                                        transition-colors duration-200"
                                 autocomplete="off"
                                 onkeyup="filterQuickOptions(this.value)"
                             >
-                            <div id="quick-filter-results" class="absolute z-10 mt-1 w-full bg-[var(--color-surface)] rounded-md shadow-sm border border-[var(--color-outline-variant)] hidden max-h-60 overflow-auto">
+                            <div id="quick-filter-results" class="absolute z-10 mt-1 w-full bg-[var(--color-surface)] rounded-md border border-[var(--color-outline-variant)] hidden max-h-60 overflow-auto">
                                 <!-- Results populated by JavaScript -->
                             </div>
                         </div>
@@ -639,9 +647,9 @@
                     
                     <!-- Active Filters -->
                     @if(!empty($activeFilters))
-                    <div class="p-6">
+                    <div class="p-4">
                         <div class="flex flex-wrap items-center gap-2">
-                            <span class="text-[var(--font-size-label-medium)] font-medium text-[var(--color-on-surface)] mr-2">Actieve filters:</span>
+                            <span class="text-sm font-medium text-[var(--color-on-surface)] mr-2">Actieve filters:</span>
                             @foreach($activeFilters as $filter)
                                 @php
                                     $removeUrl = request()->fullUrlWithQuery(['pagina' => 1]);
@@ -661,8 +669,8 @@
                                 @endphp
                                 <a href="{{ $removeUrl }}" 
                                    class="inline-flex items-center gap-2 px-4 py-2 rounded-md 
-                                          bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-primary/20
-                                          hover:bg-[var(--color-primary)]/20 hover:border-primary/30
+                                          bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
+                                          hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
                                           focus:outline-none
                                           transition-all duration-200 font-medium text-sm
                                           group"
@@ -673,7 +681,7 @@
                             @endforeach
                             <a href="{{ route('themas.index') }}{{ request('zoeken') ? '?zoeken=' . urlencode(request('zoeken')) : '' }}" 
                                class="inline-flex items-center gap-2 px-4 py-2 rounded-md 
-                                      bg-[var(--color-surface)]-variant text-[var(--color-on-surface)]-variant border border-[var(--color-outline-variant)]
+                                      bg-[var(--color-surface)]-variant text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]
                                       hover:bg-[var(--color-surface)]-variant/80
                                       focus:outline-none
                                       transition-all duration-200 font-medium text-sm
@@ -687,49 +695,51 @@
                 </div>
                 
                 <!-- Results Header -->
-                <div class="bg-[var(--color-surface)] rounded-md p-6 shadow-sm border border-[var(--color-outline-variant)]">
-                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                        <h2 class="text-[var(--font-size-headline-large)] font-medium text-[var(--color-on-surface)]">
-                            Thema's {{ (($results['page'] ?? 1) - 1) * ($results['perPage'] ?? 20) + 1 }}-{{ min(($results['page'] ?? 1) * ($results['perPage'] ?? 20), $results['total'] ?? 0) }} van de {{ number_format($results['total'] ?? 0, 0, ',', '.') }} documenten
-                        </h2>
-                        <div class="flex flex-wrap items-center gap-4">
-                            <div class="flex items-center gap-2">
-                                <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">Sorteer op:</span>
-                                <select 
-                                    name="sort" 
-                                    class="px-4 py-2 rounded-md border-2 border-[var(--color-outline)] bg-[var(--color-surface)]
-                                           text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]
-                                           focus:outline-none focus:border-[var(--color-primary)]
-                                           transition-colors duration-200
-                                           min-h-[44px] cursor-pointer"
-                                    onchange="updateSort(this.value)"
-                                >
-                                    <option value="relevance" {{ request('sort', 'relevance') === 'relevance' ? 'selected' : '' }}>Relevantie</option>
-                                    <option value="publication_date" {{ request('sort') === 'publication_date' ? 'selected' : '' }}>Publicatiedatum</option>
-                                    <option value="modified_date" {{ request('sort') === 'modified_date' ? 'selected' : '' }}>Laatst gewijzigd</option>
-                                </select>
+                <div class="bg-[var(--color-surface)] rounded-md border border-[var(--color-outline-variant)]">
+                    <div class="px-4 py-3 sm:px-6 sm:py-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div>
+                                <h2 class="text-base font-semibold text-[var(--color-on-surface)]">
+                                    Thema's
+                                </h2>
+                                <p class="mt-1 text-sm text-[var(--color-on-surface-variant)]">
+                                    {{ (($results['page'] ?? 1) - 1) * ($results['perPage'] ?? 20) + 1 }}-{{ min(($results['page'] ?? 1) * ($results['perPage'] ?? 20), $results['total'] ?? 0) }} van de {{ number_format($results['total'] ?? 0, 0, ',', '.') }} documenten
+                                </p>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">Aantal:</span>
-                                <div class="flex gap-1">
-                                    <a href="{{ request()->fullUrlWithQuery(['per_page' => 10, 'pagina' => 1]) }}" 
-                                       class="px-4 py-2.5 rounded-md text-[var(--font-size-body-medium)] font-medium transition-colors duration-200 min-h-[48px] min-w-[48px] flex items-center justify-center
-                                              {{ request('per_page', 20) == 10 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-sm' : 'text-[var(--color-primary)] hover:bg-[var(--color-primary)]-container border border-[var(--color-outline-variant)]' }}
-                                              focus:outline-none">
-                                        10
-                                    </a>
-                                    <a href="{{ request()->fullUrlWithQuery(['per_page' => 20, 'pagina' => 1]) }}" 
-                                       class="px-4 py-2.5 rounded-md text-[var(--font-size-body-medium)] font-medium transition-colors duration-200 min-h-[48px] min-w-[48px] flex items-center justify-center
-                                              {{ request('per_page', 20) == 20 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-sm' : 'text-[var(--color-primary)] hover:bg-[var(--color-primary)]-container border border-[var(--color-outline-variant)]' }}
-                                              focus:outline-none">
-                                        20
-                                    </a>
-                                    <a href="{{ request()->fullUrlWithQuery(['per_page' => 50, 'pagina' => 1]) }}" 
-                                       class="px-4 py-2.5 rounded-md text-[var(--font-size-body-medium)] font-medium transition-colors duration-200 min-h-[48px] min-w-[48px] flex items-center justify-center
-                                              {{ request('per_page', 20) == 50 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-sm' : 'text-[var(--color-primary)] hover:bg-[var(--color-primary)]-container border border-[var(--color-outline-variant)]' }}
-                                              focus:outline-none">
-                                        50
-                                    </a>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <div class="flex items-center gap-2">
+                                    <label for="sort-select" class="text-sm text-[var(--color-on-surface-variant)]">Sorteer op:</label>
+                                    <select 
+                                        id="sort-select"
+                                        name="sort" 
+                                        class="rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)] px-3 py-1.5 text-sm text-[var(--color-on-surface)] focus:outline-none focus:border-[var(--color-primary)] cursor-pointer"
+                                        onchange="updateSort(this.value)"
+                                    >
+                                        <option value="relevance" {{ request('sort', 'relevance') === 'relevance' ? 'selected' : '' }}>Relevantie</option>
+                                        <option value="publication_date" {{ request('sort') === 'publication_date' ? 'selected' : '' }}>Publicatiedatum</option>
+                                        <option value="modified_date" {{ request('sort') === 'modified_date' ? 'selected' : '' }}>Laatst gewijzigd</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <label class="text-sm text-[var(--color-on-surface-variant)]">Aantal:</label>
+                                    <div class="inline-flex rounded-md border border-[var(--color-outline-variant)]">
+                                        <a href="{{ request()->fullUrlWithQuery(['per_page' => 10, 'pagina' => 1]) }}" 
+                                           class="px-3 py-1.5 text-sm font-medium transition-colors duration-200 focus:outline-none
+                                                  {{ request('per_page', 20) == 10 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)]' : 'text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)]' }}
+                                                  {{ request('per_page', 20) == 10 ? '' : 'border-r border-[var(--color-outline-variant)]' }}">
+                                            10
+                                        </a>
+                                        <a href="{{ request()->fullUrlWithQuery(['per_page' => 20, 'pagina' => 1]) }}" 
+                                           class="px-3 py-1.5 text-sm font-medium transition-colors duration-200 focus:outline-none border-r border-[var(--color-outline-variant)]
+                                                  {{ request('per_page', 20) == 20 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)]' : 'text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)]' }}">
+                                            20
+                                        </a>
+                                        <a href="{{ request()->fullUrlWithQuery(['per_page' => 50, 'pagina' => 1]) }}" 
+                                           class="px-3 py-1.5 text-sm font-medium transition-colors duration-200 focus:outline-none
+                                                  {{ request('per_page', 20) == 50 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)]' : 'text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)]' }}">
+                                            50
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -739,7 +749,7 @@
                 <!-- Error Message -->
                 @if(isset($error))
                     <div class="bg-red-50 text-red-900 dark:bg-red-900/20 dark:text-red-200 p-4 rounded-md border border-error" role="alert">
-                        <p class="text-[var(--font-size-body-medium)] text-red-600 dark:text-red-400 font-medium">
+                        <p class="text-sm text-red-600 dark:text-red-400 font-medium">
                             Er is een fout opgetreden: {{ $error }}
                         </p>
                     </div>
@@ -748,121 +758,140 @@
                 <!-- Results List -->
                 @if(empty($results['items']))
                     <div class="bg-[var(--color-surface)] rounded-md p-12 text-center border border-[var(--color-outline-variant)]">
-                        <p class="text-[var(--font-size-body-large)] text-[var(--color-on-surface)]-variant mb-2">Geen resultaten gevonden.</p>
-                        <p class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]-variant">Probeer andere zoekwoorden of filters aan te passen.</p>
+                        <p class="text-base text-[var(--color-on-surface-variant)] mb-2">Geen resultaten gevonden.</p>
+                        <p class="text-sm text-[var(--color-on-surface-variant)]">Probeer andere zoekwoorden of filters aan te passen.</p>
                     </div>
                 @else
                     <!-- Simple List with Heading - Tailwind UI Style -->
-                    <div class="bg-[var(--color-surface)] rounded-md shadow-sm border border-[var(--color-outline-variant)] overflow-hidden">
+                    <div class="bg-[var(--color-surface)] rounded-md border border-[var(--color-outline-variant)] overflow-hidden">
                         <div class="px-6 py-4 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface)]-variant/30">
-                            <h3 class="text-[var(--font-size-headline-medium)] font-medium text-[var(--color-on-surface)]">
+                            <h3 class="text-base font-medium text-[var(--color-on-surface)]">
                                 Documenten met thema
                             </h3>
                         </div>
                         <ul role="list" class="divide-y divide-[var(--color-outline-variant)]">
                             @foreach($results['items'] as $item)
-                                <li class="px-6 py-5 hover:bg-[var(--color-surface)]-variant/30 transition-colors duration-150">
-                                    <div class="flex items-start justify-between gap-4">
-                                        <div class="flex-1 min-w-0">
-                                            <div class="flex items-start gap-3 mb-2">
-                                                <div class="flex-1 min-w-0">
-                                                    <div class="flex items-start justify-between gap-2 mb-1">
-                                                        <a href="/open-overheid/documents/{{ $item->external_id }}" 
-                                                           class="text-[var(--font-size-headline-medium)] font-medium text-[var(--color-on-surface)] block
-                                                                  hover:text-[var(--color-primary)] focus:outline-none
-                                                                  transition-colors duration-200 rounded-md flex-1">
-                                                            {{ $item->title ?? 'Geen titel' }}
-                                                        </a>
+                                <li class="px-4 py-3 hover:bg-[var(--color-primary)]/5 transition-colors duration-150">
+                                    <a href="/open-overheid/documents/{{ $item->external_id }}" 
+                                       class="block focus:outline-none group">
+                                        <div class="flex items-start justify-between gap-3">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-start justify-between gap-2 mb-1.5">
+                                                    <h3 class="text-sm font-semibold text-[var(--color-on-surface)] group-hover:text-[var(--color-primary)] transition-colors duration-200 line-clamp-2 flex-1 pr-2">
+                                                        {{ $item->title ?? 'Geen titel' }}
+                                                    </h3>
+                                                    <div class="flex items-center gap-2 shrink-0">
                                                         @if($item->category)
                                                             <a href="{{ route('themas.index') }}?informatiecategorie={{ urlencode($item->category) }}{{ request('zoeken') ? '&zoeken=' . urlencode(request('zoeken')) : '' }}" 
-                                                               class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium 
-                                                                      bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-primary/20
-                                                                      hover:bg-[var(--color-primary)]/20 hover:border-primary/30
+                                                               onclick="event.stopPropagation();"
+                                                               class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium 
+                                                                      bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
+                                                                      hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
                                                                       focus:outline-none
                                                                       transition-all duration-200 shrink-0"
                                                                title="Filter op {{ $item->formatted_category ?? $item->category }}">
                                                                 {{ $item->formatted_category ?? $item->category }}
                                                             </a>
                                                         @endif
+                                                        @if($item->external_id)
+                                                            <a href="https://open.overheid.nl/details/{{ $item->external_id }}" 
+                                                               target="_blank"
+                                                               rel="noopener noreferrer"
+                                                               onclick="event.stopPropagation();"
+                                                               class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md
+                                                                      bg-[var(--color-primary)]/5 text-[var(--color-primary)] border border-[var(--color-primary)]/20
+                                                                      hover:bg-[var(--color-primary)]/10 hover:border-[var(--color-primary)]/30
+                                                                      focus:outline-none
+                                                                      transition-all duration-200 text-[11px] font-medium
+                                                                      shrink-0"
+                                                               title="Bekijk op open.overheid.nl">
+                                                                <i class="fas fa-external-link-alt text-[10px]" aria-hidden="true"></i>
+                                                                <span class="hidden sm:inline">Open.overheid.nl</span>
+                                                            </a>
+                                                        @endif
                                                     </div>
                                                 </div>
-                                                @if($item->external_id)
-                                                    <a href="https://open.overheid.nl/details/{{ $item->external_id }}" 
-                                                       target="_blank"
-                                                       rel="noopener noreferrer"
-                                                       class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md
-                                                              bg-[var(--color-primary)]/5 text-[var(--color-primary)] border border-primary/20
-                                                              hover:bg-[var(--color-primary)]/10 hover:border-primary/30
-                                                              focus:outline-none
-                                                              transition-all duration-200 text-xs font-medium
-                                                              group shrink-0"
-                                                       title="Bekijk op open.overheid.nl">
-                                                        <i class="fas fa-external-link-alt text-xs" aria-hidden="true"></i>
-                                                        <span class="hidden sm:inline">Open.overheid.nl</span>
-                                                    </a>
-                                                @endif
-                                            </div>
                                             @if($item->description)
-                                                <p class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]-variant mb-3 line-clamp-2">
+                                                <p class="text-xs text-[var(--color-on-surface-variant)] mb-2.5 line-clamp-2 leading-relaxed">
                                                     {{ \Illuminate\Support\Str::limit($item->description, 150) }}
                                                 </p>
                                             @endif
-                                            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">
-                                                <span class="inline-flex items-center gap-1.5">
-                                                    <i class="fas fa-file-pdf text-xs text-red-600" aria-hidden="true"></i>
-                                                    <span class="font-medium text-[var(--color-on-surface)]">PDF</span>
-                                                </span>
-                                                @if($item->publication_date)
-                                                    <span class="inline-flex items-center gap-1.5">
-                                                        <i class="fas fa-calendar-alt text-xs opacity-70" aria-hidden="true"></i>
-                                                        <span>Gepubliceerd op {{ $item->publication_date->format('d-m-Y') }}</span>
+                                            
+                                            {{-- Metadata Grid - Modern & Compact --}}
+                                            <div class="mt-2.5 pt-2.5 border-t border-[var(--color-outline-variant)]/50">
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    {{-- File Type --}}
+                                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
+                                                           bg-[var(--color-surface-variant)]/50 text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]/50">
+                                                        <i class="fas fa-file-pdf text-[10px] text-red-500" aria-hidden="true"></i>
+                                                        <span>PDF</span>
                                                     </span>
-                                                @endif
-                                                @if($item->updated_at)
-                                                    <span class="inline-flex items-center gap-1.5">
-                                                        <i class="fas fa-edit text-xs opacity-70" aria-hidden="true"></i>
-                                                        <span>Gewijzigd {{ $item->updated_at->format('d-m-Y') }}</span>
-                                                    </span>
-                                                @endif
-                                                @if($item->theme)
-                                                    <a href="{{ route('themas.index') }}?thema[]={{ urlencode($item->theme) }}" 
-                                                       class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md 
-                                                              bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-primary/20
-                                                              hover:bg-[var(--color-primary)]/20 hover:border-primary/30
-                                                              focus:outline-none
-                                                              transition-all duration-200 font-medium text-xs
-                                                              group"
-                                                       title="Filter op {{ $item->theme }}">
-                                                        <i class="fas fa-tag text-xs" aria-hidden="true"></i>
-                                                        <span>{{ $item->theme }}</span>
-                                                        <i class="fas fa-filter text-xs opacity-70 group-hover:opacity-100 transition-opacity" aria-hidden="true"></i>
-                                                    </a>
-                                                @endif
-                                                @if($item->organisation)
-                                                    <a href="{{ route('themas.index') }}?organisatie[]={{ urlencode($item->organisation) }}" 
-                                                       class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md 
-                                                              bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-primary/20
-                                                              hover:bg-[var(--color-primary)]/20 hover:border-primary/30
-                                                              focus:outline-none
-                                                              transition-all duration-200 font-medium text-xs
-                                                              group"
-                                                       title="Filter op {{ $item->organisation }}">
-                                                        <i class="fas fa-building text-xs" aria-hidden="true"></i>
-                                                        <span>{{ $item->organisation }}</span>
-                                                        <i class="fas fa-filter text-xs opacity-70 group-hover:opacity-100 transition-opacity" aria-hidden="true"></i>
-                                                    </a>
-                                                @endif
+                                                    
+                                                    {{-- Publication Date --}}
+                                                    @if($item->publication_date)
+                                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
+                                                               bg-[var(--color-surface-variant)]/50 text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]/50">
+                                                            <i class="fas fa-calendar text-[10px] text-[var(--color-primary)]" aria-hidden="true"></i>
+                                                            <span>{{ $item->publication_date->format('d-m-Y') }}</span>
+                                                        </span>
+                                                    @endif
+                                                    
+                                                    {{-- Updated Date --}}
+                                                    @if($item->updated_at)
+                                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
+                                                               bg-[var(--color-surface-variant)]/50 text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]/50">
+                                                            <i class="fas fa-edit text-[10px] text-[var(--color-primary)]" aria-hidden="true"></i>
+                                                            <span>{{ $item->updated_at->format('d-m-Y') }}</span>
+                                                        </span>
+                                                    @endif
+                                                    
+                                                    {{-- Theme --}}
+                                                    @if($item->theme)
+                                                        <a href="{{ route('themas.index') }}?thema[]={{ urlencode($item->theme) }}" 
+                                                           onclick="event.stopPropagation();"
+                                                           class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
+                                                                  bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
+                                                                  hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
+                                                                  focus:outline-none
+                                                                  transition-all duration-200"
+                                                           title="Filter op {{ $item->theme }}">
+                                                            <i class="fas fa-tag text-[10px]" aria-hidden="true"></i>
+                                                            <span class="max-w-[100px] truncate">{{ $item->theme }}</span>
+                                                            <i class="fas fa-filter text-[9px] opacity-60" aria-hidden="true"></i>
+                                                        </a>
+                                                    @endif
+                                                    
+                                                    {{-- Organisation --}}
+                                                    @if($item->organisation)
+                                                        <a href="{{ route('themas.index') }}?organisatie[]={{ urlencode($item->organisation) }}" 
+                                                           onclick="event.stopPropagation();"
+                                                           class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
+                                                                  bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
+                                                                  hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
+                                                                  focus:outline-none
+                                                                  transition-all duration-200"
+                                                           title="Filter op {{ $item->organisation }}">
+                                                            <i class="fas fa-building text-[10px]" aria-hidden="true"></i>
+                                                            <span class="max-w-[120px] truncate">{{ $item->organisation }}</span>
+                                                            <i class="fas fa-filter text-[9px] opacity-60" aria-hidden="true"></i>
+                                                        </a>
+                                                    @endif
+                                                </div>
                                             </div>
+                                            
                                             @if(isset($item->metadata) && isset($item->metadata['document']['weblocatie']))
-                                                <div class="mt-3">
+                                                <div class="mt-2.5 pt-2.5 border-t border-[var(--color-outline-variant)]/50">
                                                     <a href="{{ $item->metadata['document']['weblocatie'] }}" 
                                                        target="_blank" 
                                                        rel="noopener noreferrer"
-                                                       class="text-[var(--color-primary)] font-medium text-sm inline-flex items-center gap-1.5
-                                                              hover:underline focus:outline-none
-                                                              transition-all duration-200 rounded-md">
-                                                        Open via officielebekendmakingen.nl
-                                                        <i class="fas fa-external-link-alt text-xs" aria-hidden="true"></i>
+                                                       onclick="event.stopPropagation();"
+                                                       class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
+                                                              bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
+                                                              hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
+                                                              focus:outline-none
+                                                              transition-all duration-200">
+                                                        <i class="fas fa-external-link-alt text-[10px]" aria-hidden="true"></i>
+                                                        <span>Officielebekendmakingen.nl</span>
                                                     </a>
                                                 </div>
                                             @endif
@@ -886,7 +915,7 @@
                             $startPage = max(1, $currentPage - floor($showPages / 2));
                             $endPage = min($totalPages, $startPage + $showPages - 1);
                         @endphp
-                        <div class="flex items-center justify-between border-t border-[var(--color-outline-variant)] bg-[var(--color-surface)] px-4 py-3 sm:px-6 dark:border-white/10 dark:bg-transparent">
+                        <div class="flex items-center justify-between bg-[var(--color-surface)] px-4 py-3 sm:px-6">
                             <!-- Mobile: Previous/Next -->
                             <div class="flex flex-1 justify-between sm:hidden">
                                 @if(($results['hasPreviousPage'] ?? false))
@@ -924,7 +953,7 @@
                                     </p>
                                 </div>
                                 <div>
-                                    <nav aria-label="Paginatie" class="isolate inline-flex -space-x-px rounded-md shadow-sm dark:shadow-none">
+                                    <nav aria-label="Paginatie" class="isolate inline-flex -space-x-px rounded-md">
                                         @if(($results['hasPreviousPage'] ?? false))
                                             <a href="{{ request()->fullUrlWithQuery(['pagina' => $currentPage - 1]) }}" 
                                                class="relative inline-flex items-center rounded-md px-2 py-2 text-[var(--color-on-surface-variant)]  hover:bg-[var(--color-surface-variant)] focus:z-20 focus:outline-none  dark:hover:bg-white/5">
@@ -991,7 +1020,7 @@
                 @endif
             </div>
         </div>
-    </section>
+    </main>
 @endsection
 
 @push('scripts')
@@ -1001,6 +1030,28 @@
             url.searchParams.set('sort', value);
             url.searchParams.set('pagina', '1');
             window.location.href = url.toString();
+        }
+
+        // Convert date inputs from Y-m-d (HTML date input) to d-m-Y (backend format) on form submit
+        function convertDateInputsToFormat(event) {
+            const vanInput = document.getElementById('publicatiedatum_van');
+            const totInput = document.getElementById('publicatiedatum_tot');
+            
+            if (vanInput && vanInput.value) {
+                // Date input provides Y-m-d format, convert to d-m-Y
+                const dateParts = vanInput.value.split('-');
+                if (dateParts.length === 3) {
+                    vanInput.value = dateParts[2] + '-' + dateParts[1] + '-' + dateParts[0];
+                }
+            }
+            
+            if (totInput && totInput.value) {
+                // Date input provides Y-m-d format, convert to d-m-Y
+                const dateParts = totInput.value.split('-');
+                if (dateParts.length === 3) {
+                    totInput.value = dateParts[2] + '-' + dateParts[1] + '-' + dateParts[0];
+                }
+            }
         }
 
         function toggleCustomDateRange() {
@@ -1067,7 +1118,7 @@
             });
 
             if (matches.length === 0) {
-                resultsDiv.innerHTML = '<div class="px-4 py-3 text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]-variant">Geen resultaten gevonden</div>';
+                resultsDiv.innerHTML = '<div class="px-4 py-3 text-sm text-[var(--color-on-surface-variant)]">Geen resultaten gevonden</div>';
                 resultsDiv.classList.remove('hidden');
                 return;
             }
@@ -1084,10 +1135,10 @@
                    class="block px-4 py-3 hover:bg-[var(--color-surface)]-variant transition-colors duration-150 border-b border-[var(--color-outline-variant)] last:border-b-0">
                     <div class="flex items-center justify-between">
                         <div>
-                            <div class="text-[var(--font-size-body-medium)] font-medium text-[var(--color-on-surface)]">${match.label}</div>
-                            <div class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">${match.secondary}</div>
+                            <div class="text-sm font-medium text-[var(--color-on-surface)]">${match.label}</div>
+                            <div class="text-sm text-[var(--color-on-surface-variant)]">${match.secondary}</div>
                         </div>
-                        <i class="fas fa-chevron-right text-xs text-[var(--color-on-surface)]-variant" aria-hidden="true"></i>
+                        <i class="fas fa-chevron-right text-xs text-[var(--color-on-surface-variant)]" aria-hidden="true"></i>
                     </div>
                 </a>
             `;

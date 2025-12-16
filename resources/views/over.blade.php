@@ -10,33 +10,45 @@
 @endphp
 
 @section('content')
-    <div class="relative isolate overflow-hidden bg-[var(--color-surface)] py-24 sm:py-32">
-        <div aria-hidden="true" class="absolute -top-80 left-[max(6rem,33%)] -z-10 transform-gpu blur-3xl sm:left-1/2 md:top-20 lg:ml-20 xl:top-3 xl:ml-56">
-            <div style="clip-path: polygon(63.1% 29.6%, 100% 17.2%, 76.7% 3.1%, 48.4% 0.1%, 44.6% 4.8%, 54.5% 25.4%, 59.8% 49.1%, 55.3% 57.9%, 44.5% 57.3%, 27.8% 48%, 35.1% 81.6%, 0% 97.8%, 39.3% 100%, 35.3% 81.5%, 97.2% 52.8%, 63.1% 29.6%)" 
-                 class="aspect-801/1036 w-200.25 bg-gradient-to-tr from-primary/20 to-primary/10 opacity-30"></div>
-        </div>
-        
+    <!-- Header Section -->
+    <div class="bg-[var(--color-primary-light)] py-16 sm:py-24">
         <div class="mx-auto max-w-7xl px-6 lg:px-8">
+            <!-- Breadcrumb -->
+            @if(!empty($breadcrumbs ?? []))
+            <div class="mb-8">
+                <x-breadcrumbs :items="$breadcrumbs" />
+            </div>
+            @endif
+            
             <div class="mx-auto max-w-2xl lg:mx-0">
                 <p class="text-base/7 font-semibold text-[var(--color-primary)]">Open source Woo-voorziening</p>
-                <h1 class="mt-2 text-[var(--font-size-display-large)] font-semibold tracking-tight text-pretty text-[var(--color-on-surface)] sm:text-5xl">
-                    OpenPublicaties: lichtgewicht blauwdruk voor actieve openbaarmaking
+                <h1 class="mt-2 text-4xl font-semibold tracking-tight text-pretty text-[var(--color-on-surface)] sm:text-5xl">
+                    Over OpenPublicaties
                 </h1>
-                <p class="mt-6 text-xl/8 text-[var(--color-on-surface)]-variant">
-                    Open.overheid.nl bundelt actief openbaar gemaakte documenten op één centrale plek. Met OpenPublicaties (opub.nl) 
-                    hebben wij een volledig open source Woo-voorziening ontwikkeld die hierop aansluit: een moderne, lichte 
-                    referentie-implementatie die laat zien hoe actieve openbaarmaking sneller, transparanter en beter beheersbaar kan 
-                    worden ingericht – in nauwe samenhang met de Woo-index en de landelijke voorzieningen.
+                <p class="mt-6 text-lg font-medium text-pretty text-[var(--color-on-surface-variant)] sm:text-xl/8">
+                    Een volledig open source, lichtgewicht en state-of-the-art Woo-voorziening die actieve openbaarmaking eenvoudig, betrouwbaar en duurzaam ondersteunt.
                 </p>
             </div>
-
-            <div class="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 lg:mx-0 lg:mt-10 lg:max-w-none lg:grid-cols-12">
-                <!-- Content -->
-                <div class="max-w-xl text-base/7 text-[var(--color-on-surface)]-variant lg:col-span-12">
-                    <div class="space-y-12">
-                        <!-- Projectdoelstelling -->
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl mx-auto w-full px-6 lg:px-8 pt-10 pb-20">
+        <div class="text-base/7 text-[var(--color-on-surface-variant)]">
+            <div class="space-y-12">
+                <!-- Introductie -->
+                <div>
+                    <p class="text-base/7 text-[var(--color-on-surface-variant)]">
+                        Open.overheid.nl bundelt actief openbaar gemaakte documenten op één centrale plek. Met OpenPublicaties (opub.nl) 
+                        hebben wij een volledig open source Woo-voorziening ontwikkeld die hierop aansluit: een moderne, lichte 
+                        referentie-implementatie die laat zien hoe actieve openbaarmaking sneller, transparanter en beter beheersbaar kan 
+                        worden ingericht – in nauwe samenhang met de Woo-index en de landelijke voorzieningen.
+                    </p>
+                </div>
+                
+                <!-- Projectdoelstelling -->
                         <div>
-                            <h2 class="text-[var(--font-size-headline-medium)] font-bold tracking-tight text-[var(--color-on-surface)] mb-4">
+                            <h2 class="text-[var(--font-size-headline-medium)] font-bold tracking-tight !text-[var(--color-primary-dark)] mb-4">
                                 Projectdoelstelling
                             </h2>
                             <p class="text-base/7 text-[var(--color-on-surface)]-variant">
@@ -55,7 +67,7 @@
 
                         <!-- Technische Realisatie -->
                         <div>
-                            <h2 class="text-[var(--font-size-headline-medium)] font-bold tracking-tight text-[var(--color-on-surface)] mb-4">
+                            <h2 class="text-[var(--font-size-headline-medium)] font-bold tracking-tight !text-[var(--color-primary-dark)] mb-4">
                                 Technische Realisatie
                             </h2>
                             <p class="text-base/7 text-[var(--color-on-surface)]-variant mb-4">
@@ -91,7 +103,7 @@
                         
                         <!-- Kernwaarden -->
                         <div>
-                            <h2 class="text-[var(--font-size-headline-medium)] font-bold tracking-tight text-[var(--color-on-surface)] mb-4">
+                            <h2 class="text-[var(--font-size-headline-medium)] font-bold tracking-tight !text-[var(--color-primary-dark)] mb-4">
                                 Kernwaarden
                             </h2>
                             <ul role="list" class="mt-4 space-y-6 text-base/7 text-[var(--color-on-surface)]-variant">
@@ -130,7 +142,7 @@
 
                         <!-- Van proof-of-concept naar gezamenlijke voorziening -->
                         <div>
-                            <h2 class="text-[var(--font-size-headline-medium)] font-bold tracking-tight text-[var(--color-on-surface)] mb-4">
+                            <h2 class="text-[var(--font-size-headline-medium)] font-bold tracking-tight !text-[var(--color-primary-dark)] mb-4">
                                 Van proof-of-concept naar gezamenlijke voorziening
                             </h2>
                             <p class="text-base/7 text-[var(--color-on-surface)]-variant mb-4">
@@ -149,7 +161,7 @@
                         
                         <!-- Bijdrage aan de Wet open overheid -->
                         <div>
-                            <h2 class="text-[var(--font-size-headline-medium)] font-bold tracking-tight text-[var(--color-on-surface)] mb-4">
+                            <h2 class="text-[var(--font-size-headline-medium)] font-bold tracking-tight !text-[var(--color-primary-dark)] mb-4">
                                 Bijdrage aan de Wet open overheid (Woo)
                             </h2>
                             <p class="text-base/7 text-[var(--color-on-surface)]-variant">
@@ -162,27 +174,25 @@
                         <!-- Vraag en ondersteuning -->
                         <div class="flex items-start gap-4 pt-4">
                             <div class="flex-shrink-0">
-                                <div class="w-12 h-12 rounded-full bg-[var(--color-primary-light)] flex items-center justify-center">
-                                    <i class="fas fa-question-circle text-[var(--font-size-headline-medium)] text-[var(--color-primary)]" aria-hidden="true"></i>
+                                <div class="w-12 h-12 rounded-md bg-[var(--color-primary-light)] flex items-center justify-center">
+                                    <i class="fas fa-question-circle text-lg text-[var(--color-primary)]" aria-hidden="true"></i>
                                 </div>
                             </div>
                             <div class="flex-1">
-                                <h2 class="text-[var(--font-size-headline-medium)] font-bold tracking-tight text-[var(--color-on-surface)] mb-4">
+                                <h2 class="text-[var(--font-size-headline-medium)] font-bold tracking-tight !text-[var(--color-primary-dark)] mb-4">
                                     Vraag en ondersteuning
                                 </h2>
                                 <p class="text-base/7 text-[var(--color-on-surface)]-variant mb-4">
                                     Heeft u vragen of suggesties over de website?
                                 </p>
-                                <a href="#" class="inline-flex items-center gap-2 text-[var(--color-primary)] font-medium text-base hover:underline focus:outline-2 focus:outline-primary focus:outline-offset-2 rounded-sm">
+                                <a href="#" class="inline-flex items-center gap-2 text-[var(--color-primary)] font-medium text-base hover:text-[var(--color-primary-dark)] focus:outline-none transition-colors duration-200">
                                     Link naar contact
                                     <i class="fas fa-chevron-right text-sm" aria-hidden="true"></i>
                                 </a>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
         </div>
-    </div>
+    </main>
 @endsection
 

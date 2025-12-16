@@ -207,6 +207,11 @@ class SearchController extends Controller
         return view('over');
     }
 
+    public function contactPage(Request $request)
+    {
+        return view('contact');
+    }
+
     /**
      * Chat interface page with natural language search
      */
