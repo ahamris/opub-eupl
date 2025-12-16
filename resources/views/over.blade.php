@@ -48,7 +48,7 @@
                 
                 <!-- Projectdoelstelling -->
                         <div>
-                            <h2 class="text-[var(--font-size-headline-medium)] font-bold tracking-tight text-[var(--color-primary-dark)] mb-4">
+                            <h2 class="text-[var(--font-size-headline-medium)] font-bold tracking-tight !text-[var(--color-primary-dark)] mb-4">
                                 Projectdoelstelling
                             </h2>
                             <p class="text-base/7 text-[var(--color-on-surface)]-variant">
@@ -67,7 +67,7 @@
 
                         <!-- Technische Realisatie -->
                         <div>
-                            <h2 class="text-[var(--font-size-headline-medium)] font-bold tracking-tight text-[var(--color-primary-dark)] mb-4">
+                            <h2 class="text-[var(--font-size-headline-medium)] font-bold tracking-tight !text-[var(--color-primary-dark)] mb-4">
                                 Technische Realisatie
                             </h2>
                             <p class="text-base/7 text-[var(--color-on-surface)]-variant mb-4">
@@ -103,7 +103,7 @@
                         
                         <!-- Kernwaarden -->
                         <div>
-                            <h2 class="text-[var(--font-size-headline-medium)] font-bold tracking-tight text-[var(--color-primary-dark)] mb-4">
+                            <h2 class="text-[var(--font-size-headline-medium)] font-bold tracking-tight !text-[var(--color-primary-dark)] mb-4">
                                 Kernwaarden
                             </h2>
                             <ul role="list" class="mt-4 space-y-6 text-base/7 text-[var(--color-on-surface)]-variant">
@@ -142,7 +142,7 @@
 
                         <!-- Van proof-of-concept naar gezamenlijke voorziening -->
                         <div>
-                            <h2 class="text-[var(--font-size-headline-medium)] font-bold tracking-tight text-[var(--color-primary-dark)] mb-4">
+                            <h2 class="text-[var(--font-size-headline-medium)] font-bold tracking-tight !text-[var(--color-primary-dark)] mb-4">
                                 Van proof-of-concept naar gezamenlijke voorziening
                             </h2>
                             <p class="text-base/7 text-[var(--color-on-surface)]-variant mb-4">
@@ -161,7 +161,7 @@
                         
                         <!-- Bijdrage aan de Wet open overheid -->
                         <div>
-                            <h2 class="text-[var(--font-size-headline-medium)] font-bold tracking-tight text-[var(--color-primary-dark)] mb-4">
+                            <h2 class="text-[var(--font-size-headline-medium)] font-bold tracking-tight !text-[var(--color-primary-dark)] mb-4">
                                 Bijdrage aan de Wet open overheid (Woo)
                             </h2>
                             <p class="text-base/7 text-[var(--color-on-surface)]-variant">
@@ -179,7 +179,7 @@
                                 </div>
                             </div>
                             <div class="flex-1">
-                                <h2 class="text-[var(--font-size-headline-medium)] font-bold tracking-tight text-[var(--color-primary-dark)] mb-4">
+                                <h2 class="text-[var(--font-size-headline-medium)] font-bold tracking-tight !text-[var(--color-primary-dark)] mb-4">
                                     Vraag en ondersteuning
                                 </h2>
                                 <p class="text-base/7 text-[var(--color-on-surface)]-variant mb-4">

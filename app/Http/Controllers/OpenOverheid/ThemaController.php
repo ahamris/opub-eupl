@@ -97,9 +97,11 @@ class ThemaController extends Controller
                         $filterCounts = $this->convertTypesenseFacetsToFilterCounts($results['facet_counts'], $query);
                         
                         // Calculate date filter counts using Typesense (not database!)
-                        $filterCounts['week'] = $this->getDateFilterCountFromTypesense($query, 'week');
-                        $filterCounts['maand'] = $this->getDateFilterCountFromTypesense($query, 'maand');
-                        $filterCounts['jaar'] = $this->getDateFilterCountFromTypesense($query, 'jaar');
+                        try {
+                            $filterCounts['week'] = $this->getDateFilterCountFromTypesense($query, 'week');
+                            $filterCounts['maand'] = $this->getDateFilterCountFromTypesense($query, 'maand');
+                            $filterCounts['jaar'] = $this->getDateFilterCountFromTypesense($query, 'jaar');
+                        } catch (\Exception $dateException) {
                             \Log::warning('Date filter counts failed in ThemaController', ['error' => $dateException->getMessage()]);
                         }
                     } else {

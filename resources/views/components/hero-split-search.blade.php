@@ -43,7 +43,6 @@
                     @endif
                     @if($badgeText)
                     <a href="#" class="flex items-center gap-x-1.5 hover:text-[var(--color-primary)] transition-colors duration-200">
-                        <span aria-hidden="true" class="absolute inset-0"></span>
                         {{ $badgeText }}
                         <i class="fas fa-arrow-right text-xs" aria-hidden="true"></i>
                     </a>
