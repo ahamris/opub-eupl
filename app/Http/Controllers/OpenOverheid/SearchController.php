@@ -10,6 +10,8 @@ use App\Services\OpenOverheid\OpenOverheidLocalSearchService;
 use App\Services\OpenOverheid\OpenOverheidSearchService;
 use App\Services\OpenOverheid\QueryParsingService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class SearchController extends Controller
 {
