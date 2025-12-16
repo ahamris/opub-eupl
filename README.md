@@ -224,6 +224,126 @@ Het Open Overheid Platform stelt burgers in staat om:
 
 Voor een complete development setup met Docker, zie [`guides/installation/INSTALLATION.md`](guides/installation/INSTALLATION.md).
 
+## 📥 Document Synchronisatie
+
+Het platform synchroniseert documenten van de Open Overheid API naar de lokale PostgreSQL database. Gebruik het `open-overheid:sync` commando om documenten te synchroniseren.
+
+### Sync Commando Parameters
+
+Het `open-overheid:sync` commando ondersteunt de volgende opties:
+
+| Parameter | Type | Beschrijving | Voorbeeld |
+|-----------|------|--------------|-----------|
+| `--id=` | string | Sync een specifiek document via external ID | `--id=oep-ob-12345` |
+| `--week` | flag | Sync alle documenten van deze week (maandag t/m zondag) | `--week` |
+| `--from=` | string | Startdatum in DD-MM-YYYY formaat | `--from=01-12-2024` |
+| `--to=` | string | Einddatum in DD-MM-YYYY formaat | `--to=31-12-2024` |
+| `--no-retry` | flag | Sla retry van gefaalde documenten over | `--no-retry` |
+
+**Let op:** Als geen parameters worden opgegeven, synchroniseert het commando **alle** documenten uit de API.
+
+### Gebruiksvoorbeelden
+
+#### 1. Sync alle documenten
+```bash
+# Sync alle beschikbare documenten (kan lang duren!)
+php artisan open-overheid:sync
+```
+
+#### 2. Sync een specifiek document
+```bash
+# Sync een document via external ID
+php artisan open-overheid:sync --id=oep-ob-12345
+```
+
+#### 3. Sync documenten van deze week
+```bash
+# Sync alle documenten gepubliceerd van maandag t/m zondag van deze week
+php artisan open-overheid:sync --week
+```
+
+#### 4. Sync documenten in een datum bereik
+```bash
+# Sync documenten van 1 december 2024 tot 31 december 2024
+php artisan open-overheid:sync --from=01-12-2024 --to=31-12-2024
+
+# Sync documenten vanaf een specifieke datum (tot nu)
+php artisan open-overheid:sync --from=01-01-2024
+
+# Sync documenten tot een specifieke datum (vanaf het begin)
+php artisan open-overheid:sync --to=31-12-2024
+```
+
+#### 5. Sync zonder retry van gefaalde documenten
+```bash
+# Sync documenten maar probeer gefaalde documenten niet opnieuw
+php artisan open-overheid:sync --from=01-12-2024 --to=31-12-2024 --no-retry
+```
+
+#### 6. Gecombineerde voorbeelden
+```bash
+# Sync deze week zonder retry
+php artisan open-overheid:sync --week --no-retry
+
+# Sync laatste maand
+php artisan open-overheid:sync --from=01-11-2024 --to=30-11-2024
+```
+
+### Sync Output
+
+Het commando toont gedetailleerde informatie tijdens het synchroniseren:
+
+```
+Syncing documents from date range...
+  From: 01-12-2024
+  To: 31-12-2024
+Found 1250 documents to sync.
+
+ 1250/1250 [████████████████████████] 100% ETA: 00:00:00
+
+✅ Sync completed!
+   Total: 1250 documents
+   Created: 850 documents
+   Updated: 350 documents
+   Skipped: 50 documents (already up-to-date)
+   Retried: 5 documents
+   Errors: 0 documents
+```
+
+### Sync Gedrag
+
+- **Automatische Retry**: Gefaalde documenten worden automatisch opnieuw geprobeerd (tenzij `--no-retry` wordt gebruikt)
+- **Incrementele Updates**: Alleen gewijzigde documenten worden bijgewerkt
+- **Progress Bar**: Real-time voortgang met ETA, error count en skipped count
+- **Logging**: Alle sync activiteiten worden gelogd in `storage/logs/laravel.log`
+- **Dossier Detectie**: Documenten die deel uitmaken van dossiers triggeren automatisch metadata pre-computing jobs
+
+### Configuratie
+
+Sync gedrag kan worden geconfigureerd in `config/open_overheid.php`:
+
+```php
+'sync' => [
+    'enabled' => env('OPEN_OVERHEID_SYNC_ENABLED', true),
+    'batch_size' => env('OPEN_OVERHEID_SYNC_BATCH_SIZE', 50),
+    'days_back' => env('OPEN_OVERHEID_SYNC_DAYS_BACK', 1), // Standaard sync laatste 24 uur
+],
+```
+
+### Automatische Synchronisatie
+
+Voor productie omgevingen, overweeg het instellen van een cron job of scheduler:
+
+```php
+// In app/Console/Kernel.php
+protected function schedule(Schedule $schedule)
+{
+    // Sync recente documenten elke 6 uur
+    $schedule->command('open-overheid:sync --week')
+             ->everySixHours();
+}
+```
+
 ## 🧪 Testing
 
 Het project gebruikt [Pest PHP v4](https://pestphp.com) voor testing.
