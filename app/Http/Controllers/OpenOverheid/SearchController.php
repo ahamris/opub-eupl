@@ -791,10 +791,9 @@ class SearchController extends Controller
             titlesOnly: ! empty($validated['titles_only']),
         );
 
-        // Always try Typesense first (better performance, typo tolerance, faceting)
-        // Fallback to PostgreSQL if Typesense is unavailable
-        // Neuro search is now premium-only feature, removed from regular search
-        // $useNeuroSearch = ! empty($validated['neuro_search']);
+        // IMPORTANT: All search results and filters MUST use Typesense (not database!)
+        // Database is ONLY used when clicking a single result item to get full details (see DocumentController::show)
+        // This ensures fast performance with 600k+ records
         $useTypesense = config('open_overheid.typesense.enabled', true);
 
         try {
@@ -1187,22 +1186,19 @@ class SearchController extends Controller
         }
 
         // Transform Typesense results to match expected format
+        // IMPORTANT: Use ONLY Typesense data - NO database queries!
+        // Database is ONLY used when clicking a single result item to get full details
         $items = collect($typesenseResults['hits'] ?? [])->map(function ($hit) {
             $doc = $hit['document'] ?? $hit;
-            $model = \App\Models\OpenOverheidDocument::where('external_id', $doc['external_id'] ?? null)->first();
 
-            // If model exists, return it; otherwise create a fake model-like object
-            if ($model) {
-                return $model;
-            }
-
-            // Create a simple object with necessary properties
+            // Create a simple object with necessary properties from Typesense ONLY
+            // This avoids N database queries (where N = results per page)
             return (object) [
                 'id' => $doc['id'] ?? null,
                 'external_id' => $doc['external_id'] ?? null,
                 'title' => $doc['title'] ?? 'Geen titel',
                 'description' => $doc['description'] ?? '',
-                'content' => $doc['content'] ?? '',
+                'content' => $doc['content'] ?? '', // Typesense has content, use it
                 'publication_date' => isset($doc['publication_date']) && $doc['publication_date'] > 0
                     ? \Carbon\Carbon::createFromTimestamp($doc['publication_date'])
                     : null,
@@ -1210,9 +1206,12 @@ class SearchController extends Controller
                 'category' => $doc['category'] ?? null,
                 'theme' => $doc['theme'] ?? null,
                 'organisation' => $doc['organisation'] ?? null,
+                'url' => $doc['url'] ?? null,
                 'updated_at' => isset($doc['synced_at']) && $doc['synced_at'] > 0
                     ? \Carbon\Carbon::createFromTimestamp($doc['synced_at'])
                     : now(),
+                // Mark as from Typesense so we know it's not a full Eloquent model
+                '_from_typesense' => true,
             ];
         });
 
