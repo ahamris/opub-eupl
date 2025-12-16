@@ -96,30 +96,10 @@ class ThemaController extends Controller
                     if (isset($results['facet_counts']) && ! empty($results['facet_counts'])) {
                         $filterCounts = $this->convertTypesenseFacetsToFilterCounts($results['facet_counts'], $query);
                         
-                        // Calculate date filter counts separately
-                        // IMPORTANT: Apply ALL current filters to get accurate counts
-                        try {
-                            $now = now();
-                            $baseQuery = OpenOverheidDocument::whereNotNull('theme')
-                                ->where('theme', '!=', 'Onbekend');
-                            
-                            // Apply search text filter
-                            if (! empty($query->zoektekst)) {
-                                $baseQuery->whereFullText(['title', 'description', 'content'], $query->zoektekst);
-                            }
-                            
-                            // Apply ALL current filters to match the search results
-                            $baseQuery->dateRange($query->publicatiedatumVan, $query->publicatiedatumTot);
-                            $baseQuery->byDocumentType($query->documentsoort);
-                            $baseQuery->byCategory($query->informatiecategorie);
-                            $baseQuery->byTheme($query->thema);
-                            $baseQuery->byOrganisation($query->organisatie);
-                            
-                            // Calculate date counts with all filters applied
-                            $filterCounts['week'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subWeek())->count();
-                            $filterCounts['maand'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subMonth())->count();
-                            $filterCounts['jaar'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subYear())->count();
-                        } catch (\Exception $dateException) {
+                        // Calculate date filter counts using Typesense (not database!)
+                        $filterCounts['week'] = $this->getDateFilterCountFromTypesense($query, 'week');
+                        $filterCounts['maand'] = $this->getDateFilterCountFromTypesense($query, 'maand');
+                        $filterCounts['jaar'] = $this->getDateFilterCountFromTypesense($query, 'jaar');
                             \Log::warning('Date filter counts failed in ThemaController', ['error' => $dateException->getMessage()]);
                         }
                     } else {
@@ -539,5 +519,111 @@ class ThemaController extends Controller
             'organisatie' => $allOrganisations,
             'informatiecategorie' => $allCategories,
         ];
+    }
+
+    /**
+     * Get date filter count from Typesense (not database!)
+     * Makes a lightweight Typesense query with same filters + date range
+     */
+    private function getDateFilterCountFromTypesense(OpenOverheidSearchQuery $query, string $period): int
+    {
+        try {
+            $searchService = app(\App\Services\Typesense\TypesenseSearchService::class);
+            $now = now();
+            
+            // Calculate date threshold based on period
+            $dateThreshold = match ($period) {
+                'week' => $now->copy()->subWeek()->timestamp,
+                'maand' => $now->copy()->subMonth()->timestamp,
+                'jaar' => $now->copy()->subYear()->timestamp,
+                default => 0,
+            };
+            
+            if ($dateThreshold <= 0) {
+                return 0;
+            }
+            
+            // Build same filters as main search (including theme filter for themes page)
+            $filters = ['theme:!=Onbekend']; // Themes page always filters out "Onbekend"
+            
+            if ($query->documentsoort) {
+                $types = is_array($query->documentsoort) ? $query->documentsoort : [$query->documentsoort];
+                $types = array_filter(array_map('trim', $types));
+                if (! empty($types)) {
+                    $escapedTypes = array_map(function ($t) {
+                        $t = str_replace(['"', "'"], '', $t);
+                        return '='.$t;
+                    }, $types);
+                    $filters[] = 'document_type:['.implode(',', $escapedTypes).']';
+                }
+            }
+            if ($query->informatiecategorie) {
+                $category = trim($query->informatiecategorie);
+                if (! empty($category)) {
+                    $category = str_replace(['"', "'"], '', $category);
+                    $filters[] = 'category:='.$category;
+                }
+            }
+            if ($query->thema) {
+                $themes = is_array($query->thema) ? $query->thema : [$query->thema];
+                $themes = array_filter(array_map('trim', $themes));
+                if (! empty($themes)) {
+                    $escapedThemes = array_map(function ($t) {
+                        $t = str_replace(['"', "'"], '', $t);
+                        return '='.$t;
+                    }, $themes);
+                    $filters[] = 'theme:['.implode(',', $escapedThemes).']';
+                }
+            }
+            if ($query->organisatie) {
+                $orgs = is_array($query->organisatie) ? $query->organisatie : [$query->organisatie];
+                $orgs = array_filter(array_map('trim', $orgs));
+                if (! empty($orgs)) {
+                    $escapedOrgs = array_map(function ($o) {
+                        $o = str_replace(['"', "'"], '', $o);
+                        return '='.$o;
+                    }, $orgs);
+                    $filters[] = 'organisation:['.implode(',', $escapedOrgs).']';
+                }
+            }
+            
+            // Add date range filters (existing + period threshold)
+            $dateFilters = [];
+            if ($query->publicatiedatumVan) {
+                $fromDate = \DateTime::createFromFormat('d-m-Y', $query->publicatiedatumVan);
+                if ($fromDate) {
+                    $dateFilters[] = '>='.$fromDate->getTimestamp();
+                }
+            }
+            // Use the period threshold as minimum date (week/month/year ago)
+            $dateFilters[] = '>='.$dateThreshold;
+            
+            if ($query->publicatiedatumTot) {
+                $toDate = \DateTime::createFromFormat('d-m-Y', $query->publicatiedatumTot);
+                if ($toDate) {
+                    $dateFilters[] = '<='.$toDate->getTimestamp();
+                }
+            }
+            if (! empty($dateFilters)) {
+                $filters[] = 'publication_date:['.implode(',', $dateFilters).']';
+            }
+            
+            // Make lightweight Typesense query (per_page=0 to get only count)
+            $options = [
+                'per_page' => 0, // Don't fetch documents, just get count
+                'page' => 1,
+                'filter_by' => implode(' && ', $filters),
+            ];
+            
+            $results = $searchService->search($query->zoektekst ?? '', $options);
+            
+            return $results['found'] ?? 0;
+        } catch (\Exception $e) {
+            \Log::warning('Typesense date filter count failed', [
+                'period' => $period,
+                'error' => $e->getMessage(),
+            ]);
+            return 0;
+        }
     }
 }
