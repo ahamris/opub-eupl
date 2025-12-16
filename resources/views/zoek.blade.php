@@ -2,6 +2,13 @@
 
 @section('title', 'Zoek overheidsdocumenten - Open Overheid' . (isset($documentCount) ? ' (' . number_format($documentCount, 0, ',', '.') . ' documenten)' : ''))
 
+@php
+    $breadcrumbs = [
+        ['label' => 'Home', 'href' => route('home')],
+        ['label' => 'Zoeken', 'href' => null, 'current' => true],
+    ];
+@endphp
+
 @section('content')
     <!-- Minimalistic Info Banner -->
     <div class="bg-[var(--color-primary-light)] border-b border-[var(--color-primary)]/20" role="alert">
@@ -25,21 +32,22 @@
     
     <!-- Quick Actions Section - Bento Grid - Only on Homepage -->
     @if(request()->routeIs('home'))
-    <div class="bg-gradient-to-b from-white to-[var(--color-primary-light)]/20 pt-20 pb-20">
+    <div class="bg-gray-50 py-24 sm:py-32 dark:bg-gray-900">
         <div class="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
-            <h2 class="text-[var(--font-size-label-large)] font-semibold text-[var(--color-primary)] uppercase tracking-wider">Snel aan de slag</h2>
-            <p class="mt-2 max-w-lg text-[var(--font-size-headline-large)] font-bold tracking-[-0.01em] text-pretty text-[var(--color-on-surface)] leading-[var(--line-height-tight)]">
+            <h2 class="text-base/7 font-semibold text-[var(--color-primary)] dark:text-[var(--color-primary-light)]">Snel aan de slag</h2>
+            <p class="mt-2 max-w-lg text-4xl font-semibold tracking-tight text-pretty text-gray-900 sm:text-5xl dark:text-white">
                 Alles wat je nodig hebt
             </p>
             <div class="mt-10 grid grid-cols-1 gap-4 sm:mt-16 lg:grid-cols-6 lg:grid-rows-2">
                 <!-- Thema's - 4 columns -->
-                <a href="{{ route('themas.index') }}" class="flex p-px lg:col-span-4 group">
-                    <div class="w-full overflow-hidden rounded-2xl bg-white shadow-sm outline outline-black/5 max-lg:rounded-t-4xl lg:rounded-tl-4xl transition-transform duration-200 group-hover:scale-[1.01]">
-                        <img src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=2070&auto=format&fit=crop" alt="Thema's" class="h-80 object-cover object-left" />
+                <a href="{{ route('themas.index') }}" class="flex p-px lg:col-span-4">
+                    <div class="w-full overflow-hidden rounded-md bg-white shadow-sm outline outline-black/5 dark:bg-gray-800 dark:shadow-none dark:outline-white/15">
+                        <img src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=2070&auto=format&fit=crop" alt="Thema's" class="h-80 object-cover object-left dark:hidden" />
+                        <img src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=2070&auto=format&fit=crop" alt="Thema's" class="h-80 object-cover object-left not-dark:hidden" />
                         <div class="p-10">
-                            <h3 class="text-[var(--font-size-label-large)] font-semibold text-[var(--color-on-surface-variant)] uppercase tracking-wider">Thema's</h3>
-                            <p class="mt-2 text-[var(--font-size-headline-small)] font-semibold tracking-tight text-[var(--color-on-surface)]">Zoek op onderwerp</p>
-                            <p class="mt-2 max-w-lg text-[var(--font-size-body-medium)]/6 text-[var(--color-on-surface-variant)]">
+                            <h3 class="text-sm/4 font-semibold text-gray-500 dark:text-gray-400">Thema's</h3>
+                            <p class="mt-2 text-lg font-medium tracking-tight text-gray-900 dark:text-white">Zoek op onderwerp</p>
+                            <p class="mt-2 max-w-lg text-sm/6 text-gray-600 dark:text-gray-400">
                                 Zoek documenten op onderwerp zoals ruimtelijke ordening, onderwijs of zorg. Verken alle thema's en vind gerelateerde documenten.
                             </p>
                         </div>
@@ -47,13 +55,14 @@
                 </a>
                 
                 <!-- Dossiers - 2 columns -->
-                <a href="{{ route('dossiers.index') }}" class="flex p-px lg:col-span-2 group">
-                    <div class="w-full overflow-hidden rounded-lg bg-white shadow-sm outline outline-black/5 lg:rounded-tr-4xl transition-transform duration-200 group-hover:scale-[1.01]">
-                        <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop" alt="Dossiers" class="h-80 object-cover" />
+                <a href="{{ route('dossiers.index') }}" class="flex p-px lg:col-span-2">
+                    <div class="w-full overflow-hidden rounded-md bg-white shadow-sm outline outline-black/5 dark:bg-gray-800 dark:shadow-none dark:outline-white/15">
+                        <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop" alt="Dossiers" class="h-80 object-cover dark:hidden" />
+                        <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop" alt="Dossiers" class="h-80 object-cover not-dark:hidden" />
                         <div class="p-10">
-                            <h3 class="text-[var(--font-size-label-large)] font-semibold text-[var(--color-on-surface-variant)] uppercase tracking-wider">Dossiers</h3>
-                            <p class="mt-2 text-[var(--font-size-headline-small)] font-semibold tracking-tight text-[var(--color-on-surface)]">Verken complete dossiers</p>
-                            <p class="mt-2 max-w-lg text-[var(--font-size-body-medium)]/6 text-[var(--color-on-surface-variant)]">
+                            <h3 class="text-sm/4 font-semibold text-gray-500 dark:text-gray-400">Dossiers</h3>
+                            <p class="mt-2 text-lg font-medium tracking-tight text-gray-900 dark:text-white">Verken complete dossiers</p>
+                            <p class="mt-2 max-w-lg text-sm/6 text-gray-600 dark:text-gray-400">
                                 Verken complete dossiers met alle bijbehorende documenten en verbanden.
                             </p>
                         </div>
@@ -61,13 +70,14 @@
                 </a>
                 
                 <!-- Uitgebreid zoeken - 2 columns -->
-                <a href="{{ route('zoeken') }}" class="flex p-px lg:col-span-2 group">
-                    <div class="w-full overflow-hidden rounded-2xl bg-white shadow-sm outline outline-black/5 lg:rounded-bl-4xl transition-transform duration-200 group-hover:scale-[1.01]">
-                        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop" alt="Uitgebreid zoeken" class="h-80 object-cover" />
+                <a href="{{ route('zoeken') }}" class="flex p-px lg:col-span-2">
+                    <div class="w-full overflow-hidden rounded-md bg-white shadow-sm outline outline-black/5 dark:bg-gray-800 dark:shadow-none dark:outline-white/15">
+                        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop" alt="Uitgebreid zoeken" class="h-80 object-cover dark:hidden" />
+                        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop" alt="Uitgebreid zoeken" class="h-80 object-cover not-dark:hidden" />
                         <div class="p-10">
-                            <h3 class="text-[var(--font-size-label-large)] font-semibold text-[var(--color-on-surface-variant)] uppercase tracking-wider">Uitgebreid zoeken</h3>
-                            <p class="mt-2 text-[var(--font-size-headline-small)] font-semibold tracking-tight text-[var(--color-on-surface)]">Filters en precieze resultaten</p>
-                            <p class="mt-2 max-w-lg text-[var(--font-size-body-medium)]/6 text-[var(--color-on-surface-variant)]">
+                            <h3 class="text-sm/4 font-semibold text-gray-500 dark:text-gray-400">Uitgebreid zoeken</h3>
+                            <p class="mt-2 text-lg font-medium tracking-tight text-gray-900 dark:text-white">Filters en precieze resultaten</p>
+                            <p class="mt-2 max-w-lg text-sm/6 text-gray-600 dark:text-gray-400">
                                 Gebruik filters op datum, organisatie of categorie voor precieze zoekresultaten.
                             </p>
                         </div>
@@ -75,13 +85,14 @@
                 </a>
                 
                 <!-- Verwijzingen - 4 columns -->
-                <a href="{{ route('verwijzingen') }}" class="flex p-px lg:col-span-4 group">
-                    <div class="w-full overflow-hidden rounded-2xl bg-white shadow-sm outline outline-black/5 max-lg:rounded-b-4xl lg:rounded-br-4xl transition-transform duration-200 group-hover:scale-[1.01]">
-                        <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2084&auto=format&fit=crop" alt="Verwijzingen" class="h-80 object-cover object-left" />
+                <a href="{{ route('verwijzingen') }}" class="flex p-px lg:col-span-4">
+                    <div class="w-full overflow-hidden rounded-md bg-white shadow-sm outline outline-black/5 dark:bg-gray-800 dark:shadow-none dark:outline-white/15">
+                        <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2084&auto=format&fit=crop" alt="Verwijzingen" class="h-80 object-cover object-left dark:hidden" />
+                        <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2084&auto=format&fit=crop" alt="Verwijzingen" class="h-80 object-cover object-left not-dark:hidden" />
                         <div class="p-10">
-                            <h3 class="text-[var(--font-size-label-large)] font-semibold text-[var(--color-on-surface-variant)] uppercase tracking-wider">Verwijzingen</h3>
-                            <p class="mt-2 text-[var(--font-size-headline-small)] font-semibold tracking-tight text-[var(--color-on-surface)]">Gerelateerde links en bronnen</p>
-                            <p class="mt-2 max-w-lg text-[var(--font-size-body-medium)]/6 text-[var(--color-on-surface-variant)]">
+                            <h3 class="text-sm/4 font-semibold text-gray-500 dark:text-gray-400">Verwijzingen</h3>
+                            <p class="mt-2 text-lg font-medium tracking-tight text-gray-900 dark:text-white">Gerelateerde links en bronnen</p>
+                            <p class="mt-2 max-w-lg text-sm/6 text-gray-600 dark:text-gray-400">
                                 Vind handige links naar gerelateerde websites en informatiebronnen voor verdere verkenning.
                             </p>
                         </div>

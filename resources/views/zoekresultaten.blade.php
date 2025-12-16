@@ -4,39 +4,36 @@
 
 @php
     $searchQuery = request('zoeken');
-    
+
     // Helper function to highlight search terms
     if (!function_exists('highlightSearchTerms')) {
         function highlightSearchTerms($text, $query) {
             if (empty($query) || empty($text)) {
                 return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
             }
-            
+
             $terms = array_filter(explode(' ', trim($query)), fn($term) => strlen($term) > 2);
             $highlighted = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
-            
+
             foreach ($terms as $term) {
                 $pattern = '/' . preg_quote(htmlspecialchars($term, ENT_QUOTES, 'UTF-8'), '/') . '/i';
                 $highlighted = preg_replace($pattern, '<mark class="bg-yellow-200 dark:bg-yellow-800 px-0.5 rounded">$0</mark>', $highlighted);
             }
-            
+
             return $highlighted;
         }
     }
+
+    // Breadcrumbs: used by layouts.app global breadcrumb component
+    $breadcrumbs = [
+        ['label' => 'Home', 'href' => route('home')],
+        isset($isDossier) && $isDossier
+            ? ['label' => 'Dossiers', 'href' => null, 'current' => true]
+            : ['label' => 'Zoekresultaten', 'href' => null, 'current' => true],
+    ];
 @endphp
 
 @section('content')
-    <!-- Minimalistic Info Banner -->
-    <div class="bg-[var(--color-primary-light)] border-b border-[var(--color-primary)]/20" role="alert">
-        <div class="mx-auto max-w-7xl px-6 lg:px-8 py-4">
-            <p class="text-[var(--font-size-body-medium)] font-medium text-[var(--color-on-surface-variant)]">
-                U bent hier: 
-                <a href="{{ route('home') }}" class="text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition-colors duration-200">Home</a> 
-                / {{ isset($isDossier) ? 'Dossiers' : 'Zoekresultaten' }}
-            </p>
-        </div>
-    </div>
-    
     <!-- Main Content -->
     <main class="flex-1 max-w-7xl mx-auto w-full px-6 lg:px-8 pt-10 pb-20">
         <div class="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8">

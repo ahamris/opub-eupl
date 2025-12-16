@@ -2,11 +2,12 @@
 
 @section('title', 'Verwijzingen - Open Overheid')
 
-@section('breadcrumbs')
-    U bent hier: 
-    <a href="{{ route('home') }}" class="text-primary hover:underline focus:outline-2 focus:outline-primary focus:outline-offset-2 rounded-sm">Home</a> 
-    / Verwijzingen
-@endsection
+@php
+    $breadcrumbs = [
+        ['label' => 'Home', 'href' => route('home')],
+        ['label' => 'Verwijzingen', 'href' => null, 'current' => true],
+    ];
+@endphp
 
 @section('content')
     <div class="relative isolate overflow-hidden bg-surface py-24 sm:py-32">

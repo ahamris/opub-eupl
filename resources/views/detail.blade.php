@@ -1,20 +1,8 @@
-<!DOCTYPE html>
-<html lang="nl">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $jsonData['title'] ?? 'Document Details' }} - Open Overheid</title>
-    
-    @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @endif
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&family=Roboto+Mono&display=swap" rel="stylesheet">
-    
-    {{-- Font Awesome 6.5.2 --}}
-    <link rel="stylesheet" href="{{ asset('vendor/fontawesome/css/all.min.css') }}">
+@extends('layouts.app')
+
+@section('title', ($jsonData['title'] ?? 'Document Details') . ' - Open Overheid')
+
+@push('styles')
     <style>
         .document-detail {
             max-width: 1200px;
@@ -314,50 +302,18 @@
             }
         }
     </style>
-</head>
-<body class="bg-surface text-on-surface min-h-screen flex flex-col">
-    <!-- Navigation Header -->
-    <header class="bg-primary text-on-primary shadow-sm" role="banner">
-        <nav class="max-w-7xl mx-auto px-4 py-4" role="navigation" aria-label="Hoofdnavigatie">
-            <div class="flex items-center justify-between flex-wrap gap-4">
-                <div class="flex items-center gap-4">
-                    <a href="/" class="text-headline-small font-normal hover:opacity-90 transition-opacity duration-200 focus:outline-2 focus:outline-on-primary focus:outline-offset-2 rounded-sm">
-                        Overheid.nl
-                    </a>
-                    <span class="text-body-medium opacity-90">Open overheid</span>
-                </div>
-                <ul class="flex gap-6 flex-wrap">
-                    <li>
-                        <a href="/zoek" class="text-body-large hover:opacity-90 transition-opacity duration-200 focus:outline-2 focus:outline-on-primary focus:outline-offset-2 rounded-sm px-2 py-1">
-                            Home
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="text-body-large hover:opacity-90 transition-opacity duration-200 focus:outline-2 focus:outline-on-primary focus:outline-offset-2 rounded-sm px-2 py-1">
-                            Verwijzingen
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#" class="text-body-large hover:opacity-90 transition-opacity duration-200 focus:outline-2 focus:outline-on-primary focus:outline-offset-2 rounded-sm px-2 py-1">
-                            Over
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-        <div class="bg-surface text-on-surface-variant border-b border-outline-variant">
-            <div class="max-w-7xl mx-auto px-4 py-2">
-                <p class="text-label-medium">
-                    U bent hier: 
-                    <a href="/zoek" class="text-primary hover:underline focus:outline-2 focus:outline-primary focus:outline-offset-2 rounded-sm">Home</a> / 
-                    <a href="/zoeken" class="text-primary hover:underline focus:outline-2 focus:outline-primary focus:outline-offset-2 rounded-sm">Zoekresultaten</a> / 
-                    Document
-                </p>
-            </div>
-        </div>
-    </header>
-    
-    <main class="flex-1 max-w-7xl mx-auto w-full px-4 py-8">
+@endpush
+
+@php
+    $breadcrumbs = [
+        ['label' => 'Home', 'href' => route('home')],
+        ['label' => 'Zoekresultaten', 'href' => route('zoeken')],
+        ['label' => 'Document', 'href' => null, 'current' => true],
+    ];
+@endphp
+
+@section('content')
+    <main class="max-w-7xl mx-auto w-full px-4 py-8">
         <div class="space-y-6">
             <a href="/zoeken{{ request()->get('from') ? '?zoeken=' . urlencode(request()->get('from')) : '' }}" 
                class="text-primary font-medium inline-flex items-center gap-2
@@ -760,39 +716,9 @@
             </div>
         </div>
     </main>
-    
-    <!-- Footer -->
-    <footer class="bg-surface-variant border-t border-outline-variant mt-16" role="contentinfo">
-        <div class="max-w-7xl mx-auto px-4 py-8">
-            <nav class="flex flex-wrap gap-6" aria-label="Footer navigatie">
-                <a href="#" 
-                   class="text-body-medium text-on-surface-variant 
-                          hover:text-primary transition-colors duration-200
-                          focus:outline-2 focus:outline-primary focus:outline-offset-2 rounded-sm">
-                    Over deze website
-                </a>
-                <a href="#" 
-                   class="text-body-medium text-on-surface-variant 
-                          hover:text-primary transition-colors duration-200
-                          focus:outline-2 focus:outline-primary focus:outline-offset-2 rounded-sm">
-                    Overheid.nl
-                </a>
-                <a href="#" 
-                   class="text-body-medium text-on-surface-variant 
-                          hover:text-primary transition-colors duration-200
-                          focus:outline-2 focus:outline-primary focus:outline-offset-2 rounded-sm">
-                    Privacy & Cookies
-                </a>
-                <a href="#" 
-                   class="text-body-medium text-on-surface-variant 
-                          hover:text-primary transition-colors duration-200
-                          focus:outline-2 focus:outline-primary focus:outline-offset-2 rounded-sm">
-                    Toegankelijkheid
-                </a>
-            </nav>
-        </div>
-    </footer>
+@endsection
 
+@push('scripts')
     <script>
         // Format JSON with syntax highlighting
         function formatJSONValue(value, indent = 0) {
@@ -972,5 +898,4 @@
             @endif
         });
     </script>
-</body>
-</html>
+@endpush

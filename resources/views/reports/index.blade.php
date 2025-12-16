@@ -2,6 +2,13 @@
 
 @section('title', 'Open Overheid in cijfers - Rapportage')
 
+@php
+    $breadcrumbs = [
+        ['label' => 'Home', 'href' => route('home')],
+        ['label' => 'In cijfers', 'href' => null, 'current' => true],
+    ];
+@endphp
+
 @section('content')
     <!-- Hero Section -->
     <div class="relative isolate overflow-hidden bg-gradient-to-br from-primary via-primary-dark to-primary">

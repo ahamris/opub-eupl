@@ -35,7 +35,16 @@
 </head>
 <body class="bg-surface text-on-surface min-h-screen flex flex-col">
     @include('layouts.includes.header')
-    
+
+    {{-- Global breadcrumb component (if $breadcrumbs is set) --}}
+    @if(!empty($breadcrumbs ?? []))
+        <div class="bg-surface border-b border-outline-variant">
+            <div class="max-w-7xl mx-auto px-8 py-3">
+                <x-breadcrumbs :items="$breadcrumbs" />
+            </div>
+        </div>
+    @endif
+
     <!-- Main Content -->
     <main class="flex-1">
         @yield('content')

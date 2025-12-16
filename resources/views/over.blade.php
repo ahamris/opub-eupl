@@ -2,11 +2,12 @@
 
 @section('title', 'Over OpenPublicaties - Open Source Woo-Voorziening')
 
-@section('breadcrumbs')
-    U bent hier: 
-    <a href="{{ route('home') }}" class="text-primary hover:underline focus:outline-2 focus:outline-primary focus:outline-offset-2 rounded-sm">Home</a> 
-    / Over OpenPublicaties
-@endsection
+@php
+    $breadcrumbs = [
+        ['label' => 'Home', 'href' => route('home')],
+        ['label' => 'Over OpenPublicaties', 'href' => null, 'current' => true],
+    ];
+@endphp
 
 @section('content')
     <div class="relative isolate overflow-hidden bg-surface py-24 sm:py-32">

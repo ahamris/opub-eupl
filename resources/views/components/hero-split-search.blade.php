@@ -6,29 +6,26 @@
     'documentCount' => 0,
 ])
 
-<div class="relative isolate pt-14 bg-gradient-to-br from-[var(--color-primary-light)] via-white to-[var(--color-primary-light)]/30">
-    <!-- Subtle background pattern -->
-    <svg aria-hidden="true" class="absolute inset-0 -z-10 size-full mask-[radial-gradient(100%_100%_at_top_right,white,transparent)] stroke-[var(--color-primary)]/10">
+<div class="relative isolate pt-14 bg-white">
+    <!-- Subtle background pattern (slightly more visible but still light) -->
+    <svg aria-hidden="true" class="absolute inset-0 -z-10 size-full mask-[radial-gradient(100%_100%_at_top_right,white,transparent)] stroke-gray-200 dark:stroke-white/10">
         <defs>
             <pattern id="hero-pattern" width="200" height="200" x="50%" y="-1" patternUnits="userSpaceOnUse">
                 <path d="M100 200V.5M.5 .5H200" fill="none" />
             </pattern>
         </defs>
-        <svg x="50%" y="-1" class="overflow-visible fill-[var(--color-primary-light)]/20">
+        <svg x="50%" y="-1" class="overflow-visible fill-gray-50 dark:fill-gray-800/50">
             <path d="M-100.5 0h201v201h-201Z M699.5 0h201v201h-201Z M499.5 400h201v201h-201Z M-300.5 600h201v201h-201Z" stroke-width="0" />
         </svg>
         <rect width="100%" height="100%" fill="url(#hero-pattern)" stroke-width="0" />
     </svg>
-    
-    <!-- Decorative gradient overlay -->
-    <div aria-hidden="true" class="absolute top-0 right-0 -z-10 w-1/3 h-full bg-gradient-to-l from-[var(--color-primary)]/5 to-transparent"></div>
-    
-    <div class="mx-auto max-w-7xl px-6 pt-40 pb-40 lg:flex lg:items-center lg:gap-x-10 lg:px-8">
+
+    <div class="mx-auto max-w-7xl px-6 py-16 sm:py-24 lg:flex lg:items-center lg:gap-x-10 lg:px-8 lg:py-32">
         <!-- Left side: Text content -->
-        <div class="max-w-2xl lg:flex-auto">
+        <div class="max-w-3xl lg:flex-auto">
             @if($badge || $badgeText)
             <div class="flex">
-                <div class="relative flex items-center gap-x-4 rounded-full bg-white px-4 py-1 text-[var(--font-size-body-small)] text-[var(--color-on-surface-variant)] ring-1 ring-gray-900/10 hover:ring-gray-900/20 transition-all duration-200">
+                <div class="relative flex items-center gap-x-4 rounded-md bg-white px-4 py-1 text-sm text-[var(--color-on-surface-variant)] ring-1 ring-gray-900/10 hover:ring-gray-900/20 transition-all duration-200">
                     @if($badge)
                     <span class="font-semibold text-[var(--color-primary)]">{{ $badge }}</span>
                     @endif
@@ -69,22 +66,18 @@
         
         <!-- Right side: Search functionality -->
         <div class="mt-16 sm:mt-24 lg:mt-0 lg:shrink-0 lg:grow">
-            <div class="relative search-container" x-data="liveSearch()" style="z-index: 99999 !important; position: relative !important; isolation: isolate !important;" @click.outside="showResults = false">
-                <div class="rounded-2xl bg-white/95 backdrop-blur-sm p-6 shadow-xl ring-1 ring-[var(--color-primary)]/10 border border-[var(--color-primary)]/5">
-                    <div class="mb-4 flex items-center justify-between">
-                        <p class="text-[var(--font-size-body-medium)] font-medium text-[var(--color-on-surface)]">Slim zoeken met</p>
-                        <a href="{{ route('chat') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--color-primary)] text-white text-[var(--font-size-body-small)] font-medium hover:bg-[var(--color-primary-dark)] transition-colors duration-200">
-                            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-4">
-                                <path d="M3.5 2.75a.75.75 0 0 0-1.5 0v14.5a.75.75 0 0 0 1.5 0v-4.392l1.657-.348a6.449 6.449 0 0 1 4.271.572 7.948 7.948 0 0 0 5.965.44l2.087-.694a.75.75 0 0 0 .42-.941l-.8-2.385a.75.75 0 0 0-.42-.499l-2.087-.694a7.948 7.948 0 0 0-5.965.44 6.449 6.449 0 0 1-4.271.572L3.5 7.25v-4.5Z" />
-                            </svg>
+            <div class="relative search-container" x-data="liveSearch()" @click.outside="showResults = false">
+                <div class="mx-auto max-w-md rounded-md bg-white p-6 shadow-xl ring-1 ring-gray-900/10 dark:bg-gray-900 dark:ring-white/10">
+                    <div class="mb-4 flex items-center justify-between gap-3">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white">Slim zoeken met</p>
+                        <a href="{{ route('chat') }}" class="inline-flex items-center gap-2 rounded-md bg-[var(--color-primary)] px-3.5 py-1.5 text-xs font-semibold text-[var(--color-on-primary)] shadow-xs hover:bg-[var(--color-primary-dark)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
+                            <i class="fas fa-comments text-[0.9rem]" aria-hidden="true"></i>
                             <span>Chat met AI</span>
                         </a>
                     </div>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none z-10">
-                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" class="size-5 text-[var(--color-on-surface-variant)]">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m19 19-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                            </svg>
+                    <div class="relative mt-2">
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10">
+                            <i class="fas fa-search text-gray-400 dark:text-gray-500 text-sm" aria-hidden="true"></i>
                         </div>
                         <input 
                             type="text" 
@@ -95,80 +88,54 @@
                             @keydown.arrow-down.prevent="navigateResults(1)"
                             @keydown.arrow-up.prevent="navigateResults(-1)"
                             @keydown.enter.prevent="selectResult()"
-                            class="w-full pl-12 pr-12 py-4 rounded-lg
-                                   border-0 bg-white
-                                   text-[var(--font-size-body-large)] text-[var(--color-on-surface)] font-normal
-                                   focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-primary)]
-                                   transition-all duration-200 ease-out
-                                   shadow-sm
-                                   placeholder:text-[var(--color-on-surface-variant)]
-                                   ring-1 ring-inset ring-gray-900/10"
-                            placeholder="Vul je zoekterm in"
+                            class="block w-full rounded-md bg-white py-2 pl-10 pr-10 text-sm text-gray-900 border border-gray-200 placeholder:text-gray-400 sm:text-sm sm:leading-6 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 focus:outline-none"
+                            placeholder="Zoek in alle documenten"
                             autocomplete="off"
                             aria-label="Zoek documenten"
                             :aria-expanded="showResults ? 'true' : 'false'"
                             aria-haspopup="listbox"
                             aria-autocomplete="list"
                         >
-                        <div x-show="loading" class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                            <svg class="animate-spin h-5 w-5 text-[var(--color-primary)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
+                        <div x-show="loading" class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                            <i class="fas fa-circle-notch animate-spin text-[var(--color-primary)] dark:text-[var(--color-primary)] text-sm" aria-hidden="true"></i>
                         </div>
                     </div>
                 
-                <!-- Apple/Google Level: Premium dropdown - Fully contained within hero -->
-                <div 
+                <!-- Dropdown: matches input width, minimal & clean -->
+                <div
                     x-show="showResults && (query.length >= 2 || loading)"
                     x-cloak
-                    x-transition:enter="transition ease-out duration-200"
-                    x-transition:enter-start="opacity-0 transform translate-y-[-8px]"
-                    x-transition:enter-end="opacity-100 transform translate-y-0"
-                    x-transition:leave="transition ease-in duration-150"
-                    x-transition:leave-start="opacity-100 transform translate-y-0"
-                    x-transition:leave-end="opacity-0 transform translate-y-[-8px]"
-                    class="absolute w-full mt-3 bg-white rounded-md shadow-2xl ring-1 ring-gray-900/10 max-h-[500px] overflow-y-auto search-dropdown"
+                    x-transition:enter="transition ease-out duration-150"
+                    x-transition:enter-start="opacity-0 translate-y-1"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    x-transition:leave="transition ease-in duration-100"
+                    x-transition:leave-start="opacity-100 translate-y-0"
+                    x-transition:leave-end="opacity-0 translate-y-1"
+                    class="absolute inset-x-0 top-full mt-2 bg-white rounded-md shadow-lg ring-1 ring-gray-900/5 border border-gray-100 max-h-80 overflow-y-auto search-dropdown"
                     role="listbox"
                     @click.stop
-                    style="z-index: 99999 !important; position: absolute !important; top: calc(100% + 0.75rem) !important; left: 0 !important; right: 0 !important; margin-bottom: 2rem !important;"
-                    x-ref="dropdown"
-                    x-init="$watch('showResults', value => {
-                        if (value && $refs.dropdown) {
-                            const rect = $refs.dropdown.getBoundingClientRect();
-                            const containerRect = $el.getBoundingClientRect();
-                            if (rect.bottom > window.innerHeight) {
-                                $refs.dropdown.style.maxHeight = (window.innerHeight - containerRect.bottom - 20) + 'px';
-                            }
-                        }
-                    })"
                 >
                     <!-- Autocomplete Suggestions (Prioritized First) - Apple Level -->
                     <template x-if="suggestions.length > 0">
                         <div>
-                            <div class="px-5 py-3 border-b border-gray-900/10 bg-gray-50">
-                                <p class="text-[var(--font-size-label-small)] font-semibold text-gray-600 uppercase tracking-wider">Suggesties</p>
+                            <div class="px-4 py-2 border-b border-gray-100 bg-gray-50/60">
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Suggesties</p>
                             </div>
-                            <ul class="py-2" role="listbox">
+                            <ul class="py-1" role="listbox">
                                 <template x-for="(suggestion, index) in suggestions" :key="index">
                                     <li 
                                         @click="selectSuggestion(suggestion)"
                                         @mouseenter="selectedIndex = index"
-                                        :class="selectedIndex === index ? 'bg-[var(--color-primary-light)]' : 'hover:bg-gray-50'"
-                                        class="px-5 py-3 cursor-pointer transition-all duration-150 ease-out active:scale-[0.98]"
+                                        :class="selectedIndex === index ? 'bg-gray-50' : 'hover:bg-gray-50'"
+                                        class="px-4 py-2 cursor-pointer transition-colors duration-100"
                                         role="option"
                                         :aria-selected="selectedIndex === index"
                                     >
-                                        <div class="flex items-center gap-4">
-                                            <div class="flex-shrink-0 w-8 h-8 rounded bg-[var(--color-primary-light)] flex items-center justify-center">
-                                                <svg viewBox="0 0 20 20" fill="currentColor" data-slot="icon" aria-hidden="true" class="size-4 text-[var(--color-primary)]">
-                                                    <path d="M10.43 2.3a.75.75 0 0 0-.86 0l-3 1.85a.75.75 0 0 0-.39.58l-.87 3.38A.75.75 0 0 1 4.57 8.5l-.5-.87a.75.75 0 0 0-1.14-.1L1.72 8.9a.75.75 0 0 1-1.1-.64l.35-2.5a.75.75 0 0 0-.43-.75L.84 4.83a.75.75 0 0 1 .28-1.35l2.5-.73a.75.75 0 0 0 .58-.39L5.98.85a.75.75 0 0 1 1.04 0l1.85 3 3.38-.87a.75.75 0 0 1 .75.43l.73 2.5a.75.75 0 0 1-1.35.28l-1.38-1.38a.75.75 0 0 0-1.1.1l.87.5a.75.75 0 1 1-.87 1.26l-3.38.87a.75.75 0 0 1-.39-.58L6.3 4.43a.75.75 0 0 1 .3-.58l2.83-2.55Zm1.14 4.4a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0V7.81l-5.22 5.22a.75.75 0 0 1-1.06-1.06l5.22-5.22h-2.69a.75.75 0 0 1-.75-.75Z" />
-                                                </svg>
-                                            </div>
+                                        <div class="flex items-center gap-3">
+                                            <i class="fas fa-bolt text-xs text-[var(--color-primary)] flex-shrink-0" aria-hidden="true"></i>
                                             <div class="flex-1 min-w-0">
-                                                <div class="text-[var(--font-size-body-medium)] font-medium text-[var(--color-on-surface)] leading-[var(--line-height-normal)]" x-html="suggestion.highlight || suggestion.query"></div>
+                                                <div class="text-sm font-medium text-gray-900 leading-snug" x-html="suggestion.highlight || suggestion.query"></div>
                                             </div>
-                                            <i class="fas fa-chevron-right text-gray-400 shrink-0 text-[var(--font-size-label-small)] transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true"></i>
                                         </div>
                                     </li>
                                 </template>
@@ -179,36 +146,36 @@
                     <!-- Search Results - Apple Level Design -->
                     <template x-if="results.length > 0">
                         <div>
-                            <div class="px-5 py-3 border-b border-gray-900/10 bg-gray-50">
-                                <p class="text-[var(--font-size-body-medium)] font-semibold text-gray-600">
+                            <div class="px-4 py-2 border-b border-gray-100 bg-gray-50/60">
+                                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">
                                     <span x-text="found"></span> resultaten gevonden
                                     <template x-if="searchTime > 0">
-                                        <span class="text-gray-500"> in <span x-text="searchTime"></span>ms</span>
+                                        <span class="text-gray-400"> in <span x-text="searchTime"></span>ms</span>
                                     </template>
                                 </p>
                             </div>
-                            <ul class="py-2" role="listbox">
+                            <ul class="py-1" role="listbox">
                                 <template x-for="(result, index) in results" :key="result.id">
                                     <li 
                                         @click="goToDetail(result.id)"
                                         @mouseenter="selectedIndex = suggestions.length + index"
-                                        :class="selectedIndex === (suggestions.length + index) ? 'bg-[var(--color-primary-light)]' : 'hover:bg-gray-50'"
-                        class="px-5 py-4 cursor-pointer transition-all duration-150 ease-out active:scale-[0.98] border-b border-gray-900/10 last:border-b-0"
+                                        :class="selectedIndex === (suggestions.length + index) ? 'bg-gray-50' : 'hover:bg-gray-50'"
+                                        class="px-4 py-3 cursor-pointer transition-colors duration-100 border-b border-gray-100 last:border-b-0"
                                         role="option"
                                         :aria-selected="selectedIndex === (suggestions.length + index)"
                                     >
                                         <div class="flex items-start justify-between gap-4">
                                             <div class="flex-1 min-w-0">
-                                                <div class="flex items-start justify-between gap-3 mb-2">
-                                                    <h3 class="text-[var(--font-size-body-medium)] font-semibold text-gray-900 truncate flex-1 leading-[var(--line-height-normal)]" x-text="result.title"></h3>
+                                                <div class="flex items-start justify-between gap-3 mb-1.5">
+                                                    <h3 class="text-sm font-medium text-gray-900 truncate flex-1 leading-snug" x-text="result.title"></h3>
                                                     <template x-if="result.formatted_category || result.category">
-                                                        <span class="inline-flex items-center px-2.5 py-1 rounded text-[var(--font-size-label-small)] font-semibold bg-[var(--color-primary-light)] text-[var(--color-primary)] shrink-0">
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-[var(--color-primary-light)] text-[var(--color-primary)] shrink-0">
                                                             <span x-text="result.formatted_category || result.category"></span>
                                                         </span>
                                                     </template>
                                                 </div>
-                                                <p class="mt-1.5 text-[var(--font-size-body-small)] text-gray-600 line-clamp-2 leading-[var(--line-height-normal)]" x-text="result.description"></p>
-                                                <div class="mt-3 flex items-center gap-5 text-[var(--font-size-label-small)] text-gray-500">
+                                                <p class="mt-1 text-xs text-gray-600 line-clamp-2 leading-snug" x-text="result.description"></p>
+                                                <div class="mt-2 flex items-center gap-4 text-[11px] text-gray-500">
                                                     <template x-if="result.organisation">
                                                         <span class="inline-flex items-center gap-1.5">
                                                             <i class="fas fa-building text-[10px]" aria-hidden="true"></i>
@@ -223,7 +190,7 @@
                                                     </template>
                                                 </div>
                                             </div>
-                                            <i class="fas fa-chevron-right text-gray-400 shrink-0 mt-1 text-[var(--font-size-label-small)] transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden="true"></i>
+                                            <i class="fas fa-chevron-right text-gray-300 shrink-0 mt-1 text-xs" aria-hidden="true"></i>
                                         </div>
                                     </li>
                                 </template>
@@ -233,10 +200,10 @@
                     
                     <!-- Footer with "View all results" -->
                     <template x-if="(suggestions.length > 0 || results.length > 0) && query.length >= 2">
-                        <div class="px-5 py-4 border-t border-gray-900/10 bg-gray-50">
+                        <div class="px-4 py-3 border-t border-gray-100 bg-gray-50/80">
                             <a 
                                 :href="'{{ route('zoeken') }}?zoeken=' + encodeURIComponent(query)"
-                                class="text-[var(--font-size-body-medium)] font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition-colors duration-200 inline-flex items-center gap-2 group"
+                                class="text-sm font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition-colors duration-150 inline-flex items-center gap-2 group"
                             >
                                 Bekijk alle resultaten
                                 <i class="fas fa-arrow-right text-[var(--font-size-label-small)] transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true"></i>
@@ -246,11 +213,11 @@
                     
                     <!-- No Results -->
                     <template x-if="suggestions.length === 0 && results.length === 0 && query.length >= 2 && !loading">
-                        <div class="px-5 py-12 text-center">
-                            <p class="text-[var(--font-size-body-medium)] text-gray-600 mb-4">Geen resultaten gevonden voor "<span class="font-medium text-gray-900" x-text="query"></span>"</p>
+                        <div class="px-4 py-6 text-center text-sm">
+                            <p class="text-gray-600 mb-3">Geen resultaten gevonden voor "<span class="font-medium text-gray-900" x-text="query"></span>"</p>
                             <a 
                                 :href="'{{ route('zoeken') }}?zoeken=' + encodeURIComponent(query)"
-                                class="text-[var(--font-size-body-medium)] font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition-colors duration-200 inline-flex items-center gap-2 group"
+                                class="text-sm font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition-colors duration-150 inline-flex items-center gap-2 group"
                             >
                                 Toch zoeken
                                 <i class="fas fa-arrow-right text-[var(--font-size-label-small)] transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true"></i>
