@@ -1658,15 +1658,14 @@
                     throw new Error(data.message || 'Search failed');
                 }
                 
-                // Store search state for pagination
+                // Store search state for pagination (reuse currentUrl from above)
                 currentSearchState = {
                     query: query,
                     filters: {},
                     perPage: data.per_page || 20
                 };
                 
-                // Preserve existing filters in state
-                const currentUrl = new URL(window.location.href);
+                // Preserve existing filters in state (reuse currentUrl)
                 ['beschikbaarSinds', 'publicatiedatum_van', 'publicatiedatum_tot', 'sort'].forEach(filter => {
                     const val = currentUrl.searchParams.get(filter);
                     if (val) currentSearchState.filters[filter] = val;
