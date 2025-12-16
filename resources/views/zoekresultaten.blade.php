@@ -34,17 +34,45 @@
 @endphp
 
 @section('content')
+    <!-- Header Section -->
+    <div class="bg-[var(--color-primary-light)] py-16 sm:py-24">
+        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+            <!-- Breadcrumb -->
+            @if(!empty($breadcrumbs ?? []))
+            <div class="mb-8">
+                <x-breadcrumbs :items="$breadcrumbs" />
+            </div>
+            @endif
+            
+            <div class="mx-auto max-w-2xl lg:mx-0">
+                @if(isset($isDossier) && $isDossier)
+                    <p class="text-base/7 font-semibold text-[var(--color-primary)]">Verken complete dossiers</p>
+                    <h1 class="mt-2 text-4xl font-semibold tracking-tight text-[var(--color-on-surface)] sm:text-5xl">Dossiers</h1>
+                    <p class="mt-6 text-lg font-medium text-pretty text-[var(--color-on-surface-variant)] sm:text-xl/8">
+                        Verken complete dossiers met alle bijbehorende documenten en verbanden. Elke dossier bevat gerelateerde documenten die samen een compleet beeld geven.
+                    </p>
+                @else
+                    <p class="text-base/7 font-semibold text-[var(--color-primary)]">Zoek in overheidsdocumenten</p>
+                    <h1 class="mt-2 text-4xl font-semibold tracking-tight text-[var(--color-on-surface)] sm:text-5xl">Uitgebreid zoeken</h1>
+                    <p class="mt-6 text-lg font-medium text-pretty text-[var(--color-on-surface-variant)] sm:text-xl/8">
+                        Gebruik filters op datum, organisatie, categorie of thema om precies te vinden wat je zoekt. Verfijn je zoekopdracht voor de beste resultaten.
+                    </p>
+                @endif
+            </div>
+        </div>
+    </div>
+    
     <!-- Main Content -->
     <main class="flex-1 max-w-7xl mx-auto w-full px-6 lg:px-8 pt-10 pb-20">
         <div class="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8">
             <!-- Sidebar Filters -->
-            <aside class="lg:sticky lg:top-8 h-fit" aria-label="Zoekfilters">
-                <div class="bg-white rounded-md p-6 shadow-sm border border-[var(--color-outline-variant)]">
-                    <h2 class="text-[var(--font-size-headline-small)] font-semibold mb-6 text-[var(--color-on-surface)] pb-4 border-b border-[var(--color-outline-variant)]">
+            <aside class="lg:sticky lg:top-[88px] h-fit lg:z-40" aria-label="Zoekfilters">
+                <div class="bg-[var(--color-surface)] rounded-md p-6 border border-[var(--color-outline-variant)]">
+                    <h2 class="text-base font-semibold mb-6 text-[var(--color-on-surface)] pb-4 border-b border-[var(--color-outline-variant)]">
                         Verfijn zoekopdracht
                     </h2>
                     
-                    <form action="{{ isset($isDossier) ? route('dossiers.index') : route('zoeken') }}" method="GET" id="filter-form" class="space-y-6">
+                    <form action="{{ isset($isDossier) ? route('dossiers.index') : route('zoeken') }}" method="GET" id="filter-form" class="space-y-6" onsubmit="convertDateInputsToFormat(event)">
                         <input type="hidden" name="sort" id="hidden-sort" value="{{ request('sort', 'relevance') }}">
                         <input type="hidden" name="per_page" id="hidden-per-page" value="{{ request('per_page', 20) }}">
                         @if(request('zoeken'))
@@ -153,42 +181,36 @@
                                 </div>
                                 <!-- Custom Date Range Inputs -->
                                 <div id="custom-date-range" class="space-y-3 mt-3 pl-7 {{ request('beschikbaarSinds') === 'zelf' || (request('publicatiedatum_van') && !request('beschikbaarSinds')) || (request('publicatiedatum_tot') && !request('beschikbaarSinds')) ? '' : 'hidden' }}">
-                                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                                        <label for="publicatiedatum_van" class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface-variant)] whitespace-nowrap">
-                                            Vanaf (dd-mm-jjjj):
+                                    <div class="flex flex-col gap-2">
+                                        <label for="publicatiedatum_van" class="text-sm font-medium text-[var(--color-on-surface)]">
+                                            Vanaf
                                         </label>
-                                        <x-input 
-                                            type="text"
+                                        <input 
+                                            type="date"
                                             name="publicatiedatum_van"
                                             id="publicatiedatum_van"
-                                            value="{{ request('publicatiedatum_van') }}"
-                                            placeholder="dd-mm-jjjj"
-                                            pattern="\d{2}-\d{2}-\d{4}"
+                                            value="{{ request('publicatiedatum_van') ? (function($date) { try { return \Carbon\Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d'); } catch(\Exception $e) { return $date; } })(request('publicatiedatum_van')) : '' }}"
                                             onchange="document.getElementById('filter-form').submit()"
-                                            class="flex-1 px-3 py-2 rounded-md border-2 border-[var(--color-outline)] bg-white
-                                                   text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]
+                                            class="w-full px-3 py-2 rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)]
+                                                   text-sm text-[var(--color-on-surface)]
                                                    focus:outline-none focus:border-[var(--color-primary)]
-                                                   transition-colors duration-200
-                                                   min-h-[44px] max-w-[150px]"
+                                                   transition-colors duration-200"
                                         />
                                     </div>
-                                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                                        <label for="publicatiedatum_tot" class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface-variant)] whitespace-nowrap">
-                                            Tot en met (dd-mm-jjjj):
+                                    <div class="flex flex-col gap-2">
+                                        <label for="publicatiedatum_tot" class="text-sm font-medium text-[var(--color-on-surface)]">
+                                            Tot en met
                                         </label>
-                                        <x-input 
-                                            type="text"
+                                        <input 
+                                            type="date"
                                             name="publicatiedatum_tot"
                                             id="publicatiedatum_tot"
-                                            value="{{ request('publicatiedatum_tot') }}"
-                                            placeholder="dd-mm-jjjj"
-                                            pattern="\d{2}-\d{2}-\d{4}"
+                                            value="{{ request('publicatiedatum_tot') ? (function($date) { try { return \Carbon\Carbon::createFromFormat('d-m-Y', $date)->format('Y-m-d'); } catch(\Exception $e) { return $date; } })(request('publicatiedatum_tot')) : '' }}"
                                             onchange="document.getElementById('filter-form').submit()"
-                                            class="flex-1 px-3 py-2 rounded-md border-2 border-[var(--color-outline)] bg-white
-                                                   text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]
+                                            class="w-full px-3 py-2 rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)]
+                                                   text-sm text-[var(--color-on-surface)]
                                                    focus:outline-none focus:border-[var(--color-primary)]
-                                                   transition-colors duration-200
-                                                   min-h-[44px] max-w-[150px]"
+                                                   transition-colors duration-200"
                                         />
                                     </div>
                                 </div>
@@ -659,7 +681,7 @@
                 @endphp
                 
                 <!-- Unified Search & Active Filters Card -->
-                <div class="bg-white rounded-md shadow-sm border border-[var(--color-outline-variant)] divide-y divide-[var(--color-outline-variant)]">
+                <div class="bg-[var(--color-surface)] rounded-md border border-[var(--color-outline-variant)] divide-y divide-[var(--color-outline-variant)]">
                     <!-- Unified Search (Documents & Filters) -->
                     <div class="p-4">
                         <label for="unified-search" class="block text-sm font-medium text-[var(--color-on-surface)] mb-2">
@@ -674,12 +696,12 @@
                                 placeholder="Zoek {{ isset($isDossier) ? 'dossiers' : 'documenten' }} of filter op organisatie, thema..."
                                 leadingIcon="fas fa-search"
                                 autocomplete="off"
-                                class="block w-full pr-3 py-2.5 rounded-md border-2 border-[var(--color-outline)] bg-white
+                                class="block w-full pr-3 py-2 rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)]
                                        text-sm text-[var(--color-on-surface)] placeholder-[var(--color-on-surface-variant)]
                                        focus:outline-none focus:border-[var(--color-primary)]
                                        transition-colors duration-200"
                             />
-                            <div id="unified-search-results" class="absolute z-50 mt-1 w-full bg-white rounded-md shadow-sm border border-[var(--color-outline-variant)] hidden max-h-96 overflow-auto">
+                            <div id="unified-search-results" class="absolute z-50 mt-1 w-full bg-[var(--color-surface)] rounded-md border border-[var(--color-outline-variant)] hidden max-h-96 overflow-auto">
                                 <!-- Results populated by JavaScript -->
                             </div>
                         </div>
@@ -739,46 +761,52 @@
                 </div>
                 
                 <!-- Results Header -->
-                <div class="bg-white rounded-md p-6 shadow-sm border border-[var(--color-outline-variant)]">
-                    <div class="flex items-center justify-between gap-3 flex-nowrap overflow-x-auto">
-                        <h2 class="text-lg font-medium text-[var(--color-on-surface)] truncate flex-shrink min-w-0">
-                            {{ isset($isDossier) ? 'Dossiers' : 'Zoekresultaten' }} {{ (($results['page'] ?? 1) - 1) * ($results['perPage'] ?? 20) + 1 }}-{{ min(($results['page'] ?? 1) * ($results['perPage'] ?? 20), $results['total'] ?? 0) }} van de {{ number_format($results['total'] ?? 0, 0, ',', '.') }} {{ isset($isDossier) ? 'dossiers' : 'resultaten' }}
-                        </h2>
-                        <div class="flex items-center gap-2 flex-shrink-0">
-                            <span class="text-sm text-[var(--color-on-surface-variant)] whitespace-nowrap">Sorteer:</span>
-                            <select 
-                                name="sort" 
-                                class="px-3 py-1.5 rounded-md border-2 border-[var(--color-outline)] bg-white
-                                       text-sm text-[var(--color-on-surface)]
-                                       focus:outline-none focus:border-[var(--color-primary)]
-                                       transition-colors duration-200
-                                       min-h-[40px] cursor-pointer"
-                                onchange="updateSort(this.value)"
-                            >
-                                <option value="relevance" {{ request('sort', 'relevance') === 'relevance' ? 'selected' : '' }}>Relevantie</option>
-                                <option value="publication_date" {{ request('sort') === 'publication_date' ? 'selected' : '' }}>Publicatiedatum</option>
-                                <option value="modified_date" {{ request('sort') === 'modified_date' ? 'selected' : '' }}>Laatst gewijzigd</option>
-                            </select>
-                            <span class="text-sm text-[var(--color-on-surface-variant)] whitespace-nowrap ml-2">Aantal:</span>
-                            <div class="flex gap-1">
-                                <a href="{{ request()->fullUrlWithQuery(['per_page' => 10, 'pagina' => 1]) }}" 
-                                   class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 min-h-[40px] min-w-[40px] flex items-center justify-center
-                                          {{ request('per_page', 20) == 10 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-sm' : 'text-[var(--color-primary)] hover:bg-[var(--color-primary-container)] border border-[var(--color-outline-variant)]' }}
-                                          focus:outline-none">
-                                    10
-                                </a>
-                                <a href="{{ request()->fullUrlWithQuery(['per_page' => 20, 'pagina' => 1]) }}" 
-                                   class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 min-h-[40px] min-w-[40px] flex items-center justify-center
-                                          {{ request('per_page', 20) == 20 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-sm' : 'text-[var(--color-primary)] hover:bg-[var(--color-primary-container)] border border-[var(--color-outline-variant)]' }}
-                                          focus:outline-none">
-                                    20
-                                </a>
-                                <a href="{{ request()->fullUrlWithQuery(['per_page' => 50, 'pagina' => 1]) }}" 
-                                   class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 min-h-[40px] min-w-[40px] flex items-center justify-center
-                                          {{ request('per_page', 20) == 50 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-sm' : 'text-[var(--color-primary)] hover:bg-[var(--color-primary-container)] border border-[var(--color-outline-variant)]' }}
-                                          focus:outline-none">
-                                    50
-                                </a>
+                <div class="bg-[var(--color-surface)] rounded-md border border-[var(--color-outline-variant)]">
+                    <div class="px-4 py-3 sm:px-6 sm:py-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div>
+                                <h2 class="text-base font-semibold text-[var(--color-on-surface)]">
+                                    {{ isset($isDossier) ? 'Dossiers' : 'Zoekresultaten' }}
+                                </h2>
+                                <p class="mt-1 text-sm text-[var(--color-on-surface-variant)]">
+                                    {{ (($results['page'] ?? 1) - 1) * ($results['perPage'] ?? 20) + 1 }}-{{ min(($results['page'] ?? 1) * ($results['perPage'] ?? 20), $results['total'] ?? 0) }} van de {{ number_format($results['total'] ?? 0, 0, ',', '.') }} {{ isset($isDossier) ? 'dossiers' : 'resultaten' }}
+                                </p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-3">
+                                <div class="flex items-center gap-2">
+                                    <label for="sort-select" class="text-sm text-[var(--color-on-surface-variant)]">Sorteer op:</label>
+                                    <select 
+                                        id="sort-select"
+                                        name="sort" 
+                                        class="rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)] px-3 py-1.5 text-sm text-[var(--color-on-surface)] focus:outline-none focus:border-[var(--color-primary)] cursor-pointer"
+                                        onchange="updateSort(this.value)"
+                                    >
+                                        <option value="relevance" {{ request('sort', 'relevance') === 'relevance' ? 'selected' : '' }}>Relevantie</option>
+                                        <option value="publication_date" {{ request('sort') === 'publication_date' ? 'selected' : '' }}>Publicatiedatum</option>
+                                        <option value="modified_date" {{ request('sort') === 'modified_date' ? 'selected' : '' }}>Laatst gewijzigd</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <label class="text-sm text-[var(--color-on-surface-variant)]">Aantal:</label>
+                                    <div class="inline-flex rounded-md border border-[var(--color-outline-variant)]">
+                                        <a href="{{ request()->fullUrlWithQuery(['per_page' => 10, 'pagina' => 1]) }}" 
+                                           class="px-3 py-1.5 text-sm font-medium transition-colors duration-200 focus:outline-none
+                                                  {{ request('per_page', 20) == 10 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)]' : 'text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)]' }}
+                                                  {{ request('per_page', 20) == 10 ? '' : 'border-r border-[var(--color-outline-variant)]' }}">
+                                            10
+                                        </a>
+                                        <a href="{{ request()->fullUrlWithQuery(['per_page' => 20, 'pagina' => 1]) }}" 
+                                           class="px-3 py-1.5 text-sm font-medium transition-colors duration-200 focus:outline-none border-r border-[var(--color-outline-variant)]
+                                                  {{ request('per_page', 20) == 20 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)]' : 'text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)]' }}">
+                                            20
+                                        </a>
+                                        <a href="{{ request()->fullUrlWithQuery(['per_page' => 50, 'pagina' => 1]) }}" 
+                                           class="px-3 py-1.5 text-sm font-medium transition-colors duration-200 focus:outline-none
+                                                  {{ request('per_page', 20) == 50 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)]' : 'text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)]' }}">
+                                            50
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -795,13 +823,13 @@
                 
                 <!-- Results List -->
                 @if(empty($results['items']))
-                    <div class="bg-white rounded-md p-12 text-center border border-[var(--color-outline-variant)]">
+                    <div class="bg-[var(--color-surface)] rounded-md p-12 text-center border border-[var(--color-outline-variant)]">
                         <p class="text-[var(--font-size-body-large)] text-[var(--color-on-surface-variant)] mb-2">Geen resultaten gevonden.</p>
                         <p class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface-variant)]">Probeer andere zoekwoorden of filters aan te passen.</p>
                     </div>
                 @else
                     <!-- Simple List with Heading - Tailwind UI Style -->
-                    <div class="bg-white rounded-md shadow-sm border border-[var(--color-outline-variant)] overflow-hidden">
+                    <div class="bg-[var(--color-surface)] rounded-md border border-[var(--color-outline-variant)] overflow-hidden">
                         <div class="px-6 py-4 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-variant)]/30">
                             <h3 class="text-sm font-semibold text-[var(--color-on-surface)]">
                                 {{ isset($isDossier) ? 'Dossiers' : 'Documenten' }}
@@ -809,28 +837,27 @@
                         </div>
                         <ul role="list" class="divide-y divide-[var(--color-outline-variant)]">
                             @foreach($results['items'] as $item)
-                                <li class="px-6 py-5 hover:bg-[var(--color-surface-variant)]/30 transition-colors duration-150">
-                                    <div class="flex items-start justify-between gap-4">
-                                        <div class="flex-1 min-w-0">
-                                            <div class="flex items-start gap-3 mb-2">
-                                                <div class="flex-1 min-w-0">
-                                                    <div class="flex items-start justify-between gap-2 mb-1">
-                                                        <a href="{{ isset($isDossier) ? route('dossiers.show', $item->external_id) : '/open-overheid/documents/' . $item->external_id }}" 
-                                                           class="text-sm font-medium text-[var(--color-on-surface)] block
-                                                                  hover:text-[var(--color-primary)] focus:outline-none
-                                                                  transition-colors duration-200 rounded-md flex-1">
-                                                            @if(isset($isDossier) && isset($item->ai_enhanced_title) && !empty($item->ai_enhanced_title))
-                                                                <span class="inline-flex items-center gap-1.5">
-                                                                    <span>{!! $searchQuery ? highlightSearchTerms($item->ai_enhanced_title, $searchQuery) : $item->ai_enhanced_title !!}</span>
-                                                                    <i class="fas fa-sparkles text-[var(--color-primary)] text-xs" aria-label="AI-geoptimaliseerd" title="AI-geoptimaliseerde titel"></i>
-                                                                </span>
-                                                            @else
-                                                                {!! $searchQuery ? highlightSearchTerms($item->title ?? 'Geen titel', $searchQuery) : ($item->title ?? 'Geen titel') !!}
-                                                            @endif
-                                                        </a>
+                                <li class="px-4 py-3 hover:bg-[var(--color-primary)]/5 transition-colors duration-150">
+                                    <a href="{{ isset($isDossier) ? route('dossiers.show', $item->external_id) : '/open-overheid/documents/' . $item->external_id }}" 
+                                       class="block focus:outline-none group">
+                                        <div class="flex items-start justify-between gap-3">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex items-start justify-between gap-2 mb-1.5">
+                                                    <h3 class="text-sm font-semibold text-[var(--color-on-surface)] group-hover:text-[var(--color-primary)] transition-colors duration-200 line-clamp-2 flex-1 pr-2">
+                                                        @if(isset($isDossier) && isset($item->ai_enhanced_title) && !empty($item->ai_enhanced_title))
+                                                            <span class="inline-flex items-center gap-1.5">
+                                                                <span>{!! $searchQuery ? highlightSearchTerms($item->ai_enhanced_title, $searchQuery) : $item->ai_enhanced_title !!}</span>
+                                                                <i class="fas fa-sparkles text-[var(--color-primary)] text-[10px]" aria-label="AI-geoptimaliseerd" title="AI-geoptimaliseerde titel"></i>
+                                                            </span>
+                                                        @else
+                                                            {!! $searchQuery ? highlightSearchTerms($item->title ?? 'Geen titel', $searchQuery) : ($item->title ?? 'Geen titel') !!}
+                                                        @endif
+                                                    </h3>
+                                                    <div class="flex items-center gap-2 shrink-0">
                                                         @if($item->category)
                                                             <a href="{{ isset($isDossier) ? route('dossiers.index') : route('zoeken') }}?informatiecategorie={{ urlencode($item->category) }}{{ request('zoeken') ? '&zoeken=' . urlencode(request('zoeken')) : '' }}" 
-                                                               class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium 
+                                                               onclick="event.stopPropagation();"
+                                                               class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium 
                                                                       bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
                                                                       hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
                                                                       focus:outline-none
@@ -839,24 +866,24 @@
                                                                 {{ $item->formatted_category ?? $item->category }}
                                                             </a>
                                                         @endif
+                                                        @if($item->external_id)
+                                                            <a href="https://open.overheid.nl/details/{{ $item->external_id }}" 
+                                                               target="_blank"
+                                                               rel="noopener noreferrer"
+                                                               onclick="event.stopPropagation();"
+                                                               class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md
+                                                                      bg-[var(--color-primary)]/5 text-[var(--color-primary)] border border-[var(--color-primary)]/20
+                                                                      hover:bg-[var(--color-primary)]/10 hover:border-[var(--color-primary)]/30
+                                                                      focus:outline-none
+                                                                      transition-all duration-200 text-[11px] font-medium
+                                                                      shrink-0"
+                                                               title="Bekijk op open.overheid.nl">
+                                                                <i class="fas fa-external-link-alt text-[10px]" aria-hidden="true"></i>
+                                                                <span class="hidden sm:inline">Open.overheid.nl</span>
+                                                            </a>
+                                                        @endif
                                                     </div>
                                                 </div>
-                                                @if($item->external_id)
-                                                    <a href="https://open.overheid.nl/details/{{ $item->external_id }}" 
-                                                       target="_blank"
-                                                       rel="noopener noreferrer"
-                                                       class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md
-                                                              bg-[var(--color-primary)]/5 text-[var(--color-primary)] border border-[var(--color-primary)]/20
-                                                              hover:bg-[var(--color-primary)]/10 hover:border-[var(--color-primary)]/30
-                                                              focus:outline-none
-                                                              transition-all duration-200 text-xs font-medium
-                                                              group shrink-0"
-                                                       title="Bekijk op open.overheid.nl">
-                                                        <i class="fas fa-external-link-alt text-xs" aria-hidden="true"></i>
-                                                        <span class="hidden sm:inline">Open.overheid.nl</span>
-                                                    </a>
-                                                @endif
-                                            </div>
                                             @if(isset($isDossier))
                                                 @if(isset($item->ai_summary) && !empty($item->ai_summary))
                                                     <p class="text-xs text-[var(--color-on-surface-variant)] mb-3">
@@ -907,79 +934,113 @@
                                                     </div>
                                                 @endif
                                             @elseif($item->description)
-                                                <p class="text-xs text-[var(--color-on-surface-variant)] mb-3 line-clamp-2">
+                                                <p class="text-xs text-[var(--color-on-surface-variant)] mb-2.5 line-clamp-2 leading-relaxed">
                                                     {!! $searchQuery ? highlightSearchTerms(\Illuminate\Support\Str::limit($item->description, 150), $searchQuery) : \Illuminate\Support\Str::limit($item->description, 150) !!}
                                                 </p>
                                             @endif
-                                            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[var(--color-on-surface-variant)]">
-                                                <span class="inline-flex items-center gap-1.5">
-                                                    <i class="fas fa-file-pdf text-xs text-red-600" aria-hidden="true"></i>
-                                                    <span class="font-medium text-[var(--color-on-surface)]">PDF</span>
-                                                </span>
-                                                @if($item->publication_date)
-                                                    <span class="inline-flex items-center gap-1.5">
-                                                        <i class="fas fa-calendar-alt text-xs opacity-70" aria-hidden="true"></i>
-                                                        <span>Gepubliceerd op {{ $item->publication_date->format('d-m-Y') }}</span>
+                                            
+                                            {{-- Metadata Grid - Modern & Compact --}}
+                                            <div class="mt-2.5 pt-2.5 border-t border-[var(--color-outline-variant)]/50">
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    {{-- File Type --}}
+                                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
+                                                           bg-[var(--color-surface-variant)]/50 text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]/50">
+                                                        <i class="fas fa-file-pdf text-[10px] text-red-500" aria-hidden="true"></i>
+                                                        <span>PDF</span>
                                                     </span>
-                                                @endif
-                                                @if($item->updated_at)
-                                                    <span class="inline-flex items-center gap-1.5">
-                                                        <i class="fas fa-edit text-xs opacity-70" aria-hidden="true"></i>
-                                                        <span>Gewijzigd {{ $item->updated_at->format('d-m-Y') }}</span>
-                                                    </span>
-                                                @endif
-                                                @if($item->organisation)
-                                                    <a href="{{ isset($isDossier) ? route('dossiers.index') : route('zoeken') }}?organisatie[]={{ urlencode($item->organisation) }}" 
-                                                       class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md 
-                                                              bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
-                                                              hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
-                                                              focus:outline-none
-                                                              transition-all duration-200 font-medium text-xs
-                                                              group"
-                                                       title="Filter op {{ $item->organisation }}">
-                                                        <i class="fas fa-building text-xs" aria-hidden="true"></i>
-                                                        <span>{{ $item->organisation }}</span>
-                                                        <i class="fas fa-filter text-xs opacity-70 group-hover:opacity-100 transition-opacity" aria-hidden="true"></i>
-                                                    </a>
-                                                @endif
-                                                @if(isset($isDossier))
-                                                    @if(isset($item->dossier_status))
-                                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md 
-                                                                  {{ $item->dossier_status === 'actief' ? 'bg-green-100 text-green-700 border-green-300' : 'bg-gray-100 text-gray-700 border-gray-300' }}
-                                                                  font-medium text-xs">
-                                                            <i class="fas {{ $item->dossier_status === 'actief' ? 'fa-circle-check' : 'fa-circle-xmark' }} text-xs" aria-hidden="true"></i>
+                                                    
+                                                    {{-- Publication Date --}}
+                                                    @if($item->publication_date)
+                                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
+                                                               bg-[var(--color-surface-variant)]/50 text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]/50">
+                                                            <i class="fas fa-calendar text-[10px] text-[var(--color-primary)]" aria-hidden="true"></i>
+                                                            <span>{{ $item->publication_date->format('d-m-Y') }}</span>
+                                                        </span>
+                                                    @endif
+                                                    
+                                                    {{-- Updated Date --}}
+                                                    @if($item->updated_at)
+                                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
+                                                               bg-[var(--color-surface-variant)]/50 text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]/50">
+                                                            <i class="fas fa-edit text-[10px] text-[var(--color-primary)]" aria-hidden="true"></i>
+                                                            <span>{{ $item->updated_at->format('d-m-Y') }}</span>
+                                                        </span>
+                                                    @endif
+                                                    
+                                                    {{-- Organisation --}}
+                                                    @if($item->organisation)
+                                                        <a href="{{ isset($isDossier) ? route('dossiers.index') : route('zoeken') }}?organisatie[]={{ urlencode($item->organisation) }}" 
+                                                           onclick="event.stopPropagation();"
+                                                           class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
+                                                                  bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
+                                                                  hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
+                                                                  focus:outline-none
+                                                                  transition-all duration-200"
+                                                           title="Filter op {{ $item->organisation }}">
+                                                            <i class="fas fa-building text-[10px]" aria-hidden="true"></i>
+                                                            <span class="max-w-[120px] truncate">{{ $item->organisation }}</span>
+                                                            <i class="fas fa-filter text-[9px] opacity-60" aria-hidden="true"></i>
+                                                        </a>
+                                                    @endif
+                                                    
+                                                    {{-- Theme (for themas page) --}}
+                                                    @if(isset($item->theme) && !isset($isDossier))
+                                                        <a href="{{ route('themas.index') }}?thema[]={{ urlencode($item->theme) }}" 
+                                                           onclick="event.stopPropagation();"
+                                                           class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
+                                                                  bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
+                                                                  hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
+                                                                  focus:outline-none
+                                                                  transition-all duration-200"
+                                                           title="Filter op {{ $item->theme }}">
+                                                            <i class="fas fa-tag text-[10px]" aria-hidden="true"></i>
+                                                            <span class="max-w-[100px] truncate">{{ $item->theme }}</span>
+                                                            <i class="fas fa-filter text-[9px] opacity-60" aria-hidden="true"></i>
+                                                        </a>
+                                                    @endif
+                                                    
+                                                    {{-- Dossier Status --}}
+                                                    @if(isset($isDossier) && isset($item->dossier_status))
+                                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
+                                                               {{ $item->dossier_status === 'actief' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-[var(--color-surface-variant)]/50 text-[var(--color-on-surface-variant)] border-[var(--color-outline-variant)]/50' }}">
+                                                            <i class="fas {{ $item->dossier_status === 'actief' ? 'fa-circle-check' : 'fa-circle-xmark' }} text-[10px]" aria-hidden="true"></i>
                                                             <span>{{ ucfirst($item->dossier_status) }}</span>
                                                         </span>
                                                     @endif
-                                                    @if(isset($item->dossier_member_count) && $item->dossier_member_count > 0)
-                                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md 
-                                                                  bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
-                                                                  font-medium text-xs">
-                                                            <i class="fas fa-file text-xs" aria-hidden="true"></i>
-                                                            <span>{{ $item->dossier_member_count }} document{{ $item->dossier_member_count !== 1 ? 'en' : '' }}</span>
+                                                    
+                                                    {{-- Dossier Document Count --}}
+                                                    @if(isset($isDossier) && isset($item->dossier_member_count) && $item->dossier_member_count > 0)
+                                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
+                                                               bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20">
+                                                            <i class="fas fa-file text-[10px]" aria-hidden="true"></i>
+                                                            <span>{{ $item->dossier_member_count }} doc{{ $item->dossier_member_count !== 1 ? 's' : '' }}</span>
                                                         </span>
                                                     @endif
-                                                    @if(isset($item->has_audio) && $item->has_audio)
-                                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md 
-                                                                  bg-purple-100 text-purple-700 border-purple-300
-                                                                  font-medium text-xs"
+                                                    
+                                                    {{-- Audio Available --}}
+                                                    @if(isset($isDossier) && isset($item->has_audio) && $item->has_audio)
+                                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
+                                                               bg-purple-50 text-purple-700 border-purple-200"
                                                               title="Audio beschikbaar voor toegankelijkheid">
-                                                            <i class="fas fa-headphones text-xs" aria-hidden="true"></i>
+                                                            <i class="fas fa-headphones text-[10px]" aria-hidden="true"></i>
                                                             <span>Audio</span>
                                                         </span>
                                                     @endif
-                                                @endif
+                                                </div>
                                             </div>
                                             @if(isset($item->metadata) && isset($item->metadata['document']['weblocatie']))
-                                                <div class="mt-3">
+                                                <div class="mt-2.5 pt-2.5 border-t border-[var(--color-outline-variant)]/50">
                                                     <a href="{{ $item->metadata['document']['weblocatie'] }}" 
                                                        target="_blank" 
                                                        rel="noopener noreferrer"
-                                                       class="text-[var(--color-primary)] font-medium text-sm inline-flex items-center gap-1.5
-                                                              hover:underline focus:outline-none
-                                                              transition-all duration-200 rounded-md">
-                                                        Open via officielebekendmakingen.nl
-                                                        <i class="fas fa-external-link-alt text-xs" aria-hidden="true"></i>
+                                                       onclick="event.stopPropagation();"
+                                                       class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
+                                                              bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
+                                                              hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
+                                                              focus:outline-none
+                                                              transition-all duration-200">
+                                                        <i class="fas fa-external-link-alt text-[10px]" aria-hidden="true"></i>
+                                                        <span>Officielebekendmakingen.nl</span>
                                                     </a>
                                                 </div>
                                             @endif
@@ -1003,26 +1064,26 @@
                             $startPage = max(1, $currentPage - floor($showPages / 2));
                             $endPage = min($totalPages, $startPage + $showPages - 1);
                         @endphp
-                        <div class="flex items-center justify-between border-t border-[var(--color-outline-variant)] bg-[var(--color-surface)] px-4 py-3 sm:px-6 dark:border-white/10 dark:bg-transparent">
+                        <div class="flex items-center justify-between bg-[var(--color-surface)] px-4 py-3 sm:px-6">
                             <!-- Mobile: Previous/Next -->
                             <div class="flex flex-1 justify-between sm:hidden">
                                 @if(($results['hasPreviousPage'] ?? false))
                                     <a href="{{ request()->fullUrlWithQuery(['pagina' => $currentPage - 1]) }}" 
-                                       class="relative inline-flex items-center rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)] px-4 py-2 text-sm font-medium text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)] dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10">
+                                       class="relative inline-flex items-center rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)] px-4 py-2 text-sm font-medium text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)] dark:border-white/10 dark:bg-[var(--color-surface)]/5 dark:text-gray-200 dark:hover:bg-[var(--color-surface)]/10">
                                         Vorige
                                     </a>
                                 @else
-                                    <span class="relative inline-flex items-center rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)] px-4 py-2 text-sm font-medium text-[var(--color-on-surface-variant)] opacity-50 cursor-not-allowed dark:border-white/10 dark:bg-white/5 dark:text-gray-400">
+                                    <span class="relative inline-flex items-center rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)] px-4 py-2 text-sm font-medium text-[var(--color-on-surface-variant)] opacity-50 cursor-not-allowed dark:border-white/10 dark:bg-[var(--color-surface)]/5 dark:text-gray-400">
                                         Vorige
                                     </span>
                                 @endif
                                 @if(($results['hasNextPage'] ?? false))
                                     <a href="{{ request()->fullUrlWithQuery(['pagina' => $currentPage + 1]) }}" 
-                                       class="relative ml-3 inline-flex items-center rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)] px-4 py-2 text-sm font-medium text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)] dark:border-white/10 dark:bg-white/5 dark:text-gray-200 dark:hover:bg-white/10">
+                                       class="relative ml-3 inline-flex items-center rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)] px-4 py-2 text-sm font-medium text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)] dark:border-white/10 dark:bg-[var(--color-surface)]/5 dark:text-gray-200 dark:hover:bg-[var(--color-surface)]/10">
                                         Volgende
                                     </a>
                                 @else
-                                    <span class="relative ml-3 inline-flex items-center rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)] px-4 py-2 text-sm font-medium text-[var(--color-on-surface-variant)] opacity-50 cursor-not-allowed dark:border-white/10 dark:bg-white/5 dark:text-gray-400">
+                                    <span class="relative ml-3 inline-flex items-center rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)] px-4 py-2 text-sm font-medium text-[var(--color-on-surface-variant)] opacity-50 cursor-not-allowed dark:border-white/10 dark:bg-[var(--color-surface)]/5 dark:text-gray-400">
                                         Volgende
                                     </span>
                                 @endif
@@ -1041,10 +1102,10 @@
                                     </p>
                                 </div>
                                 <div>
-                                    <nav aria-label="Paginatie" class="isolate inline-flex -space-x-px rounded-md shadow-sm dark:shadow-none">
+                                    <nav aria-label="Paginatie" class="isolate inline-flex -space-x-px rounded-md">
                                         @if(($results['hasPreviousPage'] ?? false))
                                             <a href="{{ request()->fullUrlWithQuery(['pagina' => $currentPage - 1]) }}" 
-                                               class="relative inline-flex items-center rounded-md px-2 py-2 text-[var(--color-on-surface-variant)]  hover:bg-[var(--color-surface-variant)] focus:z-20 focus:outline-none  dark:hover:bg-white/5">
+                                               class="relative inline-flex items-center rounded-md px-2 py-2 text-[var(--color-on-surface-variant)]  hover:bg-[var(--color-surface-variant)] focus:z-20 focus:outline-none  dark:hover:bg-[var(--color-surface)]/5">
                                                 <span class="sr-only">Vorige</span>
                                                 <i class="fas fa-chevron-left text-sm" aria-hidden="true"></i>
                                             </a>
@@ -1057,7 +1118,7 @@
                                         
                                         @if($startPage > 1)
                                             <a href="{{ request()->fullUrlWithQuery(['pagina' => 1]) }}" 
-                                               class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-[var(--color-on-surface)]  hover:bg-[var(--color-surface-variant)] focus:z-20 focus:outline-none dark:text-gray-200  dark:hover:bg-white/5">
+                                               class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-[var(--color-on-surface)]  hover:bg-[var(--color-surface-variant)] focus:z-20 focus:outline-none dark:text-gray-200  dark:hover:bg-[var(--color-surface)]/5">
                                                 1
                                             </a>
                                             @if($startPage > 2)
@@ -1072,7 +1133,7 @@
                                                 </a>
                                             @else
                                                 <a href="{{ request()->fullUrlWithQuery(['pagina' => $i]) }}" 
-                                                   class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-[var(--color-on-surface)]  hover:bg-[var(--color-surface-variant)] focus:z-20 focus:outline-none dark:text-gray-200  dark:hover:bg-white/5">
+                                                   class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-[var(--color-on-surface)]  hover:bg-[var(--color-surface-variant)] focus:z-20 focus:outline-none dark:text-gray-200  dark:hover:bg-[var(--color-surface)]/5">
                                                     {{ $i }}
                                                 </a>
                                             @endif
@@ -1083,14 +1144,14 @@
                                                 <span class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-[var(--color-on-surface-variant)]  focus:outline-none dark:text-gray-400 ">...</span>
                                             @endif
                                             <a href="{{ request()->fullUrlWithQuery(['pagina' => $totalPages]) }}" 
-                                               class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-[var(--color-on-surface)]  hover:bg-[var(--color-surface-variant)] focus:z-20 focus:outline-none dark:text-gray-200  dark:hover:bg-white/5">
+                                               class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-[var(--color-on-surface)]  hover:bg-[var(--color-surface-variant)] focus:z-20 focus:outline-none dark:text-gray-200  dark:hover:bg-[var(--color-surface)]/5">
                                                 {{ $totalPages }}
                                             </a>
                                         @endif
                                         
                                         @if(($results['hasNextPage'] ?? false))
                                             <a href="{{ request()->fullUrlWithQuery(['pagina' => $currentPage + 1]) }}" 
-                                               class="relative inline-flex items-center rounded-md px-2 py-2 text-[var(--color-on-surface-variant)]  hover:bg-[var(--color-surface-variant)] focus:z-20 focus:outline-none  dark:hover:bg-white/5">
+                                               class="relative inline-flex items-center rounded-md px-2 py-2 text-[var(--color-on-surface-variant)]  hover:bg-[var(--color-surface-variant)] focus:z-20 focus:outline-none  dark:hover:bg-[var(--color-surface)]/5">
                                                 <span class="sr-only">Volgende</span>
                                                 <i class="fas fa-chevron-right text-sm" aria-hidden="true"></i>
                                             </a>
@@ -1118,6 +1179,28 @@
             window.location.href = url.toString();
         }
 
+
+        // Convert date inputs from Y-m-d (HTML date input) to d-m-Y (backend format) on form submit
+        function convertDateInputsToFormat(event) {
+            const vanInput = document.getElementById('publicatiedatum_van');
+            const totInput = document.getElementById('publicatiedatum_tot');
+            
+            if (vanInput && vanInput.value) {
+                // Date input provides Y-m-d format, convert to d-m-Y
+                const dateParts = vanInput.value.split('-');
+                if (dateParts.length === 3) {
+                    vanInput.value = dateParts[2] + '-' + dateParts[1] + '-' + dateParts[0];
+                }
+            }
+            
+            if (totInput && totInput.value) {
+                // Date input provides Y-m-d format, convert to d-m-Y
+                const dateParts = totInput.value.split('-');
+                if (dateParts.length === 3) {
+                    totInput.value = dateParts[2] + '-' + dateParts[1] + '-' + dateParts[0];
+                }
+            }
+        }
 
         function toggleCustomDateRange() {
             const customRange = document.getElementById('custom-date-range');

@@ -18,6 +18,7 @@ Route::get('/open-overheid/documents/{id}', [DocumentController::class, 'show'])
 Route::get('/v2026', [SearchController::class, 'v2026LandingPage'])->name('v2026');
 Route::get('/new', [SearchController::class, 'newLandingPage'])->name('new');
 Route::get('/over', [SearchController::class, 'aboutPage'])->name('over');
+Route::get('/contact', [SearchController::class, 'contactPage'])->name('contact');
 Route::get('/chat', [SearchController::class, 'chatPage'])->name('chat');
 Route::get('/api/live-search', [SearchController::class, 'liveSearch'])->name('api.live-search');
 Route::get('/api/autocomplete', [SearchController::class, 'autocomplete'])->name('api.autocomplete');

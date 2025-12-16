@@ -10,12 +10,12 @@
                         <h3 class="text-sm font-semibold leading-6 text-[var(--color-on-primary)] mb-4">Over deze website</h3>
                         <ul role="list" class="space-y-3">
                             <li>
-                                <a href="{{ route('over') }}" class="text-sm leading-6 text-[var(--color-on-primary)]/80 hover:text-[var(--color-on-primary)] transition-colors duration-200 focus:outline-2 focus:outline-[var(--color-on-primary)] focus:outline-offset-2 rounded-sm">
+                                <a href="{{ route('over') }}" class="text-sm leading-6 text-[var(--color-on-primary)]/80 hover:text-[var(--color-on-primary)] transition-colors duration-200 focus:outline-none">
                                     Over open.overheid.nl
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('verwijzingen') }}" class="text-sm leading-6 text-[var(--color-on-primary)]/80 hover:text-[var(--color-on-primary)] transition-colors duration-200 focus:outline-2 focus:outline-[var(--color-on-primary)] focus:outline-offset-2 rounded-sm">
+                                <a href="{{ route('verwijzingen') }}" class="text-sm leading-6 text-[var(--color-on-primary)]/80 hover:text-[var(--color-on-primary)] transition-colors duration-200 focus:outline-none">
                                     Verwijzingen
                                 </a>
                             </li>
@@ -25,12 +25,12 @@
                         <h3 class="text-sm font-semibold leading-6 text-[var(--color-on-primary)] mb-4">Recht & Privacy</h3>
                         <ul role="list" class="space-y-3">
                             <li>
-                                <a href="#" class="text-sm leading-6 text-[var(--color-on-primary)]/80 hover:text-[var(--color-on-primary)] transition-colors duration-200 focus:outline-2 focus:outline-[var(--color-on-primary)] focus:outline-offset-2 rounded-sm">
+                                <a href="#" class="text-sm leading-6 text-[var(--color-on-primary)]/80 hover:text-[var(--color-on-primary)] transition-colors duration-200 focus:outline-none">
                                     Privacy & Cookies
                                 </a>
                             </li>
                             <li>
-                                <a href="#" class="text-sm leading-6 text-[var(--color-on-primary)]/80 hover:text-[var(--color-on-primary)] transition-colors duration-200 focus:outline-2 focus:outline-[var(--color-on-primary)] focus:outline-offset-2 rounded-sm">
+                                <a href="#" class="text-sm leading-6 text-[var(--color-on-primary)]/80 hover:text-[var(--color-on-primary)] transition-colors duration-200 focus:outline-none">
                                     Toegankelijkheid
                                 </a>
                             </li>
@@ -42,13 +42,13 @@
                         <h3 class="text-sm font-semibold leading-6 text-[var(--color-on-primary)] mb-4">Externe links</h3>
                         <ul role="list" class="space-y-3">
                             <li>
-                                <a href="https://www.overheid.nl" target="_blank" rel="noopener noreferrer" class="text-sm leading-6 text-[var(--color-on-primary)]/80 hover:text-[var(--color-on-primary)] transition-colors duration-200 focus:outline-2 focus:outline-[var(--color-on-primary)] focus:outline-offset-2 rounded-sm inline-flex items-center gap-1.5">
+                                <a href="https://www.overheid.nl" target="_blank" rel="noopener noreferrer" class="text-sm leading-6 text-[var(--color-on-primary)]/80 hover:text-[var(--color-on-primary)] transition-colors duration-200 focus:outline-none inline-flex items-center gap-1.5">
                                     Overheid.nl
                                     <i class="fas fa-external-link-alt text-xs" aria-hidden="true"></i>
                                 </a>
                             </li>
                             <li>
-                                <a href="https://www.woo-index.nl" target="_blank" rel="noopener noreferrer" class="text-sm leading-6 text-[var(--color-on-primary)]/80 hover:text-[var(--color-on-primary)] transition-colors duration-200 focus:outline-2 focus:outline-[var(--color-on-primary)] focus:outline-offset-2 rounded-sm inline-flex items-center gap-1.5">
+                                <a href="https://www.woo-index.nl" target="_blank" rel="noopener noreferrer" class="text-sm leading-6 text-[var(--color-on-primary)]/80 hover:text-[var(--color-on-primary)] transition-colors duration-200 focus:outline-none inline-flex items-center gap-1.5">
                                     Woo-index
                                     <i class="fas fa-external-link-alt text-xs" aria-hidden="true"></i>
                                 </a>

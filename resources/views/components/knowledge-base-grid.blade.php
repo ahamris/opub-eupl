@@ -38,41 +38,40 @@
             <img 
                 src="{{ $article['image'] }}" 
                 alt="{{ $article['title'] }}" 
-                class="aspect-video w-full rounded-md bg-[var(--color-surface-variant)]100 object-cover sm:aspect-2/1 lg:aspect-3/2 dark:bg-[var(--color-surface-variant)]800"
+                class="aspect-video w-full rounded-md bg-[var(--color-surface-variant)] object-cover sm:aspect-2/1 lg:aspect-3/2"
                 loading="lazy"
             />
-            <div class="absolute inset-0 rounded-md inset-ring inset-ring-gray-900/10 dark:inset-ring-white/10"></div>
         </div>
         <div class="flex max-w-xl grow flex-col justify-between">
             <div class="mt-8 flex items-center gap-x-4 text-xs">
-                <time datetime="{{ $article['date']->format('Y-m-d') }}" class="text-[var(--color-on-surface-variant)]500 dark:text-[var(--color-on-surface-variant)]400">
+                <time datetime="{{ $article['date']->format('Y-m-d') }}" class="text-[var(--color-on-surface-variant)]">
                     {{ $article['date']->format('M d, Y') }}
                 </time>
-                <a href="#" class="relative z-10 rounded-md bg-[var(--color-surface-variant)]50 px-3 py-1.5 font-medium text-[var(--color-on-surface-variant)]600 dark:bg-[var(--color-surface-variant)]800/60 dark:text-[var(--color-on-surface-variant)]300">
+                <a href="#" class="relative z-10 rounded-md bg-[var(--color-primary)]/10 px-3 py-1.5 font-medium text-[var(--color-primary)] border border-[var(--color-primary)]/20">
                     {{ $article['category'] }}
                 </a>
             </div>
             <div class="relative grow">
-                <h3 class="mt-3 text-lg/6 font-semibold text-[var(--color-on-surface-variant)]900 dark:text-white">
+                <h3 class="mt-3 text-lg font-semibold text-[var(--color-on-surface)]">
                     <a href="#">
                         <span class="absolute inset-0"></span>
                         {{ $article['title'] }}
                     </a>
                 </h3>
-                <p class="mt-5 line-clamp-3 text-sm/6 text-[var(--color-on-surface-variant)]600 dark:text-[var(--color-on-surface-variant)]400">
+                <p class="mt-5 line-clamp-3 text-sm text-[var(--color-on-surface-variant)]">
                     {{ $article['description'] }}
                 </p>
             </div>
             <div class="relative mt-8 flex items-center gap-x-4 justify-self-end">
-                <img src="https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" class="size-10 rounded-full bg-[var(--color-surface-variant)]100 dark:bg-[var(--color-surface-variant)]800" />
-                <div class="text-sm/6">
-                    <p class="font-semibold text-[var(--color-on-surface-variant)]900 dark:text-white">
+                <img src="https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" class="size-10 rounded-full bg-[var(--color-surface-variant)]" />
+                <div class="text-sm">
+                    <p class="font-semibold text-[var(--color-on-surface)]">
                         <a href="#">
                             <span class="absolute inset-0"></span>
                             Open Overheid Team
                         </a>
                     </p>
-                    <p class="text-[var(--color-on-surface-variant)]600 dark:text-[var(--color-on-surface-variant)]400">Redactie</p>
+                    <p class="text-[var(--color-on-surface-variant)]">Redactie</p>
                 </div>
             </div>
         </div>

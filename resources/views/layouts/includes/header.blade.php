@@ -1,7 +1,7 @@
 <header class="sticky top-0 z-50 bg-[var(--color-surface)] dark:bg-[var(--color-surface)] border-b border-[var(--color-outline-variant)]/50 shadow-sm backdrop-blur-sm" role="banner" x-data="{ mobileMenuOpen: false }">
     <nav aria-label="Global" class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
         <!-- Brand -->
-        <div class="flex lg:flex-1 items-center gap-3">
+        <div class="flex items-center gap-3">
             <a href="{{ route('home') }}" class="-m-1.5 p-1.5 flex items-center gap-2">
                 <span class="sr-only">Open overheid</span>
                 {{-- Logo placeholder - can be replaced with SVG/asset --}}
@@ -51,10 +51,10 @@
             <a href="{{ route('over') }}" class="text-sm font-semibold leading-6 {{ request()->routeIs('over') ? 'text-[var(--color-primary)]' : 'text-[var(--color-on-surface)] dark:text-[var(--color-on-surface)] hover:text-[var(--color-primary)]' }}">
                 Over
             </a>
+            <a href="{{ route('contact') }}" class="text-sm font-semibold leading-6 {{ request()->routeIs('contact') ? 'text-[var(--color-primary)]' : 'text-[var(--color-on-surface)] dark:text-[var(--color-on-surface)] hover:text-[var(--color-primary)]' }}">
+                Contact
+            </a>
         </div>
-
-        <!-- Right side boş bırakıldı (şimdilik ekstra buton yok) -->
-        <div class="hidden lg:flex lg:flex-1 lg:justify-end"></div>
     </nav>
 
     <!-- Mobile menu (simple version reusing existing links) -->
@@ -91,6 +91,9 @@
             </a>
             <a href="{{ route('over') }}" class="block rounded-lg px-3 py-2 text-base font-semibold {{ request()->routeIs('over') ? 'text-[var(--color-primary)] bg-[var(--color-surface-variant)] dark:bg-[var(--color-surface-variant)]' : 'text-[var(--color-on-surface)] dark:text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)] dark:hover:bg-[var(--color-surface-variant)]' }}">
                 Over
+            </a>
+            <a href="{{ route('contact') }}" class="block rounded-lg px-3 py-2 text-base font-semibold {{ request()->routeIs('contact') ? 'text-[var(--color-primary)] bg-[var(--color-surface-variant)] dark:bg-[var(--color-surface-variant)]' : 'text-[var(--color-on-surface)] dark:text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)] dark:hover:bg-[var(--color-surface-variant)]' }}">
+                Contact
             </a>
         </nav>
     </div>
