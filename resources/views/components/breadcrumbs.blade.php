@@ -20,7 +20,7 @@
             {{-- Home item with icon --}}
             <li>
                 <div>
-                    <a href="{{ $homeHref }}" class="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-300">
+                    <a href="{{ $homeHref }}" class="text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)] dark:text-[var(--color-on-surface-variant)] dark:hover:text-[var(--color-on-surface)]">
                         <i class="fas fa-house text-sm shrink-0" aria-hidden="true"></i>
                         <span class="sr-only">{{ $homeLabel }}</span>
                     </a>
@@ -36,16 +36,16 @@
                 @endphp
                 <li>
                     <div class="flex items-center">
-                        <i class="fas fa-angle-right text-xs shrink-0 text-gray-400 dark:text-gray-500" aria-hidden="true"></i>
+                        <i class="fas fa-angle-right text-xs shrink-0 text-[var(--color-on-surface-variant)] dark:text-[var(--color-on-surface-variant)]" aria-hidden="true"></i>
 
                         @if($href && ! $isCurrent)
                             <a href="{{ $href }}"
-                               class="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                               class="ml-4 text-sm font-medium text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)] dark:text-[var(--color-on-surface-variant)] dark:hover:text-[var(--color-on-surface)]">
                                 {{ $label }}
                             </a>
                         @else
                             <span @if($isCurrent) aria-current="page" @endif
-                                  class="ml-4 text-sm font-medium text-gray-500 dark:text-gray-400">
+                                  class="ml-4 text-sm font-medium text-[var(--color-on-surface-variant)] dark:text-[var(--color-on-surface-variant)]">
                                 {{ $label }}
                             </span>
                         @endif

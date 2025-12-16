@@ -5,11 +5,11 @@
 @section('content')
 <div class="min-h-screen bg-gradient-to-br from-[var(--color-primary-light)] via-white to-[var(--color-primary-light)]/30">
     <!-- Header -->
-    <div class="bg-white border-b border-gray-200">
+    <div class="bg-[var(--color-surface)] border-b border-[var(--color-outline-variant)]">
         <div class="mx-auto max-w-4xl px-6 py-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-[var(--color-primary)] text-white">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-[var(--color-primary)] text-[var(--color-on-primary)]">
                         <svg viewBox="0 0 20 20" fill="currentColor" class="size-5">
                             <path d="M10 2a.75.75 0 0 1 .75.75v6.5h6.5a.75.75 0 0 1 0 1.5h-6.5v6.5a.75.75 0 0 1-1.5 0v-6.5H3.25a.75.75 0 0 1 0-1.5h6.5v-6.5A.75.75 0 0 1 10 2Z" />
                         </svg>
@@ -55,19 +55,19 @@
                     <div class="space-y-3 max-w-2xl mx-auto">
                         <button 
                             @click="askQuestion('Wanneer kan ik mij inschrijven?')"
-                            class="w-full text-left px-6 py-4 rounded-xl bg-white border border-gray-200 hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-light)]/10 transition-all duration-200 text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]"
+                            class="w-full text-left px-6 py-4 rounded-xl bg-[var(--color-surface)] border border-[var(--color-outline-variant)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-light)]/10 transition-all duration-200 text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]"
                         >
                             Wanneer kan ik mij inschrijven?
                         </button>
                         <button 
                             @click="askQuestion('Waar kan ik parkeren?')"
-                            class="w-full text-left px-6 py-4 rounded-xl bg-white border border-gray-200 hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-light)]/10 transition-all duration-200 text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]"
+                            class="w-full text-left px-6 py-4 rounded-xl bg-[var(--color-surface)] border border-[var(--color-outline-variant)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-light)]/10 transition-all duration-200 text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]"
                         >
                             Waar kan ik parkeren?
                         </button>
                         <button 
                             @click="askQuestion('Kan ik vrijwilliger worden?')"
-                            class="w-full text-left px-6 py-4 rounded-xl bg-white border border-gray-200 hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-light)]/10 transition-all duration-200 text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]"
+                            class="w-full text-left px-6 py-4 rounded-xl bg-[var(--color-surface)] border border-[var(--color-outline-variant)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-light)]/10 transition-all duration-200 text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]"
                         >
                             Kan ik vrijwilliger worden?
                         </button>
@@ -81,7 +81,7 @@
                     <!-- User Message -->
                     <div x-show="message.type === 'user'" class="flex justify-end mb-4">
                         <div class="max-w-3xl">
-                            <div class="bg-[var(--color-primary)] text-white rounded-2xl rounded-tr-sm px-6 py-4 shadow-sm">
+                            <div class="bg-[var(--color-primary)] text-[var(--color-on-primary)] rounded-2xl rounded-tr-sm px-6 py-4 shadow-sm">
                                 <p class="text-[var(--font-size-body-medium)]" x-text="message.text"></p>
                             </div>
                             <p class="text-[var(--font-size-label-small)] text-[var(--color-on-surface-variant)] mt-2 text-right" x-text="formatTime(message.timestamp)"></p>
@@ -91,7 +91,7 @@
                     <!-- AI Response -->
                     <div x-show="message.type === 'ai'" class="flex justify-start mb-4">
                         <div class="max-w-3xl w-full">
-                            <div class="bg-white rounded-2xl rounded-tl-sm px-6 py-4 shadow-sm border border-gray-200">
+                            <div class="bg-[var(--color-surface)] rounded-2xl rounded-tl-sm px-6 py-4 shadow-sm border border-[var(--color-outline-variant)]">
                                 <div x-show="message.loading" class="flex items-center gap-3">
                                     <div class="flex items-center gap-2">
                                         <div class="w-2 h-2 bg-[var(--color-primary)] rounded-full animate-bounce" style="animation-delay: 0s"></div>
@@ -138,10 +138,10 @@
                                                         <template x-for="(source, sourceIndex) in message.sources" :key="sourceIndex">
                                                             <a 
                                                                 :href="source.url"
-                                                                class="block px-4 py-3 rounded-lg border border-gray-200 hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-light)]/5 transition-all duration-200"
+                                                                class="block px-4 py-3 rounded-lg border border-[var(--color-outline-variant)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-light)]/5 transition-all duration-200"
                                                             >
                                                                 <div class="flex items-start gap-3">
-                                                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[var(--color-primary)] text-white text-[var(--font-size-label-small)] font-semibold shrink-0" x-text="source.number"></span>
+                                                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[var(--color-primary)] text-[var(--color-on-primary)] text-[var(--font-size-label-small)] font-semibold shrink-0" x-text="source.number"></span>
                                                                     <div class="flex-1 min-w-0">
                                                                         <p class="text-[var(--font-size-body-medium)] font-medium text-[var(--color-on-surface)]" x-text="source.title"></p>
                                                                         <template x-if="source.organisation">
@@ -177,7 +177,7 @@
                                                 <template x-for="(result, resultIndex) in message.results" :key="resultIndex">
                                                     <a 
                                                         :href="'/open-overheid/documents/' + result.id"
-                                                        class="block p-4 rounded-lg border border-gray-200 hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-light)]/5 transition-all duration-200"
+                                                        class="block p-4 rounded-lg border border-[var(--color-outline-variant)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-light)]/5 transition-all duration-200"
                                                     >
                                                         <div class="flex items-start justify-between gap-4 mb-2">
                                                             <h4 class="text-[var(--font-size-body-medium)] font-semibold text-[var(--color-on-surface)] flex-1" x-text="result.title"></h4>
@@ -226,7 +226,7 @@
         </div>
 
         <!-- Input Area -->
-        <div class="sticky bottom-0 bg-white border-t border-gray-200 py-4">
+        <div class="sticky bottom-0 bg-[var(--color-surface)] border-t border-[var(--color-outline-variant)] py-4">
             <div class="max-w-4xl mx-auto px-6">
                 <form @submit.prevent="sendMessage()" class="flex items-center gap-4">
                     <div class="flex-1 relative">
@@ -241,7 +241,7 @@
                         <button 
                             type="submit"
                             :disabled="loading || !inputText.trim()"
-                            class="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-[var(--color-primary)] text-[var(--color-on-primary)] hover:bg-[var(--color-primary-dark)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
                         >
                             <svg viewBox="0 0 20 20" fill="currentColor" class="size-5">
                                 <path d="M3.5 2.75a.75.75 0 0 0-1.5 0v14.5a.75.75 0 0 0 1.5 0v-4.392l1.657-.348a6.449 6.449 0 0 1 4.271.572 7.948 7.948 0 0 0 5.965.44l2.087-.694a.75.75 0 0 0 .42-.941l-.8-2.385a.75.75 0 0 0-.42-.499l-2.087-.694a7.948 7.948 0 0 0-5.965.44 6.449 6.449 0 0 1-4.271.572L3.5 7.25v-4.5Z" />
@@ -382,11 +382,11 @@ function chatInterface() {
             // Match patterns like "Document 1", "document 2", "Volgens document 3", "In document 1", etc.
             return answer
                 .replace(/(document|Document|volgens|Volgens|in|In)\s+(\d+)/gi, (match, word, num) => {
-                    return `${word} <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[var(--color-primary)] text-white text-[var(--font-size-label-small)] font-semibold mx-1 align-middle">${num}</span>`;
+                    return `${word} <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[var(--color-primary)] text-[var(--color-on-primary)] text-[var(--font-size-label-small)] font-semibold mx-1 align-middle">${num}</span>`;
                 })
                 // Also match standalone numbers that are likely source references (1, 2, 3) when they appear in context
                 .replace(/\b([1-5])\b(?=\s+(staan|vermeldt|volgens|document|bron|bronnen))/gi, (match, num) => {
-                    return `<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[var(--color-primary)] text-white text-[var(--font-size-label-small)] font-semibold mx-1 align-middle">${num}</span>`;
+                    return `<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[var(--color-primary)] text-[var(--color-on-primary)] text-[var(--font-size-label-small)] font-semibold mx-1 align-middle">${num}</span>`;
                 });
         },
     };

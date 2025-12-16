@@ -20,12 +20,12 @@
         <rect width="100%" height="100%" fill="url(#hero-pattern)" stroke-width="0" />
     </svg>
 
-    <div class="mx-auto max-w-7xl px-6 py-16 sm:py-24 lg:flex lg:items-center lg:gap-x-10 lg:px-8 lg:py-32">
+    <div class="mx-auto max-w-7xl px-6 pt-40 pb-40 lg:flex lg:items-center lg:gap-x-10 lg:px-8">
         <!-- Left side: Text content -->
-        <div class="max-w-3xl lg:flex-auto">
+        <div class="max-w-2xl lg:flex-auto">
             @if($badge || $badgeText)
             <div class="flex">
-                <div class="relative flex items-center gap-x-4 rounded-md bg-white px-4 py-1 text-sm text-[var(--color-on-surface-variant)] ring-1 ring-gray-900/10 hover:ring-gray-900/20 transition-all duration-200">
+                <div class="relative flex items-center gap-x-4 rounded-full bg-white px-4 py-1 text-[var(--font-size-body-small)] text-[var(--color-on-surface-variant)] ring-1 ring-gray-900/10 hover:ring-gray-900/20 transition-all duration-200">
                     @if($badge)
                     <span class="font-semibold text-[var(--color-primary)]">{{ $badge }}</span>
                     @endif
@@ -66,11 +66,11 @@
         
         <!-- Right side: Search functionality -->
         <div class="mt-16 sm:mt-24 lg:mt-0 lg:shrink-0 lg:grow">
-            <div class="relative search-container" x-data="liveSearch()" @click.outside="showResults = false">
+            <div class="relative z-9999 isolate" x-data="liveSearch()" @click.outside="showResults = false">
                 <div class="mx-auto max-w-md rounded-md bg-white p-6 shadow-xl ring-1 ring-gray-900/10 dark:bg-gray-900 dark:ring-white/10">
                     <div class="mb-4 flex items-center justify-between gap-3">
                         <p class="text-sm font-medium text-gray-900 dark:text-white">Slim zoeken met</p>
-                        <a href="{{ route('chat') }}" class="inline-flex items-center gap-2 rounded-md bg-[var(--color-primary)] px-3.5 py-1.5 text-xs font-semibold text-[var(--color-on-primary)] shadow-xs hover:bg-[var(--color-primary-dark)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
+                        <a href="{{ route('chat') }}" class="inline-flex items-center gap-2 rounded-md bg-[var(--color-primary)] px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[var(--color-primary-dark)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
                             <i class="fas fa-comments text-[0.9rem]" aria-hidden="true"></i>
                             <span>Chat met AI</span>
                         </a>
@@ -111,7 +111,7 @@
                     x-transition:leave="transition ease-in duration-100"
                     x-transition:leave-start="opacity-100 translate-y-0"
                     x-transition:leave-end="opacity-0 translate-y-1"
-                    class="absolute inset-x-0 top-full mt-2 bg-white rounded-md shadow-lg ring-1 ring-gray-900/5 border border-gray-100 max-h-80 overflow-y-auto search-dropdown"
+                    class="absolute inset-x-0 top-full left-0 right-0 mt-2 bg-white rounded-md shadow-lg ring-1 ring-gray-900/5 border border-gray-100 max-h-80 overflow-y-auto z-[99999]"
                     role="listbox"
                     @click.stop
                 >
@@ -206,7 +206,7 @@
                                 class="text-sm font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition-colors duration-150 inline-flex items-center gap-2 group"
                             >
                                 Bekijk alle resultaten
-                                <i class="fas fa-arrow-right text-[var(--font-size-label-small)] transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true"></i>
+                                <i class="fas fa-arrow-right text-xs transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true"></i>
                             </a>
                         </div>
                     </template>
@@ -220,7 +220,7 @@
                                 class="text-sm font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition-colors duration-150 inline-flex items-center gap-2 group"
                             >
                                 Toch zoeken
-                                <i class="fas fa-arrow-right text-[var(--font-size-label-small)] transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true"></i>
+                                <i class="fas fa-arrow-right text-xs transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true"></i>
                             </a>
                         </div>
                     </template>
@@ -230,22 +230,6 @@
     </div>
 </div>
 
-@push('styles')
-<style>
-    .search-container {
-        z-index: 99999 !important;
-        isolation: isolate;
-    }
-
-    .search-dropdown {
-        z-index: 99999 !important;
-        position: absolute !important;
-        top: 100%;
-        left: 0;
-        right: 0;
-    }
-</style>
-@endpush
 
 @push('scripts')
 <script>

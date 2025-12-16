@@ -15,8 +15,8 @@
         <div class="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8">
             <!-- Sidebar Filters -->
             <aside class="lg:sticky lg:top-8 h-fit" aria-label="Zoekfilters">
-                <div class="bg-surface rounded-xl p-6 shadow-sm border border-outline-variant">
-                    <h2 class="text-title-large font-medium mb-6 text-on-surface pb-4 border-b border-outline-variant">
+                <div class="bg-[var(--color-surface)] rounded-xl p-6 shadow-sm border border-[var(--color-outline-variant)]">
+                    <h2 class="text-[var(--font-size-headline-large)] font-medium mb-6 text-[var(--color-on-surface)] pb-4 border-b border-[var(--color-outline-variant)]">
                         Verfijn zoekopdracht
                     </h2>
                     
@@ -26,7 +26,7 @@
                         
                         <!-- Search Keywords -->
                         <div class="space-y-3">
-                            <label for="sidebar-zoeken" class="block text-label-large font-medium text-on-surface">
+                            <label for="sidebar-zoeken" class="block text-[var(--font-size-label-medium)] font-medium text-[var(--color-on-surface)]">
                                 Zoekwoorden
                             </label>
                             <input 
@@ -34,8 +34,8 @@
                                 id="sidebar-zoeken" 
                                 name="zoeken" 
                                 class="w-full px-4 py-3 rounded-lg 
-                                       border-2 border-outline bg-surface
-                                       text-body-large text-on-surface
+                                       border-2 border-[var(--color-outline)] bg-[var(--color-surface)]
+                                       text-[var(--font-size-body-large)] text-[var(--color-on-surface)]
                                        focus:border-primary focus:outline-2 focus:outline-primary focus:outline-offset-2
                                        transition-colors duration-200
                                        min-h-[44px]"
@@ -49,22 +49,22 @@
                                     name="titles_only" 
                                     value="1"
                                     {{ request('titles_only') ? 'checked' : '' }}
-                                    class="w-4 h-4 rounded border border-outline
+                                    class="w-4 h-4 rounded border border-[var(--color-outline)]
                                                focus:ring-2 focus:ring-primary focus:ring-offset-2
-                                               cursor-pointer text-primary
-                                               checked:bg-primary checked:border-primary
+                                               cursor-pointer text-[var(--color-primary)]
+                                               checked:bg-[var(--color-primary)] checked:border-primary
                                                transition-all duration-200" 
                                            focus:outline-2 focus:outline-primary focus:outline-offset-2
                                            cursor-pointer min-h-[44px] min-w-[44px]"
                                 >
-                                <label for="sidebar-titles-only" class="text-body-medium text-on-surface cursor-pointer">
+                                <label for="sidebar-titles-only" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer">
                                     Zoek alleen in titels
                                 </label>
                             </div>
                             <button 
                                 type="submit" 
-                                class="w-full bg-primary text-on-primary 
-                                       hover:bg-primary/90 active:bg-primary/80
+                                class="w-full bg-[var(--color-primary)] text-[var(--color-on-primary)] 
+                                       hover:bg-[var(--color-primary)]/90 active:bg-[var(--color-primary)]/80
                                        focus:outline-2 focus:outline-primary focus:outline-offset-2
                                        px-4 py-3 rounded-full font-medium
                                        transition-colors duration-200
@@ -74,8 +74,8 @@
                             <button 
                                 type="button" 
                                 onclick="window.location.href='{{ route('dossiers.index') }}'"
-                                class="w-full border-2 border-outline text-primary
-                                       hover:bg-primary-container
+                                class="w-full border-2 border-[var(--color-outline)] text-[var(--color-primary)]
+                                       hover:bg-[var(--color-primary)]-container
                                        focus:outline-2 focus:outline-primary focus:outline-offset-2
                                        px-4 py-3 rounded-full font-medium
                                        transition-colors duration-200
@@ -86,7 +86,7 @@
                         
                         <!-- Date Filter -->
                         <div class="space-y-3">
-                            <h3 class="text-title-medium font-medium text-on-surface">Datum beschikbaar</h3>
+                            <h3 class="text-[var(--font-size-headline-medium)] font-medium text-[var(--color-on-surface)]">Datum beschikbaar</h3>
                             <div class="space-y-2">
                                 <div class="flex items-center gap-3">
                                     <input 
@@ -96,13 +96,13 @@
                                         value=""
                                         {{ !request('beschikbaarSinds') ? 'checked' : '' }}
                                         onchange="document.getElementById('filter-form').submit()"
-                                        class="w-4 h-4 border border-outline 
+                                        class="w-4 h-4 border border-[var(--color-outline)] 
                                                focus:ring-2 focus:ring-primary focus:ring-offset-2
-                                               cursor-pointer text-primary
-                                               checked:bg-primary checked:border-primary
+                                               cursor-pointer text-[var(--color-primary)]
+                                               checked:bg-[var(--color-primary)] checked:border-primary
                                                transition-all duration-200"
                                     >
-                                    <label for="datum-geen" class="text-body-medium text-on-surface cursor-pointer flex-1">
+                                    <label for="datum-geen" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                         Geen periode
                                     </label>
                                 </div>
@@ -114,16 +114,16 @@
                                         value="week"
                                         {{ request('beschikbaarSinds') === 'week' ? 'checked' : '' }}
                                         onchange="document.getElementById('filter-form').submit()"
-                                        class="w-4 h-4 border border-outline 
+                                        class="w-4 h-4 border border-[var(--color-outline)] 
                                                focus:ring-2 focus:ring-primary focus:ring-offset-2
-                                               cursor-pointer text-primary
-                                               checked:bg-primary checked:border-primary
+                                               cursor-pointer text-[var(--color-primary)]
+                                               checked:bg-[var(--color-primary)] checked:border-primary
                                                transition-all duration-200"
                                     >
-                                    <label for="datum-week" class="text-body-medium text-on-surface cursor-pointer flex-1">
+                                    <label for="datum-week" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                         Afgelopen week
                                     </label>
-                                    <span class="text-label-medium text-on-surface-variant" id="count-week">({{ $filterCounts['week'] ?? 0 }})</span>
+                                    <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant" id="count-week">({{ $filterCounts['week'] ?? 0 }})</span>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <input 
@@ -133,16 +133,16 @@
                                         value="maand"
                                         {{ request('beschikbaarSinds') === 'maand' ? 'checked' : '' }}
                                         onchange="document.getElementById('filter-form').submit()"
-                                        class="w-4 h-4 border border-outline 
+                                        class="w-4 h-4 border border-[var(--color-outline)] 
                                                focus:ring-2 focus:ring-primary focus:ring-offset-2
-                                               cursor-pointer text-primary
-                                               checked:bg-primary checked:border-primary
+                                               cursor-pointer text-[var(--color-primary)]
+                                               checked:bg-[var(--color-primary)] checked:border-primary
                                                transition-all duration-200"
                                     >
-                                    <label for="datum-maand" class="text-body-medium text-on-surface cursor-pointer flex-1">
+                                    <label for="datum-maand" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                         Afgelopen maand
                                     </label>
-                                    <span class="text-label-medium text-on-surface-variant" id="count-maand">({{ $filterCounts['maand'] ?? 0 }})</span>
+                                    <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant" id="count-maand">({{ $filterCounts['maand'] ?? 0 }})</span>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <input 
@@ -152,16 +152,16 @@
                                         value="jaar"
                                         {{ request('beschikbaarSinds') === 'jaar' ? 'checked' : '' }}
                                         onchange="document.getElementById('filter-form').submit()"
-                                        class="w-4 h-4 border border-outline 
+                                        class="w-4 h-4 border border-[var(--color-outline)] 
                                                focus:ring-2 focus:ring-primary focus:ring-offset-2
-                                               cursor-pointer text-primary
-                                               checked:bg-primary checked:border-primary
+                                               cursor-pointer text-[var(--color-primary)]
+                                               checked:bg-[var(--color-primary)] checked:border-primary
                                                transition-all duration-200"
                                     >
-                                    <label for="datum-jaar" class="text-body-medium text-on-surface cursor-pointer flex-1">
+                                    <label for="datum-jaar" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                         Afgelopen jaar
                                     </label>
-                                    <span class="text-label-medium text-on-surface-variant" id="count-jaar">({{ $filterCounts['jaar'] ?? 0 }})</span>
+                                    <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant" id="count-jaar">({{ $filterCounts['jaar'] ?? 0 }})</span>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <input 
@@ -171,20 +171,20 @@
                                         value="zelf"
                                         {{ request('beschikbaarSinds') === 'zelf' || request('publicatiedatum_van') || request('publicatiedatum_tot') ? 'checked' : '' }}
                                         onchange="toggleCustomDateRange()"
-                                        class="w-4 h-4 border border-outline 
+                                        class="w-4 h-4 border border-[var(--color-outline)] 
                                                focus:ring-2 focus:ring-primary focus:ring-offset-2
-                                               cursor-pointer text-primary
-                                               checked:bg-primary checked:border-primary
+                                               cursor-pointer text-[var(--color-primary)]
+                                               checked:bg-[var(--color-primary)] checked:border-primary
                                                transition-all duration-200"
                                     >
-                                    <label for="datum-zelf" class="text-body-medium text-on-surface cursor-pointer flex-1">
+                                    <label for="datum-zelf" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                         Aangepaste periode
                                     </label>
                                 </div>
                                 <!-- Custom Date Range Inputs -->
                                 <div id="custom-date-range" class="space-y-3 mt-3 pl-7 {{ request('beschikbaarSinds') === 'zelf' || (request('publicatiedatum_van') && !request('beschikbaarSinds')) || (request('publicatiedatum_tot') && !request('beschikbaarSinds')) ? '' : 'hidden' }}">
                                     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                                        <label for="publicatiedatum_van" class="text-label-medium text-on-surface-variant whitespace-nowrap">
+                                        <label for="publicatiedatum_van" class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant whitespace-nowrap">
                                             Vanaf (dd-mm-jjjj):
                                         </label>
                                         <input 
@@ -195,15 +195,15 @@
                                             placeholder="dd-mm-jjjj"
                                             pattern="\d{2}-\d{2}-\d{4}"
                                             onchange="document.getElementById('filter-form').submit()"
-                                            class="flex-1 px-3 py-2 rounded-lg border-2 border-outline bg-surface
-                                                   text-body-medium text-on-surface
+                                            class="flex-1 px-3 py-2 rounded-lg border-2 border-[var(--color-outline)] bg-[var(--color-surface)]
+                                                   text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]
                                                    focus:border-primary focus:outline-2 focus:outline-primary focus:outline-offset-2
                                                    transition-colors duration-200
                                                    min-h-[44px] max-w-[150px]"
                                         >
                                     </div>
                                     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                                        <label for="publicatiedatum_tot" class="text-label-medium text-on-surface-variant whitespace-nowrap">
+                                        <label for="publicatiedatum_tot" class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant whitespace-nowrap">
                                             Tot en met (dd-mm-jjjj):
                                         </label>
                                         <input 
@@ -214,8 +214,8 @@
                                             placeholder="dd-mm-jjjj"
                                             pattern="\d{2}-\d{2}-\d{4}"
                                             onchange="document.getElementById('filter-form').submit()"
-                                            class="flex-1 px-3 py-2 rounded-lg border-2 border-outline bg-surface
-                                                   text-body-medium text-on-surface
+                                            class="flex-1 px-3 py-2 rounded-lg border-2 border-[var(--color-outline)] bg-[var(--color-surface)]
+                                                   text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]
                                                    focus:border-primary focus:outline-2 focus:outline-primary focus:outline-offset-2
                                                    transition-colors duration-200
                                                    min-h-[44px] max-w-[150px]"
@@ -227,7 +227,7 @@
                         
                         <!-- Information Category Filter (Woo Informatiecategorie) -->
                         <div class="space-y-3">
-                            <h3 class="text-title-medium font-medium text-on-surface">Informatiecategorie</h3>
+                            <h3 class="text-[var(--font-size-headline-medium)] font-medium text-[var(--color-on-surface)]">Informatiecategorie</h3>
                             <div class="space-y-2">
                                 @php
                                     $allCategories = $allFilterOptions['informatiecategorie'] ?? [];
@@ -244,16 +244,16 @@
                                             value="{{ $category }}"
                                             {{ $selectedCategory === $category ? 'checked' : '' }}
                                             onchange="document.getElementById('filter-form').submit()"
-                                            class="w-4 h-4 border border-outline 
+                                            class="w-4 h-4 border border-[var(--color-outline)] 
                                                    focus:ring-2 focus:ring-primary focus:ring-offset-2
-                                                   cursor-pointer text-primary
-                                                   checked:bg-primary checked:border-primary
+                                                   cursor-pointer text-[var(--color-primary)]
+                                                   checked:bg-[var(--color-primary)] checked:border-primary
                                                    transition-all duration-200"
                                         >
-                                        <label for="categorie-{{ md5($category) }}" class="text-body-medium text-on-surface cursor-pointer flex-1">
+                                        <label for="categorie-{{ md5($category) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                             {{ $category }}
                                         </label>
-                                        <span class="text-label-medium text-on-surface-variant">({{ $filterCounts['informatiecategorie'][$category] ?? 0 }})</span>
+                                        <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">({{ $filterCounts['informatiecategorie'][$category] ?? 0 }})</span>
                                     </div>
                                 @endforeach
                                 @if(!empty($hiddenCategories))
@@ -267,16 +267,16 @@
                                                 value="{{ $category }}"
                                                 {{ $selectedCategory === $category ? 'checked' : '' }}
                                                 onchange="document.getElementById('filter-form').submit()"
-                                                class="w-4 h-4 border border-outline 
+                                                class="w-4 h-4 border border-[var(--color-outline)] 
                                                        focus:ring-2 focus:ring-primary focus:ring-offset-2
-                                                       cursor-pointer text-primary
-                                                       checked:bg-primary checked:border-primary
+                                                       cursor-pointer text-[var(--color-primary)]
+                                                       checked:bg-[var(--color-primary)] checked:border-primary
                                                        transition-all duration-200"
                                             >
-                                            <label for="categorie-{{ md5($category) }}" class="text-body-medium text-on-surface cursor-pointer flex-1">
+                                            <label for="categorie-{{ md5($category) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                                 {{ $category }}
                                             </label>
-                                            <span class="text-label-medium text-on-surface-variant">({{ $filterCounts['informatiecategorie'][$category] ?? 0 }})</span>
+                                            <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">({{ $filterCounts['informatiecategorie'][$category] ?? 0 }})</span>
                                         </div>
                                     @endforeach
                                 </div>
@@ -284,7 +284,7 @@
                                     type="button" 
                                     onclick="toggleFilterSection('informatiecategorie-more', 'informatiecategorie-toggle')"
                                     id="informatiecategorie-toggle"
-                                    class="text-primary font-medium text-body-medium hover:underline 
+                                    class="text-[var(--color-primary)] font-medium text-[var(--font-size-body-medium)] hover:underline 
                                            focus:outline-2 focus:outline-primary focus:outline-offset-2 rounded-sm">
                                     Toon meer
                                 </button>
@@ -294,7 +294,7 @@
                                     <button 
                                         type="button" 
                                         onclick="document.getElementById('categorie-none').checked = true; document.getElementById('filter-form').submit();"
-                                        class="text-primary font-medium text-body-small hover:underline 
+                                        class="text-[var(--color-primary)] font-medium text-[var(--font-size-body-small)] hover:underline 
                                                focus:outline-2 focus:outline-primary focus:outline-offset-2 rounded-sm">
                                         <i class="fas fa-times text-xs" aria-hidden="true"></i> Categorie wissen
                                     </button>
@@ -314,7 +314,7 @@
                         
                         <!-- Document Type Filter -->
                         <div class="space-y-3">
-                            <h3 class="text-title-medium font-medium text-on-surface">Documentsoort</h3>
+                            <h3 class="text-[var(--font-size-headline-medium)] font-medium text-[var(--color-on-surface)]">Documentsoort</h3>
                             <div class="space-y-2">
                                 @php
                                     $allDocumentTypes = $allFilterOptions['documentsoort'] ?? [];
@@ -331,16 +331,16 @@
                                             value="{{ $type }}"
                                             {{ in_array($type, $selectedTypes) ? 'checked' : '' }}
                                             onchange="document.getElementById('filter-form').submit()"
-                                            class="w-4 h-4 rounded border border-outline 
+                                            class="w-4 h-4 rounded border border-[var(--color-outline)] 
                                                    focus:ring-2 focus:ring-primary focus:ring-offset-2
-                                                   cursor-pointer text-primary
-                                                   checked:bg-primary checked:border-primary
+                                                   cursor-pointer text-[var(--color-primary)]
+                                                   checked:bg-[var(--color-primary)] checked:border-primary
                                                    transition-all duration-200"
                                         >
-                                        <label for="soort-{{ str_replace(' ', '-', strtolower($type)) }}" class="text-body-medium text-on-surface cursor-pointer flex-1">
+                                        <label for="soort-{{ str_replace(' ', '-', strtolower($type)) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                             {{ $type }}
                                         </label>
-                                        <span class="text-label-medium text-on-surface-variant">({{ $filterCounts['documentsoort'][$type] ?? 0 }})</span>
+                                        <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">({{ $filterCounts['documentsoort'][$type] ?? 0 }})</span>
                                     </div>
                                 @endforeach
                                 @if(!empty($hiddenTypes))
@@ -354,16 +354,16 @@
                                                 value="{{ $type }}"
                                                 {{ in_array($type, $selectedTypes) ? 'checked' : '' }}
                                                 onchange="document.getElementById('filter-form').submit()"
-                                                class="w-4 h-4 rounded border border-outline 
+                                                class="w-4 h-4 rounded border border-[var(--color-outline)] 
                                                        focus:ring-2 focus:ring-primary focus:ring-offset-2
-                                                       cursor-pointer text-primary
-                                                       checked:bg-primary checked:border-primary
+                                                       cursor-pointer text-[var(--color-primary)]
+                                                       checked:bg-[var(--color-primary)] checked:border-primary
                                                        transition-all duration-200"
                                             >
-                                            <label for="soort-{{ str_replace(' ', '-', strtolower($type)) }}" class="text-body-medium text-on-surface cursor-pointer flex-1">
+                                            <label for="soort-{{ str_replace(' ', '-', strtolower($type)) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                                 {{ $type }}
                                             </label>
-                                            <span class="text-label-medium text-on-surface-variant">({{ $filterCounts['documentsoort'][$type] ?? 0 }})</span>
+                                            <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">({{ $filterCounts['documentsoort'][$type] ?? 0 }})</span>
                                         </div>
                                     @endforeach
                                 </div>
@@ -371,7 +371,7 @@
                                     type="button" 
                                     onclick="toggleFilterSection('documentsoort-more', 'documentsoort-toggle')"
                                     id="documentsoort-toggle"
-                                    class="text-primary font-medium text-body-medium hover:underline 
+                                    class="text-[var(--color-primary)] font-medium text-[var(--font-size-body-medium)] hover:underline 
                                            focus:outline-2 focus:outline-primary focus:outline-offset-2 rounded-sm">
                                     Toon meer
                                 </button>
@@ -381,7 +381,7 @@
                         
                         <!-- File Type Filter -->
                         <div class="space-y-3">
-                            <h3 class="text-title-medium font-medium text-on-surface">Type bronbestand</h3>
+                            <h3 class="text-[var(--font-size-headline-medium)] font-medium text-[var(--color-on-surface)]">Type bronbestand</h3>
                             <div class="space-y-2">
                                 @php
                                     $fileTypes = [
@@ -403,21 +403,21 @@
                                             value="{{ $label }}"
                                             {{ in_array($label, $selectedFileTypes) ? 'checked' : '' }}
                                             onchange="document.getElementById('filter-form').submit()"
-                                            class="w-4 h-4 rounded border border-outline 
+                                            class="w-4 h-4 rounded border border-[var(--color-outline)] 
                                                    focus:ring-2 focus:ring-primary focus:ring-offset-2
-                                                   cursor-pointer text-primary
-                                                   checked:bg-primary checked:border-primary
+                                                   cursor-pointer text-[var(--color-primary)]
+                                                   checked:bg-[var(--color-primary)] checked:border-primary
                                                    transition-all duration-200"
                                         >
-                                        <label for="bestandstype-{{ strtolower(str_replace([' ', '-'], ['', ''], $label)) }}" class="text-body-medium text-on-surface cursor-pointer flex-1">
+                                        <label for="bestandstype-{{ strtolower(str_replace([' ', '-'], ['', ''], $label)) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                             {{ $label }}
                                         </label>
-                                        <span class="text-label-medium text-on-surface-variant">({{ $filterCounts['bestandstype'][$label] ?? 0 }})</span>
+                                        <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">({{ $filterCounts['bestandstype'][$label] ?? 0 }})</span>
                                     </div>
                                 @endforeach
                                 <button 
                                     type="button" 
-                                    class="text-primary font-medium text-body-medium hover:underline 
+                                    class="text-[var(--color-primary)] font-medium text-[var(--font-size-body-medium)] hover:underline 
                                            focus:outline-2 focus:outline-primary focus:outline-offset-2 rounded-sm">
                                     Toon meer
                                 </button>
@@ -426,7 +426,7 @@
                         
                         <!-- Organisation Filter -->
                         <div class="space-y-3">
-                            <h3 class="text-title-medium font-medium text-on-surface">Organisatie</h3>
+                            <h3 class="text-[var(--font-size-headline-medium)] font-medium text-[var(--color-on-surface)]">Organisatie</h3>
                             <div class="space-y-2">
                                 @php
                                     $allOrganisations = $allFilterOptions['organisatie'] ?? [];
@@ -443,16 +443,16 @@
                                             value="{{ $org }}"
                                             {{ in_array($org, $selectedOrgs) ? 'checked' : '' }}
                                             onchange="document.getElementById('filter-form').submit()"
-                                            class="w-4 h-4 rounded border border-outline 
+                                            class="w-4 h-4 rounded border border-[var(--color-outline)] 
                                                    focus:ring-2 focus:ring-primary focus:ring-offset-2
-                                                   cursor-pointer text-primary
-                                                   checked:bg-primary checked:border-primary
+                                                   cursor-pointer text-[var(--color-primary)]
+                                                   checked:bg-[var(--color-primary)] checked:border-primary
                                                    transition-all duration-200"
                                         >
-                                        <label for="org-{{ md5($org) }}" class="text-body-medium text-on-surface cursor-pointer flex-1">
+                                        <label for="org-{{ md5($org) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                             {{ $org }}
                                         </label>
-                                        <span class="text-label-medium text-on-surface-variant">({{ number_format($filterCounts['organisatie'][$org] ?? 0, 0, ',', '.') }})</span>
+                                        <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">({{ number_format($filterCounts['organisatie'][$org] ?? 0, 0, ',', '.') }})</span>
                                     </div>
                                 @endforeach
                                 @if(!empty($hiddenOrgs))
@@ -466,16 +466,16 @@
                                                 value="{{ $org }}"
                                                 {{ in_array($org, $selectedOrgs) ? 'checked' : '' }}
                                                 onchange="document.getElementById('filter-form').submit()"
-                                                class="w-4 h-4 rounded border border-outline 
+                                                class="w-4 h-4 rounded border border-[var(--color-outline)] 
                                                        focus:ring-2 focus:ring-primary focus:ring-offset-2
-                                                       cursor-pointer text-primary
-                                                       checked:bg-primary checked:border-primary
+                                                       cursor-pointer text-[var(--color-primary)]
+                                                       checked:bg-[var(--color-primary)] checked:border-primary
                                                        transition-all duration-200"
                                             >
-                                            <label for="org-{{ md5($org) }}" class="text-body-medium text-on-surface cursor-pointer flex-1">
+                                            <label for="org-{{ md5($org) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                                 {{ $org }}
                                             </label>
-                                            <span class="text-label-medium text-on-surface-variant">({{ number_format($filterCounts['organisatie'][$org] ?? 0, 0, ',', '.') }})</span>
+                                            <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">({{ number_format($filterCounts['organisatie'][$org] ?? 0, 0, ',', '.') }})</span>
                                         </div>
                                     @endforeach
                                 </div>
@@ -483,7 +483,7 @@
                                     type="button" 
                                     onclick="toggleFilterSection('organisatie-more', 'organisatie-toggle')"
                                     id="organisatie-toggle"
-                                    class="text-primary font-medium text-body-medium hover:underline 
+                                    class="text-[var(--color-primary)] font-medium text-[var(--font-size-body-medium)] hover:underline 
                                            focus:outline-2 focus:outline-primary focus:outline-offset-2 rounded-sm">
                                     Toon meer
                                 </button>
@@ -538,29 +538,29 @@
                 @endphp
                 
                 <!-- Quick Filter & Active Filters Card -->
-                <div class="bg-surface rounded-xl shadow-sm border border-outline-variant divide-y divide-outline-variant">
+                <div class="bg-[var(--color-surface)] rounded-xl shadow-sm border border-[var(--color-outline-variant)] divide-y divide-[var(--color-outline-variant)]">
                     <!-- Quick Filter Combobox -->
                     <div class="p-6">
-                        <label for="quick-filter" class="block text-label-large font-medium text-on-surface mb-3">
+                        <label for="quick-filter" class="block text-[var(--font-size-label-medium)] font-medium text-[var(--color-on-surface)] mb-3">
                             Snel filteren
                         </label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <i class="fas fa-search text-on-surface-variant" aria-hidden="true"></i>
+                                <i class="fas fa-search text-[var(--color-on-surface)]-variant" aria-hidden="true"></i>
                             </div>
                             <input 
                                 type="text" 
                                 id="quick-filter"
                                 name="quick-filter"
                                 placeholder="Type om te filteren op organisatie, documentsoort of informatiecategorie..."
-                                class="block w-full pl-10 pr-3 py-3 rounded-lg border-2 border-outline bg-surface
-                                       text-body-medium text-on-surface placeholder-on-surface-variant
+                                class="block w-full pl-10 pr-3 py-3 rounded-lg border-2 border-[var(--color-outline)] bg-[var(--color-surface)]
+                                       text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] placeholder:text-[var(--color-on-surface-variant)]
                                        focus:border-primary focus:outline-2 focus:outline-primary focus:outline-offset-2
                                        transition-colors duration-200"
                                 autocomplete="off"
                                 onkeyup="filterQuickOptions(this.value)"
                             >
-                            <div id="quick-filter-results" class="absolute z-10 mt-1 w-full bg-surface rounded-lg shadow-lg border border-outline-variant hidden max-h-60 overflow-auto">
+                            <div id="quick-filter-results" class="absolute z-10 mt-1 w-full bg-[var(--color-surface)] rounded-lg shadow-lg border border-[var(--color-outline-variant)] hidden max-h-60 overflow-auto">
                                 <!-- Results populated by JavaScript -->
                             </div>
                         </div>
@@ -570,7 +570,7 @@
                     @if(!empty($activeFilters))
                     <div class="p-6">
                         <div class="flex flex-wrap items-center gap-2">
-                            <span class="text-label-large font-medium text-on-surface mr-2">Actieve filters:</span>
+                            <span class="text-[var(--font-size-label-medium)] font-medium text-[var(--color-on-surface)] mr-2">Actieve filters:</span>
                             @foreach($activeFilters as $filter)
                                 @php
                                     $removeUrl = request()->fullUrlWithQuery(['pagina' => 1]);
@@ -590,8 +590,8 @@
                                 @endphp
                                 <a href="{{ $removeUrl }}" 
                                    class="inline-flex items-center gap-2 px-4 py-2 rounded-full 
-                                          bg-primary/10 text-primary border border-primary/20
-                                          hover:bg-primary/20 hover:border-primary/30
+                                          bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-primary/20
+                                          hover:bg-[var(--color-primary)]/20 hover:border-primary/30
                                           focus:outline-2 focus:outline-primary focus:outline-offset-2
                                           transition-all duration-200 font-medium text-sm
                                           group"
@@ -602,8 +602,8 @@
                             @endforeach
                             <a href="{{ route('dossiers.index') }}{{ request('zoeken') ? '?zoeken=' . urlencode(request('zoeken')) : '' }}" 
                                class="inline-flex items-center gap-2 px-4 py-2 rounded-full 
-                                      bg-surface-variant text-on-surface-variant border border-outline-variant
-                                      hover:bg-surface-variant/80
+                                      bg-[var(--color-surface)]-variant text-[var(--color-on-surface)]-variant border border-[var(--color-outline-variant)]
+                                      hover:bg-[var(--color-surface)]-variant/80
                                       focus:outline-2 focus:outline-primary focus:outline-offset-2
                                       transition-all duration-200 font-medium text-sm
                                       ml-auto">
@@ -616,18 +616,18 @@
                 </div>
                 
                 <!-- Results Header -->
-                <div class="bg-surface rounded-xl p-6 shadow-sm border border-outline-variant">
+                <div class="bg-[var(--color-surface)] rounded-xl p-6 shadow-sm border border-[var(--color-outline-variant)]">
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                        <h2 class="text-title-large font-medium text-on-surface">
+                        <h2 class="text-[var(--font-size-headline-large)] font-medium text-[var(--color-on-surface)]">
                             Dossiers {{ (($results['page'] ?? 1) - 1) * ($results['perPage'] ?? 20) + 1 }}-{{ min(($results['page'] ?? 1) * ($results['perPage'] ?? 20), $results['total'] ?? 0) }} van de {{ number_format($results['total'] ?? 0, 0, ',', '.') }} documenten
                         </h2>
                         <div class="flex flex-wrap items-center gap-4">
                             <div class="flex items-center gap-2">
-                                <span class="text-label-large text-on-surface-variant">Sorteer op:</span>
+                                <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">Sorteer op:</span>
                                 <select 
                                     name="sort" 
-                                    class="px-4 py-2 rounded-lg border-2 border-outline bg-surface
-                                           text-body-medium text-on-surface
+                                    class="px-4 py-2 rounded-lg border-2 border-[var(--color-outline)] bg-[var(--color-surface)]
+                                           text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]
                                            focus:border-primary focus:outline-2 focus:outline-primary focus:outline-offset-2
                                            transition-colors duration-200
                                            min-h-[44px] cursor-pointer"
@@ -639,23 +639,23 @@
                                 </select>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="text-label-large text-on-surface-variant">Aantal:</span>
+                                <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">Aantal:</span>
                                 <div class="flex gap-1">
                                     <a href="{{ request()->fullUrlWithQuery(['per_page' => 10, 'pagina' => 1]) }}" 
-                                       class="px-4 py-2.5 rounded-lg text-body-medium font-medium transition-colors duration-200 min-h-[48px] min-w-[48px] flex items-center justify-center
-                                              {{ request('per_page', 20) == 10 ? 'bg-primary text-on-primary shadow-sm' : 'text-primary hover:bg-primary-container border border-outline-variant' }}
+                                       class="px-4 py-2.5 rounded-lg text-[var(--font-size-body-medium)] font-medium transition-colors duration-200 min-h-[48px] min-w-[48px] flex items-center justify-center
+                                              {{ request('per_page', 20) == 10 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-sm' : 'text-[var(--color-primary)] hover:bg-[var(--color-primary)]-container border border-[var(--color-outline-variant)]' }}
                                               focus:outline-2 focus:outline-primary focus:outline-offset-2">
                                         10
                                     </a>
                                     <a href="{{ request()->fullUrlWithQuery(['per_page' => 20, 'pagina' => 1]) }}" 
-                                       class="px-4 py-2.5 rounded-lg text-body-medium font-medium transition-colors duration-200 min-h-[48px] min-w-[48px] flex items-center justify-center
-                                              {{ request('per_page', 20) == 20 ? 'bg-primary text-on-primary shadow-sm' : 'text-primary hover:bg-primary-container border border-outline-variant' }}
+                                       class="px-4 py-2.5 rounded-lg text-[var(--font-size-body-medium)] font-medium transition-colors duration-200 min-h-[48px] min-w-[48px] flex items-center justify-center
+                                              {{ request('per_page', 20) == 20 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-sm' : 'text-[var(--color-primary)] hover:bg-[var(--color-primary)]-container border border-[var(--color-outline-variant)]' }}
                                               focus:outline-2 focus:outline-primary focus:outline-offset-2">
                                         20
                                     </a>
                                     <a href="{{ request()->fullUrlWithQuery(['per_page' => 50, 'pagina' => 1]) }}" 
-                                       class="px-4 py-2.5 rounded-lg text-body-medium font-medium transition-colors duration-200 min-h-[48px] min-w-[48px] flex items-center justify-center
-                                              {{ request('per_page', 20) == 50 ? 'bg-primary text-on-primary shadow-sm' : 'text-primary hover:bg-primary-container border border-outline-variant' }}
+                                       class="px-4 py-2.5 rounded-lg text-[var(--font-size-body-medium)] font-medium transition-colors duration-200 min-h-[48px] min-w-[48px] flex items-center justify-center
+                                              {{ request('per_page', 20) == 50 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-sm' : 'text-[var(--color-primary)] hover:bg-[var(--color-primary)]-container border border-[var(--color-outline-variant)]' }}
                                               focus:outline-2 focus:outline-primary focus:outline-offset-2">
                                         50
                                     </a>
@@ -667,8 +667,8 @@
                 
                 <!-- Error Message -->
                 @if(isset($error))
-                    <div class="bg-error-container text-on-error-container p-4 rounded-xl border border-error" role="alert">
-                        <p class="text-body-medium text-error font-medium">
+                    <div class="bg-red-50 text-red-900 dark:bg-red-900/20 dark:text-red-200 p-4 rounded-xl border border-error" role="alert">
+                        <p class="text-[var(--font-size-body-medium)] text-red-600 dark:text-red-400 font-medium">
                             Er is een fout opgetreden: {{ $error }}
                         </p>
                     </div>
@@ -676,44 +676,44 @@
                 
                 <!-- Results List -->
                 @if(empty($results['items']))
-                    <div class="bg-surface rounded-xl p-12 text-center border border-outline-variant">
-                        <p class="text-body-large text-on-surface-variant mb-2">Geen resultaten gevonden.</p>
-                        <p class="text-body-medium text-on-surface-variant">Probeer andere zoekwoorden of filters aan te passen.</p>
+                    <div class="bg-[var(--color-surface)] rounded-xl p-12 text-center border border-[var(--color-outline-variant)]">
+                        <p class="text-[var(--font-size-body-large)] text-[var(--color-on-surface)]-variant mb-2">Geen resultaten gevonden.</p>
+                        <p class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]-variant">Probeer andere zoekwoorden of filters aan te passen.</p>
                     </div>
                 @else
                     <!-- Simple List with Heading - Tailwind UI Style -->
-                    <div class="bg-surface rounded-xl shadow-sm border border-outline-variant overflow-hidden">
-                        <div class="px-6 py-4 border-b border-outline-variant bg-surface-variant/30">
-                            <h3 class="text-title-medium font-medium text-on-surface">
+                    <div class="bg-[var(--color-surface)] rounded-xl shadow-sm border border-[var(--color-outline-variant)] overflow-hidden">
+                        <div class="px-6 py-4 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface)]-variant/30">
+                            <h3 class="text-[var(--font-size-headline-medium)] font-medium text-[var(--color-on-surface)]">
                                 Dossiers
                             </h3>
                         </div>
-                        <ul role="list" class="divide-y divide-outline-variant">
+                        <ul role="list" class="divide-y divide-[var(--color-outline-variant)]">
                             @foreach($results['items'] as $item)
                                 @php
                                     $members = $item->getDossierMembers();
                                     $dossierMemberCount = $members->count();
                                 @endphp
-                                <li class="px-6 py-5 hover:bg-surface-variant/30 transition-colors duration-150">
+                                <li class="px-6 py-5 hover:bg-[var(--color-surface)]-variant/30 transition-colors duration-150">
                                     <div class="flex items-start justify-between gap-4">
                                         <div class="flex-1 min-w-0">
                                             <div class="flex items-start gap-3 mb-2">
-                                                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                                                    <i class="fas fa-folder-open text-primary" aria-hidden="true"></i>
+                                                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-[var(--color-primary)]/10 flex items-center justify-center">
+                                                    <i class="fas fa-folder-open text-[var(--color-primary)]" aria-hidden="true"></i>
                                                 </div>
                                                 <div class="flex-1 min-w-0">
                                                     <div class="flex items-start justify-between gap-2 mb-1">
                                                         <a href="{{ route('dossiers.show', $item->external_id) }}" 
-                                                           class="text-title-medium font-medium text-on-surface block
-                                                                  hover:text-primary focus:outline-2 focus:outline-primary focus:outline-offset-2
+                                                           class="text-[var(--font-size-headline-medium)] font-medium text-[var(--color-on-surface)] block
+                                                                  hover:text-[var(--color-primary)] focus:outline-2 focus:outline-primary focus:outline-offset-2
                                                                   transition-colors duration-200 rounded-sm flex-1">
                                                             {{ $item->title ?? 'Geen titel' }}
                                                         </a>
                                                         @if($item->category)
                                                             <a href="{{ route('dossiers.index') }}?informatiecategorie={{ urlencode($item->category) }}{{ request('zoeken') ? '&zoeken=' . urlencode(request('zoeken')) : '' }}" 
                                                                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium 
-                                                                      bg-primary/10 text-primary border border-primary/20
-                                                                      hover:bg-primary/20 hover:border-primary/30
+                                                                      bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-primary/20
+                                                                      hover:bg-[var(--color-primary)]/20 hover:border-primary/30
                                                                       focus:outline-2 focus:outline-primary focus:outline-offset-2
                                                                       transition-all duration-200 shrink-0"
                                                                title="Filter op {{ $item->formatted_category ?? $item->category }}">
@@ -727,8 +727,8 @@
                                                        target="_blank"
                                                        rel="noopener noreferrer"
                                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md
-                                                              bg-primary/5 text-primary border border-primary/20
-                                                              hover:bg-primary/10 hover:border-primary/30
+                                                              bg-[var(--color-primary)]/5 text-[var(--color-primary)] border border-primary/20
+                                                              hover:bg-[var(--color-primary)]/10 hover:border-primary/30
                                                               focus:outline-2 focus:outline-primary focus:outline-offset-2
                                                               transition-all duration-200 text-xs font-medium
                                                               group shrink-0"
@@ -739,14 +739,14 @@
                                                 @endif
                                             </div>
                                             @if($item->description)
-                                                <p class="text-body-medium text-on-surface-variant mb-3 line-clamp-2">
+                                                <p class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]-variant mb-3 line-clamp-2">
                                                     {{ \Illuminate\Support\Str::limit($item->description, 150) }}
                                                 </p>
                                             @endif
-                                            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-label-medium text-on-surface-variant">
+                                            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">
                                                 <span class="inline-flex items-center gap-1.5">
                                                     <i class="fas fa-file-pdf text-xs text-red-600" aria-hidden="true"></i>
-                                                    <span class="font-medium text-on-surface">PDF</span>
+                                                    <span class="font-medium text-[var(--color-on-surface)]">PDF</span>
                                                 </span>
                                                 @if($item->publication_date)
                                                     <span class="inline-flex items-center gap-1.5">
@@ -763,8 +763,8 @@
                                                 @if($item->organisation)
                                                     <a href="{{ route('dossiers.index') }}?organisatie[]={{ urlencode($item->organisation) }}" 
                                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md 
-                                                              bg-primary/10 text-primary border border-primary/20
-                                                              hover:bg-primary/20 hover:border-primary/30
+                                                              bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-primary/20
+                                                              hover:bg-[var(--color-primary)]/20 hover:border-primary/30
                                                               focus:outline-2 focus:outline-primary focus:outline-offset-2
                                                               transition-all duration-200 font-medium text-xs
                                                               group"
@@ -776,7 +776,7 @@
                                                 @endif
                                                 @if($dossierMemberCount > 0)
                                                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md 
-                                                                  bg-primary/10 text-primary border border-primary/20
+                                                                  bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-primary/20
                                                                   font-medium text-xs">
                                                         <i class="fas fa-link text-xs" aria-hidden="true"></i>
                                                         <span>{{ $dossierMemberCount }} gerelateerd{{ $dossierMemberCount !== 1 ? 'e' : '' }} document{{ $dossierMemberCount !== 1 ? 'en' : '' }}</span>
@@ -786,8 +786,8 @@
                                             <div class="mt-3 flex items-center gap-3">
                                                 <a href="{{ route('dossiers.show', $item->external_id) }}" 
                                                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg
-                                                          bg-primary text-on-primary border border-primary
-                                                          hover:bg-primary/90 hover:border-primary/80
+                                                          bg-[var(--color-primary)] text-[var(--color-on-primary)] border border-primary
+                                                          hover:bg-[var(--color-primary)]/90 hover:border-primary/80
                                                           focus:outline-2 focus:outline-primary focus:outline-offset-2
                                                           transition-all duration-200 text-sm font-medium">
                                                     <i class="fas fa-folder-open" aria-hidden="true"></i>
@@ -795,8 +795,8 @@
                                                 </a>
                                                 <a href="/open-overheid/documents/{{ $item->external_id }}" 
                                                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg
-                                                          bg-surface-variant text-on-surface-variant border border-outline-variant
-                                                          hover:bg-surface-variant/80
+                                                          bg-[var(--color-surface)]-variant text-[var(--color-on-surface)]-variant border border-[var(--color-outline-variant)]
+                                                          hover:bg-[var(--color-surface)]-variant/80
                                                           focus:outline-2 focus:outline-primary focus:outline-offset-2
                                                           transition-all duration-200 text-sm font-medium">
                                                     <i class="fas fa-file-alt" aria-hidden="true"></i>
@@ -815,14 +815,14 @@
                         <nav class="flex items-center justify-center gap-2 flex-wrap" aria-label="Paginatie">
                             @if(($results['hasPreviousPage'] ?? false))
                                 <a href="{{ request()->fullUrlWithQuery(['pagina' => ($results['page'] ?? 1) - 1]) }}" 
-                                   class="px-4 py-2 rounded-full text-body-medium text-primary
-                                          hover:bg-primary-container focus:outline-2 focus:outline-primary focus:outline-offset-2
+                                   class="px-4 py-2 rounded-full text-[var(--font-size-body-medium)] text-[var(--color-primary)]
+                                          hover:bg-[var(--color-primary)]-container focus:outline-2 focus:outline-primary focus:outline-offset-2
                                           transition-colors duration-200 min-h-[44px] min-w-[44px] flex items-center justify-center"
                                    aria-label="Vorige pagina">
                                     <i class="fas fa-chevron-left" aria-hidden="true"></i>
                                 </a>
                             @else
-                                <span class="px-4 py-2 rounded-full text-body-medium text-on-surface-variant 
+                                <span class="px-4 py-2 rounded-full text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]-variant 
                                             min-h-[44px] min-w-[44px] flex items-center justify-center" 
                                       aria-disabled="true"
                                       aria-label="Vorige pagina">
@@ -840,34 +840,34 @@
                             
                             @if($startPage > 1)
                                 <a href="{{ request()->fullUrlWithQuery(['pagina' => 1]) }}" 
-                                   class="px-4 py-2 rounded-full text-body-medium text-primary
-                                          hover:bg-primary-container focus:outline-2 focus:outline-primary focus:outline-offset-2
+                                   class="px-4 py-2 rounded-full text-[var(--font-size-body-medium)] text-[var(--color-primary)]
+                                          hover:bg-[var(--color-primary)]-container focus:outline-2 focus:outline-primary focus:outline-offset-2
                                           transition-colors duration-200 min-h-[44px] min-w-[44px] flex items-center justify-center">
                                     1
                                 </a>
                                 @if($startPage > 2)
-                                    <span class="px-4 py-2 text-body-medium text-on-surface-variant">...</span>
+                                    <span class="px-4 py-2 text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]-variant">...</span>
                                 @endif
                             @endif
                             
                             @for($i = $startPage; $i <= $endPage; $i++)
                                 <a 
                                     href="{{ request()->fullUrlWithQuery(['pagina' => $i]) }}" 
-                                    class="px-4 py-2 rounded-full text-body-medium transition-colors duration-200
+                                    class="px-4 py-2 rounded-full text-[var(--font-size-body-medium)] transition-colors duration-200
                                            min-h-[44px] min-w-[44px] flex items-center justify-center
                                            focus:outline-2 focus:outline-primary focus:outline-offset-2
-                                           {{ $i == $currentPage ? 'bg-primary text-on-primary' : 'text-primary hover:bg-primary-container' }}">
+                                           {{ $i == $currentPage ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)]' : 'text-[var(--color-primary)] hover:bg-[var(--color-primary)]-container' }}">
                                     {{ $i }}
                                 </a>
                             @endfor
                             
                             @if($endPage < $totalPages)
                                 @if($endPage < $totalPages - 1)
-                                    <span class="px-4 py-2 text-body-medium text-on-surface-variant">...</span>
+                                    <span class="px-4 py-2 text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]-variant">...</span>
                                 @endif
                                 <a href="{{ request()->fullUrlWithQuery(['pagina' => $totalPages]) }}" 
-                                   class="px-4 py-2 rounded-full text-body-medium text-primary
-                                          hover:bg-primary-container focus:outline-2 focus:outline-primary focus:outline-offset-2
+                                   class="px-4 py-2 rounded-full text-[var(--font-size-body-medium)] text-[var(--color-primary)]
+                                          hover:bg-[var(--color-primary)]-container focus:outline-2 focus:outline-primary focus:outline-offset-2
                                           transition-colors duration-200 min-h-[44px] min-w-[44px] flex items-center justify-center">
                                     {{ $totalPages }}
                                 </a>
@@ -875,14 +875,14 @@
                             
                             @if(($results['hasNextPage'] ?? false))
                                 <a href="{{ request()->fullUrlWithQuery(['pagina' => ($results['page'] ?? 1) + 1]) }}" 
-                                   class="px-4 py-2 rounded-full text-body-medium text-primary
-                                          hover:bg-primary-container focus:outline-2 focus:outline-primary focus:outline-offset-2
+                                   class="px-4 py-2 rounded-full text-[var(--font-size-body-medium)] text-[var(--color-primary)]
+                                          hover:bg-[var(--color-primary)]-container focus:outline-2 focus:outline-primary focus:outline-offset-2
                                           transition-colors duration-200 min-h-[44px] min-w-[44px] flex items-center justify-center"
                                    aria-label="Volgende pagina">
                                     <i class="fas fa-chevron-right" aria-hidden="true"></i>
                                 </a>
                             @else
-                                <span class="px-4 py-2 rounded-full text-body-medium text-on-surface-variant 
+                                <span class="px-4 py-2 rounded-full text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]-variant 
                                             min-h-[44px] min-w-[44px] flex items-center justify-center" 
                                       aria-disabled="true"
                                       aria-label="Volgende pagina">
@@ -897,30 +897,30 @@
     </main>
     
     <!-- Footer -->
-    <footer class="bg-surface-variant border-t border-outline-variant mt-16" role="contentinfo">
+    <footer class="bg-[var(--color-surface)]-variant border-t border-[var(--color-outline-variant)] mt-16" role="contentinfo">
         <div class="max-w-7xl mx-auto px-4 py-8">
             <nav class="flex flex-wrap gap-6" aria-label="Footer navigatie">
                 <a href="#" 
-                   class="text-body-medium text-on-surface-variant 
-                          hover:text-primary transition-colors duration-200
+                   class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]-variant 
+                          hover:text-[var(--color-primary)] transition-colors duration-200
                           focus:outline-2 focus:outline-primary focus:outline-offset-2 rounded-sm">
                     Over deze website
                 </a>
                 <a href="#" 
-                   class="text-body-medium text-on-surface-variant 
-                          hover:text-primary transition-colors duration-200
+                   class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]-variant 
+                          hover:text-[var(--color-primary)] transition-colors duration-200
                           focus:outline-2 focus:outline-primary focus:outline-offset-2 rounded-sm">
                     Overheid.nl
                 </a>
                 <a href="#" 
-                   class="text-body-medium text-on-surface-variant 
-                          hover:text-primary transition-colors duration-200
+                   class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]-variant 
+                          hover:text-[var(--color-primary)] transition-colors duration-200
                           focus:outline-2 focus:outline-primary focus:outline-offset-2 rounded-sm">
                     Privacy & Cookies
                 </a>
                 <a href="#" 
-                   class="text-body-medium text-on-surface-variant 
-                          hover:text-primary transition-colors duration-200
+                   class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]-variant 
+                          hover:text-[var(--color-primary)] transition-colors duration-200
                           focus:outline-2 focus:outline-primary focus:outline-offset-2 rounded-sm">
                     Toegankelijkheid
                 </a>
@@ -1026,7 +1026,7 @@
             });
 
             if (matches.length === 0) {
-                resultsDiv.innerHTML = '<div class="px-4 py-3 text-body-medium text-on-surface-variant">Geen resultaten gevonden</div>';
+                resultsDiv.innerHTML = '<div class="px-4 py-3 text-[var(--font-size-body-medium)] text-[var(--color-on-surface)]-variant">Geen resultaten gevonden</div>';
                 resultsDiv.classList.remove('hidden');
                 return;
             }
@@ -1040,13 +1040,13 @@
                 const paramName = match.type === 'informatiecategorie' ? match.type : `${match.type}[]`;
                 return `
                 <a href="/dossiers?${paramName}=${encodeURIComponent(match.value)}${searchParam}" 
-                   class="block px-4 py-3 hover:bg-surface-variant transition-colors duration-150 border-b border-outline-variant last:border-b-0">
+                   class="block px-4 py-3 hover:bg-[var(--color-surface)]-variant transition-colors duration-150 border-b border-[var(--color-outline-variant)] last:border-b-0">
                     <div class="flex items-center justify-between">
                         <div>
-                            <div class="text-body-medium font-medium text-on-surface">${match.label}</div>
-                            <div class="text-label-medium text-on-surface-variant">${match.secondary}</div>
+                            <div class="text-[var(--font-size-body-medium)] font-medium text-[var(--color-on-surface)]">${match.label}</div>
+                            <div class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">${match.secondary}</div>
                         </div>
-                        <i class="fas fa-chevron-right text-xs text-on-surface-variant" aria-hidden="true"></i>
+                        <i class="fas fa-chevron-right text-xs text-[var(--color-on-surface)]-variant" aria-hidden="true"></i>
                     </div>
                 </a>
             `;

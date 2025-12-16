@@ -50,7 +50,7 @@
             @endif
             
             <!-- Advanced Search with Autocomplete -->
-            <div class="mt-8 relative search-container" id="advanced-search-container" style="z-index: 99999; position: relative;">
+            <div class="mt-8 relative z-[99999] isolate" id="advanced-search-container">
                 <!-- Autocomplete input will be injected here -->
                 <div id="autocomplete" class="relative"></div>
             </div>

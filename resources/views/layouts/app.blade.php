@@ -28,17 +28,15 @@
     {{-- Font Awesome 6.5.2 --}}
     <link rel="stylesheet" href="{{ asset('vendor/fontawesome/css/all.min.css') }}">
     
-    {{-- Modern Open Overheid Styles --}}
-    <link rel="stylesheet" href="{{ asset('css/openoverheid.css') }}">
     
     @stack('styles')
 </head>
-<body class="bg-surface text-on-surface min-h-screen flex flex-col">
+<body class="bg-[var(--color-surface)] text-[var(--color-on-surface)] min-h-screen flex flex-col font-sans">
     @include('layouts.includes.header')
 
     {{-- Global breadcrumb component (if $breadcrumbs is set) --}}
     @if(!empty($breadcrumbs ?? []))
-        <div class="bg-surface border-b border-outline-variant">
+        <div class="bg-[var(--color-surface)] border-b border-[var(--color-outline-variant)]">
             <div class="max-w-7xl mx-auto px-8 py-3">
                 <x-breadcrumbs :items="$breadcrumbs" />
             </div>
