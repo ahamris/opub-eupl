@@ -17,9 +17,9 @@
         ui-monospace, monospace;
 
     /* Primary Colors */
-    --color-primary: #16609a;
-    --color-primary-dark: #0f4a75;
-    --color-primary-light: #e6f2ff;
+    --color-primary: #01689b;
+    --color-primary-dark: #004263;
+    --color-primary-light: #e5f0f9;
     --color-on-primary: #ffffff;
 
     /* Surface Colors */
@@ -63,6 +63,7 @@
         font-weight: 700;
         line-height: var(--line-height-tight);
         letter-spacing: -0.02em;
+        color: var(--color-primary-dark);
     }
 
     h2 {
@@ -70,6 +71,7 @@
         font-weight: 700;
         line-height: var(--line-height-tight);
         letter-spacing: -0.01em;
+        color: var(--color-primary-dark);
     }
 
     h3 {
@@ -77,6 +79,7 @@
         font-weight: 600;
         line-height: var(--line-height-tight);
         letter-spacing: -0.01em;
+        color: var(--color-primary-dark);
     }
 
     h4 {
@@ -84,6 +87,23 @@
         font-weight: 600;
         line-height: var(--line-height-normal);
         letter-spacing: -0.01em;
+        color: var(--color-primary-dark);
+    }
+
+    h5 {
+        font-size: var(--font-size-headline-small);
+        font-weight: 600;
+        line-height: var(--line-height-normal);
+        letter-spacing: -0.01em;
+        color: var(--color-primary-dark);
+    }
+
+    h6 {
+        font-size: var(--font-size-body-large);
+        font-weight: 600;
+        line-height: var(--line-height-normal);
+        letter-spacing: -0.01em;
+        color: var(--color-primary-dark);
     }
 
     p {

@@ -135,22 +135,18 @@
                     </p>
                     <form action="#" method="POST" class="mt-6 flex max-w-md gap-x-4">
                         @csrf
-                        <label for="email-address" class="sr-only">E-mailadres</label>
-                        <input 
-                            id="email-address" 
-                            type="email" 
-                            name="email" 
-                            required 
-                            placeholder="Vul je e-mailadres in" 
-                            autocomplete="email" 
-                            class="min-w-0 flex-auto rounded-md bg-[var(--color-surface)] px-3.5 py-2 text-[var(--font-size-body-large)] text-[var(--color-on-surface)] outline-1 -outline-offset-1 outline-[var(--color-outline-variant)] placeholder:text-[var(--color-on-surface-variant)] focus:outline-2 focus:-outline-offset-2 focus:outline-[var(--color-primary)]"
+                        <x-input 
+                            type="email"
+                            name="email"
+                            id="email-address"
+                            placeholder="Vul je e-mailadres in"
+                            autocomplete="email"
+                            required
+                            class="min-w-0 flex-auto"
                         />
-                        <button 
-                            type="submit" 
-                            class="flex-none rounded-md bg-[var(--color-primary)] px-3.5 py-2.5 text-[var(--font-size-body-medium)] font-semibold text-[var(--color-on-primary)] shadow-sm hover:bg-[var(--color-primary-dark)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] transition-colors duration-200"
-                        >
+                        <x-primary-button class="flex-none rounded-md px-3.5 py-2.5 text-sm font-semibold shadow-sm">
                             Inschrijven
-                        </button>
+                        </x-primary-button>
                     </form>
                 </div>
                 <dl class="grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:pt-2">

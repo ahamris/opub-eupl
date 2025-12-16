@@ -4,22 +4,22 @@
 
 @php
     $searchQuery = request('zoeken');
-
+    
     // Helper function to highlight search terms
     if (!function_exists('highlightSearchTerms')) {
         function highlightSearchTerms($text, $query) {
             if (empty($query) || empty($text)) {
                 return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
             }
-
+            
             $terms = array_filter(explode(' ', trim($query)), fn($term) => strlen($term) > 2);
             $highlighted = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
-
+            
             foreach ($terms as $term) {
                 $pattern = '/' . preg_quote(htmlspecialchars($term, ENT_QUOTES, 'UTF-8'), '/') . '/i';
                 $highlighted = preg_replace($pattern, '<mark class="bg-yellow-200 dark:bg-yellow-800 px-0.5 rounded">$0</mark>', $highlighted);
             }
-
+            
             return $highlighted;
         }
     }
@@ -157,10 +157,10 @@
                                         <label for="publicatiedatum_van" class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface-variant)] whitespace-nowrap">
                                             Vanaf (dd-mm-jjjj):
                                         </label>
-                                        <input 
-                                            type="text" 
-                                            id="publicatiedatum_van" 
-                                            name="publicatiedatum_van" 
+                                        <x-input 
+                                            type="text"
+                                            name="publicatiedatum_van"
+                                            id="publicatiedatum_van"
                                             value="{{ request('publicatiedatum_van') }}"
                                             placeholder="dd-mm-jjjj"
                                             pattern="\d{2}-\d{2}-\d{4}"
@@ -170,16 +170,16 @@
                                                    focus:border-[var(--color-primary)] focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2
                                                    transition-colors duration-200
                                                    min-h-[44px] max-w-[150px]"
-                                        >
+                                        />
                                     </div>
                                     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                                         <label for="publicatiedatum_tot" class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface-variant)] whitespace-nowrap">
                                             Tot en met (dd-mm-jjjj):
                                         </label>
-                                        <input 
-                                            type="text" 
-                                            id="publicatiedatum_tot" 
-                                            name="publicatiedatum_tot" 
+                                        <x-input 
+                                            type="text"
+                                            name="publicatiedatum_tot"
+                                            id="publicatiedatum_tot"
                                             value="{{ request('publicatiedatum_tot') }}"
                                             placeholder="dd-mm-jjjj"
                                             pattern="\d{2}-\d{2}-\d{4}"
@@ -189,7 +189,7 @@
                                                    focus:border-[var(--color-primary)] focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2
                                                    transition-colors duration-200
                                                    min-h-[44px] max-w-[150px]"
-                                        >
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -666,21 +666,19 @@
                             Zoeken in {{ isset($isDossier) ? 'dossiers' : 'documenten' }} & filters
                         </label>
                         <div class="relative">
-                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <i class="fas fa-search text-[var(--color-on-surface-variant)]" aria-hidden="true"></i>
-                            </div>
-                            <input 
-                                type="text" 
-                                id="unified-search"
+                            <x-input 
+                                type="text"
                                 name="zoeken"
+                                id="unified-search"
                                 value="{{ request('zoeken') }}"
                                 placeholder="Zoek {{ isset($isDossier) ? 'dossiers' : 'documenten' }} of filter op organisatie, thema..."
-                                class="block w-full pl-10 pr-3 py-2.5 rounded-lg border-2 border-[var(--color-outline)] bg-white
+                                leadingIcon="fas fa-search"
+                                autocomplete="off"
+                                class="block w-full pr-3 py-2.5 rounded-lg border-2 border-[var(--color-outline)] bg-white
                                        text-sm text-[var(--color-on-surface)] placeholder-[var(--color-on-surface-variant)]
                                        focus:border-[var(--color-primary)] focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2
                                        transition-colors duration-200"
-                                autocomplete="off"
-                            >
+                            />
                             <div id="unified-search-results" class="absolute z-50 mt-1 w-full bg-white rounded-lg shadow-xl border border-[var(--color-outline-variant)] hidden max-h-96 overflow-auto">
                                 <!-- Results populated by JavaScript -->
                             </div>

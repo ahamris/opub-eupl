@@ -57,7 +57,7 @@
                                 <option value="3" {{ $quarter == 3 ? 'selected' : '' }}>Q3</option>
                                 <option value="4" {{ $quarter == 4 ? 'selected' : '' }}>Q4</option>
                             </select>
-                            <button type="submit" class="px-6 py-2 bg-[var(--color-on-primary)] text-[var(--color-primary)] font-semibold rounded-sm hover:bg-[var(--color-on-primary)]/90 transition-colors duration-200 focus:outline-2 focus:outline-on-primary focus:outline-offset-2">
+                            <button type="submit" class="px-6 py-2 bg-[var(--color-primary)] text-[var(--color-on-primary)] font-semibold rounded-sm hover:bg-[var(--color-primary-dark)] transition-colors duration-200 focus:outline-2 focus:outline-[var(--color-primary)] focus:outline-offset-2">
                                 Toepassen
                             </button>
                         </form>

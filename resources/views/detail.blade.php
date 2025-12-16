@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', ($jsonData['title'] ?? 'Document Details') . ' - Open Overheid')
-
+    
 @push('styles')
     <style>
         .document-detail {

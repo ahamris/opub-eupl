@@ -27,21 +27,19 @@
                         
                         <!-- Search Keywords -->
                         <div class="space-y-3">
-                            <label for="sidebar-zoeken" class="block text-[var(--font-size-label-medium)] font-medium text-[var(--color-on-surface)]">
-                                Zoekwoorden
-                            </label>
-                            <input 
-                                type="text" 
-                                id="sidebar-zoeken" 
-                                name="zoeken" 
+                            <x-input 
+                                type="text"
+                                name="zoeken"
+                                id="sidebar-zoeken"
+                                label="Zoekwoorden"
+                                value="{{ request('zoeken') }}"
+                                placeholder="Zoekwoorden..."
                                 class="w-full px-4 py-3 rounded-lg 
                                        border-2 border-[var(--color-outline)] bg-[var(--color-surface)]
                                        text-[var(--font-size-body-large)] text-[var(--color-on-surface)]
                                        focus:border-primary focus:outline-2 focus:outline-primary focus:outline-offset-2
                                        transition-colors duration-200
                                        min-h-[44px]"
-                                value="{{ request('zoeken') }}"
-                                placeholder="Zoekwoorden..."
                             >
                             <div class="flex items-center gap-3">
                                 <input 
@@ -188,10 +186,10 @@
                                         <label for="publicatiedatum_van" class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant whitespace-nowrap">
                                             Vanaf (dd-mm-jjjj):
                                         </label>
-                                        <input 
-                                            type="text" 
-                                            id="publicatiedatum_van" 
-                                            name="publicatiedatum_van" 
+                                        <x-input 
+                                            type="text"
+                                            name="publicatiedatum_van"
+                                            id="publicatiedatum_van"
                                             value="{{ request('publicatiedatum_van') }}"
                                             placeholder="dd-mm-jjjj"
                                             pattern="\d{2}-\d{2}-\d{4}"
@@ -201,16 +199,16 @@
                                                    focus:border-primary focus:outline-2 focus:outline-primary focus:outline-offset-2
                                                    transition-colors duration-200
                                                    min-h-[44px] max-w-[150px]"
-                                        >
+                                        />
                                     </div>
                                     <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                                         <label for="publicatiedatum_tot" class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant whitespace-nowrap">
                                             Tot en met (dd-mm-jjjj):
                                         </label>
-                                        <input 
-                                            type="text" 
-                                            id="publicatiedatum_tot" 
-                                            name="publicatiedatum_tot" 
+                                        <x-input 
+                                            type="text"
+                                            name="publicatiedatum_tot"
+                                            id="publicatiedatum_tot"
                                             value="{{ request('publicatiedatum_tot') }}"
                                             placeholder="dd-mm-jjjj"
                                             pattern="\d{2}-\d{2}-\d{4}"
@@ -220,7 +218,7 @@
                                                    focus:border-primary focus:outline-2 focus:outline-primary focus:outline-offset-2
                                                    transition-colors duration-200
                                                    min-h-[44px] max-w-[150px]"
-                                        >
+                                        />
                                     </div>
                                 </div>
                             </div>

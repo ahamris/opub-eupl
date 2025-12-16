@@ -70,14 +70,14 @@
                 <div class="mx-auto rounded-md bg-white p-6 shadow-xl ring-1 ring-gray-900/10 dark:bg-gray-900 dark:ring-white/10">
                     <div class="mb-4 flex items-center justify-between gap-3">
                         <p class="text-sm font-medium text-gray-900 dark:text-white">Slim zoeken met</p>
-                        <a href="{{ route('chat') }}" class="inline-flex items-center gap-2 rounded-md bg-[var(--color-primary)] px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[var(--color-primary-dark)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
+                        <a href="{{ route('chat') }}" class="inline-flex items-center gap-2 rounded-md bg-[var(--color-primary)] px-3.5 py-1.5 text-xs font-semibold text-[var(--color-on-primary)] shadow-xs hover:bg-[var(--color-primary-dark)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)]">
                             <i class="fas fa-comments text-[0.9rem]" aria-hidden="true"></i>
                             <span>Chat met AI</span>
                         </a>
                     </div>
                     <div class="relative mt-2">
                         <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 z-10">
-                            <i class="fas fa-search text-gray-400 dark:text-gray-500 text-sm" aria-hidden="true"></i>
+                            <i class="fas fa-search text-[var(--color-on-surface-variant)] dark:text-[var(--color-on-surface-variant)] text-sm" aria-hidden="true"></i>
                         </div>
                         <input 
                             type="text" 
@@ -88,7 +88,7 @@
                             @keydown.arrow-down.prevent="navigateResults(1)"
                             @keydown.arrow-up.prevent="navigateResults(-1)"
                             @keydown.enter.prevent="selectResult()"
-                            class="block w-full rounded-md bg-white py-2 pl-10 pr-10 text-sm text-gray-900 border border-gray-200 placeholder:text-gray-400 sm:text-sm sm:leading-6 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 focus:outline-none"
+                            class="block w-full rounded-md bg-white px-3 py-2 pl-10 pr-10 text-base text-[var(--color-on-surface)] outline-1 -outline-offset-1 outline-[var(--color-outline-variant)] placeholder:text-[var(--color-on-surface-variant)] focus:outline-2 focus:-outline-offset-2 focus:outline-[var(--color-primary)] sm:text-sm/6 dark:bg-white/5 dark:text-[var(--color-on-surface)] dark:outline-white/10 dark:placeholder:text-[var(--color-on-surface-variant)] dark:focus:outline-[var(--color-primary)]"
                             placeholder="Zoek in alle documenten"
                             autocomplete="off"
                             aria-label="Zoek documenten"
@@ -96,7 +96,7 @@
                             aria-haspopup="listbox"
                             aria-autocomplete="list"
                         >
-                        <div x-show="loading" class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                        <div x-show="loading" class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 z-10">
                             <i class="fas fa-circle-notch animate-spin text-[var(--color-primary)] dark:text-[var(--color-primary)] text-sm" aria-hidden="true"></i>
                         </div>
                     </div>
