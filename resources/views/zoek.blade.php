@@ -105,17 +105,12 @@
 
     <!-- Kennisbank Section - Blog Grid -->
     @if(request()->routeIs('home'))
-    <div class="mx-auto max-w-7xl px-6 pt-20 pb-20 lg:px-8">
-        <div class="max-w-2xl">
-            <h2 class="text-[var(--font-size-label-large)] font-semibold text-[var(--color-primary)] uppercase tracking-wider">Kennisbank</h2>
-            <p class="mt-2 text-[var(--font-size-headline-large)] font-bold tracking-[-0.01em] text-pretty text-[var(--color-on-surface)] leading-[var(--line-height-tight)]">
-                Leer meer over open data en transparantie
-            </p>
-            <p class="mt-6 text-[var(--font-size-body-large)] text-[var(--color-on-surface-variant)] leading-[var(--line-height-relaxed)]">
-                Leer meer over open data, transparantie en hoe je het platform gebruikt
-            </p>
-        </div>
-        <div class="mt-16 sm:mt-20 lg:mt-24">
+    <div class="bg-white py-24 sm:py-32 dark:bg-gray-900">
+        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+            <div class="max-w-2xl">
+                <h2 class="text-4xl font-semibold tracking-tight text-balance text-gray-900 sm:text-5xl dark:text-white">Kennisbank</h2>
+                <p class="mt-2 text-lg/8 text-gray-600 dark:text-gray-300">Leer meer over open data, transparantie en hoe je het platform gebruikt</p>
+            </div>
             <x-knowledge-base-grid />
         </div>
     </div>
@@ -189,7 +184,7 @@
             </div>
         </div>
         <div aria-hidden="true" class="absolute top-0 left-1/2 -z-10 -translate-x-1/2 blur-3xl xl:-top-6">
-            <div style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)" class="aspect-[1155/678] w-[288.75px] bg-gradient-to-tr from-[var(--color-primary-light)] to-[var(--color-primary)] opacity-20"></div>
+            <div class="aspect-[1155/678] w-[288.75px]"></div>
         </div>
     </div>
     @endif

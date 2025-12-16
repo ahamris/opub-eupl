@@ -33,48 +33,46 @@
 
 <div class="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-20 lg:mx-0 lg:max-w-none lg:grid-cols-3">
     @foreach($articles as $article)
-    <article class="flex flex-col items-start justify-between group">
+    <article class="flex flex-col items-start justify-between">
         <div class="relative w-full">
             <img 
                 src="{{ $article['image'] }}" 
                 alt="{{ $article['title'] }}" 
-                class="aspect-video w-full rounded-2xl bg-outline-variant/30 object-cover sm:aspect-2/1 lg:aspect-3/2 transition-transform duration-300 group-hover:scale-105"
+                class="aspect-video w-full rounded-md bg-gray-100 object-cover sm:aspect-2/1 lg:aspect-3/2 dark:bg-gray-800"
                 loading="lazy"
             />
-            <div class="absolute inset-0 rounded-2xl ring-1 ring-inset ring-outline-variant/20"></div>
+            <div class="absolute inset-0 rounded-md inset-ring inset-ring-gray-900/10 dark:inset-ring-white/10"></div>
         </div>
-        <div class="flex max-w-xl grow flex-col justify-between mt-8">
-            <div class="flex items-center gap-x-4 text-label-small mb-4">
-                <time datetime="{{ $article['date']->format('Y-m-d') }}" class="text-on-surface-variant/70">
-                    {{ $article['date']->format('d M Y') }}
+        <div class="flex max-w-xl grow flex-col justify-between">
+            <div class="mt-8 flex items-center gap-x-4 text-xs">
+                <time datetime="{{ $article['date']->format('Y-m-d') }}" class="text-gray-500 dark:text-gray-400">
+                    {{ $article['date']->format('M d, Y') }}
                 </time>
-                <a href="#" class="relative z-10 rounded bg-primary-light/50 px-3 py-1.5 font-medium text-primary hover:bg-primary-light transition-colors duration-200">
+                <a href="#" class="relative z-10 rounded-md bg-gray-50 px-3 py-1.5 font-medium text-gray-600 dark:bg-gray-800/60 dark:text-gray-300">
                     {{ $article['category'] }}
                 </a>
             </div>
-            <div class="group/article relative grow">
-                <h3 class="mt-3 text-headline-small font-semibold text-on-surface group-hover/article:text-primary transition-colors duration-200">
+            <div class="relative grow">
+                <h3 class="mt-3 text-lg/6 font-semibold text-gray-900 dark:text-white">
                     <a href="#">
-                        <span class="absolute inset-0" aria-hidden="true"></span>
+                        <span class="absolute inset-0"></span>
                         {{ $article['title'] }}
                     </a>
                 </h3>
-                <p class="mt-5 line-clamp-3 text-body-medium text-on-surface-variant/80 leading-relaxed">
+                <p class="mt-5 line-clamp-3 text-sm/6 text-gray-600 dark:text-gray-400">
                     {{ $article['description'] }}
                 </p>
             </div>
-            <div class="relative mt-8 flex items-center gap-x-4">
-                <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <i class="fas fa-user text-primary text-sm" aria-hidden="true"></i>
-                </div>
-                <div class="text-body-small">
-                    <p class="font-semibold text-on-surface">
-                        <a href="#" class="hover:text-primary transition-colors duration-200">
-                            <span class="absolute inset-0" aria-hidden="true"></span>
+            <div class="relative mt-8 flex items-center gap-x-4 justify-self-end">
+                <img src="https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" class="size-10 rounded-full bg-gray-100 dark:bg-gray-800" />
+                <div class="text-sm/6">
+                    <p class="font-semibold text-gray-900 dark:text-white">
+                        <a href="#">
+                            <span class="absolute inset-0"></span>
                             Open Overheid Team
                         </a>
                     </p>
-                    <p class="text-on-surface-variant/70">Redactie</p>
+                    <p class="text-gray-600 dark:text-gray-400">Redactie</p>
                 </div>
             </div>
         </div>
