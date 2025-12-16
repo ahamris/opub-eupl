@@ -568,7 +568,29 @@ class SearchController extends Controller
 
         // If empty query, return total document count for live ticker
         if (empty($query) || strlen($query) < 2) {
-            $totalCount = OpenOverheidDocument::count();
+            // Get total count from Typesense (cached) instead of database
+            $totalCount = 0;
+            $useTypesense = config('open_overheid.typesense.enabled', true);
+            
+            if ($useTypesense) {
+                try {
+                    $searchService = app(\App\Services\Typesense\TypesenseSearchService::class);
+                    $countResults = $searchService->search('', [
+                        'per_page' => 0, // Just get count
+                        'page' => 1,
+                    ]);
+                    $totalCount = $countResults['found'] ?? 0;
+                } catch (\Exception $e) {
+                    // Fallback to cached database count
+                    $totalCount = Cache::remember('total_document_count', 3600, function () {
+                        return OpenOverheidDocument::count();
+                    });
+                }
+            } else {
+                $totalCount = Cache::remember('total_document_count', 3600, function () {
+                    return OpenOverheidDocument::count();
+                });
+            }
 
             return response()->json([
                 'hits' => [],
@@ -617,8 +639,19 @@ class SearchController extends Controller
 
                 $searchTime = (int) (($results['search_time_ms'] ?? 0) + ((microtime(true) - $startTime) * 1000));
 
-                // Get total document count for live ticker
-                $totalCount = OpenOverheidDocument::count();
+                // Get total document count for live ticker from Typesense (cached)
+                // Use cached count to avoid slow database query on every live search
+                $totalCount = Cache::remember('total_document_count', 3600, function () use ($searchService) {
+                    try {
+                        $countResults = $searchService->search('', [
+                            'per_page' => 0, // Just get count
+                            'page' => 1,
+                        ]);
+                        return $countResults['found'] ?? 0;
+                    } catch (\Exception $e) {
+                        return OpenOverheidDocument::count();
+                    }
+                });
 
                 return response()->json([
                     'hits' => $formattedHits,
@@ -663,8 +696,10 @@ class SearchController extends Controller
 
             $searchTime = (int) ((microtime(true) - $startTime) * 1000);
 
-            // Get total document count for live ticker
-            $totalCount = OpenOverheidDocument::count();
+            // Get total document count for live ticker (cached to avoid slow query)
+            $totalCount = Cache::remember('total_document_count', 3600, function () {
+                return OpenOverheidDocument::count();
+            });
 
             return response()->json([
                 'hits' => $formattedHits,
@@ -823,23 +858,25 @@ class SearchController extends Controller
                 }
             }
 
-            // Get total document count from Typesense (not database!)
-            $documentCount = 0;
-            if ($useTypesense) {
-                try {
-                    // Make lightweight Typesense query to get total count
-                    $countResults = $this->searchWithTypesense(
-                        new OpenOverheidSearchQuery(zoektekst: '', page: 1, perPage: 0),
-                        false
-                    );
-                    $documentCount = $countResults['total'] ?? 0;
-                } catch (\Exception $e) {
-                    \Log::warning('Typesense total count failed, using database fallback', ['error' => $e->getMessage()]);
-                    $documentCount = OpenOverheidDocument::count();
+            // Get total document count from Typesense (cached to avoid slow queries)
+            $documentCount = Cache::remember('total_document_count', 3600, function () use ($useTypesense) {
+                if ($useTypesense) {
+                    try {
+                        // Make lightweight Typesense query to get total count
+                        $searchService = app(\App\Services\Typesense\TypesenseSearchService::class);
+                        $countResults = $searchService->search('', [
+                            'per_page' => 0, // Just get count
+                            'page' => 1,
+                        ]);
+                        return $countResults['found'] ?? 0;
+                    } catch (\Exception $e) {
+                        \Log::warning('Typesense total count failed, using database fallback', ['error' => $e->getMessage()]);
+                        return OpenOverheidDocument::count();
+                    }
+                } else {
+                    return OpenOverheidDocument::count();
                 }
-            } else {
-                $documentCount = OpenOverheidDocument::count();
-            }
+            });
 
             // Get all available filter options for "Toon meer"
             // Note: This still uses database for now, but could be optimized to use Typesense facets
