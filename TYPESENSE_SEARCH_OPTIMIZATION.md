@@ -123,3 +123,4 @@ Expected results:
 3. **Async Loading**: Load filter counts asynchronously after initial page load
 4. **Pre-computed Facets**: Store common facet combinations in cache
 
+

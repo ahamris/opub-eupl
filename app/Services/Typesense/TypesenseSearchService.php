@@ -22,7 +22,7 @@ class TypesenseSearchService
                 'port' => (int) ($config['port'] ?? env('TYPESENSE_PORT', 8108)),
                 'protocol' => $config['protocol'] ?? env('TYPESENSE_PROTOCOL', 'http'),
             ]],
-            'connection_timeout_seconds' => 2,
+            'connection_timeout_seconds' => 10, // Increased timeout for complex queries with multiple filters
         ]);
     }
 

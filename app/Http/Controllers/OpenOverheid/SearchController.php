@@ -781,15 +781,24 @@ class SearchController extends Controller
                         $filterCounts = $this->convertTypesenseFacetsToFilterCounts($facetCounts, $query);
                         
                         // Calculate date filter counts separately (Typesense doesn't provide date facets)
-                        // Use a lightweight query for date counts
+                        // IMPORTANT: Apply ALL current filters to get accurate counts
                         try {
                             $now = now();
                             $baseQuery = OpenOverheidDocument::query();
+                            
+                            // Apply search text filter
                             if (! empty($query->zoektekst)) {
                                 $baseQuery->whereFullText(['title', 'description', 'content'], $query->zoektekst);
                             }
-                            $baseQuery->dateRange($query->publicatiedatumVan, $query->publicatiedatumTot);
                             
+                            // Apply ALL current filters to match the search results
+                            $baseQuery->dateRange($query->publicatiedatumVan, $query->publicatiedatumTot);
+                            $baseQuery->byDocumentType($query->documentsoort);
+                            $baseQuery->byCategory($query->informatiecategorie);
+                            $baseQuery->byTheme($query->thema);
+                            $baseQuery->byOrganisation($query->organisatie);
+                            
+                            // Calculate date counts with all filters applied
                             $filterCounts['week'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subWeek())->count();
                             $filterCounts['maand'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subMonth())->count();
                             $filterCounts['jaar'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subYear())->count();
@@ -1015,21 +1024,49 @@ class SearchController extends Controller
         $searchService = app(\App\Services\Typesense\TypesenseSearchService::class);
 
         // Build filter_by string
+        // IMPORTANT: Escape special characters and filter out empty values to prevent Typesense errors
         $filters = [];
         if ($query->documentsoort) {
             $types = is_array($query->documentsoort) ? $query->documentsoort : [$query->documentsoort];
-            $filters[] = 'document_type:['.implode(',', array_map(fn ($t) => '='.$t, $types)).']';
+            $types = array_filter(array_map('trim', $types)); // Remove empty values
+            if (! empty($types)) {
+                // Escape special characters in Typesense filter syntax
+                $escapedTypes = array_map(function ($t) {
+                    // Escape quotes and special characters
+                    $t = str_replace(['"', "'"], '', $t); // Remove quotes
+                    return '='.$t;
+                }, $types);
+                $filters[] = 'document_type:['.implode(',', $escapedTypes).']';
+            }
         }
         if ($query->informatiecategorie) {
-            $filters[] = 'category:='.$query->informatiecategorie;
+            $category = trim($query->informatiecategorie);
+            if (! empty($category)) {
+                $category = str_replace(['"', "'"], '', $category); // Remove quotes
+                $filters[] = 'category:='.$category;
+            }
         }
         if ($query->thema) {
             $themes = is_array($query->thema) ? $query->thema : [$query->thema];
-            $filters[] = 'theme:['.implode(',', array_map(fn ($t) => '='.$t, $themes)).']';
+            $themes = array_filter(array_map('trim', $themes)); // Remove empty values
+            if (! empty($themes)) {
+                $escapedThemes = array_map(function ($t) {
+                    $t = str_replace(['"', "'"], '', $t); // Remove quotes
+                    return '='.$t;
+                }, $themes);
+                $filters[] = 'theme:['.implode(',', $escapedThemes).']';
+            }
         }
         if ($query->organisatie) {
             $orgs = is_array($query->organisatie) ? $query->organisatie : [$query->organisatie];
-            $filters[] = 'organisation:['.implode(',', array_map(fn ($o) => '='.$o, $orgs)).']';
+            $orgs = array_filter(array_map('trim', $orgs)); // Remove empty values
+            if (! empty($orgs)) {
+                $escapedOrgs = array_map(function ($o) {
+                    $o = str_replace(['"', "'"], '', $o); // Remove quotes
+                    return '='.$o;
+                }, $orgs);
+                $filters[] = 'organisation:['.implode(',', $escapedOrgs).']';
+            }
         }
         if ($query->publicatiedatumVan || $query->publicatiedatumTot) {
             $dateFilters = [];
@@ -1076,7 +1113,13 @@ class SearchController extends Controller
         ];
 
         if (! empty($filters)) {
-            $options['filter_by'] = implode(' && ', $filters);
+            $filterString = implode(' && ', $filters);
+            $options['filter_by'] = $filterString;
+            
+            // Log filter string for debugging (only in debug mode)
+            if (config('app.debug')) {
+                \Log::debug('Typesense filter string', ['filter_by' => $filterString, 'filter_count' => count($filters)]);
+            }
         }
 
         // Natural language search is disabled - Typesense is pure search only
@@ -1085,8 +1128,26 @@ class SearchController extends Controller
         //     $options['natural_language_search'] = true;
         // }
 
-        // Search in Typesense
-        $typesenseResults = $searchService->search($query->zoektekst ?? '', $options);
+        // Search in Typesense with timeout handling
+        try {
+            $typesenseResults = $searchService->search($query->zoektekst ?? '', $options);
+        } catch (\Typesense\Exceptions\TypesenseClientError $e) {
+            // Log Typesense-specific errors
+            \Log::error('Typesense client error', [
+                'error' => $e->getMessage(),
+                'filters' => $filters ?? [],
+                'query' => $query->zoektekst ?? '',
+            ]);
+            throw $e;
+        } catch (\Exception $e) {
+            // Log other errors
+            \Log::error('Typesense search error', [
+                'error' => $e->getMessage(),
+                'filters' => $filters ?? [],
+                'query' => $query->zoektekst ?? '',
+            ]);
+            throw $e;
+        }
 
         // Transform Typesense results to match expected format
         $items = collect($typesenseResults['hits'] ?? [])->map(function ($hit) {

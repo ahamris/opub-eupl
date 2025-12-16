@@ -106,3 +106,4 @@ Based on the code:
 3. **Test search** and check if filter counts appear
 4. **Monitor performance** - should be < 1 second if using facets
 
+

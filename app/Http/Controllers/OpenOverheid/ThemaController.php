@@ -97,15 +97,25 @@ class ThemaController extends Controller
                         $filterCounts = $this->convertTypesenseFacetsToFilterCounts($results['facet_counts'], $query);
                         
                         // Calculate date filter counts separately
+                        // IMPORTANT: Apply ALL current filters to get accurate counts
                         try {
                             $now = now();
                             $baseQuery = OpenOverheidDocument::whereNotNull('theme')
                                 ->where('theme', '!=', 'Onbekend');
+                            
+                            // Apply search text filter
                             if (! empty($query->zoektekst)) {
                                 $baseQuery->whereFullText(['title', 'description', 'content'], $query->zoektekst);
                             }
-                            $baseQuery->dateRange($query->publicatiedatumVan, $query->publicatiedatumTot);
                             
+                            // Apply ALL current filters to match the search results
+                            $baseQuery->dateRange($query->publicatiedatumVan, $query->publicatiedatumTot);
+                            $baseQuery->byDocumentType($query->documentsoort);
+                            $baseQuery->byCategory($query->informatiecategorie);
+                            $baseQuery->byTheme($query->thema);
+                            $baseQuery->byOrganisation($query->organisatie);
+                            
+                            // Calculate date counts with all filters applied
                             $filterCounts['week'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subWeek())->count();
                             $filterCounts['maand'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subMonth())->count();
                             $filterCounts['jaar'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subYear())->count();
