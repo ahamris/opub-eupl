@@ -6,30 +6,21 @@
     'documentCount' => 0,
 ])
 
-<div class="relative isolate bg-white">
-    <!-- Soft gradient overlay -->
-    <div class="absolute inset-0 -z-10 bg-gradient-to-br from-[var(--color-primary-light)]/20 via-white to-[var(--color-primary-light)]/10"></div>
-    <div class="absolute inset-0 -z-10 bg-gradient-to-tr from-transparent via-[var(--color-primary-light)]/5 to-[var(--color-primary)]/5"></div>
-    
-    <!-- Subtle background pattern -->
-    <svg aria-hidden="true" class="absolute inset-0 -z-10 size-full mask-[radial-gradient(100%_100%_at_top_right,white,transparent)] stroke-[var(--color-outline-variant)]/20">
-        <defs>
-            <pattern id="hero-pattern" width="200" height="200" x="50%" y="-1" patternUnits="userSpaceOnUse">
-                <path d="M100 200V.5M.5 .5H200" fill="none" />
-            </pattern>
-        </defs>
-        <svg x="50%" y="-1" class="overflow-visible fill-[var(--color-surface-variant)]/30">
-            <path d="M-100.5 0h201v201h-201Z M699.5 0h201v201h-201Z M499.5 400h201v201h-201Z M-300.5 600h201v201h-201Z" stroke-width="0" />
-        </svg>
-        <rect width="100%" height="100%" fill="url(#hero-pattern)" stroke-width="0" />
-    </svg>
-    
-    <!-- Decorative gradient blob -->
-    <div aria-hidden="true" class="absolute inset-x-0 top-0 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-20">
-        <div style="clip-path: polygon(73.6% 51.7%, 91.7% 11.8%, 100% 46.4%, 97.4% 82.2%, 92.5% 84.9%, 75.7% 64%, 55.3% 47.5%, 46.5% 49.4%, 45% 62.9%, 50.3% 87.2%, 21.3% 64.1%, 0.1% 100%, 5.4% 51.1%, 21.4% 63.9%, 58.9% 0.2%, 73.6% 51.7%)" class="relative left-[calc(50%-11rem)] aspect-1155/678 w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[var(--color-primary-light)]/40 to-[var(--color-primary)]/20 opacity-50 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"></div>
+<div class="relative isolate bg-white group overflow-hidden">
+    <!-- Animated Grid Background with Wave Effect -->
+    <div class="hero-grid-container absolute inset-0 -z-10 overflow-hidden" x-data="heroGrid()" x-init="init()">
+        <!-- Base gradient overlay -->
+        <div class="absolute inset-0 bg-gradient-to-br from-blue-50/40 via-purple-50/20 to-cyan-50/30"></div>
+        
+        <!-- Animated grid canvas -->
+        <canvas x-ref="gridCanvas" class="absolute inset-0 w-full h-full opacity-80"></canvas>
+        
+        <!-- Soft radial mask for fade effect -->
+        <div class="absolute inset-0" style="background: radial-gradient(ellipse 120% 100% at 80% 0%, transparent 40%, white 100%);"></div>
     </div>
+    
 
-    <div class="mx-auto max-w-7xl px-6 pt-24 pb-24 sm:pt-32 sm:pb-32 lg:grid lg:grid-cols-12 lg:gap-x-12 lg:items-center lg:px-8 lg:pt-40 lg:pb-40">
+    <div class="mx-auto max-w-7xl px-6 pt-24 pb-24 sm:pt-24 sm:pb-24 lg:grid lg:grid-cols-12 lg:gap-x-12 lg:items-center lg:px-8 lg:pt-32 lg:pb-32">
         <!-- Left side: Text content -->
         <div class="mx-auto max-w-2xl lg:col-span-5 lg:mx-0 xl:col-span-6">
             @if($badge || $badgeText)
@@ -74,7 +65,7 @@
         <div class="mx-auto mt-16 w-full max-w-2xl lg:col-span-7 lg:mx-0 lg:mt-0 xl:col-span-6">
             <div class="relative isolate" x-data="liveSearch()" @click.outside="showResults = false">
                 <!-- Enhanced Search Card -->
-                <div class="rounded-md bg-white p-8 border border-[var(--color-outline-variant)] shadow-sm">
+                <div class="rounded-md bg-white p-8 border border-[var(--color-outline-variant)] shadow-sm transition-all duration-300 hover:shadow-md hover:border-[var(--color-primary)]/30">
                     <!-- Header Section -->
                     <div class="mb-6">
                         <div class="flex items-center justify-between gap-4 mb-4">
@@ -267,6 +258,176 @@
 
 @push('scripts')
 <script>
+// Animated Grid with Wave Effect - AI-inspired soft animation
+function heroGrid() {
+    return {
+        canvas: null,
+        ctx: null,
+        cells: [],
+        gridSize: 40,
+        animationId: null,
+        time: 0,
+        mouseX: -1000,
+        mouseY: -1000,
+        
+        // Soft, AI-inspired color palette
+        colors: [
+            { r: 59, g: 130, b: 246 },   // blue-500
+            { r: 139, g: 92, b: 246 },   // violet-500
+            { r: 6, g: 182, b: 212 },    // cyan-500
+            { r: 99, g: 102, b: 241 },   // indigo-500
+            { r: 20, g: 184, b: 166 },   // teal-500
+            { r: 168, g: 85, b: 247 },   // purple-500
+        ],
+        
+        init() {
+            this.canvas = this.$refs.gridCanvas;
+            if (!this.canvas) return;
+            
+            this.ctx = this.canvas.getContext('2d');
+            this.resize();
+            this.createGrid();
+            this.animate();
+            
+            // Handle resize
+            window.addEventListener('resize', () => this.resize());
+            
+            // Optional: mouse interaction for subtle ripple effect
+            this.canvas.addEventListener('mousemove', (e) => {
+                const rect = this.canvas.getBoundingClientRect();
+                this.mouseX = e.clientX - rect.left;
+                this.mouseY = e.clientY - rect.top;
+            });
+            
+            this.canvas.addEventListener('mouseleave', () => {
+                this.mouseX = -1000;
+                this.mouseY = -1000;
+            });
+        },
+        
+        resize() {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = this.canvas.parentElement.getBoundingClientRect();
+            
+            this.canvas.width = rect.width * dpr;
+            this.canvas.height = rect.height * dpr;
+            this.canvas.style.width = rect.width + 'px';
+            this.canvas.style.height = rect.height + 'px';
+            
+            this.ctx.scale(dpr, dpr);
+            this.createGrid();
+        },
+        
+        createGrid() {
+            this.cells = [];
+            const rect = this.canvas.parentElement.getBoundingClientRect();
+            const cols = Math.ceil(rect.width / this.gridSize) + 1;
+            const rows = Math.ceil(rect.height / this.gridSize) + 1;
+            
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    // Randomly select some cells to be colored
+                    if (Math.random() < 0.15) {
+                        this.cells.push({
+                            x: col * this.gridSize,
+                            y: row * this.gridSize,
+                            color: this.colors[Math.floor(Math.random() * this.colors.length)],
+                            phase: Math.random() * Math.PI * 2,
+                            speed: 0.25 + Math.random() * 0.2,
+                            baseOpacity: 0.08 + Math.random() * 0.12
+                        });
+                    }
+                }
+            }
+        },
+        
+        animate() {
+            this.time += 0.005;
+            this.draw();
+            this.animationId = requestAnimationFrame(() => this.animate());
+        },
+        
+        draw() {
+            const rect = this.canvas.parentElement.getBoundingClientRect();
+            this.ctx.clearRect(0, 0, rect.width, rect.height);
+            
+            // Draw grid lines
+            this.ctx.strokeStyle = 'rgba(191, 219, 254, 0.3)';
+            this.ctx.lineWidth = 0.5;
+            
+            const cols = Math.ceil(rect.width / this.gridSize) + 1;
+            const rows = Math.ceil(rect.height / this.gridSize) + 1;
+            
+            // Vertical lines
+            for (let col = 0; col <= cols; col++) {
+                const x = col * this.gridSize;
+                // Add subtle wave to line opacity
+                const waveOffset = Math.sin(this.time * 0.3 + col * 0.1) * 0.1 + 0.3;
+                this.ctx.strokeStyle = `rgba(191, 219, 254, ${waveOffset})`;
+                this.ctx.beginPath();
+                this.ctx.moveTo(x, 0);
+                this.ctx.lineTo(x, rect.height);
+                this.ctx.stroke();
+            }
+            
+            // Horizontal lines
+            for (let row = 0; row <= rows; row++) {
+                const y = row * this.gridSize;
+                const waveOffset = Math.sin(this.time * 0.3 + row * 0.1) * 0.1 + 0.3;
+                this.ctx.strokeStyle = `rgba(191, 219, 254, ${waveOffset})`;
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, y);
+                this.ctx.lineTo(rect.width, y);
+                this.ctx.stroke();
+            }
+            
+            // Draw animated colored cells
+            this.cells.forEach(cell => {
+                // Calculate wave-based opacity
+                const waveValue = Math.sin(this.time * cell.speed + cell.phase);
+                const normalizedWave = (waveValue + 1) / 2; // 0 to 1
+                
+                // Mouse proximity effect (subtle)
+                let mouseEffect = 0;
+                const dx = this.mouseX - (cell.x + this.gridSize / 2);
+                const dy = this.mouseY - (cell.y + this.gridSize / 2);
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < 150) {
+                    mouseEffect = (1 - distance / 150) * 0.15;
+                }
+                
+                // Global wave ripple effect
+                const centerX = rect.width * 0.7;
+                const centerY = rect.height * 0.3;
+                const distFromCenter = Math.sqrt(
+                    Math.pow(cell.x - centerX, 2) + 
+                    Math.pow(cell.y - centerY, 2)
+                );
+                const ripple = Math.sin(distFromCenter * 0.01 - this.time * 0.8) * 0.5 + 0.5;
+                
+                const opacity = (cell.baseOpacity * normalizedWave * 0.6 + ripple * 0.08 + mouseEffect) * 0.8;
+                
+                // Draw the cell with soft glow
+                this.ctx.fillStyle = `rgba(${cell.color.r}, ${cell.color.g}, ${cell.color.b}, ${opacity})`;
+                this.ctx.fillRect(cell.x + 1, cell.y + 1, this.gridSize - 2, this.gridSize - 2);
+                
+                // Add subtle inner glow for highlighted cells
+                if (normalizedWave > 0.7 || mouseEffect > 0.05) {
+                    const glowOpacity = opacity * 0.3;
+                    this.ctx.fillStyle = `rgba(255, 255, 255, ${glowOpacity})`;
+                    this.ctx.fillRect(cell.x + 4, cell.y + 4, this.gridSize - 8, this.gridSize - 8);
+                }
+            });
+        },
+        
+        destroy() {
+            if (this.animationId) {
+                cancelAnimationFrame(this.animationId);
+            }
+        }
+    };
+}
+
 // Live Document Counter - Updates periodically to show real-time document count
 function liveDocumentCounter(initialCount) {
     return {
@@ -490,4 +651,19 @@ function liveSearch() {
     }
 }
 </script>
+@endpush
+
+@push('styles')
+<style>
+    .hero-grid-container canvas {
+        pointer-events: none;
+    }
+    
+    /* Reduce motion for accessibility */
+    @media (prefers-reduced-motion: reduce) {
+        .hero-grid-container canvas {
+            opacity: 0.4;
+        }
+    }
+</style>
 @endpush
