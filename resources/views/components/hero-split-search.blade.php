@@ -356,23 +356,12 @@ function liveDocumentCounter(initialCount) {
 
 // Initialize Typesense Autocomplete on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Get Typesense config from environment (passed via blade)
-    const typesenseConfig = {
-        apiKey: '{{ config("open_overheid.typesense.api_key") }}',
-        host: '{{ config("open_overheid.typesense.host") }}',
-        port: {{ config("open_overheid.typesense.port", 8108) }},
-        protocol: '{{ config("open_overheid.typesense.protocol", "http") }}',
-    };
-    
     // Initialize autocomplete if container exists and function is available
     if (document.getElementById('hero-autocomplete') && typeof window.initTypesenseAutocomplete === 'function') {
         window.initTypesenseAutocomplete({
             container: '#hero-autocomplete',
-            apiKey: typesenseConfig.apiKey,
-            host: typesenseConfig.host,
-            port: typesenseConfig.port,
-            protocol: typesenseConfig.protocol,
-            collection: 'open_overheid_documents',
+            liveSearchUrl: '{{ route("api.live-search") }}',
+            autocompleteUrl: '{{ route("api.autocomplete") }}',
             searchRoute: '{{ route("zoeken") }}',
             documentRoute: '/open-overheid/documents',
             placeholder: 'Zoek in alle documenten...',

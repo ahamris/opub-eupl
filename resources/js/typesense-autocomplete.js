@@ -2,35 +2,67 @@
  * Typesense Autocomplete Implementation
  * Based on: https://github.com/typesense/typesense-autocomplete-demo
  * 
- * Uses @algolia/autocomplete-js with typesense-instantsearch-adapter
+ * Uses @algolia/autocomplete-js with Laravel API proxy (to avoid mixed content issues)
  */
 
-import { autocomplete, getAlgoliaResults } from '@algolia/autocomplete-js';
-import TypesenseInstantSearchAdapter from 'typesense-instantsearch-adapter';
+import { autocomplete } from '@algolia/autocomplete-js';
 
 // Store the autocomplete instance globally for cleanup
 let autocompleteInstance = null;
 
 /**
+ * Custom search client that uses Laravel API endpoints
+ * This avoids mixed content issues (HTTP Typesense on HTTPS site)
+ */
+function createLaravelSearchClient(liveSearchUrl, autocompleteUrl) {
+    return {
+        async search(queries) {
+            const query = queries[0]?.query || '';
+            if (!query || query.length < 2) {
+                return { results: [{ hits: [], nbHits: 0 }] };
+            }
+            
+            try {
+                const response = await fetch(`${liveSearchUrl}?q=${encodeURIComponent(query)}&limit=6`);
+                if (!response.ok) throw new Error('Search failed');
+                const data = await response.json();
+                
+                return {
+                    results: [{
+                        hits: (data.hits || []).map(hit => ({
+                            ...hit,
+                            objectID: hit.id,
+                            _highlightResult: {
+                                title: { value: hit.title || '' },
+                                description: { value: hit.description || '' },
+                            }
+                        })),
+                        nbHits: data.found || 0,
+                        processingTimeMS: data.search_time_ms || 0,
+                    }]
+                };
+            } catch (error) {
+                console.error('Search error:', error);
+                return { results: [{ hits: [], nbHits: 0 }] };
+            }
+        }
+    };
+}
+
+/**
  * Initialize Typesense Autocomplete
  * @param {Object} config - Configuration object
  * @param {string} config.container - CSS selector for the container element
- * @param {string} config.apiKey - Typesense API key (search-only)
- * @param {string} config.host - Typesense host
- * @param {number} config.port - Typesense port
- * @param {string} config.protocol - Protocol (http/https)
- * @param {string} config.collection - Collection name
+ * @param {string} config.liveSearchUrl - URL for live search API
+ * @param {string} config.autocompleteUrl - URL for autocomplete suggestions API
  * @param {string} config.searchRoute - URL to redirect for full search
  * @param {string} config.documentRoute - Base URL for document details
  */
 export function initTypesenseAutocomplete(config) {
     const {
         container,
-        apiKey,
-        host,
-        port,
-        protocol,
-        collection = 'open_overheid_documents',
+        liveSearchUrl = '/api/live-search',
+        autocompleteUrl = '/api/autocomplete',
         searchRoute = '/zoeken',
         documentRoute = '/open-overheid/documents',
         placeholder = 'Zoek in alle documenten...',
@@ -48,27 +80,8 @@ export function initTypesenseAutocomplete(config) {
         return null;
     }
 
-    // Initialize Typesense adapter
-    const typesenseAdapter = new TypesenseInstantSearchAdapter({
-        server: {
-            apiKey: apiKey,
-            nodes: [
-                {
-                    host: host,
-                    port: port,
-                    protocol: protocol,
-                },
-            ],
-            connectionTimeoutSeconds: 5,
-        },
-        additionalSearchParameters: {
-            query_by: 'title,description,organisation,category,theme',
-            num_typos: 1,
-            typo_tokens_threshold: 1,
-        },
-    });
-
-    const searchClient = typesenseAdapter.searchClient;
+    // Create Laravel-backed search client
+    const searchClient = createLaravelSearchClient(liveSearchUrl, autocompleteUrl);
 
     // Initialize autocomplete
     autocompleteInstance = autocomplete({
@@ -160,25 +173,12 @@ export function initTypesenseAutocomplete(config) {
                     },
                 },
 
-                // Source 2: Document Results from Typesense
+                // Source 2: Document Results from Laravel API (proxied Typesense)
                 {
                     sourceId: 'documents',
-                    getItems() {
-                        return getAlgoliaResults({
-                            searchClient,
-                            queries: [
-                                {
-                                    indexName: collection,
-                                    query,
-                                    params: {
-                                        hitsPerPage: 6,
-                                        attributesToHighlight: ['title', 'description'],
-                                        highlightPreTag: '<mark class="ts-highlight">',
-                                        highlightPostTag: '</mark>',
-                                    },
-                                },
-                            ],
-                        });
+                    async getItems() {
+                        const results = await searchClient.search([{ query }]);
+                        return results.results[0]?.hits || [];
                     },
                     getItemUrl({ item }) {
                         return `${documentRoute}/${item.id}`;
