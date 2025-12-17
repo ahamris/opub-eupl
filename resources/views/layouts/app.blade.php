@@ -49,7 +49,9 @@
         @yield('content')
     </main>
 
-    @include('layouts.includes.footer')
+    @if (! View::hasSection('hide_footer'))
+        @include('layouts.includes.footer')
+    @endif
     
     @stack('scripts')
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3/dist/cdn.min.js"></script>

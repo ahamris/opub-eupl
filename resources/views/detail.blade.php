@@ -296,23 +296,11 @@
 
 @section('content')
     <!-- Header Section -->
-    <div class="bg-[var(--color-primary-light)] py-16 sm:py-24">
-        <div class="mx-auto max-w-7xl px-6 lg:px-8">
-            <!-- Breadcrumb -->
-            @if(!empty($breadcrumbs ?? []))
-            <div class="mb-8">
-                <x-breadcrumbs :items="$breadcrumbs" />
-            </div>
-            @endif
-            
-            <div class="mx-auto max-w-2xl lg:mx-0">
-                <p class="text-base font-semibold text-[var(--color-primary)]">Document details</p>
-                <h1 class="mt-2 text-4xl font-semibold tracking-tight text-pretty text-[var(--color-on-surface)] sm:text-5xl line-clamp-2">
-                    {{ $jsonData['title'] ?? 'Geen titel beschikbaar' }}
-                </h1>
-            </div>
-        </div>
-    </div>
+    <x-page-header 
+        eyebrow="Document details"
+        :title="$jsonData['title'] ?? 'Geen titel beschikbaar'"
+        :breadcrumbs="$breadcrumbs"
+    />
 
     <!-- Main Content -->
     <main class="flex-1 max-w-7xl mx-auto w-full px-6 lg:px-8 pt-10 pb-20">

@@ -21,8 +21,21 @@
     <main class="max-w-7xl mx-auto w-full px-4 py-8">
         <div class="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8">
             <!-- Sidebar Filters -->
-            <aside class="lg:sticky lg:top-[88px] h-fit lg:z-40" aria-label="Zoekfilters">
-                <div class="bg-[var(--color-surface)] rounded-md p-6 border border-[var(--color-outline-variant)]">
+            <aside class="lg:sticky lg:top-[88px] h-fit lg:z-40" aria-label="Zoekfilters" x-data="{ mobileFiltersOpen: false }">
+                <!-- Mobile Toggle Button -->
+                <button 
+                    @click="mobileFiltersOpen = !mobileFiltersOpen" 
+                    class="lg:hidden w-full mb-4 flex items-center justify-between bg-[var(--color-surface)] p-4 rounded-md border border-[var(--color-outline-variant)] hover:bg-[var(--color-surface-variant)] transition-colors"
+                    type="button"
+                >
+                    <span class="font-semibold text-[var(--color-on-surface)] flex items-center gap-2">
+                        <i class="fas fa-filter text-[var(--color-primary)]"></i>
+                        Filters & Verfijnen
+                    </span>
+                    <i class="fas" :class="mobileFiltersOpen ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                </button>
+
+                <div class="bg-[var(--color-surface)] rounded-md p-6 border border-[var(--color-outline-variant)] hidden lg:block" :class="{'!block': mobileFiltersOpen}">
                     <h2 class="text-[var(--font-size-headline-large)] font-medium mb-6 text-[var(--color-on-surface)] pb-4 border-b border-[var(--color-outline-variant)]">
                         Verfijn zoekopdracht
                     </h2>
@@ -708,11 +721,11 @@
                                        class="block focus:outline-none group">
                                         <div class="flex items-start justify-between gap-3">
                                             <div class="flex-1 min-w-0">
-                                                <div class="flex items-start justify-between gap-2 mb-1.5">
+                                                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-1.5">
                                                     <h3 class="text-sm font-semibold text-[var(--color-on-surface)] group-hover:text-[var(--color-primary)] transition-colors duration-200 line-clamp-2 flex-1 pr-2">
                                                         {{ $item->title ?? 'Geen titel' }}
                                                     </h3>
-                                                    <div class="flex items-center gap-2 shrink-0">
+                                                    <div class="flex items-center gap-2 shrink-0 mt-1 sm:mt-0">
                                                         @if($item->category)
                                                             <a href="{{ route('dossiers.index') }}?informatiecategorie={{ urlencode($item->category) }}{{ request('zoeken') ? '&zoeken=' . urlencode(request('zoeken')) : '' }}" 
                                                                onclick="event.stopPropagation();"

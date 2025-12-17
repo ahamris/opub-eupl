@@ -55,27 +55,29 @@
             
             <!-- Filter Form -->
             <div class="mx-auto mt-8 max-w-2xl lg:mx-0">
-                <form method="GET" action="{{ route('reports.index') }}" class="flex flex-col sm:flex-row items-start sm:items-end gap-3">
-                    <div class="flex-1 min-w-0">
-                        <label for="jaar-select" class="block text-sm font-medium text-[var(--color-on-surface-variant)] mb-2">Jaar</label>
-                        <select id="jaar-select" name="jaar" class="w-full px-3 py-2 rounded-md border border-slate-200 bg-white text-sm text-[var(--color-on-surface)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]">
-                            @for($y = now()->year; $y >= now()->year - 5; $y--)
-                                <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
-                            @endfor
-                        </select>
+                <form method="GET" action="{{ route('reports.index') }}" class="flex flex-col lg:flex-row items-end gap-4 w-full">
+                    <div class="grid grid-cols-2 gap-4 w-full lg:w-auto lg:flex-1">
+                        <div class="w-full">
+                            <label for="jaar-select" class="block text-sm font-medium text-[var(--color-on-surface-variant)] mb-2">Jaar</label>
+                            <select id="jaar-select" name="jaar" class="w-full px-3 py-2 rounded-md border border-slate-200 bg-white text-sm text-[var(--color-on-surface)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]">
+                                @for($y = now()->year; $y >= now()->year - 5; $y--)
+                                    <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
+                                @endfor
+                            </select>
+                        </div>
+                        <div class="w-full">
+                            <label for="kwartaal-select" class="block text-sm font-medium text-[var(--color-on-surface-variant)] mb-2">Kwartaal</label>
+                            <select id="kwartaal-select" name="kwartaal" class="w-full px-3 py-2 rounded-md border border-slate-200 bg-white text-sm text-[var(--color-on-surface)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]">
+                                <option value="">Hele jaar</option>
+                                <option value="1" {{ $quarter == 1 ? 'selected' : '' }}>Q1</option>
+                                <option value="2" {{ $quarter == 2 ? 'selected' : '' }}>Q2</option>
+                                <option value="3" {{ $quarter == 3 ? 'selected' : '' }}>Q3</option>
+                                <option value="4" {{ $quarter == 4 ? 'selected' : '' }}>Q4</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="flex-1 min-w-0">
-                        <label for="kwartaal-select" class="block text-sm font-medium text-[var(--color-on-surface-variant)] mb-2">Kwartaal</label>
-                        <select id="kwartaal-select" name="kwartaal" class="w-full px-3 py-2 rounded-md border border-slate-200 bg-white text-sm text-[var(--color-on-surface)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]">
-                            <option value="">Hele jaar</option>
-                            <option value="1" {{ $quarter == 1 ? 'selected' : '' }}>Q1</option>
-                            <option value="2" {{ $quarter == 2 ? 'selected' : '' }}>Q2</option>
-                            <option value="3" {{ $quarter == 3 ? 'selected' : '' }}>Q3</option>
-                            <option value="4" {{ $quarter == 4 ? 'selected' : '' }}>Q4</option>
-                        </select>
-                    </div>
-                    <div class="sm:pt-6">
-                        <button type="submit" class="w-full sm:w-auto px-4 py-2 bg-[var(--color-primary)] text-white font-medium rounded-md hover:bg-[var(--color-primary-dark)] transition-colors duration-200 focus:outline-none text-sm whitespace-nowrap">
+                    <div class="w-full lg:w-auto">
+                        <button type="submit" class="w-full lg:w-auto px-6 py-2 bg-[var(--color-primary)] text-white font-medium rounded-md hover:bg-[var(--color-primary-dark)] transition-colors duration-200 focus:outline-none text-sm whitespace-nowrap shadow-sm">
                             Toepassen
                         </button>
                     </div>

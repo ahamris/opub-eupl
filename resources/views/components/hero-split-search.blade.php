@@ -6,7 +6,7 @@
     'documentCount' => 0,
 ])
 
-<div class="relative isolate bg-white group overflow-hidden">
+<div class="relative isolate bg-white group z-20">
     <!-- Animated Grid Background with Wave Effect -->
     <div class="hero-grid-container absolute inset-0 -z-10 overflow-hidden" x-data="heroGrid()" x-init="init()">
         <!-- Base gradient overlay -->
