@@ -44,59 +44,6 @@
                         <input type="hidden" name="sort" id="hidden-sort" value="{{ request('sort', 'relevance') }}">
                         <input type="hidden" name="per_page" id="hidden-per-page" value="{{ request('per_page', 20) }}">
                         
-                        <!-- Search Keywords -->
-                        <div class="space-y-3">
-                            <x-input 
-                                type="text"
-                                name="zoeken"
-                                id="sidebar-zoeken"
-                                label="Zoekwoorden"
-                                value="{{ request('zoeken') }}"
-                                placeholder="Zoekwoorden..."
-                                class="w-full px-3 py-2 rounded-md 
-                                       border border-[var(--color-outline-variant)] bg-[var(--color-surface)]
-                                       text-sm text-[var(--color-on-surface)]
-                                       focus:outline-none focus:border-[var(--color-primary)]
-                                       transition-colors duration-200"
-                            />
-                            <div class="flex items-center gap-3">
-                                <input 
-                                    type="checkbox" 
-                                    id="sidebar-titles-only" 
-                                    name="titles_only" 
-                                    value="1"
-                                    {{ request('titles_only') ? 'checked' : '' }}
-                                    class="w-4 h-4 rounded border border-[var(--color-outline)]
-                                               focus:outline-none
-                                               cursor-pointer text-[var(--color-primary)]
-                                               checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
-                                               transition-all duration-200"
-                                >
-                                <label for="sidebar-titles-only" class="text-sm text-[var(--color-on-surface)] cursor-pointer">
-                                    Zoek alleen in titels
-                                </label>
-                            </div>
-                            <button 
-                                type="submit" 
-                                class="w-full bg-[var(--color-primary)] text-[var(--color-on-primary)] 
-                                       hover:bg-[var(--color-primary-dark)]
-                                       focus:outline-none
-                                       px-4 py-2 rounded-md font-medium text-sm
-                                       transition-colors duration-200">
-                                Zoeken
-                            </button>
-                            <button 
-                                type="button" 
-                                onclick="window.location.href='{{ route('themas.index') }}'"
-                                class="w-full border border-[var(--color-outline-variant)] text-[var(--color-primary)]
-                                       hover:bg-[var(--color-primary)]/10
-                                       focus:outline-none
-                                       px-4 py-2 rounded-md font-medium text-sm
-                                       transition-colors duration-200">
-                                Selectie wissen
-                            </button>
-                        </div>
-                        
                         <!-- Date Filter -->
                         <div class="space-y-3">
                             <h3 class="text-sm font-semibold text-[var(--color-on-surface)]">Datum beschikbaar</h3>

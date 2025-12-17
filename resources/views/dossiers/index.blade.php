@@ -44,66 +44,6 @@
                         <input type="hidden" name="sort" id="hidden-sort" value="{{ request('sort', 'relevance') }}">
                         <input type="hidden" name="per_page" id="hidden-per-page" value="{{ request('per_page', 20) }}">
                         
-                        <!-- Search Keywords -->
-                        <div class="space-y-3">
-                            <label for="sidebar-zoeken" class="block text-[var(--font-size-label-medium)] font-medium text-[var(--color-on-surface)]">
-                                Zoekwoorden
-                            </label>
-                            <input 
-                                type="text" 
-                                id="sidebar-zoeken" 
-                                name="zoeken" 
-                                class="w-full px-4 py-3 rounded-md 
-                                       border-2 border-[var(--color-outline)] bg-[var(--color-surface)]
-                                       text-[var(--font-size-body-large)] text-[var(--color-on-surface)]
-                                       focus:outline-none focus:border-[var(--color-primary)]
-                                       transition-colors duration-200
-                                       min-h-[44px]"
-                                value="{{ request('zoeken') }}"
-                                placeholder="Zoekwoorden..."
-                            >
-                            <div class="flex items-center gap-3">
-                                <input 
-                                    type="checkbox" 
-                                    id="sidebar-titles-only" 
-                                    name="titles_only" 
-                                    value="1"
-                                    {{ request('titles_only') ? 'checked' : '' }}
-                                    class="w-4 h-4 rounded border border-[var(--color-outline)]
-                                               focus:outline-none
-                                               cursor-pointer text-[var(--color-primary)]
-                                               checked:bg-[var(--color-primary)] checked:border-primary
-                                               transition-all duration-200" 
-                                           focus:outline-none
-                                           cursor-pointer min-h-[44px] min-w-[44px]"
-                                >
-                                <label for="sidebar-titles-only" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer">
-                                    Zoek alleen in titels
-                                </label>
-                            </div>
-                            <button 
-                                type="submit" 
-                                class="w-full bg-[var(--color-primary)] text-[var(--color-on-primary)] 
-                                       hover:bg-[var(--color-primary)]/90 active:bg-[var(--color-primary)]/80
-                                       focus:outline-none
-                                       px-4 py-3 rounded-md font-medium
-                                       transition-colors duration-200
-                                       min-h-[44px]">
-                                Zoeken
-                            </button>
-                            <button 
-                                type="button" 
-                                onclick="window.location.href='{{ route('dossiers.index') }}'"
-                                class="w-full border-2 border-[var(--color-outline)] text-[var(--color-primary)]
-                                       hover:bg-[var(--color-primary)]-container
-                                       focus:outline-none
-                                       px-4 py-3 rounded-md font-medium
-                                       transition-colors duration-200
-                                       min-h-[44px]">
-                                Selectie wissen
-                            </button>
-                        </div>
-                        
                         <!-- Date Filter -->
                         <div class="space-y-3">
                             <h3 class="text-[var(--font-size-headline-medium)] font-medium text-[var(--color-on-surface)]">Datum beschikbaar</h3>
