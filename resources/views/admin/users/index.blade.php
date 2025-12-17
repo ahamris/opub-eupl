@@ -18,6 +18,7 @@
             :columns="[
                 'id',
                 'name',
+                'last_name',
                 'email',
                 ['key' => 'is_active', 'type' => 'toggle'],
                 ['key' => 'created_at', 'format' => 'date'],

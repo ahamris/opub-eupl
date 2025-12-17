@@ -24,6 +24,7 @@ class StoreUserRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'last_name' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'confirmed', Password::defaults()],
         ];
@@ -39,6 +40,7 @@ class StoreUserRequest extends FormRequest
         return [
             'name.required' => 'The name field is required.',
             'name.max' => 'The name may not be greater than 255 characters.',
+            'last_name.max' => 'The last name may not be greater than 255 characters.',
             'email.required' => 'The email field is required.',
             'email.email' => 'Please enter a valid email address.',
             'email.unique' => 'This email address is already in use.',

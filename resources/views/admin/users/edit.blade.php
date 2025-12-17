@@ -18,15 +18,30 @@
                 <!-- Name Field -->
                 <div>
                     <x-input 
-                        label="Name" 
+                        label="First Name" 
                         name="name" 
                         type="text" 
-                        placeholder="Enter user name"
+                        placeholder="Enter first name"
                         icon="user"
                         value="{{ old('name', $user->name) }}"
                         required
                     />
                     @error('name')
+                        <p class="mt-1 text-sm text-error">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Last Name Field -->
+                <div>
+                    <x-input 
+                        label="Last Name" 
+                        name="last_name" 
+                        type="text" 
+                        placeholder="Enter last name"
+                        icon="user"
+                        value="{{ old('last_name', $user->last_name) }}"
+                    />
+                    @error('last_name')
                         <p class="mt-1 text-sm text-error">{{ $message }}</p>
                     @enderror
                 </div>

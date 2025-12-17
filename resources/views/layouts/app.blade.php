@@ -32,6 +32,7 @@
     @stack('styles')
 </head>
 <body class="bg-[var(--color-surface)] text-[var(--color-on-surface)] min-h-screen flex flex-col font-sans">
+    <x-admin-banner />
     @include('layouts.includes.header')
 
     {{-- Global breadcrumb component (if $breadcrumbs is set) --}}

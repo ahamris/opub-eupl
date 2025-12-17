@@ -28,6 +28,14 @@ return Application::configure(basePath: dirname(__DIR__))
         if (env('TRUST_PROXIES', false)) {
             $middleware->trustProxies(at: '*');
         }
+
+        // Redirect unauthenticated admin requests to admin login
+        $middleware->redirectGuestsTo(function ($request) {
+            if ($request->is('admin*') || $request->routeIs('admin.*')) {
+                return route('admin.login');
+            }
+            return route('login');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -23,7 +23,9 @@
 
                     <!-- User Info -->
                     <div class="flex-1">
-                        <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">{{ $user->name }}</h2>
+                        <h2 class="text-2xl font-bold text-zinc-900 dark:text-white mb-2">
+                            {{ $user->name }}{{ $user->last_name ? ' ' . $user->last_name : '' }}
+                        </h2>
                         <div class="space-y-2">
                             <div class="flex items-center gap-2 text-zinc-600 dark:text-zinc-400">
                                 <i class="fas fa-envelope text-sm"></i>
@@ -59,9 +61,15 @@
                     </h3>
                     <div class="space-y-4">
                         <div>
-                            <label class="text-sm font-medium text-zinc-600 dark:text-zinc-400">Name</label>
+                            <label class="text-sm font-medium text-zinc-600 dark:text-zinc-400">First Name</label>
                             <p class="text-zinc-900 dark:text-white mt-1">{{ $user->name }}</p>
                         </div>
+                        @if($user->last_name)
+                        <div>
+                            <label class="text-sm font-medium text-zinc-600 dark:text-zinc-400">Last Name</label>
+                            <p class="text-zinc-900 dark:text-white mt-1">{{ $user->last_name }}</p>
+                        </div>
+                        @endif
                         <div>
                             <label class="text-sm font-medium text-zinc-600 dark:text-zinc-400">Email</label>
                             <p class="text-zinc-900 dark:text-white mt-1">{{ $user->email }}</p>
