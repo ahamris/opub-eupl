@@ -10,30 +10,55 @@
 @endphp
 
 @section('content')
-    <!-- Header Section -->
-    <div class="bg-[var(--color-primary-light)] py-16 sm:py-24">
-        <div class="mx-auto max-w-7xl px-6 lg:px-8">
+    <!-- Premium Page Header Section with Filter -->
+    <div class="relative bg-gradient-to-b from-slate-50 to-white overflow-hidden">
+        <!-- Subtle grid pattern -->
+        <div class="absolute inset-0 -z-10">
+            <svg class="absolute inset-0 h-full w-full stroke-slate-200/50" fill="none">
+                <defs>
+                    <pattern id="reports-header-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                        <path d="M.5 40V.5H40" fill="none" />
+                    </pattern>
+                </defs>
+                <rect width="100%" height="100%" stroke-width="0" fill="url(#reports-header-grid)" />
+            </svg>
+            <!-- Fade overlay -->
+            <div class="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent"></div>
+        </div>
+        
+        <!-- Animated floating squares -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute top-8 right-[15%] w-16 h-16 rounded-md bg-[var(--color-primary)]/[0.04] animate-[float-slow_6s_ease-in-out_infinite]"></div>
+            <div class="absolute top-16 left-[10%] w-12 h-12 rounded-md bg-[var(--color-primary)]/[0.03] animate-[float-slower_8s_ease-in-out_infinite]"></div>
+            <div class="absolute top-1/2 right-[8%] w-20 h-20 rounded-md bg-[var(--color-primary)]/[0.05] animate-[float-slow_6s_ease-in-out_infinite_-2s]"></div>
+            <div class="absolute bottom-12 left-[20%] w-14 h-14 rounded-md bg-[var(--color-primary)]/[0.04] animate-[float-slower_8s_ease-in-out_infinite_-3s]"></div>
+            <div class="absolute top-12 right-[35%] w-10 h-10 rounded-md bg-[var(--color-primary)]/[0.03] animate-[float-slow_6s_ease-in-out_infinite_-1s]"></div>
+        </div>
+        
+        <div class="mx-auto max-w-7xl px-6 lg:px-8 py-12 sm:py-16 relative z-10">
             <!-- Breadcrumb -->
-            @if(!empty($breadcrumbs ?? []))
-            <div class="mb-8">
+            @if(!empty($breadcrumbs))
+            <div class="mb-6">
                 <x-breadcrumbs :items="$breadcrumbs" />
             </div>
             @endif
             
             <div class="mx-auto max-w-2xl lg:mx-0">
-                <h1 class="text-4xl font-semibold tracking-tight text-[var(--color-on-surface)] sm:text-5xl">Open Overheid in cijfers</h1>
-                <p class="mt-6 text-lg font-medium text-pretty text-[var(--color-on-surface-variant)] sm:text-xl/8">
-                    Op deze pagina zie je statistieken over actief openbaar gemaakte overheidsdocumenten. 
-                    De data wordt regelmatig bijgewerkt en geeft inzicht in transparantie en openbaarheid.
+                <p class="text-sm font-medium uppercase tracking-wider text-[var(--color-primary)]">Statistieken & Rapportage</p>
+                <h1 class="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-on-surface)] sm:text-4xl">
+                    Open Overheid in cijfers
+                </h1>
+                <p class="mt-4 text-base text-[var(--color-on-surface-variant)] leading-relaxed">
+                    Op deze pagina zie je statistieken over actief openbaar gemaakte overheidsdocumenten.
                 </p>
             </div>
             
-            <!-- Minimal Filter -->
+            <!-- Filter Form -->
             <div class="mx-auto mt-8 max-w-2xl lg:mx-0">
                 <form method="GET" action="{{ route('reports.index') }}" class="flex flex-col sm:flex-row items-start sm:items-end gap-3">
                     <div class="flex-1 min-w-0">
                         <label for="jaar-select" class="block text-sm font-medium text-[var(--color-on-surface-variant)] mb-2">Jaar</label>
-                        <select id="jaar-select" name="jaar" class="w-full px-3 py-2 rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)] text-sm text-[var(--color-on-surface)] focus:outline-none focus:border-[var(--color-primary)]">
+                        <select id="jaar-select" name="jaar" class="w-full px-3 py-2 rounded-md border border-slate-200 bg-white text-sm text-[var(--color-on-surface)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]">
                             @for($y = now()->year; $y >= now()->year - 5; $y--)
                                 <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
                             @endfor
@@ -41,7 +66,7 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <label for="kwartaal-select" class="block text-sm font-medium text-[var(--color-on-surface-variant)] mb-2">Kwartaal</label>
-                        <select id="kwartaal-select" name="kwartaal" class="w-full px-3 py-2 rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)] text-sm text-[var(--color-on-surface)] focus:outline-none focus:border-[var(--color-primary)]">
+                        <select id="kwartaal-select" name="kwartaal" class="w-full px-3 py-2 rounded-md border border-slate-200 bg-white text-sm text-[var(--color-on-surface)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]">
                             <option value="">Hele jaar</option>
                             <option value="1" {{ $quarter == 1 ? 'selected' : '' }}>Q1</option>
                             <option value="2" {{ $quarter == 2 ? 'selected' : '' }}>Q2</option>
@@ -50,14 +75,22 @@
                         </select>
                     </div>
                     <div class="sm:pt-6">
-                        <button type="submit" class="w-full sm:w-auto px-4 py-2 bg-[var(--color-primary)] text-[var(--color-on-primary)] font-medium rounded-md hover:bg-[var(--color-primary-dark)] transition-colors duration-200 focus:outline-none text-sm whitespace-nowrap">
+                        <button type="submit" class="w-full sm:w-auto px-4 py-2 bg-[var(--color-primary)] text-white font-medium rounded-md hover:bg-[var(--color-primary-dark)] transition-colors duration-200 focus:outline-none text-sm whitespace-nowrap">
                             Toepassen
                         </button>
                     </div>
                 </form>
             </div>
         </div>
+        
+        <!-- Bottom gradient line -->
+        <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
     </div>
+    
+    <style>
+        @keyframes float-slow { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-12px) rotate(3deg); } }
+        @keyframes float-slower { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-8px) rotate(-2deg); } }
+    </style>
 
     <!-- Main Statistics Section -->
     <div class="bg-[var(--color-surface)] py-16">

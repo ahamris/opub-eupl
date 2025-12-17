@@ -10,25 +10,12 @@
 @endphp
 
 @section('content')
-    <!-- Header Section -->
-    <div class="bg-[var(--color-primary-light)] py-16 sm:py-24">
-        <div class="mx-auto max-w-7xl px-6 lg:px-8">
-            <!-- Breadcrumb -->
-            @if(!empty($breadcrumbs ?? []))
-            <div class="mb-8">
-                <x-breadcrumbs :items="$breadcrumbs" />
-            </div>
-            @endif
-            
-            <div class="mx-auto max-w-2xl lg:mx-0">
-                <p class="text-base/7 font-semibold text-[var(--color-primary)]">Verken complete dossiers</p>
-                <h1 class="mt-2 text-4xl font-semibold tracking-tight text-[var(--color-on-surface)] sm:text-5xl">Dossiers</h1>
-                <p class="mt-6 text-lg font-medium text-pretty text-[var(--color-on-surface-variant)] sm:text-xl/8">
-                    Verken complete dossiers met alle bijbehorende documenten en verbanden. Elke dossier bevat gerelateerde documenten die samen een compleet beeld geven.
-                </p>
-            </div>
-        </div>
-    </div>
+    <x-page-header 
+        eyebrow="Verken complete dossiers"
+        title="Dossiers"
+        description="Verken complete dossiers met alle bijbehorende documenten en verbanden. Elke dossier bevat gerelateerde documenten die samen een compleet beeld geven."
+        :breadcrumbs="$breadcrumbs"
+    />
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto w-full px-4 py-8">

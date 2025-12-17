@@ -10,27 +10,12 @@
 @endphp
 
 @section('content')
-    <!-- Header Section -->
-    <div class="bg-[var(--color-primary-light)] py-16 sm:py-24">
-        <div class="mx-auto max-w-7xl px-6 lg:px-8">
-            <!-- Breadcrumb -->
-            @if(!empty($breadcrumbs ?? []))
-            <div class="mb-8">
-                <x-breadcrumbs :items="$breadcrumbs" />
-            </div>
-            @endif
-            
-            <div class="mx-auto max-w-2xl lg:mx-0">
-                <p class="text-base/7 font-semibold text-[var(--color-primary)]">Gerelateerde links en bronnen</p>
-                <h1 class="mt-2 text-4xl font-semibold tracking-tight text-[var(--color-on-surface)] sm:text-5xl">
-                    Verwijzingen
-                </h1>
-                <p class="mt-6 text-lg font-medium text-pretty text-[var(--color-on-surface-variant)] sm:text-xl/8">
-                    Links naar andere relevante portalen en websites voor overheidsinformatie.
-                </p>
-            </div>
-        </div>
-    </div>
+    <x-page-header 
+        eyebrow="Gerelateerde links en bronnen"
+        title="Verwijzingen"
+        description="Links naar andere relevante portalen en websites voor overheidsinformatie."
+        :breadcrumbs="$breadcrumbs"
+    />
     
     <!-- Main Content -->
     <main class="flex-1 max-w-7xl mx-auto w-full px-6 lg:px-8 pt-10 pb-20">

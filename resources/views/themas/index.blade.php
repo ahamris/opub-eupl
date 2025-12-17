@@ -10,25 +10,12 @@
 @endphp
 
 @section('content')
-    <!-- Header Section -->
-    <div class="bg-[var(--color-primary-light)] py-16 sm:py-24">
-        <div class="mx-auto max-w-7xl px-6 lg:px-8">
-            <!-- Breadcrumb -->
-            @if(!empty($breadcrumbs ?? []))
-            <div class="mb-8">
-                <x-breadcrumbs :items="$breadcrumbs" />
-            </div>
-            @endif
-            
-            <div class="mx-auto max-w-2xl lg:mx-0">
-                <p class="text-base/7 font-semibold text-[var(--color-primary)]">Verken documenten op onderwerp</p>
-                <h1 class="mt-2 text-4xl font-semibold tracking-tight text-[var(--color-on-surface)] sm:text-5xl">Thema's</h1>
-                <p class="mt-6 text-lg font-medium text-pretty text-[var(--color-on-surface-variant)] sm:text-xl/8">
-                    Zoek documenten op onderwerp zoals ruimtelijke ordening, onderwijs of zorg. Verken alle thema's en vind gerelateerde documenten.
-                </p>
-            </div>
-        </div>
-    </div>
+    <x-page-header 
+        eyebrow="Verken documenten op onderwerp"
+        title="Thema's"
+        description="Zoek documenten op onderwerp zoals ruimtelijke ordening, onderwijs of zorg. Verken alle thema's en vind gerelateerde documenten."
+        :breadcrumbs="$breadcrumbs"
+    />
 
     <!-- Main Content -->
     <main class="flex-1 max-w-7xl mx-auto w-full px-6 lg:px-8 pt-10 pb-20">

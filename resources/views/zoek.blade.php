@@ -21,17 +21,18 @@
     
     <!-- Header Section - Only on Zoeken Page -->
     @if(request()->routeIs('zoeken'))
-    <div class="bg-gradient-to-b from-slate-50 to-white py-12 sm:py-16">
-        <div class="mx-auto max-w-7xl px-6 lg:px-8">
-            <div class="mx-auto max-w-2xl lg:mx-0">
-                <p class="text-sm font-medium uppercase tracking-wider text-[var(--color-primary)]">Zoek in overheidsdocumenten</p>
-                <h1 class="mt-3 text-4xl font-semibold tracking-tight text-[var(--color-on-surface)] sm:text-5xl">Uitgebreid zoeken</h1>
-                <p class="mt-4 text-lg text-[var(--color-on-surface-variant)] leading-relaxed">
-                    Gebruik filters op datum, organisatie, categorie of thema om precies te vinden wat je zoekt.
-                </p>
-            </div>
-        </div>
-    </div>
+    @php
+        $zoekenBreadcrumbs = [
+            ['label' => 'Home', 'href' => route('home')],
+            ['label' => 'Zoeken', 'href' => null, 'current' => true],
+        ];
+    @endphp
+    <x-page-header 
+        eyebrow="Zoek in overheidsdocumenten"
+        title="Uitgebreid zoeken"
+        description="Gebruik filters op datum, organisatie, categorie of thema om precies te vinden wat je zoekt."
+        :breadcrumbs="$zoekenBreadcrumbs"
+    />
     @endif
     
     <!-- Quick Actions Section - Bento Grid - Only on Homepage -->
