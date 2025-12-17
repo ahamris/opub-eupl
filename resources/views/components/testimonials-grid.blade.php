@@ -73,35 +73,48 @@
     $testimonials = !empty($testimonials) ? $testimonials : $defaultTestimonials;
 @endphp
 
-<div class="bg-[var(--color-surface)] py-24 sm:py-32">
-        <div class="mx-auto max-w-7xl px-6 lg:px-8">
-        <div class="max-w-2xl">
-            <h2 class="text-base/7 font-semibold text-[var(--color-primary)]">Testimonials</h2>
-            <p class="mt-2 text-4xl font-semibold tracking-tight text-balance text-[var(--color-on-surface)] sm:text-5xl">
-                Wat gebruikers van ons platform vinden
+<div class="bg-gradient-to-b from-white to-slate-50 py-16 sm:py-20">
+    <div class="mx-auto max-w-7xl px-6 lg:px-8">
+        <!-- Section divider -->
+        <div class="w-full h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-12"></div>
+        
+        <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-10">
+            <div>
+                <p class="text-sm font-medium uppercase tracking-wider text-[var(--color-primary)]">Testimonials</p>
+                <h2 class="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-on-surface)] sm:text-4xl">
+                    Wat gebruikers vinden
+                </h2>
+            </div>
+            <p class="max-w-lg text-sm text-[var(--color-on-surface-variant)] lg:text-right">
+                Ontdek hoe anderen het platform gebruiken voor hun onderzoek en werk.
             </p>
         </div>
-        <div class="mx-auto mt-16 flow-root max-w-2xl sm:mt-20 lg:mx-0 lg:max-w-none">
+        
+        <div class="mx-auto flow-root max-w-2xl lg:mx-0 lg:max-w-none">
             <div class="-mt-8 sm:-mx-4 sm:columns-2 sm:text-[0] lg:columns-3">
                 @foreach($testimonials as $testimonial)
                 <div class="pt-8 sm:inline-block sm:w-full sm:px-4">
-                    <figure class="rounded-md bg-[var(--color-surface)] border border-[var(--color-outline-variant)] p-8 text-sm">
-                        <blockquote class="text-[var(--color-on-surface)]">
-                            <p>"{{ $testimonial['quote'] }}"</p>
+                    <figure class="rounded-md bg-white p-8 ring-1 ring-slate-200/60">
+                        <!-- Quote icon -->
+                        <svg class="h-6 w-6 text-[var(--color-primary)]/20 mb-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M4.583 17.321C3.553 16.227 3 15 3 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311 1.804.167 3.226 1.648 3.226 3.489a3.5 3.5 0 01-3.5 3.5c-1.073 0-2.099-.49-2.748-1.179zm10 0C13.553 16.227 13 15 13 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311 1.804.167 3.226 1.648 3.226 3.489a3.5 3.5 0 01-3.5 3.5c-1.073 0-2.099-.49-2.748-1.179z" />
+                        </svg>
+                        <blockquote class="text-[var(--color-on-surface)] leading-relaxed">
+                            <p>{{ $testimonial['quote'] }}</p>
                         </blockquote>
-                        <figcaption class="mt-6 flex items-center gap-x-4">
+                        <figcaption class="mt-6 flex items-center gap-x-4 pt-6 border-t border-slate-100">
                             <img
                                 src="{{ $testimonial['avatar'] }}"
                                 alt="{{ $testimonial['author'] }}"
-                                class="size-10 rounded-full bg-[var(--color-surface-variant)]"
+                                class="h-12 w-12 rounded-full object-cover ring-2 ring-white"
                                 loading="lazy"
                             />
                             <div>
                                 <div class="font-semibold text-[var(--color-on-surface)]">
                                     {{ $testimonial['author'] }}
                                 </div>
-                                <div class="text-[var(--color-on-surface-variant)]">
-                                    {{ $testimonial['role'] }}{{ $testimonial['organization'] ? ' bij ' . $testimonial['organization'] : '' }}
+                                <div class="text-sm text-[var(--color-on-surface-variant)]">
+                                    {{ $testimonial['role'] }}{{ $testimonial['organization'] ? ' · ' . $testimonial['organization'] : '' }}
                                 </div>
                             </div>
                         </figcaption>
