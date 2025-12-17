@@ -122,7 +122,7 @@ export function initTypesenseAutocomplete(config) {
         },
 
         // Define sources - this is where the magic happens!
-        getSources({ query, setContext }) {
+        getSources({ query }) {
             if (!query || query.length < 2) {
                 return [];
             }
@@ -137,7 +137,6 @@ export function initTypesenseAutocomplete(config) {
                                 type: 'action',
                                 label: `Zoeken naar "${query}"`,
                                 query: query,
-                                icon: 'fa-search',
                             },
                         ];
                     },
@@ -145,30 +144,22 @@ export function initTypesenseAutocomplete(config) {
                         return `${searchRoute}?zoeken=${encodeURIComponent(item.query)}`;
                     },
                     templates: {
-                        header({ html }) {
-                            return html`
-                                <div class="ts-source-header">
-                                    <span class="ts-source-header-title">
-                                        <i class="fas fa-bolt text-amber-500"></i>
-                                        Snelle acties
-                                    </span>
-                                </div>
-                            `;
-                        },
-                        item({ item, html }) {
-                            return html`
-                                <a href="${searchRoute}?zoeken=${encodeURIComponent(item.query)}" class="ts-suggestion-item">
-                                    <div class="ts-suggestion-icon">
-                                        <i class="fas ${item.icon}"></i>
-                                    </div>
-                                    <div class="ts-suggestion-content">
-                                        <span class="ts-suggestion-label">${item.label}</span>
-                                    </div>
-                                    <div class="ts-suggestion-arrow">
-                                        <i class="fas fa-arrow-right"></i>
-                                    </div>
-                                </a>
-                            `;
+                        item({ item, createElement }) {
+                            // Use createElement (Preact's h function) for proper rendering
+                            return createElement('a', {
+                                href: `${searchRoute}?zoeken=${encodeURIComponent(item.query)}`,
+                                className: 'ts-suggestion-item',
+                            }, [
+                                createElement('div', { className: 'ts-suggestion-icon' }, 
+                                    createElement('i', { className: 'fas fa-search' })
+                                ),
+                                createElement('div', { className: 'ts-suggestion-content' },
+                                    createElement('span', { className: 'ts-suggestion-label' }, item.label)
+                                ),
+                                createElement('div', { className: 'ts-suggestion-arrow' },
+                                    createElement('i', { className: 'fas fa-arrow-right' })
+                                ),
+                            ]);
                         },
                     },
                 },
@@ -184,25 +175,21 @@ export function initTypesenseAutocomplete(config) {
                         return `${documentRoute}/${item.id}`;
                     },
                     templates: {
-                        header({ items, html }) {
-                            if (items.length === 0) {
-                                return null;
-                            }
-                            return html`
-                                <div class="ts-source-header">
-                                    <span class="ts-source-header-title">
-                                        <i class="fas fa-file-alt text-blue-500"></i>
-                                        Documenten
-                                    </span>
-                                    <span class="ts-source-header-count">${items.length} gevonden</span>
-                                </div>
-                            `;
+                        header({ items, createElement }) {
+                            if (items.length === 0) return null;
+                            return createElement('div', { className: 'ts-source-header' }, [
+                                createElement('span', { className: 'ts-source-header-title' }, [
+                                    createElement('i', { className: 'fas fa-file-alt text-blue-500' }),
+                                    ' DOCUMENTEN'
+                                ]),
+                                createElement('span', { className: 'ts-source-header-count' }, `${items.length} gevonden`)
+                            ]);
                         },
-                        item({ item, html, components }) {
+                        item({ item, createElement }) {
                             const title = item.title || 'Geen titel';
                             const description = item.description || '';
-                            const truncatedDescription = description.length > 120 
-                                ? description.substring(0, 120) + '...' 
+                            const truncatedDesc = description.length > 100 
+                                ? description.substring(0, 100) + '...' 
                                 : description;
                             
                             // Format date
@@ -216,87 +203,51 @@ export function initTypesenseAutocomplete(config) {
                                         day: 'numeric'
                                     });
                                 } catch (e) {
-                                    formattedDate = item.publication_date;
+                                    formattedDate = '';
                                 }
                             }
 
-                            return html`
-                                <a href="${documentRoute}/${item.id}" class="ts-document-item">
-                                    <div class="ts-document-content">
-                                        <div class="ts-document-header">
-                                            <h4 class="ts-document-title">${title}</h4>
-                                            ${item.category ? html`
-                                                <span class="ts-document-category">${item.category}</span>
-                                            ` : ''}
-                                        </div>
-                                        ${truncatedDescription ? html`
-                                            <p class="ts-document-description">${truncatedDescription}</p>
-                                        ` : ''}
-                                        <div class="ts-document-meta">
-                                            ${item.organisation ? html`
-                                                <span class="ts-document-meta-item">
-                                                    <i class="fas fa-building"></i>
-                                                    ${item.organisation}
-                                                </span>
-                                            ` : ''}
-                                            ${formattedDate ? html`
-                                                <span class="ts-document-meta-item">
-                                                    <i class="fas fa-calendar"></i>
-                                                    ${formattedDate}
-                                                </span>
-                                            ` : ''}
-                                            ${item.theme ? html`
-                                                <span class="ts-document-meta-item">
-                                                    <i class="fas fa-tag"></i>
-                                                    ${item.theme}
-                                                </span>
-                                            ` : ''}
-                                        </div>
-                                    </div>
-                                    <div class="ts-document-arrow">
-                                        <i class="fas fa-chevron-right"></i>
-                                    </div>
-                                </a>
-                            `;
+                            const metaItems = [];
+                            if (item.organisation) {
+                                metaItems.push(createElement('span', { className: 'ts-document-meta-item' }, [
+                                    createElement('i', { className: 'fas fa-building' }),
+                                    ` ${item.organisation}`
+                                ]));
+                            }
+                            if (formattedDate) {
+                                metaItems.push(createElement('span', { className: 'ts-document-meta-item' }, [
+                                    createElement('i', { className: 'fas fa-calendar' }),
+                                    ` ${formattedDate}`
+                                ]));
+                            }
+
+                            return createElement('a', {
+                                href: `${documentRoute}/${item.id}`,
+                                className: 'ts-document-item',
+                            }, [
+                                createElement('div', { className: 'ts-document-content' }, [
+                                    createElement('div', { className: 'ts-document-header' }, [
+                                        createElement('h4', { className: 'ts-document-title' }, title),
+                                        item.category ? createElement('span', { className: 'ts-document-category' }, item.category) : null,
+                                    ].filter(Boolean)),
+                                    truncatedDesc ? createElement('p', { className: 'ts-document-description' }, truncatedDesc) : null,
+                                    metaItems.length > 0 ? createElement('div', { className: 'ts-document-meta' }, metaItems) : null,
+                                ].filter(Boolean)),
+                                createElement('div', { className: 'ts-document-arrow' },
+                                    createElement('i', { className: 'fas fa-chevron-right' })
+                                ),
+                            ]);
                         },
-                        noResults({ html }) {
-                            return html`
-                                <div class="ts-no-results">
-                                    <i class="fas fa-search text-gray-400 text-2xl mb-2"></i>
-                                    <p class="ts-no-results-text">Geen documenten gevonden</p>
-                                    <p class="ts-no-results-hint">Probeer andere zoektermen</p>
-                                </div>
-                            `;
+                        noResults({ createElement }) {
+                            return createElement('div', { className: 'ts-no-results' }, [
+                                createElement('i', { className: 'fas fa-search text-gray-400 text-2xl mb-2' }),
+                                createElement('p', { className: 'ts-no-results-text' }, 'Geen documenten gevonden'),
+                                createElement('p', { className: 'ts-no-results-hint' }, 'Probeer andere zoektermen'),
+                            ]);
                         },
                     },
                 },
             ];
-        },
-
-        // Render the autocomplete panel
-        render({ elements, render, html }, root) {
-            const { suggestions, documents } = elements;
-
-            render(
-                html`
-                    <div class="ts-autocomplete-layout">
-                        ${suggestions}
-                        ${documents}
-                    </div>
-                    <div class="ts-autocomplete-footer">
-                        <span class="ts-footer-hint">
-                            <kbd>↵</kbd> om te zoeken
-                            <kbd>↑</kbd><kbd>↓</kbd> om te navigeren
-                            <kbd>esc</kbd> om te sluiten
-                        </span>
-                        <span class="ts-footer-powered">
-                            <i class="fas fa-bolt text-amber-500"></i>
-                            Powered by Typesense
-                        </span>
-                    </div>
-                `,
-                root
-            );
         },
     });
 
