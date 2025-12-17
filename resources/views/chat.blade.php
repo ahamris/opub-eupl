@@ -5,12 +5,12 @@
 @section('content')
     <!-- Main Chat Interface -->
     <div class="bg-[var(--color-surface)] min-h-screen">
-        <div class="mx-auto max-w-7xl px-6 lg:px-8 py-8" x-data="chatInterface()">
+        <div class="mx-auto max-w-7xl px-6 lg:px-8 py-4" x-data="chatInterface()">
             <!-- Chat Messages Area -->
-            <div class="mb-6 space-y-4 max-w-7xl mx-auto" x-ref="messagesContainer">
+            <div class="mb-6 space-y-4 max-w-7xl mx-auto min-h-[calc(100vh-200px)] flex flex-col justify-center" x-ref="messagesContainer" x-bind:class="messages.length > 0 ? 'min-h-0 justify-start' : ''">
                 <!-- Welcome Message -->
                 <template x-if="messages.length === 0">
-                    <div class="py-12">
+                    <div class="py-6">
                         <div class="flex items-center gap-3 mb-4">
                             <div class="flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-primary-light)]">
                                 <svg class="w-12 h-12" viewBox="0 0 838 837" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
