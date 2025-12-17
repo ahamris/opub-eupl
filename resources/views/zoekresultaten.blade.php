@@ -670,7 +670,7 @@
             </aside>
             
             <!-- Results Section -->
-            <div id="search-results-area" class="space-y-6">
+            <div class="space-y-6">
                 <!-- Active Filters Ribbons -->
                 @php
                     $activeFilters = [];
@@ -724,135 +724,145 @@
                     }
                 @endphp
                 
-                <!-- Unified Search & Active Filters Card -->
-                <div class="bg-[var(--color-surface)] rounded-md border border-[var(--color-outline-variant)] divide-y divide-[var(--color-outline-variant)]">
-                    <!-- Unified Search (Documents & Filters) -->
-                    <div class="p-4">
-                        <label for="unified-search" class="block text-sm font-medium text-[var(--color-on-surface)] mb-2">
-                            Zoeken in {{ isset($isDossier) ? 'dossiers' : 'documenten' }} & filters
-                        </label>
-                        <div class="relative">
-                            <x-input 
-                                type="text"
-                                name="zoeken"
-                                id="unified-search"
-                                value="{{ request('zoeken') }}"
-                                placeholder="Zoek {{ isset($isDossier) ? 'dossiers' : 'documenten' }} of filter op organisatie, thema..."
-                                leadingIcon="fas fa-search"
-                                autocomplete="off"
-                                class="block w-full pr-3 py-2 rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)]
-                                       text-sm text-[var(--color-on-surface)] placeholder-[var(--color-on-surface-variant)]
-                                       focus:outline-none focus:border-[var(--color-primary)]
-                                       transition-colors duration-200"
-                            />
-                            <div id="unified-search-results" class="absolute z-50 mt-1 w-full bg-[var(--color-surface)] rounded-md border border-[var(--color-outline-variant)] hidden max-h-96 overflow-auto">
-                                <!-- Results populated by JavaScript -->
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Active Filters -->
-                    @if(!empty($activeFilters))
-                    <div class="p-6">
-                        <div class="flex flex-wrap items-center gap-2">
-                            <span class="text-sm font-medium text-[var(--color-on-surface)] mr-2">Actieve filters:</span>
-                            @foreach($activeFilters as $filter)
-                                @php
-                                    $removeUrl = request()->fullUrlWithQuery(['pagina' => 1]);
-                                    if ($filter['type'] === 'beschikbaarSinds') {
-                                        $removeUrl = request()->fullUrlWithQuery(['beschikbaarSinds' => null, 'pagina' => 1]);
-                                    } else                                    if ($filter['type'] === 'date') {
-                                        $removeUrl = request()->fullUrlWithQuery(['publicatiedatum_van' => null, 'publicatiedatum_tot' => null, 'beschikbaarSinds' => null, 'pagina' => 1]);
-                                    } elseif ($filter['type'] === 'status') {
-                                        $removeUrl = request()->fullUrlWithQuery(['status' => null, 'pagina' => 1]);
-                                    } elseif ($filter['type'] === 'titles_only') {
-                                        $removeUrl = request()->fullUrlWithQuery(['titles_only' => null, 'pagina' => 1]);
-                                    } elseif ($filter['type'] === 'informatiecategorie') {
-                                        $removeUrl = request()->fullUrlWithQuery(['informatiecategorie' => null, 'pagina' => 1]);
-                                    } elseif ($filter['type'] === 'zoeken') {
-                                        $removeUrl = request()->fullUrlWithQuery(['zoeken' => null, 'pagina' => 1]);
-                                    } else {
-                                        $currentValues = (array)request($filter['type'], []);
-                                        $newValues = array_values(array_filter($currentValues, fn($v) => $v !== $filter['value']));
-                                        $removeUrl = request()->fullUrlWithQuery([$filter['type'] => $newValues, 'pagina' => 1]);
-                                    }
-                                @endphp
-                                <a href="{{ $removeUrl }}" 
-                                   class="inline-flex items-center gap-2 px-4 py-2 rounded-md 
-                                          bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
-                                          hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
-                                          focus:outline-none
-                                          transition-all duration-200 font-medium text-sm
-                                          group"
-                                   title="Verwijder filter: {{ $filter['label'] }}">
-                                    <span>{{ $filter['label'] }}</span>
-                                    <i class="fas fa-times text-xs opacity-70 group-hover:opacity-100 transition-opacity" aria-hidden="true"></i>
-                                </a>
-                            @endforeach
-                            <a href="{{ isset($isDossier) ? route('dossiers.index') : route('zoeken') }}" 
-                               class="inline-flex items-center gap-2 px-4 py-2 rounded-md 
-                                      bg-[var(--color-surface-variant)] text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]
-                                      hover:bg-[var(--color-surface-variant)]/80
-                                                                      focus:outline-none
-                                      transition-all duration-200 font-medium text-sm
-                                      ml-auto">
-                                <i class="fas fa-times-circle text-sm" aria-hidden="true"></i>
-                                <span>Alle filters wissen</span>
-                            </a>
-                        </div>
-                    </div>
-                    @endif
-                </div>
-                
-                <!-- Results Header -->
-                <div class="bg-[var(--color-surface)] rounded-md border border-[var(--color-outline-variant)]">
-                    <div class="px-4 py-3 sm:px-6 sm:py-4">
-                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                            <div>
-                                <h2 class="text-base font-semibold text-[var(--color-on-surface)]">
-                                    {{ isset($isDossier) ? 'Dossiers' : 'Zoekresultaten' }}
-                                </h2>
-                                <p class="mt-1 text-sm text-[var(--color-on-surface-variant)]">
-                                    {{ (($results['page'] ?? 1) - 1) * ($results['perPage'] ?? 20) + 1 }}-{{ min(($results['page'] ?? 1) * ($results['perPage'] ?? 20), $results['total'] ?? 0) }} van de {{ number_format($results['total'] ?? 0, 0, ',', '.') }} {{ isset($isDossier) ? 'dossiers' : 'resultaten' }}
-                                </p>
-                            </div>
-                            <div class="flex flex-wrap items-center gap-3">
-                                <div class="flex items-center gap-2">
-                                    <label for="sort-select" class="text-sm text-[var(--color-on-surface-variant)]">Sorteer op:</label>
-                                    <select 
-                                        id="sort-select"
-                                        name="sort" 
-                                        class="rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)] px-3 py-1.5 text-sm text-[var(--color-on-surface)] focus:outline-none focus:border-[var(--color-primary)] cursor-pointer"
-                                        onchange="updateSort(this.value)"
-                                    >
-                                        <option value="relevance" {{ request('sort', 'relevance') === 'relevance' ? 'selected' : '' }}>Relevantie</option>
-                                        <option value="publication_date" {{ request('sort') === 'publication_date' ? 'selected' : '' }}>Publicatiedatum</option>
-                                        <option value="modified_date" {{ request('sort') === 'modified_date' ? 'selected' : '' }}>Laatst gewijzigd</option>
-                                    </select>
+                <!-- Unified Search, Filters & Results Header Card -->
+                <div id="search-header-card" class="bg-[var(--color-surface)] rounded-md border border-[var(--color-outline-variant)]">
+                    <div class="p-4 sm:p-6 space-y-5">
+                        <!-- Top Row: Search Section -->
+                        <div class="space-y-3">
+                            <label for="unified-search" class="block text-sm font-semibold text-[var(--color-on-surface)]">
+                                Zoeken in {{ isset($isDossier) ? 'dossiers' : 'documenten' }} & filters
+                            </label>
+                            <div class="relative">
+                                <x-input 
+                                    type="text"
+                                    name="zoeken"
+                                    id="unified-search"
+                                    value="{{ request('zoeken') }}"
+                                    placeholder="Zoek {{ isset($isDossier) ? 'dossiers' : 'documenten' }} of filter op organisatie, thema..."
+                                    leadingIcon="fas fa-search"
+                                    autocomplete="off"
+                                    class="block w-full pr-3 py-2.5 rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)]
+                                           text-sm text-[var(--color-on-surface)] placeholder-[var(--color-on-surface-variant)]
+                                           focus:outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20
+                                           transition-all duration-200"
+                                />
+                                <div id="unified-search-results" class="absolute z-50 mt-1 w-full bg-[var(--color-surface)] rounded-md border border-[var(--color-outline-variant)] shadow-lg hidden max-h-96 overflow-auto">
+                                    <!-- Results populated by JavaScript -->
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <label class="text-sm text-[var(--color-on-surface-variant)]">Aantal:</label>
-                                    <div class="inline-flex rounded-md border border-[var(--color-outline-variant)]">
-                                        <a href="{{ request()->fullUrlWithQuery(['per_page' => 10, 'pagina' => 1]) }}" 
-                                           class="px-3 py-1.5 text-sm font-medium transition-colors duration-200 focus:outline-none
-                                                  {{ request('per_page', 20) == 10 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)]' : 'text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)]' }}
-                                                  {{ request('per_page', 20) == 10 ? '' : 'border-r border-[var(--color-outline-variant)]' }}">
-                                            10
-                                        </a>
-                                        <a href="{{ request()->fullUrlWithQuery(['per_page' => 20, 'pagina' => 1]) }}" 
-                                           class="px-3 py-1.5 text-sm font-medium transition-colors duration-200 focus:outline-none border-r border-[var(--color-outline-variant)]
-                                                  {{ request('per_page', 20) == 20 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)]' : 'text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)]' }}">
-                                            20
-                                        </a>
-                                        <a href="{{ request()->fullUrlWithQuery(['per_page' => 50, 'pagina' => 1]) }}" 
-                                           class="px-3 py-1.5 text-sm font-medium transition-colors duration-200 focus:outline-none
-                                                  {{ request('per_page', 20) == 50 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)]' : 'text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)]' }}">
-                                            50
-                                        </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Bottom Row: Results Info & Controls -->
+                        <div class="pt-3 border-t border-[var(--color-outline-variant)]">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                <!-- Results Count -->
+                                <div class="flex-shrink-0">
+                                    <h2 class="text-base font-semibold text-[var(--color-on-surface)]">
+                                        {{ isset($isDossier) ? 'Dossiers' : 'Zoekresultaten' }}
+                                    </h2>
+                                    <p class="mt-1 text-sm text-[var(--color-on-surface-variant)]">
+                                        {{ (($results['page'] ?? 1) - 1) * ($results['perPage'] ?? 20) + 1 }}-{{ min(($results['page'] ?? 1) * ($results['perPage'] ?? 20), $results['total'] ?? 0) }} van de {{ number_format($results['total'] ?? 0, 0, ',', '.') }} {{ isset($isDossier) ? 'dossiers' : 'resultaten' }}
+                                    </p>
+                                </div>
+                                
+                                <!-- Sort & Per Page Controls -->
+                                <div class="flex flex-wrap items-center gap-4">
+                                    <div class="flex items-center gap-2">
+                                        <label for="sort-select" class="text-sm font-medium text-[var(--color-on-surface-variant)] whitespace-nowrap">Sorteer op:</label>
+                                        <select 
+                                            id="sort-select"
+                                            name="sort" 
+                                            class="rounded-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)] px-3 py-1.5 text-sm text-[var(--color-on-surface)] 
+                                                   focus:outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20
+                                                   cursor-pointer transition-all duration-200"
+                                            onchange="updateSort(this.value)"
+                                        >
+                                            <option value="relevance" {{ request('sort', 'relevance') === 'relevance' ? 'selected' : '' }}>Relevantie</option>
+                                            <option value="publication_date" {{ request('sort') === 'publication_date' ? 'selected' : '' }}>Publicatiedatum</option>
+                                            <option value="modified_date" {{ request('sort') === 'modified_date' ? 'selected' : '' }}>Laatst gewijzigd</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <label class="text-sm font-medium text-[var(--color-on-surface-variant)] whitespace-nowrap">Aantal:</label>
+                                        <div class="inline-flex rounded-md border border-[var(--color-outline-variant)] overflow-hidden">
+                                            <a href="{{ request()->fullUrlWithQuery(['per_page' => 10, 'pagina' => 1]) }}" 
+                                               class="px-3 py-1.5 text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20
+                                                      {{ request('per_page', 20) == 10 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)]' : 'text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)]' }}
+                                                      {{ request('per_page', 20) == 10 ? '' : 'border-r border-[var(--color-outline-variant)]' }}">
+                                                10
+                                            </a>
+                                            <a href="{{ request()->fullUrlWithQuery(['per_page' => 20, 'pagina' => 1]) }}" 
+                                               class="px-3 py-1.5 text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 border-r border-[var(--color-outline-variant)]
+                                                      {{ request('per_page', 20) == 20 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)]' : 'text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)]' }}">
+                                                20
+                                            </a>
+                                            <a href="{{ request()->fullUrlWithQuery(['per_page' => 50, 'pagina' => 1]) }}" 
+                                               class="px-3 py-1.5 text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 border-r border-[var(--color-outline-variant)]
+                                                      {{ request('per_page', 20) == 50 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)]' : 'text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)]' }}">
+                                                50
+                                            </a>
+                                            <a href="{{ request()->fullUrlWithQuery(['per_page' => 100, 'pagina' => 1]) }}" 
+                                               class="px-3 py-1.5 text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20
+                                                      {{ request('per_page', 20) == 100 ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)]' : 'text-[var(--color-on-surface)] hover:bg-[var(--color-surface-variant)]' }}">
+                                                100
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- Active Filters -->
+                        @if(!empty($activeFilters))
+                        <div class="pt-4 border-t border-[var(--color-outline-variant)]">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="text-sm font-medium text-[var(--color-on-surface)] mr-1">Actieve filters:</span>
+                                @foreach($activeFilters as $filter)
+                                    @php
+                                        $removeUrl = request()->fullUrlWithQuery(['pagina' => 1]);
+                                        if ($filter['type'] === 'beschikbaarSinds') {
+                                            $removeUrl = request()->fullUrlWithQuery(['beschikbaarSinds' => null, 'pagina' => 1]);
+                                        } elseif ($filter['type'] === 'date') {
+                                            $removeUrl = request()->fullUrlWithQuery(['publicatiedatum_van' => null, 'publicatiedatum_tot' => null, 'beschikbaarSinds' => null, 'pagina' => 1]);
+                                        } elseif ($filter['type'] === 'status') {
+                                            $removeUrl = request()->fullUrlWithQuery(['status' => null, 'pagina' => 1]);
+                                        } elseif ($filter['type'] === 'titles_only') {
+                                            $removeUrl = request()->fullUrlWithQuery(['titles_only' => null, 'pagina' => 1]);
+                                        } elseif ($filter['type'] === 'informatiecategorie') {
+                                            $removeUrl = request()->fullUrlWithQuery(['informatiecategorie' => null, 'pagina' => 1]);
+                                        } elseif ($filter['type'] === 'zoeken') {
+                                            $removeUrl = request()->fullUrlWithQuery(['zoeken' => null, 'pagina' => 1]);
+                                        } else {
+                                            $currentValues = (array)request($filter['type'], []);
+                                            $newValues = array_values(array_filter($currentValues, fn($v) => $v !== $filter['value']));
+                                            $removeUrl = request()->fullUrlWithQuery([$filter['type'] => $newValues, 'pagina' => 1]);
+                                        }
+                                    @endphp
+                                    <a href="{{ $removeUrl }}" 
+                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md 
+                                              bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
+                                              hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
+                                              focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20
+                                              transition-all duration-200 font-medium text-sm
+                                              group"
+                                       title="Verwijder filter: {{ $filter['label'] }}">
+                                        <span>{{ $filter['label'] }}</span>
+                                        <i class="fas fa-times text-xs opacity-70 group-hover:opacity-100 transition-opacity" aria-hidden="true"></i>
+                                    </a>
+                                @endforeach
+                                <a href="{{ isset($isDossier) ? route('dossiers.index') : route('zoeken') }}" 
+                                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md 
+                                          bg-[var(--color-surface-variant)] text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]
+                                          hover:bg-[var(--color-surface-variant)]/80
+                                          focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20
+                                          transition-all duration-200 font-medium text-sm
+                                          ml-auto">
+                                    <i class="fas fa-times-circle text-sm" aria-hidden="true"></i>
+                                    <span>Alle filters wissen</span>
+                                </a>
+                            </div>
+                        </div>
+                        @endif
                     </div>
                 </div>
                 
@@ -866,6 +876,7 @@
                 @endif
                 
                 <!-- Results List -->
+                <div id="search-results-area" class="space-y-6">
                 @if(empty($results['items']))
                     <div class="bg-[var(--color-surface)] rounded-md p-12 text-center border border-[var(--color-outline-variant)]">
                         <p class="text-[var(--font-size-body-large)] text-[var(--color-on-surface-variant)] mb-2">Geen resultaten gevonden.</p>
@@ -1211,6 +1222,7 @@
                         </div>
                     @endif
                 @endif
+                </div>
             </div>
         </div>
     </main>
@@ -1719,11 +1731,21 @@
                     if (vals.length > 0) currentSearchState.filters[filter] = vals;
                 });
                 
-                // Update URL without reload
+                // Update URL without reload - append zoeken parameter (multiple searches allowed)
                 const newUrl = new URL(window.location.href);
-                newUrl.searchParams.set('zoeken', query);
+                // Check if this search term already exists
+                const existingSearches = newUrl.searchParams.getAll('zoeken');
+                if (!existingSearches.includes(query)) {
+                    newUrl.searchParams.append('zoeken', query);
+                }
                 newUrl.searchParams.set('pagina', '1');
                 history.pushState({}, '', newUrl.toString());
+                
+                // Update results header with new count
+                updateResultsHeader(data);
+                
+                // Update active filters (including new search term)
+                updateActiveFilters();
                 
                 // Render results with pagination using shared function
                 if (resultsArea) {
@@ -1746,6 +1768,191 @@
                     `;
                 }
             }
+        }
+        
+        // Update results header with new count and page info
+        function updateResultsHeader(data) {
+            // Find the results info section - look for h2 with "Zoekresultaten" or "Dossiers"
+            const titleEl = document.querySelector('h2');
+            if (titleEl && (titleEl.textContent.includes('Zoekresultaten') || titleEl.textContent.includes('Dossiers'))) {
+                const resultsInfo = titleEl.parentElement;
+                if (resultsInfo) {
+                    const countEl = resultsInfo.querySelector('p');
+                    if (countEl) {
+                        const start = ((data.page - 1) * data.per_page) + 1;
+                        const end = Math.min(data.page * data.per_page, data.found);
+                        const formattedTotal = data.found.toLocaleString('nl-NL');
+                        const isDossier = window.location.pathname.includes('/dossiers');
+                        
+                        titleEl.textContent = isDossier ? 'Dossiers' : 'Zoekresultaten';
+                        countEl.textContent = `${start}-${end} van de ${formattedTotal} ${isDossier ? 'dossiers' : 'resultaten'}`;
+                    }
+                }
+            }
+        }
+        
+        // Update active filters dynamically
+        function updateActiveFilters() {
+            const currentUrl = new URL(window.location.href);
+            const activeFilters = [];
+            
+            // Get all active filters from URL
+            if (currentUrl.searchParams.get('beschikbaarSinds') && currentUrl.searchParams.get('beschikbaarSinds') !== 'zelf') {
+                const periods = { 'week': 'Afgelopen week', 'maand': 'Afgelopen maand', 'jaar': 'Afgelopen jaar' };
+                const value = currentUrl.searchParams.get('beschikbaarSinds');
+                activeFilters.push({ type: 'beschikbaarSinds', value: value, label: periods[value] || value });
+            }
+            
+            if (currentUrl.searchParams.get('publicatiedatum_van') || currentUrl.searchParams.get('publicatiedatum_tot')) {
+                let dateLabel = '';
+                const van = currentUrl.searchParams.get('publicatiedatum_van');
+                const tot = currentUrl.searchParams.get('publicatiedatum_tot');
+                if (van && tot) {
+                    dateLabel = `${van} - ${tot}`;
+                } else if (van) {
+                    dateLabel = `Vanaf ${van}`;
+                } else if (tot) {
+                    dateLabel = `Tot ${tot}`;
+                }
+                activeFilters.push({ type: 'date', value: 'custom', label: dateLabel });
+            }
+            
+            // Array filters
+            ['documentsoort', 'thema', 'organisatie', 'bestandstype'].forEach(filterType => {
+                const values = currentUrl.searchParams.getAll(filterType + '[]');
+                values.forEach(value => {
+                    activeFilters.push({ type: filterType, value: value, label: value });
+                });
+            });
+            
+            // Single value filters
+            if (currentUrl.searchParams.get('status')) {
+                const statusLabels = { 'actief': 'Actief', 'gesloten': 'Gesloten' };
+                const value = currentUrl.searchParams.get('status');
+                activeFilters.push({ type: 'status', value: value, label: statusLabels[value] || value });
+            }
+            
+            if (currentUrl.searchParams.get('informatiecategorie')) {
+                const value = currentUrl.searchParams.get('informatiecategorie');
+                activeFilters.push({ type: 'informatiecategorie', value: value, label: value });
+            }
+            
+            if (currentUrl.searchParams.get('titles_only')) {
+                activeFilters.push({ type: 'titles_only', value: '1', label: 'Alleen in titels' });
+            }
+            
+            // Search term - add each search as a separate filter
+            const zoekenValues = currentUrl.searchParams.getAll('zoeken');
+            zoekenValues.forEach(value => {
+                if (value && value.trim()) {
+                    activeFilters.push({ type: 'zoeken', value: value, label: 'Zoekterm: ' + value });
+                }
+            });
+            
+            // Render active filters
+            const headerCard = document.getElementById('search-header-card');
+            if (!headerCard) return;
+            
+            // Find or create active filters container
+            let filtersContainer = headerCard.querySelector('.active-filters-container');
+            if (!filtersContainer) {
+                // Find the results info section (div with border-t)
+                const resultsInfoSection = headerCard.querySelector('.pt-3.border-t');
+                if (resultsInfoSection && resultsInfoSection.parentElement) {
+                    filtersContainer = document.createElement('div');
+                    filtersContainer.className = 'pt-4 border-t border-[var(--color-outline-variant)] active-filters-container';
+                    // Insert after results info section
+                    resultsInfoSection.parentElement.insertBefore(filtersContainer, resultsInfoSection.nextSibling);
+                } else {
+                    // Fallback: append to the main container
+                    const mainContainer = headerCard.querySelector('.space-y-5');
+                    if (mainContainer) {
+                        filtersContainer = document.createElement('div');
+                        filtersContainer.className = 'pt-4 border-t border-[var(--color-outline-variant)] active-filters-container';
+                        mainContainer.appendChild(filtersContainer);
+                    } else {
+                        return;
+                    }
+                }
+            }
+            
+            if (activeFilters.length === 0) {
+                filtersContainer.style.display = 'none';
+                return;
+            }
+            
+            filtersContainer.style.display = 'block';
+            
+            // Build filter HTML
+            let filtersHtml = '<div class="flex flex-wrap items-center gap-2">';
+            filtersHtml += '<span class="text-sm font-medium text-[var(--color-on-surface)] mr-1">Actieve filters:</span>';
+            
+            activeFilters.forEach(filter => {
+                const removeUrl = new URL(window.location.href);
+                removeUrl.searchParams.set('pagina', '1');
+                
+                if (filter.type === 'beschikbaarSinds') {
+                    removeUrl.searchParams.delete('beschikbaarSinds');
+                } else if (filter.type === 'date') {
+                    removeUrl.searchParams.delete('publicatiedatum_van');
+                    removeUrl.searchParams.delete('publicatiedatum_tot');
+                    removeUrl.searchParams.delete('beschikbaarSinds');
+                } else if (filter.type === 'status') {
+                    removeUrl.searchParams.delete('status');
+                } else if (filter.type === 'titles_only') {
+                    removeUrl.searchParams.delete('titles_only');
+                } else if (filter.type === 'informatiecategorie') {
+                    removeUrl.searchParams.delete('informatiecategorie');
+                } else if (filter.type === 'zoeken') {
+                    // Remove this specific search term
+                    const zoekenParams = removeUrl.searchParams.getAll('zoeken');
+                    removeUrl.searchParams.delete('zoeken');
+                    zoekenParams.forEach(val => {
+                        if (val !== filter.value) {
+                            removeUrl.searchParams.append('zoeken', val);
+                        }
+                    });
+                } else {
+                    // Array filters
+                    const currentValues = removeUrl.searchParams.getAll(filter.type + '[]');
+                    const newValues = currentValues.filter(v => v !== filter.value);
+                    removeUrl.searchParams.delete(filter.type + '[]');
+                    newValues.forEach(v => removeUrl.searchParams.append(filter.type + '[]', v));
+                }
+                
+                filtersHtml += `
+                    <a href="${removeUrl.toString()}" 
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md 
+                              bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
+                              hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
+                              focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20
+                              transition-all duration-200 font-medium text-sm
+                              group"
+                       title="Verwijder filter: ${escapeHtml(filter.label)}">
+                        <span>${escapeHtml(filter.label)}</span>
+                        <i class="fas fa-times text-xs opacity-70 group-hover:opacity-100 transition-opacity" aria-hidden="true"></i>
+                    </a>
+                `;
+            });
+            
+            // Add "Clear all" button
+            const clearUrl = new URL(window.location.pathname, window.location.origin);
+            const isDossier = window.location.pathname.includes('/dossiers');
+            filtersHtml += `
+                <a href="${clearUrl.toString()}" 
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md 
+                          bg-[var(--color-surface-variant)] text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]
+                          hover:bg-[var(--color-surface-variant)]/80
+                          focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20
+                          transition-all duration-200 font-medium text-sm
+                          ml-auto">
+                    <i class="fas fa-times-circle text-sm" aria-hidden="true"></i>
+                    <span>Alle filters wissen</span>
+                </a>
+            `;
+            
+            filtersHtml += '</div>';
+            filtersContainer.innerHTML = filtersHtml;
         }
         
         // Update filter counts dynamically
@@ -1902,6 +2109,12 @@
                 newUrl.searchParams.set('pagina', page.toString());
                 history.pushState({}, '', newUrl.toString());
                 
+                // Update results header with new count
+                updateResultsHeader(data);
+                
+                // Update active filters
+                updateActiveFilters();
+                
                 // Render results with pagination
                 renderSearchResults(resultsArea, data);
                 
@@ -1925,18 +2138,8 @@
         function renderSearchResults(container, data) {
             if (data.hits && data.hits.length > 0) {
                 let html = `
-                    <!-- Results Header -->
-                    <div class="bg-white rounded-md p-6 shadow-sm border border-[var(--color-outline-variant)]">
-                        <div class="flex items-center justify-between gap-3">
-                            <h2 class="text-lg font-medium text-[var(--color-on-surface)]">
-                                Zoekresultaten ${((data.page - 1) * data.per_page) + 1}-${Math.min(data.page * data.per_page, data.found)} van de ${data.found.toLocaleString('nl-NL')} resultaten
-                            </h2>
-                            <span class="text-xs text-gray-400">${data.search_time_ms}ms</span>
-                        </div>
-                    </div>
-                    
                     <!-- Results List -->
-                    <div class="bg-white rounded-md shadow-sm border border-[var(--color-outline-variant)] overflow-hidden">
+                    <div class="bg-[var(--color-surface)] rounded-md border border-[var(--color-outline-variant)] overflow-hidden">
                         <div class="px-6 py-4 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-variant)]/30">
                             <h3 class="text-sm font-semibold text-[var(--color-on-surface)]">Documenten</h3>
                         </div>
@@ -2041,6 +2244,9 @@
                 const urlParamName = filterType === 'informatiecategorie' ? filterType : `${filterType}[]`;
                 newUrl.searchParams.append(urlParamName, filterValue);
                 history.pushState({}, '', newUrl.toString());
+                
+                // Update results header with new count
+                updateResultsHeader(data);
                 
                 // Render results with pagination using shared function
                 if (resultsArea) {

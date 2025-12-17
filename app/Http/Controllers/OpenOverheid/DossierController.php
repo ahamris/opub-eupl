@@ -17,7 +17,7 @@ class DossierController extends Controller
         $validated = $request->validate([
             'zoeken' => ['nullable', 'string'],
             'pagina' => ['nullable', 'integer', 'min:1'],
-            'per_page' => ['nullable', 'integer', 'in:10,20,50'],
+            'per_page' => ['nullable', 'integer', 'in:10,20,50,100'],
             'beschikbaarSinds' => ['nullable', 'string', 'in:week,maand,jaar,zelf'],
             'publicatiedatum_van' => ['nullable', 'date_format:d-m-Y'],
             'publicatiedatum_tot' => ['nullable', 'date_format:d-m-Y'],

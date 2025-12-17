@@ -736,7 +736,7 @@ class SearchController extends Controller
         $validated = $request->validate([
             'zoeken' => ['nullable', 'string'],
             'pagina' => ['nullable', 'integer', 'min:1'],
-            'per_page' => ['nullable', 'integer', 'in:10,20,50'],
+            'per_page' => ['nullable', 'integer', 'in:10,20,50,100'],
             'beschikbaarSinds' => ['nullable', 'string', 'in:week,maand,jaar,zelf'],
             'publicatiedatum_van' => ['nullable', 'date_format:d-m-Y'],
             'publicatiedatum_tot' => ['nullable', 'date_format:d-m-Y'],
@@ -991,7 +991,7 @@ class SearchController extends Controller
         $validated = $request->validate([
             'q' => ['nullable', 'string'],
             'page' => ['nullable', 'integer', 'min:1'],
-            'per_page' => ['nullable', 'integer', 'in:10,20,50'],
+            'per_page' => ['nullable', 'integer', 'in:10,20,50,100'],
             'publicatiedatum_van' => ['nullable', 'date_format:d-m-Y'],
             'publicatiedatum_tot' => ['nullable', 'date_format:d-m-Y'],
             'documentsoort' => ['nullable'],
@@ -1079,7 +1079,7 @@ class SearchController extends Controller
         $validated = [
             'q' => $q,
             'page' => max(1, $page),
-            'per_page' => in_array($perPage, [10, 20, 50]) ? $perPage : 20,
+            'per_page' => in_array($perPage, [10, 20, 50, 100]) ? $perPage : 20,
             'documentsoort' => $documentsoort,
             'thema' => $thema,
             'organisatie' => $organisatie,
