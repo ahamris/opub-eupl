@@ -63,7 +63,7 @@
         
         <!-- Right side: Search functionality -->
         <div class="mx-auto mt-16 w-full max-w-2xl lg:col-span-7 lg:mx-0 lg:mt-0 xl:col-span-6">
-            <div class="relative isolate" x-data="liveSearch()" @click.outside="showResults = false">
+            <div class="relative isolate">
                 <!-- Enhanced Search Card -->
                 <div class="rounded-md bg-white p-8 border border-[var(--color-outline-variant)] shadow-sm transition-all duration-300 hover:shadow-md hover:border-[var(--color-primary)]/30">
                     <!-- Header Section -->
@@ -80,32 +80,8 @@
                         </div>
                     </div>
                     
-                    <!-- Enhanced Search Input -->
-                    <div class="relative">
-                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 z-10">
-                            <i class="fas fa-search text-[var(--color-on-surface-variant)] text-base" aria-hidden="true"></i>
-                        </div>
-                        <input 
-                            type="text" 
-                            x-model="query"
-                            @input="handleInput()"
-                            @focus="handleFocus()"
-                            @keydown.escape="showResults = false; query = ''"
-                            @keydown.arrow-down.prevent="navigateResults(1)"
-                            @keydown.arrow-up.prevent="navigateResults(-1)"
-                            @keydown.enter.prevent="selectResult()"
-                            class="block w-full rounded-md bg-white px-4 py-3.5 pl-12 pr-12 text-base text-[var(--color-on-surface)] border-2 border-[var(--color-outline-variant)] placeholder:text-[var(--color-on-surface-variant)] focus:outline-none focus:border-[var(--color-primary)] transition-all duration-200"
-                            placeholder="Zoek in alle documenten..."
-                            autocomplete="off"
-                            aria-label="Zoek documenten"
-                            :aria-expanded="showResults ? 'true' : 'false'"
-                            aria-haspopup="listbox"
-                            aria-autocomplete="list"
-                        >
-                        <div x-show="loading" class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 z-10">
-                            <i class="fas fa-circle-notch animate-spin text-[var(--color-primary)] text-base" aria-hidden="true"></i>
-                        </div>
-                    </div>
+                    <!-- Typesense Autocomplete Container -->
+                    <div id="hero-autocomplete" class="ts-autocomplete-wrapper"></div>
                     
                     <!-- Quick Actions -->
                     <div class="mt-6">
@@ -125,131 +101,6 @@
                             </a>
                         </div>
                     </div>
-                </div>
-                
-                <!-- Dropdown Results -->
-                <div
-                    x-show="showResults && (query.length >= 2 || loading)"
-                    x-cloak
-                    x-transition:enter="transition ease-out duration-150"
-                    x-transition:enter-start="opacity-0 translate-y-1"
-                    x-transition:enter-end="opacity-100 translate-y-0"
-                    x-transition:leave="transition ease-in duration-100"
-                    x-transition:leave-start="opacity-100 translate-y-0"
-                    x-transition:leave-end="opacity-0 translate-y-1"
-                    class="absolute inset-x-0 top-full mt-2 bg-white rounded-md border border-[var(--color-outline-variant)] shadow-lg max-h-96 overflow-y-auto z-[99999]"
-                    role="listbox"
-                    @click.stop
-                >
-                    <!-- Autocomplete Suggestions -->
-                    <template x-if="suggestions.length > 0">
-                        <div>
-                            <div class="px-4 py-2.5 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-variant)]">
-                                <p class="text-xs font-semibold text-[var(--color-on-surface-variant)] uppercase tracking-wide">Suggesties</p>
-                            </div>
-                            <ul class="py-1" role="listbox">
-                                <template x-for="(suggestion, index) in suggestions" :key="index">
-                                    <li 
-                                        @click="selectSuggestion(suggestion)"
-                                        @mouseenter="selectedIndex = index"
-                                        :class="selectedIndex === index ? 'bg-[var(--color-primary)]/10' : 'hover:bg-[var(--color-primary)]/10'"
-                                        class="px-4 py-2.5 cursor-pointer transition-colors duration-150"
-                                        role="option"
-                                        :aria-selected="selectedIndex === index"
-                                    >
-                                        <div class="flex items-center gap-3">
-                                            <i class="fas fa-bolt text-xs text-[var(--color-primary)] flex-shrink-0" aria-hidden="true"></i>
-                                            <div class="flex-1 min-w-0">
-                                                <div class="text-sm font-medium text-[var(--color-on-surface)] leading-snug" x-html="suggestion.highlight || suggestion.query"></div>
-                                            </div>
-                                        </div>
-                                    </li>
-                                </template>
-                            </ul>
-                        </div>
-                    </template>
-                    
-                    <!-- Search Results -->
-                    <template x-if="results.length > 0">
-                        <div>
-                            <div class="px-4 py-2.5 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-variant)]">
-                                <p class="text-xs font-semibold text-[var(--color-on-surface-variant)] uppercase tracking-wide">
-                                    <span x-text="found"></span> resultaten
-                                    <template x-if="searchTime > 0">
-                                        <span class="text-[var(--color-on-surface-variant)]/70 font-normal"> in <span x-text="searchTime"></span>ms</span>
-                                    </template>
-                                </p>
-                            </div>
-                            <ul class="py-1" role="listbox">
-                                <template x-for="(result, index) in results" :key="result.id">
-                                    <li 
-                                        @click="goToDetail(result.id)"
-                                        @mouseenter="selectedIndex = suggestions.length + index"
-                                        :class="selectedIndex === (suggestions.length + index) ? 'bg-[var(--color-primary)]/10' : 'hover:bg-[var(--color-primary)]/10'"
-                                        class="px-4 py-3 cursor-pointer transition-colors duration-150 border-b border-[var(--color-outline-variant)] last:border-b-0"
-                                        role="option"
-                                        :aria-selected="selectedIndex === (suggestions.length + index)"
-                                    >
-                                        <div class="flex items-start justify-between gap-4">
-                                            <div class="flex-1 min-w-0">
-                                                <div class="flex items-start justify-between gap-3 mb-1.5">
-                                                    <h3 class="text-sm font-medium text-[var(--color-on-surface)] truncate flex-1 leading-snug" x-text="result.title"></h3>
-                                                    <template x-if="result.formatted_category || result.category">
-                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-[var(--color-primary-light)] text-[var(--color-primary)] shrink-0 border border-[var(--color-primary)]/20">
-                                                            <span x-text="result.formatted_category || result.category"></span>
-                                                        </span>
-                                                    </template>
-                                                </div>
-                                                <p class="mt-1 text-xs text-[var(--color-on-surface-variant)] line-clamp-2 leading-snug" x-text="result.description"></p>
-                                                <div class="mt-2 flex items-center gap-4 text-[11px] text-[var(--color-on-surface-variant)]">
-                                                    <template x-if="result.organisation">
-                                                        <span class="inline-flex items-center gap-1.5">
-                                                            <i class="fas fa-building text-[10px]" aria-hidden="true"></i>
-                                                            <span class="tracking-tight" x-text="result.organisation"></span>
-                                                        </span>
-                                                    </template>
-                                                    <template x-if="result.publication_date">
-                                                        <span class="inline-flex items-center gap-1.5">
-                                                            <i class="fas fa-calendar text-[10px]" aria-hidden="true"></i>
-                                                            <span class="tracking-tight" x-text="formatDate(result.publication_date)"></span>
-                                                        </span>
-                                                    </template>
-                                                </div>
-                                            </div>
-                                            <i class="fas fa-chevron-right text-[var(--color-outline-variant)] shrink-0 mt-1 text-xs" aria-hidden="true"></i>
-                                        </div>
-                                    </li>
-                                </template>
-                            </ul>
-                        </div>
-                    </template>
-                    
-                    <!-- Footer: View all results -->
-                    <template x-if="(suggestions.length > 0 || results.length > 0) && query.length >= 2">
-                        <div class="px-4 py-3 border-t border-[var(--color-outline-variant)] bg-[var(--color-surface-variant)]">
-                            <a 
-                                :href="'{{ route('zoeken') }}?zoeken=' + encodeURIComponent(query)"
-                                class="text-sm font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition-colors duration-150 inline-flex items-center gap-2 group"
-                            >
-                                Bekijk alle resultaten
-                                <i class="fas fa-arrow-right text-xs transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true"></i>
-                            </a>
-                        </div>
-                    </template>
-                    
-                    <!-- No Results -->
-                    <template x-if="suggestions.length === 0 && results.length === 0 && query.length >= 2 && !loading">
-                        <div class="px-4 py-6 text-center text-sm">
-                            <p class="text-[var(--color-on-surface-variant)] mb-3">Geen resultaten gevonden voor "<span class="font-medium text-[var(--color-on-surface)]" x-text="query"></span>"</p>
-                            <a 
-                                :href="'{{ route('zoeken') }}?zoeken=' + encodeURIComponent(query)"
-                                class="text-sm font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition-colors duration-150 inline-flex items-center gap-2 group"
-                            >
-                                Toch zoeken
-                                <i class="fas fa-arrow-right text-xs transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true"></i>
-                            </a>
-                        </div>
-                    </template>
                 </div>
             </div>
         </div>
@@ -503,153 +354,31 @@ function liveDocumentCounter(initialCount) {
     }
 }
 
-function liveSearch() {
-    return {
-        query: '',
-        suggestions: [],
-        results: [],
-        found: 0,
-        searchTime: 0,
-        loading: false,
-        showResults: false,
-        selectedIndex: -1,
-        searchTimeout: null,
-        
-        handleInput() {
-            if (this.query.length >= 2) {
-                this.showResults = true;
-            }
-            
-            if (this.searchTimeout) {
-                clearTimeout(this.searchTimeout);
-            }
-            
-            this.searchTimeout = setTimeout(() => {
-                this.search();
-            }, 200);
-        },
-        
-        handleFocus() {
-            if (this.query.length >= 2) {
-                this.showResults = true;
-                if (this.results.length === 0 && this.suggestions.length === 0 && !this.loading) {
-                    this.search();
-                }
-            }
-        },
-        
-        async search() {
-            if (this.query.length < 2) {
-                this.suggestions = [];
-                this.results = [];
-                this.found = 0;
-                this.showResults = false;
-                this.loading = false;
-                return;
-            }
-            
-            this.loading = true;
-            this.selectedIndex = -1;
-            this.showResults = true;
-            
-            try {
-                // Fetch both autocomplete suggestions and search results in parallel
-                const [suggestionsResponse, searchResponse] = await Promise.all([
-                    fetch(`{{ route('api.autocomplete') }}?q=${encodeURIComponent(this.query)}&limit=3`),
-                    fetch(`{{ route('api.live-search') }}?q=${encodeURIComponent(this.query)}&limit=5`)
-                ]);
-                
-                // Process autocomplete suggestions first (prioritized)
-                if (suggestionsResponse.ok) {
-                    const suggestionsData = await suggestionsResponse.json();
-                    this.suggestions = (suggestionsData.suggestions || []).map(suggestion => ({
-                        ...suggestion,
-                        isSuggestion: true
-                    }));
-                }
-                
-                // Process search results
-                if (searchResponse.ok) {
-                    const searchData = await searchResponse.json();
-                    this.results = searchData.hits || [];
-                    this.found = searchData.found || 0;
-                    this.searchTime = searchData.search_time_ms || 0;
-                }
-                
-                this.showResults = true;
-            } catch (error) {
-                console.error('Search error:', error);
-                this.suggestions = [];
-                this.results = [];
-                this.found = 0;
-                this.showResults = true;
-            } finally {
-                this.loading = false;
-            }
-        },
-        
-        get allItems() {
-            // Prioritize suggestions first, then results
-            return [...this.suggestions, ...this.results];
-        },
-        
-        navigateResults(direction) {
-            const items = this.allItems;
-            if (items.length === 0) return;
-            
-            this.selectedIndex += direction;
-            if (this.selectedIndex < 0) {
-                this.selectedIndex = items.length - 1;
-            } else if (this.selectedIndex >= items.length) {
-                this.selectedIndex = 0;
-            }
-        },
-        
-        selectResult() {
-            const items = this.allItems;
-            if (this.selectedIndex >= 0 && items[this.selectedIndex]) {
-                const item = items[this.selectedIndex];
-                if (item.isSuggestion && item.query) {
-                    // Autocomplete suggestion - navigate to search page
-                    window.location.href = `{{ route('zoeken') }}?zoeken=${encodeURIComponent(item.query)}`;
-                } else if (item.id) {
-                    // Document result - navigate to document detail
-                    this.goToDetail(item.id);
-                }
-            } else if (this.query.length >= 2) {
-                window.location.href = `{{ route('zoeken') }}?zoeken=${encodeURIComponent(this.query)}`;
-            }
-        },
-        
-        selectSuggestion(suggestion) {
-            if (suggestion.id) {
-                // If suggestion has an ID, go directly to the document
-                this.goToDetail(suggestion.id);
-            } else if (suggestion.query) {
-                // Update search input with suggestion query and trigger live search
-                this.query = suggestion.query;
-                // Trigger live search immediately
-                this.search();
-            }
-        },
-        
-        goToDetail(id) {
-            if (id) {
-                window.location.href = `/open-overheid/documents/${id}`;
-            }
-        },
-        
-        formatDate(dateString) {
-            if (!dateString) return '';
-            const date = new Date(dateString);
-            return date.toLocaleDateString('nl-NL', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            });
-        },
+// Initialize Typesense Autocomplete on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Get Typesense config from environment (passed via blade)
+    const typesenseConfig = {
+        apiKey: '{{ config("open_overheid.typesense.api_key") }}',
+        host: '{{ config("open_overheid.typesense.host") }}',
+        port: {{ config("open_overheid.typesense.port", 8108) }},
+        protocol: '{{ config("open_overheid.typesense.protocol", "http") }}',
+    };
+    
+    // Initialize autocomplete if container exists and function is available
+    if (document.getElementById('hero-autocomplete') && typeof window.initTypesenseAutocomplete === 'function') {
+        window.initTypesenseAutocomplete({
+            container: '#hero-autocomplete',
+            apiKey: typesenseConfig.apiKey,
+            host: typesenseConfig.host,
+            port: typesenseConfig.port,
+            protocol: typesenseConfig.protocol,
+            collection: 'open_overheid_documents',
+            searchRoute: '{{ route("zoeken") }}',
+            documentRoute: '/open-overheid/documents',
+            placeholder: 'Zoek in alle documenten...',
+        });
     }
-}
+});
 </script>
 @endpush
 
