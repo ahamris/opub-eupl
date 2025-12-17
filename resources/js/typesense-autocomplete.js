@@ -145,8 +145,8 @@ export function initTypesenseAutocomplete(config) {
                         return `${searchRoute}?zoeken=${encodeURIComponent(item.query)}`;
                     },
                     templates: {
-                        header() {
-                            return `
+                        header({ html }) {
+                            return html`
                                 <div class="ts-source-header">
                                     <span class="ts-source-header-title">
                                         <i class="fas fa-bolt text-amber-500"></i>
@@ -199,10 +199,10 @@ export function initTypesenseAutocomplete(config) {
                             `;
                         },
                         item({ item, html, components }) {
-                            const title = item._highlightResult?.title?.value || item.title || 'Geen titel';
-                            const description = item._highlightResult?.description?.value || item.description || '';
-                            const truncatedDescription = description.length > 150 
-                                ? description.substring(0, 150) + '...' 
+                            const title = item.title || 'Geen titel';
+                            const description = item.description || '';
+                            const truncatedDescription = description.length > 120 
+                                ? description.substring(0, 120) + '...' 
                                 : description;
                             
                             // Format date
@@ -220,29 +220,17 @@ export function initTypesenseAutocomplete(config) {
                                 }
                             }
 
-                            // Get category badge color
-                            const categoryColors = {
-                                'Woo-verzoeken en -besluiten': 'bg-blue-100 text-blue-700 border-blue-200',
-                                'Wetten en algemeen verbindende voorschriften': 'bg-purple-100 text-purple-700 border-purple-200',
-                                'Organisatiegegevens': 'bg-green-100 text-green-700 border-green-200',
-                                'Convenanten': 'bg-orange-100 text-orange-700 border-orange-200',
-                                'Jaarplannen en jaarverslagen': 'bg-pink-100 text-pink-700 border-pink-200',
-                            };
-                            const categoryClass = categoryColors[item.category] || 'bg-gray-100 text-gray-700 border-gray-200';
-
                             return html`
                                 <a href="${documentRoute}/${item.id}" class="ts-document-item">
                                     <div class="ts-document-content">
                                         <div class="ts-document-header">
-                                            <h4 class="ts-document-title" dangerouslySetInnerHTML=${{ __html: title }}></h4>
+                                            <h4 class="ts-document-title">${title}</h4>
                                             ${item.category ? html`
-                                                <span class="ts-document-category ${categoryClass}">
-                                                    ${item.category}
-                                                </span>
+                                                <span class="ts-document-category">${item.category}</span>
                                             ` : ''}
                                         </div>
                                         ${truncatedDescription ? html`
-                                            <p class="ts-document-description" dangerouslySetInnerHTML=${{ __html: truncatedDescription }}></p>
+                                            <p class="ts-document-description">${truncatedDescription}</p>
                                         ` : ''}
                                         <div class="ts-document-meta">
                                             ${item.organisation ? html`
