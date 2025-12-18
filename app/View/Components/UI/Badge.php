@@ -19,8 +19,6 @@ class Badge extends Component
     ) {
         $classes = [];
 
-        // Base badge classes
-        // self-start: flex container içinde badge'in tüm satıra yayılmasını engeller (inline davranış)
         $baseClasses = 'inline-flex items-center font-medium rounded-full self-start';
         $classes[] = $baseClasses;
 
@@ -33,16 +31,18 @@ class Badge extends Component
             $classes[] = 'px-2.5 py-1 text-[11px] leading-4 tracking-[0.5px]';
         }
 
-        // Variant classes - Tailwind JIT için doğrudan class string'leri
         if ($variant === 'primary') {
             $classes[] = 'bg-[color-mix(in_oklab,var(--color-accent)_15%,transparent)] dark:bg-[color-mix(in_oklab,var(--color-accent)_50%,transparent)] text-[var(--color-accent)] dark:text-[var(--color-accent-content)]';
             $this->iconClasses = 'text-[var(--color-accent)] dark:text-[var(--color-accent-content)]';
+        } elseif ($variant === 'primary-dark') {
+            $classes[] = 'bg-[var(--color-primary-dark)] text-[var(--color-on-primary)]';
+            $this->iconClasses = 'text-[var(--color-on-primary)]';
         } elseif ($variant === 'primary-light') {
             $classes[] = 'bg-[var(--color-primary-light)] text-[var(--color-on-primary-light)]';
             $this->iconClasses = 'text-[var(--color-on-primary-light)]';
         } elseif ($variant === 'secondary') {
-            $classes[] = 'bg-zinc-300 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200';
-            $this->iconClasses = 'text-zinc-800 dark:text-zinc-200';
+            $classes[] = 'bg-[var(--color-primary-dark)] text-[var(--color-on-primary)]';
+            $this->iconClasses = 'text-[var(--color-on-primary)]';
         } elseif ($variant === 'success') {
             $classes[] = 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300';
             $this->iconClasses = 'text-green-700 dark:text-green-300';

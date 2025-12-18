@@ -10,15 +10,59 @@
 @endphp
 
 @section('content')
-    <x-page-header 
-        eyebrow="Verken complete dossiers"
-        title="Dossiers"
-        description="Verken complete dossiers met alle bijbehorende documenten en verbanden. Elke dossier bevat gerelateerde documenten die samen een compleet beeld geven."
-        :breadcrumbs="$breadcrumbs"
-    />
+    <!-- Premium Page Header Section -->
+    <div class="relative bg-gradient-to-b from-slate-50 to-white overflow-hidden">
+        <!-- Subtle grid pattern -->
+        <div class="absolute inset-0 -z-10">
+            <svg class="absolute inset-0 h-full w-full stroke-slate-200/50" fill="none">
+                <defs>
+                    <pattern id="dossiers-header-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                        <path d="M.5 40V.5H40" fill="none" />
+                    </pattern>
+                </defs>
+                <rect width="100%" height="100%" stroke-width="0" fill="url(#dossiers-header-grid)" />
+            </svg>
+            <!-- Fade overlay -->
+            <div class="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent"></div>
+        </div>
+        
+        <!-- Animated floating squares -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute top-8 right-[15%] w-16 h-16 rounded-md bg-[var(--color-purple)]/[0.04] animate-[float-slow_6s_ease-in-out_infinite]"></div>
+            <div class="absolute top-16 left-[10%] w-12 h-12 rounded-md bg-[var(--color-primary)]/[0.03] animate-[float-slower_8s_ease-in-out_infinite]"></div>
+            <div class="absolute top-1/2 right-[8%] w-20 h-20 rounded-md bg-[var(--color-purple)]/[0.05] animate-[float-slow_6s_ease-in-out_infinite_-2s]"></div>
+            <div class="absolute bottom-12 left-[20%] w-14 h-14 rounded-md bg-[var(--color-primary)]/[0.04] animate-[float-slower_8s_ease-in-out_infinite_-3s]"></div>
+            <div class="absolute top-12 right-[35%] w-10 h-10 rounded-md bg-[var(--color-purple)]/[0.03] animate-[float-slow_6s_ease-in-out_infinite_-1s]"></div>
+        </div>
+        
+        <div class="mx-auto max-w-7xl px-6 lg:px-8 py-12 sm:py-16 relative z-10">
+            <!-- Breadcrumb -->
+            @if(!empty($breadcrumbs))
+            <div class="mb-6">
+                <x-breadcrumbs :items="$breadcrumbs" />
+            </div>
+            @endif
+            
+            <div class="mx-auto max-w-2xl lg:mx-0">
+                <p class="text-sm font-medium uppercase">Verken complete dossiers</p>
+                <h1 class="mt-2 font-semibold">Dossiers</h1>
+                <p class="mt-4 text-base text-[var(--color-on-surface-variant)] leading-relaxed">
+                    Verken complete dossiers met alle bijbehorende documenten en verbanden. Elke dossier bevat gerelateerde documenten die samen een compleet beeld geven.
+                </p>
+            </div>
+        </div>
+        
+        <!-- Bottom gradient line -->
+        <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
+    </div>
+    
+    <style>
+        @keyframes float-slow { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-12px) rotate(3deg); } }
+        @keyframes float-slower { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-8px) rotate(-2deg); } }
+    </style>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto w-full px-4 py-8">
+    <main class="flex-1 max-w-7xl mx-auto w-full px-6 lg:px-8 pt-10 pb-20">
         <div class="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8">
             <!-- Sidebar Filters -->
             <aside class="lg:sticky lg:top-[88px] h-fit lg:z-40" aria-label="Zoekfilters" x-data="{ mobileFiltersOpen: false }">
@@ -58,8 +102,8 @@
                                         onchange="document.getElementById('filter-form').submit()"
                                         class="w-4 h-4 border border-[var(--color-outline)] 
                                                focus:outline-none
-                                               cursor-pointer text-[var(--color-primary)]
-                                               checked:bg-[var(--color-primary)] checked:border-primary
+                                               cursor-pointer text-[var(--color-primary-dark)]
+                                               checked:bg-[var(--color-primary-dark)] checked:border-[var(--color-primary-dark)]
                                                transition-all duration-200"
                                     >
                                     <label for="datum-geen" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
@@ -76,14 +120,14 @@
                                         onchange="document.getElementById('filter-form').submit()"
                                         class="w-4 h-4 border border-[var(--color-outline)] 
                                                focus:outline-none
-                                               cursor-pointer text-[var(--color-primary)]
-                                               checked:bg-[var(--color-primary)] checked:border-primary
+                                               cursor-pointer text-[var(--color-primary-dark)]
+                                               checked:bg-[var(--color-primary-dark)] checked:border-[var(--color-primary-dark)]
                                                transition-all duration-200"
                                     >
                                     <label for="datum-week" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                         Afgelopen week
                                     </label>
-                                    <x-ui.badge size="sm" variant="primary-light" id="count-week">{{ $filterCounts['week'] ?? 0 }}</x-ui.badge>
+                                    <x-ui.badge size="sm" variant="primary-dark" id="count-week">{{ $filterCounts['week'] ?? 0 }}</x-ui.badge>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <input 
@@ -95,14 +139,14 @@
                                         onchange="document.getElementById('filter-form').submit()"
                                         class="w-4 h-4 border border-[var(--color-outline)] 
                                                focus:outline-none
-                                               cursor-pointer text-[var(--color-primary)]
-                                               checked:bg-[var(--color-primary)] checked:border-primary
+                                               cursor-pointer text-[var(--color-primary-dark)]
+                                               checked:bg-[var(--color-primary-dark)] checked:border-[var(--color-primary-dark)]
                                                transition-all duration-200"
                                     >
                                     <label for="datum-maand" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                         Afgelopen maand
                                     </label>
-                                    <x-ui.badge size="sm" variant="primary-light" id="count-maand">{{ $filterCounts['maand'] ?? 0 }}</x-ui.badge>
+                                    <x-ui.badge size="sm" variant="primary-dark" id="count-maand">{{ $filterCounts['maand'] ?? 0 }}</x-ui.badge>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <input 
@@ -114,14 +158,14 @@
                                         onchange="document.getElementById('filter-form').submit()"
                                         class="w-4 h-4 border border-[var(--color-outline)] 
                                                focus:outline-none
-                                               cursor-pointer text-[var(--color-primary)]
-                                               checked:bg-[var(--color-primary)] checked:border-primary
+                                               cursor-pointer text-[var(--color-primary-dark)]
+                                               checked:bg-[var(--color-primary-dark)] checked:border-[var(--color-primary-dark)]
                                                transition-all duration-200"
                                     >
                                     <label for="datum-jaar" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                         Afgelopen jaar
                                     </label>
-                                    <x-ui.badge size="sm" variant="primary-light" id="count-jaar">{{ $filterCounts['jaar'] ?? 0 }}</x-ui.badge>
+                                    <x-ui.badge size="sm" variant="primary-dark" id="count-jaar">{{ $filterCounts['jaar'] ?? 0 }}</x-ui.badge>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <input 
@@ -133,8 +177,8 @@
                                         onchange="toggleCustomDateRange()"
                                         class="w-4 h-4 border border-[var(--color-outline)] 
                                                focus:outline-none
-                                               cursor-pointer text-[var(--color-primary)]
-                                               checked:bg-[var(--color-primary)] checked:border-primary
+                                               cursor-pointer text-[var(--color-primary-dark)]
+                                               checked:bg-[var(--color-primary-dark)] checked:border-[var(--color-primary-dark)]
                                                transition-all duration-200"
                                     >
                                     <label for="datum-zelf" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
@@ -206,14 +250,14 @@
                                             onchange="document.getElementById('filter-form').submit()"
                                             class="w-4 h-4 border border-[var(--color-outline)] 
                                                    focus:outline-none
-                                                   cursor-pointer text-[var(--color-primary)]
-                                                   checked:bg-[var(--color-primary)] checked:border-primary
+                                                   cursor-pointer text-[var(--color-primary-dark)]
+                                                   checked:bg-[var(--color-primary-dark)] checked:border-[var(--color-primary-dark)]
                                                    transition-all duration-200"
                                         >
                                         <label for="categorie-{{ md5($category) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                             {{ $category }}
                                         </label>
-                                        <x-ui.badge size="sm" variant="primary-light">{{ $filterCounts['informatiecategorie'][$category] ?? 0 }}</x-ui.badge>
+                                        <x-ui.badge size="sm" variant="primary-dark">{{ $filterCounts['informatiecategorie'][$category] ?? 0 }}</x-ui.badge>
                                     </div>
                                 @endforeach
                                 @if(!empty($hiddenCategories))
@@ -229,14 +273,14 @@
                                                 onchange="document.getElementById('filter-form').submit()"
                                                 class="w-4 h-4 border border-[var(--color-outline)] 
                                                        focus:outline-none
-                                                       cursor-pointer text-[var(--color-primary)]
-                                                       checked:bg-[var(--color-primary)] checked:border-primary
+                                                       cursor-pointer text-[var(--color-primary-dark)]
+                                                       checked:bg-[var(--color-primary-dark)] checked:border-[var(--color-primary-dark)]
                                                        transition-all duration-200"
                                             >
                                             <label for="categorie-{{ md5($category) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                                 {{ $category }}
                                             </label>
-                                            <x-ui.badge size="sm" variant="primary-light">{{ $filterCounts['informatiecategorie'][$category] ?? 0 }}</x-ui.badge>
+                                            <x-ui.badge size="sm" variant="primary-dark">{{ $filterCounts['informatiecategorie'][$category] ?? 0 }}</x-ui.badge>
                                         </div>
                                     @endforeach
                                 </div>
@@ -293,14 +337,14 @@
                                             onchange="document.getElementById('filter-form').submit()"
                                             class="w-4 h-4 rounded border border-[var(--color-outline)] 
                                                    focus:outline-none
-                                                   cursor-pointer text-[var(--color-primary)]
-                                                   checked:bg-[var(--color-primary)] checked:border-primary
+                                                   cursor-pointer text-[var(--color-primary-dark)]
+                                                   checked:bg-[var(--color-primary-dark)] checked:border-[var(--color-primary-dark)]
                                                    transition-all duration-200"
                                         >
                                         <label for="soort-{{ str_replace(' ', '-', strtolower($type)) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                             {{ $type }}
                                         </label>
-                                        <x-ui.badge size="sm" variant="primary-light">{{ $filterCounts['documentsoort'][$type] ?? 0 }}</x-ui.badge>
+                                        <x-ui.badge size="sm" variant="primary-dark">{{ $filterCounts['documentsoort'][$type] ?? 0 }}</x-ui.badge>
                                     </div>
                                 @endforeach
                                 @if(!empty($hiddenTypes))
@@ -316,14 +360,14 @@
                                                 onchange="document.getElementById('filter-form').submit()"
                                                 class="w-4 h-4 rounded border border-[var(--color-outline)] 
                                                        focus:outline-none
-                                                       cursor-pointer text-[var(--color-primary)]
-                                                       checked:bg-[var(--color-primary)] checked:border-primary
+                                                       cursor-pointer text-[var(--color-primary-dark)]
+                                                       checked:bg-[var(--color-primary-dark)] checked:border-[var(--color-primary-dark)]
                                                        transition-all duration-200"
                                             >
                                             <label for="soort-{{ str_replace(' ', '-', strtolower($type)) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                                 {{ $type }}
                                             </label>
-                                            <x-ui.badge size="sm" variant="primary-light">{{ $filterCounts['documentsoort'][$type] ?? 0 }}</x-ui.badge>
+                                            <x-ui.badge size="sm" variant="primary-dark">{{ $filterCounts['documentsoort'][$type] ?? 0 }}</x-ui.badge>
                                         </div>
                                     @endforeach
                                 </div>
@@ -365,14 +409,14 @@
                                             onchange="document.getElementById('filter-form').submit()"
                                             class="w-4 h-4 rounded border border-[var(--color-outline)] 
                                                    focus:outline-none
-                                                   cursor-pointer text-[var(--color-primary)]
-                                                   checked:bg-[var(--color-primary)] checked:border-primary
+                                                   cursor-pointer text-[var(--color-primary-dark)]
+                                                   checked:bg-[var(--color-primary-dark)] checked:border-[var(--color-primary-dark)]
                                                    transition-all duration-200"
                                         >
                                         <label for="bestandstype-{{ strtolower(str_replace([' ', '-'], ['', ''], $label)) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                             {{ $label }}
                                         </label>
-                                        <x-ui.badge size="sm" variant="primary-light">{{ $filterCounts['bestandstype'][$label] ?? 0 }}</x-ui.badge>
+                                        <x-ui.badge size="sm" variant="primary-dark">{{ $filterCounts['bestandstype'][$label] ?? 0 }}</x-ui.badge>
                                     </div>
                                 @endforeach
                                 <button 
@@ -405,14 +449,14 @@
                                             onchange="document.getElementById('filter-form').submit()"
                                             class="w-4 h-4 rounded border border-[var(--color-outline)] 
                                                    focus:outline-none
-                                                   cursor-pointer text-[var(--color-primary)]
-                                                   checked:bg-[var(--color-primary)] checked:border-primary
+                                                   cursor-pointer text-[var(--color-primary-dark)]
+                                                   checked:bg-[var(--color-primary-dark)] checked:border-[var(--color-primary-dark)]
                                                    transition-all duration-200"
                                         >
                                         <label for="org-{{ md5($org) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                             {{ $org }}
                                         </label>
-                                        <x-ui.badge size="sm" variant="primary-light">{{ number_format($filterCounts['organisatie'][$org] ?? 0, 0, ',', '.') }}</x-ui.badge>
+                                        <x-ui.badge size="sm" variant="primary-dark">{{ number_format($filterCounts['organisatie'][$org] ?? 0, 0, ',', '.') }}</x-ui.badge>
                                     </div>
                                 @endforeach
                                 @if(!empty($hiddenOrgs))
@@ -428,14 +472,14 @@
                                                 onchange="document.getElementById('filter-form').submit()"
                                                 class="w-4 h-4 rounded border border-[var(--color-outline)] 
                                                        focus:outline-none
-                                                       cursor-pointer text-[var(--color-primary)]
-                                                       checked:bg-[var(--color-primary)] checked:border-primary
+                                                       cursor-pointer text-[var(--color-primary-dark)]
+                                                       checked:bg-[var(--color-primary-dark)] checked:border-[var(--color-primary-dark)]
                                                        transition-all duration-200"
                                             >
                                             <label for="org-{{ md5($org) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                                 {{ $org }}
                                             </label>
-                                            <x-ui.badge size="sm" variant="primary-light">{{ number_format($filterCounts['organisatie'][$org] ?? 0, 0, ',', '.') }}</x-ui.badge>
+                                            <x-ui.badge size="sm" variant="primary-dark">{{ number_format($filterCounts['organisatie'][$org] ?? 0, 0, ',', '.') }}</x-ui.badge>
                                         </div>
                                     @endforeach
                                 </div>
@@ -593,8 +637,19 @@
                         <!-- Active Filters -->
                         @if(!empty($activeFilters))
                         <div class="pt-4 border-t border-[var(--color-outline-variant)]">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-medium text-[var(--color-on-surface)]">Actieve filters:</span>
+                                <a href="{{ route('dossiers.index') }}" 
+                                   class="inline-flex items-center gap-1 px-2 py-1 rounded-md 
+                                          bg-[var(--color-surface-variant)] text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]
+                                          hover:bg-[var(--color-surface-variant)]/80
+                                          focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20
+                                          transition-all duration-200 font-medium text-xs">
+                                    <i class="fas fa-times-circle text-xs" aria-hidden="true"></i>
+                                    <span>Alle filters wissen</span>
+                                </a>
+                            </div>
                             <div class="flex flex-wrap items-center gap-2">
-                                <span class="text-sm font-medium text-[var(--color-on-surface)] mr-1">Actieve filters:</span>
                                 @foreach($activeFilters as $filter)
                                     @php
                                         $removeUrl = request()->fullUrlWithQuery(['pagina' => 1]);
@@ -615,27 +670,17 @@
                                         }
                                     @endphp
                                     <a href="{{ $removeUrl }}" 
-                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md 
+                                       class="inline-flex items-center gap-1 px-2 py-1 rounded-md 
                                               bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
                                               hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
                                               focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20
-                                              transition-all duration-200 font-medium text-sm
+                                              transition-all duration-200 font-medium text-xs
                                               group"
                                        title="Verwijder filter: {{ $filter['label'] }}">
                                         <span>{{ $filter['label'] }}</span>
-                                        <i class="fas fa-times text-xs opacity-70 group-hover:opacity-100 transition-opacity" aria-hidden="true"></i>
+                                        <i class="fas fa-times text-[10px] opacity-70 group-hover:opacity-100 transition-opacity" aria-hidden="true"></i>
                                     </a>
                                 @endforeach
-                                <a href="{{ route('dossiers.index') }}" 
-                                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md 
-                                          bg-[var(--color-surface-variant)] text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]
-                                          hover:bg-[var(--color-surface-variant)]/80
-                                          focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20
-                                          transition-all duration-200 font-medium text-sm
-                                          ml-auto">
-                                    <i class="fas fa-times-circle text-sm" aria-hidden="true"></i>
-                                    <span>Alle filters wissen</span>
-                                </a>
                             </div>
                         </div>
                         @endif
@@ -872,7 +917,7 @@
                                         
                                         @if($startPage > 1)
                                             <a href="{{ request()->fullUrlWithQuery(['pagina' => 1]) }}" 
-                                               class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-[var(--color-on-surface)]  hover:bg-[var(--color-surface-variant)] focus:z-20 focus:outline-none dark:text-gray-200  dark:hover:bg-white/5">
+                                               class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-[var(--color-on-surface)] rounded-md hover:bg-[var(--color-surface-variant)] focus:z-20 focus:outline-none dark:text-gray-200  dark:hover:bg-white/5">
                                                 1
                                             </a>
                                             @if($startPage > 2)
@@ -882,12 +927,12 @@
                                         
                                         @for($i = $startPage; $i <= $endPage; $i++)
                                             @if($i == $currentPage)
-                                                <a href="#" aria-current="page" class="relative z-10 inline-flex items-center bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-[var(--color-on-primary)] focus:z-20 focus-visible:outline-none dark:bg-[var(--color-primary)] dark:focus-visible:outline-none">
+                                                <a href="#" aria-current="page" class="relative z-10 inline-flex items-center bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-[var(--color-on-primary)] rounded-md focus:z-20 focus-visible:outline-none dark:bg-[var(--color-primary)] dark:focus-visible:outline-none">
                                                     {{ $i }}
                                                 </a>
                                             @else
                                                 <a href="{{ request()->fullUrlWithQuery(['pagina' => $i]) }}" 
-                                                   class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-[var(--color-on-surface)]  hover:bg-[var(--color-surface-variant)] focus:z-20 focus:outline-none dark:text-gray-200  dark:hover:bg-white/5">
+                                                   class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-[var(--color-on-surface)] rounded-md hover:bg-[var(--color-surface-variant)] focus:z-20 focus:outline-none dark:text-gray-200  dark:hover:bg-white/5">
                                                     {{ $i }}
                                                 </a>
                                             @endif
@@ -898,7 +943,7 @@
                                                 <span class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-[var(--color-on-surface-variant)]  focus:outline-none dark:text-gray-400 ">...</span>
                                             @endif
                                             <a href="{{ request()->fullUrlWithQuery(['pagina' => $totalPages]) }}" 
-                                               class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-[var(--color-on-surface)]  hover:bg-[var(--color-surface-variant)] focus:z-20 focus:outline-none dark:text-gray-200  dark:hover:bg-white/5">
+                                               class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-[var(--color-on-surface)] rounded-md hover:bg-[var(--color-surface-variant)] focus:z-20 focus:outline-none dark:text-gray-200  dark:hover:bg-white/5">
                                                 {{ $totalPages }}
                                             </a>
                                         @endif
@@ -1202,8 +1247,23 @@
             filtersContainer.style.display = 'block';
             
             // Build filter HTML
-            let filtersHtml = '<div class="flex flex-wrap items-center gap-2">';
-            filtersHtml += '<span class="text-sm font-medium text-[var(--color-on-surface)] mr-1">Actieve filters:</span>';
+            const clearUrl = new URL(window.location.pathname, window.location.origin);
+            
+            let filtersHtml = '<div class="flex items-center justify-between mb-2">';
+            filtersHtml += '<span class="text-sm font-medium text-[var(--color-on-surface)]">Actieve filters:</span>';
+            filtersHtml += `
+                <a href="${clearUrl.toString()}" 
+                   class="inline-flex items-center gap-1 px-2 py-1 rounded-md 
+                          bg-[var(--color-surface-variant)] text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]
+                          hover:bg-[var(--color-surface-variant)]/80
+                          focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20
+                          transition-all duration-200 font-medium text-xs">
+                    <i class="fas fa-times-circle text-xs" aria-hidden="true"></i>
+                    <span>Alle filters wissen</span>
+                </a>
+            `;
+            filtersHtml += '</div>';
+            filtersHtml += '<div class="flex flex-wrap items-center gap-2">';
             
             activeFilters.forEach(filter => {
                 const removeUrl = new URL(window.location.href);
@@ -1231,33 +1291,18 @@
                 
                 filtersHtml += `
                     <a href="${removeUrl.toString()}" 
-                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md 
+                       class="inline-flex items-center gap-1 px-2 py-1 rounded-md 
                               bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
                               hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
                               focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20
-                              transition-all duration-200 font-medium text-sm
+                              transition-all duration-200 font-medium text-xs
                               group"
                        title="Verwijder filter: ${escapeHtml(filter.label)}">
                         <span>${escapeHtml(filter.label)}</span>
-                        <i class="fas fa-times text-xs opacity-70 group-hover:opacity-100 transition-opacity" aria-hidden="true"></i>
+                        <i class="fas fa-times text-[10px] opacity-70 group-hover:opacity-100 transition-opacity" aria-hidden="true"></i>
                     </a>
                 `;
             });
-            
-            // Add "Clear all" button
-            const clearUrl = new URL(window.location.pathname, window.location.origin);
-            filtersHtml += `
-                <a href="${clearUrl.toString()}" 
-                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md 
-                          bg-[var(--color-surface-variant)] text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]
-                          hover:bg-[var(--color-surface-variant)]/80
-                          focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20
-                          transition-all duration-200 font-medium text-sm
-                          ml-auto">
-                    <i class="fas fa-times-circle text-sm" aria-hidden="true"></i>
-                    <span>Alle filters wissen</span>
-                </a>
-            `;
             
             filtersHtml += '</div>';
             filtersContainer.innerHTML = filtersHtml;

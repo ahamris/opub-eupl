@@ -28,11 +28,11 @@
         
         <!-- Animated floating squares -->
         <div class="absolute inset-0 overflow-hidden pointer-events-none">
-            <div class="absolute top-8 right-[15%] w-16 h-16 rounded-md bg-[var(--color-primary)]/[0.04] animate-[float-slow_6s_ease-in-out_infinite]"></div>
+            <div class="absolute top-8 right-[15%] w-16 h-16 rounded-md bg-[var(--color-purple)]/[0.04] animate-[float-slow_6s_ease-in-out_infinite]"></div>
             <div class="absolute top-16 left-[10%] w-12 h-12 rounded-md bg-[var(--color-primary)]/[0.03] animate-[float-slower_8s_ease-in-out_infinite]"></div>
-            <div class="absolute top-1/2 right-[8%] w-20 h-20 rounded-md bg-[var(--color-primary)]/[0.05] animate-[float-slow_6s_ease-in-out_infinite_-2s]"></div>
+            <div class="absolute top-1/2 right-[8%] w-20 h-20 rounded-md bg-[var(--color-purple)]/[0.05] animate-[float-slow_6s_ease-in-out_infinite_-2s]"></div>
             <div class="absolute bottom-12 left-[20%] w-14 h-14 rounded-md bg-[var(--color-primary)]/[0.04] animate-[float-slower_8s_ease-in-out_infinite_-3s]"></div>
-            <div class="absolute top-12 right-[35%] w-10 h-10 rounded-md bg-[var(--color-primary)]/[0.03] animate-[float-slow_6s_ease-in-out_infinite_-1s]"></div>
+            <div class="absolute top-12 right-[35%] w-10 h-10 rounded-md bg-[var(--color-purple)]/[0.03] animate-[float-slow_6s_ease-in-out_infinite_-1s]"></div>
         </div>
         
         <div class="mx-auto max-w-7xl px-6 lg:px-8 py-12 sm:py-16 relative z-10">
@@ -44,10 +44,8 @@
             @endif
             
             <div class="mx-auto max-w-2xl lg:mx-0">
-                <p class="text-sm font-medium uppercase tracking-wider text-[var(--color-primary)]">Statistieken & Rapportage</p>
-                <h1 class="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-on-surface)] sm:text-4xl">
-                    Open Overheid in cijfers
-                </h1>
+                <p class="text-sm font-medium uppercase">Statistieken & Rapportage</p>
+                <h1 class="mt-2 font-semibold">Open Overheid in cijfers</h1>
                 <p class="mt-4 text-base text-[var(--color-on-surface-variant)] leading-relaxed">
                     Op deze pagina zie je statistieken over actief openbaar gemaakte overheidsdocumenten.
                 </p>
@@ -77,7 +75,7 @@
                         </div>
                     </div>
                     <div class="w-full lg:w-auto">
-                        <button type="submit" class="w-full lg:w-auto px-6 py-2 bg-[var(--color-primary)] text-white font-medium rounded-md hover:bg-[var(--color-primary-dark)] transition-colors duration-200 focus:outline-none text-sm whitespace-nowrap shadow-sm">
+                        <button type="submit" class="w-full lg:w-auto px-6 py-2 bg-[var(--color-primary-dark)] text-white font-medium rounded-md hover:bg-[var(--color-primary)] transition-colors duration-200 focus:outline-none text-sm whitespace-nowrap shadow-sm">
                             Toepassen
                         </button>
                     </div>
@@ -116,12 +114,12 @@
 
                 <div class="bg-[var(--color-surface)] border border-[var(--color-outline-variant)] rounded-md p-6">
                     <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 rounded-md bg-[var(--color-primary)]/10 flex items-center justify-center shrink-0">
-                            <i class="fas fa-check-circle text-[var(--color-primary)] text-base" aria-hidden="true"></i>
+                        <div class="w-10 h-10 rounded-md bg-[var(--color-primary-dark)]/10 flex items-center justify-center shrink-0">
+                            <i class="fas fa-check-circle text-[var(--color-primary-dark)] text-base" aria-hidden="true"></i>
                         </div>
                         <h3 class="text-base font-semibold text-[var(--color-on-surface)]">Afgehandeld</h3>
                     </div>
-                    <p class="text-3xl font-bold text-[var(--color-primary)] mb-1">
+                    <p class="text-3xl font-bold text-[var(--color-primary-dark)] mb-1">
                         {{ number_format($documentsWithDecision, 0, ',', '.') }}
                     </p>
                     <p class="text-sm text-[var(--color-on-surface-variant)]/70">
@@ -146,12 +144,12 @@
 
                 <div class="bg-[var(--color-surface)] border border-[var(--color-outline-variant)] rounded-md p-6">
                     <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 rounded-md bg-[var(--color-primary)]/10 flex items-center justify-center shrink-0">
-                            <i class="fas fa-chart-line text-[var(--color-primary)] text-base" aria-hidden="true"></i>
+                        <div class="w-10 h-10 rounded-md bg-[var(--color-primary-dark)]/10 flex items-center justify-center shrink-0">
+                            <i class="fas fa-chart-line text-[var(--color-primary-dark)] text-base" aria-hidden="true"></i>
                         </div>
                         <h3 class="text-base font-semibold text-[var(--color-on-surface)]">Gemiddelde tijd</h3>
                     </div>
-                    <p class="text-3xl font-bold text-[var(--color-primary)] mb-1">
+                    <p class="text-3xl font-bold text-[var(--color-primary-dark)] mb-1">
                         {{ $avgProcessingDays }} dagen
                     </p>
                     <p class="text-sm text-[var(--color-on-surface-variant)]/70">
@@ -196,7 +194,7 @@
                 <div class="bg-[var(--color-surface)] border border-[var(--color-outline-variant)] rounded-md p-6">
                     <div class="flex items-center justify-between mb-6">
                         <h2 class="text-xl font-semibold text-[var(--color-on-surface)]">Documenten per categorie</h2>
-                        <button class="text-sm text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] font-medium focus:outline-none transition-colors duration-200">
+                        <button class="text-sm text-[var(--color-primary-dark)] hover:text-[var(--color-primary)] font-medium focus:outline-none transition-colors duration-200">
                             Toon datatabel
                         </button>
                     </div>
@@ -213,11 +211,11 @@
                             <div class="flex-1 min-w-0">
                                 <p class="text-sm font-medium text-[var(--color-on-surface)] mb-1.5 truncate">{{ $formattedCategory }}</p>
                                 <div class="w-full bg-[var(--color-outline-variant)]/30 rounded-full h-2">
-                                    <div class="bg-[var(--color-primary)] h-2 rounded-full transition-all duration-700" style="width: {{ $maxCategoryCount > 0 ? min(($item['count'] / $maxCategoryCount) * 100, 100) : 0 }}%"></div>
+                                    <div class="bg-[var(--color-primary-dark)] h-2 rounded-full transition-all duration-700" style="width: {{ $maxCategoryCount > 0 ? min(($item['count'] / $maxCategoryCount) * 100, 100) : 0 }}%"></div>
                                 </div>
                             </div>
                             <div class="text-right shrink-0">
-                                <p class="text-lg font-bold text-[var(--color-primary)]">{{ number_format($item['count'], 0, ',', '.') }}</p>
+                                <p class="text-lg font-bold text-[var(--color-primary-dark)]">{{ number_format($item['count'], 0, ',', '.') }}</p>
                             </div>
                         </div>
                         @empty
@@ -237,11 +235,11 @@
                     </button>
                 </div>
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-12 gap-4">
-                    @foreach($monthlyTrend as $month)
+                    @foreach($monthlyTrend as $index => $month)
                     <div class="text-center">
                         <p class="text-xs text-[var(--color-on-surface-variant)]/70 mb-2">{{ $month['monthName'] }}</p>
-                        <div class="bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 rounded-md p-3">
-                            <p class="text-lg font-bold text-[var(--color-primary)]">{{ number_format($month['count'], 0, ',', '.') }}</p>
+                        <div class="{{ $index % 2 === 0 ? 'bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20' : 'bg-[var(--color-primary-dark)]/10 border border-[var(--color-primary-dark)]/20' }} rounded-md p-3">
+                            <p class="text-lg font-bold {{ $index % 2 === 0 ? 'text-[var(--color-primary)]' : 'text-[var(--color-primary-dark)]' }}">{{ number_format($month['count'], 0, ',', '.') }}</p>
                         </div>
                     </div>
                     @endforeach

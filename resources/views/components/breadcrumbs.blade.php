@@ -20,7 +20,7 @@
             {{-- Home item with icon --}}
             <li>
                 <div>
-                    <a href="{{ $homeHref }}" class="text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)] dark:text-[var(--color-on-surface-variant)] dark:hover:text-[var(--color-on-surface)]">
+                    <a href="{{ $homeHref }}" class="flex items-center text-[var(--color-primary-dark)] hover:text-[var(--color-primary)]">
                         <i class="fas fa-house text-sm shrink-0" aria-hidden="true"></i>
                         <span class="sr-only">{{ $homeLabel }}</span>
                     </a>
@@ -36,18 +36,18 @@
                 @endphp
                 <li>
                     <div class="flex items-center">
-                        <i class="fas fa-angle-right text-xs shrink-0 text-[var(--color-on-surface-variant)] dark:text-[var(--color-on-surface-variant)]" aria-hidden="true"></i>
+                        <i class="fas fa-angle-right text-[10px] leading-none shrink-0 text-[var(--color-on-surface-variant)]" aria-hidden="true"></i>
 
                         @if($href && ! $isCurrent)
                             <a href="{{ $href }}"
-                               class="ml-4 text-sm font-medium text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)] dark:text-[var(--color-on-surface-variant)] dark:hover:text-[var(--color-on-surface)]">
+                               class="ml-4 text-sm font-medium leading-none text-[var(--color-primary-dark)] hover:text-[var(--color-primary)] flex items-center">
                                 {{ $label }}
                             </a>
                         @else
                             <span @if($isCurrent) aria-current="page" @endif
-                                  class="ml-4 text-sm font-medium text-[var(--color-on-surface-variant)] dark:text-[var(--color-on-surface-variant)]">
-                                {{ $label }}
-                            </span>
+                            class="ml-4 text-sm font-medium leading-none text-[var(--color-on-surface-variant)]">
+                {{ $label }}
+            </span>
                         @endif
                     </div>
                 </li>

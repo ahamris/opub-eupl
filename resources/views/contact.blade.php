@@ -10,12 +10,56 @@
 @endphp
 
 @section('content')
-    <x-page-header 
-        eyebrow="Neem contact op"
-        title="Contact"
-        description="Heeft u vragen, suggesties of opmerkingen? Wij horen graag van u."
-        :breadcrumbs="$breadcrumbs"
-    />
+    <!-- Premium Page Header Section -->
+    <div class="relative bg-gradient-to-b from-slate-50 to-white overflow-hidden">
+        <!-- Subtle grid pattern -->
+        <div class="absolute inset-0 -z-10">
+            <svg class="absolute inset-0 h-full w-full stroke-slate-200/50" fill="none">
+                <defs>
+                    <pattern id="contact-header-grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                        <path d="M.5 40V.5H40" fill="none" />
+                    </pattern>
+                </defs>
+                <rect width="100%" height="100%" stroke-width="0" fill="url(#contact-header-grid)" />
+            </svg>
+            <!-- Fade overlay -->
+            <div class="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent"></div>
+        </div>
+        
+        <!-- Animated floating squares -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute top-8 right-[15%] w-16 h-16 rounded-md bg-[var(--color-purple)]/[0.04] animate-[float-slow_6s_ease-in-out_infinite]"></div>
+            <div class="absolute top-16 left-[10%] w-12 h-12 rounded-md bg-[var(--color-primary)]/[0.03] animate-[float-slower_8s_ease-in-out_infinite]"></div>
+            <div class="absolute top-1/2 right-[8%] w-20 h-20 rounded-md bg-[var(--color-purple)]/[0.05] animate-[float-slow_6s_ease-in-out_infinite_-2s]"></div>
+            <div class="absolute bottom-12 left-[20%] w-14 h-14 rounded-md bg-[var(--color-primary)]/[0.04] animate-[float-slower_8s_ease-in-out_infinite_-3s]"></div>
+            <div class="absolute top-12 right-[35%] w-10 h-10 rounded-md bg-[var(--color-purple)]/[0.03] animate-[float-slow_6s_ease-in-out_infinite_-1s]"></div>
+        </div>
+        
+        <div class="mx-auto max-w-7xl px-6 lg:px-8 py-12 sm:py-16 relative z-10">
+            <!-- Breadcrumb -->
+            @if(!empty($breadcrumbs))
+            <div class="mb-6">
+                <x-breadcrumbs :items="$breadcrumbs" />
+            </div>
+            @endif
+            
+            <div class="mx-auto max-w-2xl lg:mx-0">
+                <p class="text-sm font-medium uppercase">Neem contact op</p>
+                <h1 class="mt-2 font-semibold">Contact</h1>
+                <p class="mt-4 text-base text-[var(--color-on-surface-variant)] leading-relaxed">
+                    Heeft u vragen, suggesties of opmerkingen? Wij horen graag van u.
+                </p>
+            </div>
+        </div>
+        
+        <!-- Bottom gradient line -->
+        <div class="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
+    </div>
+    
+    <style>
+        @keyframes float-slow { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-12px) rotate(3deg); } }
+        @keyframes float-slower { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-8px) rotate(-2deg); } }
+    </style>
 
     <!-- Split with Pattern Section -->
     <div class="relative isolate bg-[var(--color-surface)]">
@@ -23,21 +67,6 @@
             <!-- Left side: Info with pattern background -->
             <div class="relative px-6 pt-24 pb-20 sm:pt-32 lg:static lg:px-8 lg:py-48">
                 <div class="mx-auto max-w-xl lg:mx-0 lg:max-w-lg">
-                    <!-- Pattern background -->
-                    <div class="absolute inset-y-0 left-0 -z-10 w-full overflow-hidden bg-[var(--color-primary-light)]/30 ring-1 ring-[var(--color-outline-variant)] lg:w-1/2">
-                        <svg aria-hidden="true" class="absolute inset-0 size-full mask-[radial-gradient(100%_100%_at_top_right,white,transparent)] stroke-[var(--color-outline-variant)]/20">
-                            <defs>
-                                <pattern id="contact-pattern" width="200" height="200" x="100%" y="-1" patternUnits="userSpaceOnUse">
-                                    <path d="M130 200V.5M.5 .5H200" fill="none" />
-                                </pattern>
-                            </defs>
-                            <rect width="100%" height="100%" stroke-width="0" class="fill-[var(--color-surface)]" />
-                            <svg x="100%" y="-1" class="overflow-visible fill-[var(--color-primary-light)]/20">
-                                <path d="M-470.5 0h201v201h-201Z" stroke-width="0" />
-                            </svg>
-                            <rect width="100%" height="100%" fill="url(#contact-pattern)" stroke-width="0" />
-                        </svg>
-                    </div>
                     
                     <h2 class="text-4xl font-semibold tracking-tight text-pretty text-[var(--color-on-surface)] sm:text-5xl">
                         Contactgegevens
@@ -51,7 +80,7 @@
                         <div class="flex gap-x-4">
                             <dt class="flex-none">
                                 <span class="sr-only">Adres</span>
-                                <i class="fas fa-map-marker-alt h-6 w-6 text-[var(--color-primary)]" aria-hidden="true"></i>
+                                <i class="fas fa-map-marker-alt text-lg text-[var(--color-primary)]" aria-hidden="true"></i>
                             </dt>
                             <dd>
                                 Open Overheid Platform<br />
@@ -61,10 +90,10 @@
                         <div class="flex gap-x-4">
                             <dt class="flex-none">
                                 <span class="sr-only">Telefoon</span>
-                                <i class="fas fa-phone h-6 w-6 text-[var(--color-primary)]" aria-hidden="true"></i>
+                                <i class="fas fa-phone text-lg text-[var(--color-primary)]" aria-hidden="true"></i>
                             </dt>
                             <dd>
-                                <a href="tel:+31123456789" class="hover:text-[var(--color-primary)] transition-colors duration-200">
+                                <a href="tel:+31123456789" class="text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition-colors duration-200">
                                     +31 (0) 123 456 789
                                 </a>
                             </dd>
@@ -72,10 +101,10 @@
                         <div class="flex gap-x-4">
                             <dt class="flex-none">
                                 <span class="sr-only">E-mail</span>
-                                <i class="fas fa-envelope h-6 w-6 text-[var(--color-primary)]" aria-hidden="true"></i>
+                                <i class="fas fa-envelope text-lg text-[var(--color-primary)]" aria-hidden="true"></i>
                             </dt>
                             <dd>
-                                <a href="mailto:contact@openoverheid.nl" class="hover:text-[var(--color-primary)] transition-colors duration-200">
+                                <a href="mailto:contact@openoverheid.nl" class="text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition-colors duration-200">
                                     contact@openoverheid.nl
                                 </a>
                             </dd>
@@ -139,7 +168,7 @@
                                 id="message" 
                                 name="message" 
                                 rows="4"
-                                class="block w-full rounded-md bg-[var(--color-surface)] px-3.5 py-2 text-sm text-[var(--color-on-surface)] border border-[var(--color-outline-variant)] placeholder:text-[var(--color-on-surface-variant)] focus:outline-none focus:border-[var(--color-primary)] transition-colors duration-200"
+                                class="block w-full rounded-md bg-[var(--color-surface)] px-3.5 py-2 text-sm text-[var(--color-on-surface)] border border-[var(--color-outline-variant)] placeholder:text-[var(--color-on-surface-variant)] focus:outline-none focus:border-[var(--color-primary-dark)] focus:ring-1 focus:ring-[var(--color-primary-dark)] transition-colors duration-200"
                                 placeholder="Uw bericht..."
                             ></textarea>
                         </div>
@@ -147,7 +176,7 @@
                     <div class="mt-8 flex justify-end">
                         <button 
                             type="submit" 
-                            class="inline-flex items-center justify-center px-4 py-2 bg-[var(--color-primary)] text-[var(--color-on-primary)] border border-[var(--color-primary)] rounded-md font-semibold text-sm hover:bg-[var(--color-primary-dark)] focus:outline-none transition-colors duration-200">
+                            class="inline-flex items-center justify-center px-4 py-2 bg-[var(--color-primary-dark)] text-[var(--color-on-primary)] border border-[var(--color-primary-dark)] rounded-md font-semibold text-sm hover:bg-[var(--color-primary)] focus:outline-none transition-colors duration-200">
                             Verstuur bericht
                         </button>
                     </div>
