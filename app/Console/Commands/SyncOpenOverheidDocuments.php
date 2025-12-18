@@ -14,8 +14,9 @@ class SyncOpenOverheidDocuments extends Command
      * @var string
      */
     protected $signature = 'open-overheid:sync 
-                            {--recent : Sync recent documents}
+                            {--recent : Sync recent documents (default: last 7 days)}
                             {--days=7 : Number of days back (when using --recent)}
+                            {--all : Sync ALL documents from all time (default if no options provided)}
                             {--from= : Start date (DD-MM-YYYY format)}
                             {--to= : End date (DD-MM-YYYY format)}
                             {--skip-typesense : Skip immediate Typesense sync}
@@ -59,6 +60,9 @@ class SyncOpenOverheidDocuments extends Command
             }
         }
 
+        // Check for --all option
+        $all = $this->option('all');
+        
         // Check for --recent option
         $recent = $this->option('recent');
         $days = (int) $this->option('days');
@@ -94,16 +98,24 @@ class SyncOpenOverheidDocuments extends Command
             if ($to) {
                 $this->line("   To: {$to}");
             }
-        } else {
+        } elseif ($all) {
             $this->info("📥 Step 1: Syncing from API to PostgreSQL...");
+            $this->line('   Syncing ALL documents from all time (this may take a while)...');
+        } else {
+            // Default behavior: sync all documents if no options provided
+            $this->info("📥 Step 1: Syncing from API to PostgreSQL...");
+            $this->line('   Syncing ALL documents from all time (this may take a while)...');
+            $this->line('   💡 Tip: Use --recent --days=7 to sync only recent documents');
         }
 
         try {
             $result = null;
             
             if ($recent || $from || $to || $week) {
+                // Sync by date range
                 $result = $service->syncByDateRange($from, $to, $this);
             } else {
+                // Default behavior: sync all documents (when no parameters or --all is provided)
                 $result = $service->syncAll($this);
             }
 
