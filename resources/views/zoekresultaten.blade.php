@@ -884,227 +884,217 @@
                         <p class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface-variant)]">Probeer andere zoekwoorden of filters aan te passen.</p>
                     </div>
                 @else
-                    <!-- Simple List with Heading - Tailwind UI Style -->
-                    <div class="bg-[var(--color-surface)] rounded-md border border-[var(--color-outline-variant)] overflow-hidden">
-                        <div class="px-6 py-4 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-variant)]/30">
-                            <h3 class="text-sm font-semibold text-[var(--color-on-surface)]">
-                                {{ isset($isDossier) ? 'Dossiers' : 'Documenten' }}
-                            </h3>
-                        </div>
-                        <ul role="list" class="divide-y divide-[var(--color-outline-variant)]">
-                            @foreach($results['items'] as $item)
-                                <li class="px-4 py-3 hover:bg-[var(--color-primary)]/5 transition-colors duration-150">
-                                    <a href="{{ isset($isDossier) ? route('dossiers.show', $item->external_id) : '/open-overheid/documents/' . $item->external_id }}" 
-                                       class="block focus:outline-none group">
-                                        <div class="flex items-start justify-between gap-3">
-                                            <div class="flex-1 min-w-0">
-                                                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-1.5">
-                                                    <h3 class="text-sm font-semibold text-[var(--color-on-surface)] group-hover:text-[var(--color-primary)] transition-colors duration-200 line-clamp-2 flex-1 pr-2">
-                                                        @if(isset($isDossier) && isset($item->ai_enhanced_title) && !empty($item->ai_enhanced_title))
-                                                            <span class="inline-flex items-center gap-1.5">
-                                                                <span>{!! $searchQuery ? highlightSearchTerms($item->ai_enhanced_title, $searchQuery) : $item->ai_enhanced_title !!}</span>
-                                                                <i class="fas fa-sparkles text-[var(--color-primary)] text-[10px]" aria-label="AI-geoptimaliseerd" title="AI-geoptimaliseerde titel"></i>
-                                                            </span>
-                                                        @else
-                                                            {!! $searchQuery ? highlightSearchTerms($item->title ?? 'Geen titel', $searchQuery) : ($item->title ?? 'Geen titel') !!}
-                                                        @endif
-                                                    </h3>
-                                                    <div class="flex items-center gap-2 shrink-0 mt-1 sm:mt-0">
-                                                        @if($item->category)
-                                                            <a href="{{ isset($isDossier) ? route('dossiers.index') : route('zoeken') }}?informatiecategorie={{ urlencode($item->category) }}{{ request('zoeken') ? '&zoeken=' . urlencode(request('zoeken')) : '' }}" 
-                                                               onclick="event.stopPropagation();"
-                                                               class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium 
-                                                                      bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
-                                                                      hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
-                                                                      focus:outline-none
-                                                                      transition-all duration-200 shrink-0"
-                                                               title="Filter op {{ $item->formatted_category ?? $item->category }}">
-                                                                {{ $item->formatted_category ?? $item->category }}
-                                                            </a>
-                                                        @endif
-                                                        @if($item->external_id)
-                                                            <a href="https://open.overheid.nl/details/{{ $item->external_id }}" 
-                                                               target="_blank"
-                                                               rel="noopener noreferrer"
-                                                               onclick="event.stopPropagation();"
-                                                               class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md
-                                                                      bg-[var(--color-primary)]/5 text-[var(--color-primary)] border border-[var(--color-primary)]/20
-                                                                      hover:bg-[var(--color-primary)]/10 hover:border-[var(--color-primary)]/30
-                                                                      focus:outline-none
-                                                                      transition-all duration-200 text-[11px] font-medium
-                                                                      shrink-0"
-                                                               title="Bekijk op open.overheid.nl">
-                                                                <i class="fas fa-external-link-alt text-[10px]" aria-hidden="true"></i>
-                                                                <span class="hidden sm:inline">Open.overheid.nl</span>
-                                                            </a>
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                            @if(isset($isDossier))
-                                                @if(isset($item->ai_summary) && !empty($item->ai_summary))
-                                                    <p class="text-xs text-[var(--color-on-surface-variant)] mb-3">
-                                                        <span class="inline-flex items-center gap-1 mb-1">
-                                                            <i class="fas fa-sparkles text-[var(--color-primary)] text-xs" aria-hidden="true"></i>
-                                                            <span class="text-[10px] font-medium text-[var(--color-primary)] uppercase">AI-samenvatting</span>
-                                                        </span>
-                                                        <span class="block mt-1">
-                                                            {!! $searchQuery ? highlightSearchTerms(\Illuminate\Support\Str::limit($item->ai_summary, 250), $searchQuery) : \Illuminate\Support\Str::limit($item->ai_summary, 250) !!}
-                                                        </span>
-                                                    </p>
-                                                @elseif($item->description)
-                                                    <p class="text-xs text-[var(--color-on-surface-variant)] mb-3 line-clamp-2">
-                                                        {!! $searchQuery ? highlightSearchTerms(\Illuminate\Support\Str::limit($item->description, 150), $searchQuery) : \Illuminate\Support\Str::limit($item->description, 150) !!}
-                                                    </p>
-                                                @endif
-                                                
-                                                {{-- Lijst van documenten in dossier --}}
-                                                @if(isset($item->dossier_documents) && !empty($item->dossier_documents) && count($item->dossier_documents) > 1)
-                                                    <div class="mt-3 pt-3 border-t border-[var(--color-outline-variant)]">
-                                                        <p class="text-xs font-medium text-[var(--color-on-surface)] mb-2">
-                                                            <i class="fas fa-file-alt text-[var(--color-primary)] text-xs mr-1" aria-hidden="true"></i>
-                                                            Documenten in dit dossier ({{ count($item->dossier_documents) }}):
-                                                        </p>
-                                                        <ul class="space-y-1.5">
-                                                            @foreach(array_slice($item->dossier_documents, 0, 5) as $doc)
-                                                                <li class="text-xs text-[var(--color-on-surface-variant)] flex items-start gap-2">
-                                                                    <i class="fas fa-file-pdf text-[var(--color-primary)] text-[10px] mt-1 flex-shrink-0" aria-hidden="true"></i>
-                                                                    <span class="flex-1">
-                                                                        <a href="{{ route('detail', ['id' => $doc['id']]) }}" 
-                                                                           class="hover:text-[var(--color-primary)] hover:underline">
-                                                                            {{ $doc['title'] ?? 'Geen titel' }}
-                                                                        </a>
-                                                                        @if($doc['publication_date'])
-                                                                            <span class="text-[10px] text-[var(--color-on-surface-variant)] ml-2">
-                                                                                ({{ $doc['publication_date'] }})
-                                                                            </span>
-                                                                        @endif
-                                                                    </span>
-                                                                </li>
-                                                            @endforeach
-                                                            @if(count($item->dossier_documents) > 5)
-                                                                <li class="text-xs text-[var(--color-on-surface-variant)] italic">
-                                                                    ... en {{ count($item->dossier_documents) - 5 }} meer document{{ count($item->dossier_documents) - 5 !== 1 ? 'en' : '' }}
-                                                                </li>
-                                                            @endif
-                                                        </ul>
-                                                    </div>
-                                                @endif
-                                            @elseif($item->description)
-                                                <p class="text-xs text-[var(--color-on-surface-variant)] mb-2.5 line-clamp-2 leading-relaxed">
-                                                    {!! $searchQuery ? highlightSearchTerms(\Illuminate\Support\Str::limit($item->description, 150), $searchQuery) : \Illuminate\Support\Str::limit($item->description, 150) !!}
-                                                </p>
-                                            @endif
-                                            
-                                            {{-- Metadata Grid - Modern & Compact --}}
-                                            <div class="mt-2.5 pt-2.5 border-t border-[var(--color-outline-variant)]/50">
-                                                <div class="flex flex-wrap items-center gap-2">
-                                                    {{-- File Type --}}
-                                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
-                                                           bg-[var(--color-surface-variant)]/50 text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]/50">
-                                                        <i class="fas fa-file-pdf text-[10px] text-red-500" aria-hidden="true"></i>
-                                                        <span>PDF</span>
-                                                    </span>
-                                                    
-                                                    {{-- Publication Date --}}
-                                                    @if($item->publication_date)
-                                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
-                                                               bg-[var(--color-surface-variant)]/50 text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]/50">
-                                                            <i class="fas fa-calendar text-[10px] text-[var(--color-primary)]" aria-hidden="true"></i>
-                                                            <span>{{ $item->publication_date->format('d-m-Y') }}</span>
-                                                        </span>
-                                                    @endif
-                                                    
-                                                    {{-- Updated Date --}}
-                                                    @if($item->updated_at)
-                                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
-                                                               bg-[var(--color-surface-variant)]/50 text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]/50">
-                                                            <i class="fas fa-edit text-[10px] text-[var(--color-primary)]" aria-hidden="true"></i>
-                                                            <span>{{ $item->updated_at->format('d-m-Y') }}</span>
-                                                        </span>
-                                                    @endif
-                                                    
-                                                    {{-- Organisation --}}
-                                                    @if($item->organisation)
-                                                        <a href="{{ isset($isDossier) ? route('dossiers.index') : route('zoeken') }}?organisatie[]={{ urlencode($item->organisation) }}" 
-                                                           onclick="event.stopPropagation();"
-                                                           class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
-                                                                  bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
-                                                                  hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
-                                                                  focus:outline-none
-                                                                  transition-all duration-200"
-                                                           title="Filter op {{ $item->organisation }}">
-                                                            <i class="fas fa-building text-[10px]" aria-hidden="true"></i>
-                                                            <span class="max-w-[120px] truncate">{{ $item->organisation }}</span>
-                                                            <i class="fas fa-filter text-[9px] opacity-60" aria-hidden="true"></i>
-                                                        </a>
-                                                    @endif
-                                                    
-                                                    {{-- Theme (for themas page) --}}
-                                                    @if(isset($item->theme) && !isset($isDossier))
-                                                        <a href="{{ route('themas.index') }}?thema[]={{ urlencode($item->theme) }}" 
-                                                           onclick="event.stopPropagation();"
-                                                           class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
-                                                                  bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
-                                                                  hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
-                                                                  focus:outline-none
-                                                                  transition-all duration-200"
-                                                           title="Filter op {{ $item->theme }}">
-                                                            <i class="fas fa-tag text-[10px]" aria-hidden="true"></i>
-                                                            <span class="max-w-[100px] truncate">{{ $item->theme }}</span>
-                                                            <i class="fas fa-filter text-[9px] opacity-60" aria-hidden="true"></i>
-                                                        </a>
-                                                    @endif
-                                                    
-                                                    {{-- Dossier Status --}}
-                                                    @if(isset($isDossier) && isset($item->dossier_status))
-                                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
-                                                               {{ $item->dossier_status === 'actief' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-[var(--color-surface-variant)]/50 text-[var(--color-on-surface-variant)] border-[var(--color-outline-variant)]/50' }}">
-                                                            <i class="fas {{ $item->dossier_status === 'actief' ? 'fa-circle-check' : 'fa-circle-xmark' }} text-[10px]" aria-hidden="true"></i>
-                                                            <span>{{ ucfirst($item->dossier_status) }}</span>
-                                                        </span>
-                                                    @endif
-                                                    
-                                                    {{-- Dossier Document Count --}}
-                                                    @if(isset($isDossier) && isset($item->dossier_member_count) && $item->dossier_member_count > 0)
-                                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
-                                                               bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20">
-                                                            <i class="fas fa-file text-[10px]" aria-hidden="true"></i>
-                                                            <span>{{ $item->dossier_member_count }} doc{{ $item->dossier_member_count !== 1 ? 's' : '' }}</span>
-                                                        </span>
-                                                    @endif
-                                                    
-                                                    {{-- Audio Available --}}
-                                                    @if(isset($isDossier) && isset($item->has_audio) && $item->has_audio)
-                                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
-                                                               bg-purple-50 text-purple-700 border-purple-200"
-                                                              title="Audio beschikbaar voor toegankelijkheid">
-                                                            <i class="fas fa-headphones text-[10px]" aria-hidden="true"></i>
-                                                            <span>Audio</span>
-                                                        </span>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                            @if(isset($item->metadata) && isset($item->metadata['document']['weblocatie']))
-                                                <div class="mt-2.5 pt-2.5 border-t border-[var(--color-outline-variant)]/50">
-                                                    <a href="{{ $item->metadata['document']['weblocatie'] }}" 
-                                                       target="_blank" 
-                                                       rel="noopener noreferrer"
-                                                       onclick="event.stopPropagation();"
-                                                       class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
-                                                              bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
-                                                              hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
-                                                              focus:outline-none
-                                                              transition-all duration-200">
-                                                        <i class="fas fa-external-link-alt text-[10px]" aria-hidden="true"></i>
-                                                        <span>Officielebekendmakingen.nl</span>
-                                                    </a>
-                                                </div>
-                                            @endif
-                                        </div>
+                    <!-- Columnar Full-Width Layout - Premium Design -->
+                    <div class="flex flex-col gap-4">
+                        
+                        {{-- HARDCODED EXAMPLE CARD - Remove after testing --}}
+                        <article class="rounded-lg bg-[var(--color-surface)] border border-[var(--color-outline-variant)]/60 overflow-hidden hover:border-[var(--color-primary)]/40 transition-all duration-300">
+                            <!-- Item Header -->
+                            <div class="px-5 py-2.5 bg-[var(--color-surface-variant)]/50 border-b border-[var(--color-outline-variant)]/40 flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <span class="inline-flex items-center font-semibold rounded-full px-2.5 py-0.5 text-[11px] leading-tight tracking-wide bg-[var(--color-primary-dark)] text-[var(--color-on-primary)]">
+                                        DOCUMENT
+                                    </span>
+
+                                    <span class="h-4 w-px bg-[var(--color-outline-variant)]/40"></span>
+                                    <a href="#" class="text-[12px] font-semibold text-purple-700 dark:text-purple-400 uppercase tracking-wide flex items-center gap-1.5 hover:text-[var(--color-primary)] transition-colors">
+                                        <i class="fas fa-folder-open text-[10px] opacity-70"></i>
+                                        Wetten en Regelgeving
+                                    </a>
+                                </div>
+                                
+                                <!-- Date Ribbon -->
+                                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[var(--color-surface)] text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]/50 text-[11px] font-medium tracking-wide">
+                                    <i class="far fa-calendar text-[10px] text-[var(--color-primary)] opacity-80"></i>
+                                    18-12-2025
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col md:flex-row items-stretch">
+                                <!-- Column 1: Title, Organisation, Description & Keywords (Main Info) -->
+                                <div class="flex-1 px-6 py-5 border-b md:border-b-0 md:border-r border-[var(--color-outline-variant)]/30">
+                                    <!-- Title -->
+                                    <h3 class="text-[17px] font-semibold text-[var(--color-on-surface)] leading-snug tracking-[-0.01em] mb-1.5">
+                                        <a href="#" class="hover:text-[var(--color-primary)] transition-colors duration-200">
+                                            Wijziging Omgevingsplan gemeente Amsterdam - Herziening Bestemmingsplan Centrum 2025
+                                        </a>
+                                    </h3>
+
+                                    <!-- Organisation (moved here) -->
+                                    <div class="flex items-center gap-1.5 mb-2.5">
+                                        <i class="far fa-building text-[11px] text-[var(--color-primary)]/70" aria-hidden="true"></i>
+                                        <a href="#" class="text-[12px] font-medium text-[var(--color-on-surface-variant)] hover:text-[var(--color-primary)] transition-colors" title="Gemeente Amsterdam">
+                                            Gemeente Amsterdam
+                                        </a>
                                     </div>
-                                </li>
-                            @endforeach
-                        </ul>
+
+                                    <!-- Short Description -->
+                                    <p class="text-[14px] text-[var(--color-on-surface-variant)]/80 leading-relaxed line-clamp-2 tracking-[0.01em] mb-3">
+                                        Dit document bevat de wijzigingen aan het omgevingsplan voor de gemeente Amsterdam, met specifieke aandacht voor de herziening van het bestemmingsplan in het centrum.
+                                    </p>
+
+                                    <!-- Keywords as Badges -->
+                                    <div class="flex flex-wrap gap-2">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                            <i class="fas fa-hashtag text-[8px] mr-1 opacity-60"></i>
+                                            omgevingsplan
+                                        </span>
+                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                            <i class="fas fa-hashtag text-[8px] mr-1 opacity-60"></i>
+                                            bestemmingsplan
+                                        </span>
+                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                            <i class="fas fa-hashtag text-[8px] mr-1 opacity-60"></i>
+                                            woningbouw
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Column 2: Themes -->
+                                <div class="w-full md:w-56 px-5 py-4 bg-[var(--color-surface-variant)]/5 flex flex-col justify-center gap-2 border-b md:border-b-0 md:border-r border-[var(--color-outline-variant)]/30">
+                                    <div class="text-[10px] font-semibold text-[var(--color-on-surface-variant)]/60 uppercase tracking-wider mb-1">Thema's</div>
+                                    <a href="#" class="inline-flex items-center gap-1.5 text-[12px] text-[var(--color-on-surface-variant)] font-medium hover:text-[var(--color-primary)] transition-colors">
+                                        <i class="fas fa-tag text-[10px] text-[var(--color-primary)]/70" aria-hidden="true"></i>
+                                        Bouwen en Wonen
+                                    </a>
+                                    <a href="#" class="inline-flex items-center gap-1.5 text-[12px] text-[var(--color-on-surface-variant)] font-medium hover:text-[var(--color-primary)] transition-colors">
+                                        <i class="fas fa-tag text-[10px] text-[var(--color-primary)]/70" aria-hidden="true"></i>
+                                        Ruimte en Infrastructuur
+                                    </a>
+                                    <a href="#" class="inline-flex items-center gap-1.5 text-[12px] text-[var(--color-on-surface-variant)] font-medium hover:text-[var(--color-primary)] transition-colors">
+                                        <i class="fas fa-tag text-[10px] text-[var(--color-primary)]/70" aria-hidden="true"></i>
+                                        Milieu
+                                    </a>
+                                </div>
+
+                                <!-- Column 3: Subtle Action Indicator -->
+                                <div class="w-full md:w-14 flex items-center justify-center bg-[var(--color-surface-variant)]/5">
+                                    <a href="#" 
+                                       class="w-9 h-9 rounded-full border border-[var(--color-outline-variant)]/50 flex items-center justify-center text-[var(--color-outline-variant)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] hover:translate-x-0.5 transition-all duration-300"
+                                       title="Bekijk document">
+                                        <i class="fas fa-chevron-right text-xs" aria-hidden="true"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </article>
+                        {{-- END HARDCODED EXAMPLE CARD --}}
+
+                        @foreach($results['items'] as $item)
+                            <article class="rounded-lg bg-[var(--color-surface)] border border-[var(--color-outline-variant)]/60 overflow-hidden hover:border-[var(--color-primary)]/40 transition-all duration-300">
+                                <!-- Item Header -->
+                                <div class="px-5 py-2.5 bg-[var(--color-surface-variant)]/50 border-b border-[var(--color-outline-variant)]/40 flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        @php
+                                            // Determine type from JSON or fallback to isDossier check
+                                            $type = strtoupper($item->type ?? ($item->document_type ?? (isset($isDossier) ? 'DOSSIER' : 'DOCUMENT')));
+                                            
+                                            // Map type to badge colors
+                                            $typeColors = [
+                                                'DOCUMENT' => ['bg' => 'bg-[var(--color-primary-dark)]', 'text' => 'text-[var(--color-on-primary)]'],
+                                                'THEMA' => ['bg' => 'bg-[var(--color-primary)]', 'text' => 'text-[var(--color-on-primary)]'],
+                                                'DOSSIER' => ['bg' => 'bg-sky-100 dark:bg-sky-900/50', 'text' => 'text-sky-700 dark:text-sky-300'],
+                                                'REPORT' => ['bg' => 'bg-yellow-100 dark:bg-yellow-900/50', 'text' => 'text-yellow-700 dark:text-yellow-300'],
+                                            ];
+                                            
+                                            $badgeColors = $typeColors[$type] ?? $typeColors['DOCUMENT'];
+                                        @endphp
+                                        <span class="inline-flex items-center font-semibold rounded-full px-2.5 py-0.5 text-[11px] leading-tight tracking-wide {{ $badgeColors['bg'] }} {{ $badgeColors['text'] }}">
+                                            {{ $type }}
+                                        </span>
+
+                                        @if($item->category)
+                                            <span class="h-4 w-px bg-[var(--color-outline-variant)]/40"></span>
+                                            <a href="{{ request()->fullUrlWithQuery(['informatiecategorie' => $item->category]) }}" class="text-[12px] font-semibold text-purple-700 dark:text-purple-400 uppercase tracking-wide flex items-center gap-1.5 hover:text-[var(--color-primary)] transition-colors">
+                                                <i class="fas fa-folder-open text-[10px] opacity-70"></i>
+                                                {{ $item->formatted_category ?? $item->category }}
+                                            </a>
+                                        @endif
+                                    </div>
+                                    
+                                    <!-- Date Ribbon -->
+                                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[var(--color-surface)] text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]/50 text-[11px] font-medium tracking-wide">
+                                        <i class="far fa-calendar text-[10px] text-[var(--color-primary)] opacity-80"></i>
+                                        {{ $item->publication_date ? $item->publication_date->format('d-m-Y') : 'Geen datum' }}
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col md:flex-row items-stretch">
+                                    <!-- Column 1: Title, Organisation, Description & Keywords (Main Info) -->
+                                    <div class="flex-1 px-6 py-5 border-b md:border-b-0 md:border-r border-[var(--color-outline-variant)]/30">
+                                        <!-- Title -->
+                                        <h3 class="text-[17px] font-semibold text-[var(--color-on-surface)] leading-snug tracking-[-0.01em] mb-1.5">
+                                            <a href="{{ isset($isDossier) ? route('dossiers.show', $item->external_id) : '/open-overheid/documents/' . $item->external_id }}" class="hover:text-[var(--color-primary)] transition-colors duration-200">
+                                                {!! $searchQuery ? highlightSearchTerms($item->ai_enhanced_title ?? $item->title ?? 'Geen titel', $searchQuery) : ($item->ai_enhanced_title ?? $item->title ?? 'Geen titel') !!}
+                                            </a>
+                                        </h3>
+
+                                        <!-- Organisation (moved here) -->
+                                        @if($item->organisation)
+                                            <div class="flex items-center gap-1.5 mb-2.5">
+                                                <i class="far fa-building text-[11px] text-[var(--color-primary)]/70" aria-hidden="true"></i>
+                                                <a href="{{ request()->fullUrlWithQuery(['organisatie' => [$item->organisation]]) }}" class="text-[12px] font-medium text-[var(--color-on-surface-variant)] hover:text-[var(--color-primary)] transition-colors" title="{{ $item->organisation }}">
+                                                    {{ $item->organisation }}
+                                                </a>
+                                            </div>
+                                        @endif
+
+                                        <!-- Short Description -->
+                                        @if(isset($isDossier) && isset($item->ai_summary) && !empty($item->ai_summary))
+                                            <div class="text-[14px] text-[var(--color-on-surface-variant)]/90 leading-relaxed italic border-l-2 border-purple-300/60 pl-4 py-1 bg-purple-50/20 dark:bg-purple-900/10 rounded-r mb-3">
+                                                {!! $searchQuery ? highlightSearchTerms(\Illuminate\Support\Str::limit($item->ai_summary, 150), $searchQuery) : \Illuminate\Support\Str::limit($item->ai_summary, 150) !!}
+                                            </div>
+                                        @elseif($item->description)
+                                            <p class="text-[14px] text-[var(--color-on-surface-variant)]/80 leading-relaxed line-clamp-2 tracking-[0.01em] mb-3">
+                                                {!! $searchQuery ? highlightSearchTerms(\Illuminate\Support\Str::limit($item->description, 150), $searchQuery) : \Illuminate\Support\Str::limit($item->description, 150) !!}
+                                            </p>
+                                        @endif
+
+                                        <!-- Keywords as Badges -->
+                                        @if(isset($item->keywords) && !empty($item->keywords))
+                                            <div class="flex flex-wrap gap-2">
+                                                @foreach(array_slice((array)$item->keywords, 0, 3) as $keyword)
+                                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                                        <i class="fas fa-hashtag text-[8px] mr-1 opacity-60"></i>
+                                                        {{ $keyword }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    <!-- Column 2: Themes -->
+                                    <div class="w-full md:w-56 px-5 py-4 bg-[var(--color-surface-variant)]/5 flex flex-col justify-center gap-2 border-b md:border-b-0 md:border-r border-[var(--color-outline-variant)]/30">
+                                        @if(isset($item->theme) || isset($item->themes))
+                                            <div class="text-[10px] font-semibold text-[var(--color-on-surface-variant)]/60 uppercase tracking-wider mb-1">Thema's</div>
+                                            @if(isset($item->themes) && is_array($item->themes))
+                                                @foreach($item->themes as $theme)
+                                                    <a href="{{ request()->fullUrlWithQuery(['thema' => [$theme]]) }}" class="inline-flex items-center gap-1.5 text-[12px] text-[var(--color-on-surface-variant)] font-medium hover:text-[var(--color-primary)] transition-colors">
+                                                        <i class="fas fa-tag text-[10px] text-[var(--color-primary)]/70" aria-hidden="true"></i>
+                                                        {{ $theme }}
+                                                    </a>
+                                                @endforeach
+                                            @elseif(isset($item->theme))
+                                                <a href="{{ request()->fullUrlWithQuery(['thema' => [$item->theme]]) }}" class="inline-flex items-center gap-1.5 text-[12px] text-[var(--color-on-surface-variant)] font-medium hover:text-[var(--color-primary)] transition-colors">
+                                                    <i class="fas fa-tag text-[10px] text-[var(--color-primary)]/70" aria-hidden="true"></i>
+                                                    {{ $item->theme }}
+                                                </a>
+                                            @endif
+                                        @else
+                                            <div class="text-[11px] text-[var(--color-on-surface-variant)]/50 italic">Geen thema's</div>
+                                        @endif
+                                    </div>
+
+                                    <!-- Column 3: Subtle Action Indicator -->
+                                    <div class="w-full md:w-14 flex items-center justify-center bg-[var(--color-surface-variant)]/5">
+                                        <a href="{{ isset($isDossier) ? route('dossiers.show', $item->external_id) : '/open-overheid/documents/' . $item->external_id }}" 
+                                           class="w-9 h-9 rounded-full border border-[var(--color-outline-variant)]/50 flex items-center justify-center text-[var(--color-outline-variant)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] hover:translate-x-0.5 transition-all duration-300"
+                                           title="Bekijk {{ isset($isDossier) ? 'dossier' : 'document' }}">
+                                            <i class="fas fa-chevron-right text-xs" aria-hidden="true"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </article>
+                        @endforeach
                     </div>
                     
                     <!-- Pagination -->
