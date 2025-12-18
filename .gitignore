@@ -34,3 +34,6 @@ boost.json
 *~
 .env.backup.*
 .env.*.backup
+.phpstorm.meta.php
+_ide_helper.php
+_ide_helper_models.php

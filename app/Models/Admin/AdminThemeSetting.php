@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
+/**
+ * @mixin IdeHelperAdminThemeSetting
+ */
 class AdminThemeSetting extends Model
 {
     use HasFactory;
