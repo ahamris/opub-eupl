@@ -2,22 +2,29 @@
 
 use App\Jobs\SyncDocumentToTypesense;
 use App\Jobs\SyncOpenOverheidDocumentsJob;
-use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
 
-// Schedule Open Overheid sync job to run daily at 2 AM
-Schedule::job(new SyncOpenOverheidDocumentsJob)
+// Schedule Open Overheid sync command to run daily at 2 AM
+// Syncs last 7 days by default
+Schedule::command('open-overheid:sync --recent --days=7')
     ->dailyAt('02:00')
     ->name('sync-open-overheid-documents')
     ->withoutOverlapping()
     ->onFailure(function () {
-        \Log::channel('sync_errors')->error('Open Overheid sync job failed');
+        \Log::channel('sync_errors')->error('Open Overheid sync command failed');
     });
+
+// Alternative: Use job instead of command (syncs ALL documents)
+// Uncomment if you prefer to sync all documents instead of recent ones
+// Schedule::job(new SyncOpenOverheidDocumentsJob)
+//     ->dailyAt('02:00')
+//     ->name('sync-open-overheid-documents')
+//     ->withoutOverlapping()
+//     ->onFailure(function () {
+//         \Log::channel('sync_errors')->error('Open Overheid sync job failed');
+//     });
 
 // Schedule Typesense sync every minute
 Schedule::job(SyncDocumentToTypesense::class)

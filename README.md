@@ -234,38 +234,32 @@ Het `open-overheid:sync` commando ondersteunt de volgende opties:
 
 | Parameter | Type | Beschrijving | Voorbeeld |
 |-----------|------|--------------|-----------|
-| `--id=` | string | Sync een specifiek document via external ID | `--id=oep-ob-12345` |
-| `--week` | flag | Sync alle documenten van deze week (maandag t/m zondag) | `--week` |
+| `--recent` | flag | Sync recente documenten | `--recent` |
+| `--days=` | integer | Aantal dagen terug (bij gebruik van --recent, standaard: 7) | `--days=30` |
 | `--from=` | string | Startdatum in DD-MM-YYYY formaat | `--from=01-12-2024` |
 | `--to=` | string | Einddatum in DD-MM-YYYY formaat | `--to=31-12-2024` |
+| `--skip-typesense` | flag | Sla directe Typesense sync over (scheduler blijft actief) | `--skip-typesense` |
+| `--id=` | string | Sync een specifiek document via external ID | `--id=oep-ob-12345` |
+| `--week` | flag | Sync alle documenten van deze week (maandag t/m zondag) | `--week` |
 | `--no-retry` | flag | Sla retry van gefaalde documenten over | `--no-retry` |
 
 **Let op:** Als geen parameters worden opgegeven, synchroniseert het commando **alle** documenten uit de API.
 
 ### Gebruiksvoorbeelden
 
-#### 1. Sync alle documenten
+#### 1. Sync recente documenten (aanbevolen)
 ```bash
-# Sync alle beschikbare documenten (kan lang duren!)
-php artisan open-overheid:sync
+# Sync laatste 7 dagen (standaard)
+php artisan open-overheid:sync --recent --days=7
+
+# Sync laatste 30 dagen
+php artisan open-overheid:sync --recent --days=30
 ```
 
-#### 2. Sync een specifiek document
+#### 2. Sync specifiek datum bereik
 ```bash
-# Sync een document via external ID
-php artisan open-overheid:sync --id=oep-ob-12345
-```
-
-#### 3. Sync documenten van deze week
-```bash
-# Sync alle documenten gepubliceerd van maandag t/m zondag van deze week
-php artisan open-overheid:sync --week
-```
-
-#### 4. Sync documenten in een datum bereik
-```bash
-# Sync documenten van 1 december 2024 tot 31 december 2024
-php artisan open-overheid:sync --from=01-12-2024 --to=31-12-2024
+# Sync documenten van 1 december 2025 tot 10 december 2025
+php artisan open-overheid:sync --from=01-12-2025 --to=10-12-2025
 
 # Sync documenten vanaf een specifieke datum (tot nu)
 php artisan open-overheid:sync --from=01-01-2024
@@ -274,19 +268,43 @@ php artisan open-overheid:sync --from=01-01-2024
 php artisan open-overheid:sync --to=31-12-2024
 ```
 
-#### 5. Sync zonder retry van gefaalde documenten
+#### 3. Skip directe Typesense sync
+```bash
+# Sync naar PostgreSQL maar skip directe Typesense sync (scheduler blijft actief)
+php artisan open-overheid:sync --recent --skip-typesense
+```
+
+#### 4. Sync alle documenten
+```bash
+# Sync alle beschikbare documenten (kan lang duren!)
+php artisan open-overheid:sync
+```
+
+#### 5. Sync een specifiek document
+```bash
+# Sync een document via external ID
+php artisan open-overheid:sync --id=oep-ob-12345
+```
+
+#### 6. Sync documenten van deze week
+```bash
+# Sync alle documenten gepubliceerd van maandag t/m zondag van deze week
+php artisan open-overheid:sync --week
+```
+
+#### 7. Sync zonder retry van gefaalde documenten
 ```bash
 # Sync documenten maar probeer gefaalde documenten niet opnieuw
 php artisan open-overheid:sync --from=01-12-2024 --to=31-12-2024 --no-retry
 ```
 
-#### 6. Gecombineerde voorbeelden
+#### 8. Gecombineerde voorbeelden
 ```bash
 # Sync deze week zonder retry
 php artisan open-overheid:sync --week --no-retry
 
-# Sync laatste maand
-php artisan open-overheid:sync --from=01-11-2024 --to=30-11-2024
+# Sync laatste maand zonder Typesense sync
+php artisan open-overheid:sync --from=01-11-2024 --to=30-11-2024 --skip-typesense
 ```
 
 ### Sync Output
@@ -294,28 +312,39 @@ php artisan open-overheid:sync --from=01-11-2024 --to=30-11-2024
 Het commando toont gedetailleerde informatie tijdens het synchroniseren:
 
 ```
-Syncing documents from date range...
-  From: 01-12-2024
-  To: 31-12-2024
-Found 1250 documents to sync.
+🚀 Starting Open Overheid sync...
 
- 1250/1250 [████████████████████████] 100% ETA: 00:00:00
+📥 Step 1: Syncing from API to PostgreSQL...
+   Fetching last 7 days...
+Found 150 documents to sync.
 
-✅ Sync completed!
-   Total: 1250 documents
-   Created: 850 documents
-   Updated: 350 documents
-   Skipped: 50 documents (already up-to-date)
-   Retried: 5 documents
-   Errors: 0 documents
+ 150/150 [████████████████████████] 100% ETA: 00:00:00
+
+   ✓ Synced 150 documents to PostgreSQL
+   Created: 120 documents
+   Updated: 30 documents
+   Skipped: 0 documents (already up-to-date)
+
+📤 Step 2: Syncing PostgreSQL → Typesense...
+   ✓ Typesense sync job dispatched
+   ℹ️  Scheduled sync runs every minute automatically
+
+✅ Sync completed successfully!
+
+💡 Tip: Typesense sync runs automatically every minute via scheduler
+   Run: php artisan schedule:work (in development)
+   Or set up cron: * * * * * cd /path && php artisan schedule:run
 ```
 
 ### Sync Gedrag
 
+- **Twee-staps Sync**: Eerst API → PostgreSQL, daarna PostgreSQL → Typesense
+- **Automatische Typesense Sync**: Na PostgreSQL sync wordt automatisch een Typesense sync job gedispatched (tenzij `--skip-typesense` wordt gebruikt)
+- **Scheduler Integratie**: Typesense sync draait automatisch elke minuut via Laravel scheduler
 - **Automatische Retry**: Gefaalde documenten worden automatisch opnieuw geprobeerd (tenzij `--no-retry` wordt gebruikt)
 - **Incrementele Updates**: Alleen gewijzigde documenten worden bijgewerkt
 - **Progress Bar**: Real-time voortgang met ETA, error count en skipped count
-- **Logging**: Alle sync activiteiten worden gelogd in `storage/logs/laravel.log`
+- **Logging**: Alle sync activiteiten worden gelogd in `storage/logs/sync-errors.log` en `storage/logs/typesense-errors.log`
 - **Dossier Detectie**: Documenten die deel uitmaken van dossiers triggeren automatisch metadata pre-computing jobs
 
 ### Configuratie
@@ -332,17 +361,106 @@ Sync gedrag kan worden geconfigureerd in `config/open_overheid.php`:
 
 ### Automatische Synchronisatie
 
-Voor productie omgevingen, overweeg het instellen van een cron job of scheduler:
+Het platform heeft twee automatische sync mechanismen:
 
-```php
-// In app/Console/Kernel.php
-protected function schedule(Schedule $schedule)
-{
-    // Sync recente documenten elke 6 uur
-    $schedule->command('open-overheid:sync --week')
-             ->everySixHours();
-}
+1. **Open Overheid API Sync** (dagelijks om 2:00 AM)
+   - Synchroniseert documenten van de API naar PostgreSQL
+   - Configureerd in `routes/console.php`
+
+2. **Typesense Sync** (elke minuut)
+   - Synchroniseert PostgreSQL documenten naar Typesense
+   - Verwerkt tot 100 documenten per run
+   - Configureerd in `routes/console.php`
+
+Voor productie omgevingen zijn **twee processen** vereist:
+
+#### 1. Laravel Scheduler (Cron Job)
+
+De scheduler controleert elke minuut welke taken moeten worden uitgevoerd en plaatst ze in de queue:
+
+```bash
+# Development: Start scheduler in foreground
+php artisan schedule:work
+
+# Production: Voeg toe aan crontab (als root of de applicatie gebruiker)
+* * * * * cd /path-to-project && php artisan schedule:run >> /dev/null 2>&1
 ```
+
+**Belangrijk**: Dit commando moet **elke minuut** draaien. Het plaatst alleen jobs in de queue, maar voert ze niet uit.
+
+#### 2. Queue Worker (Supervisor/Systemd)
+
+De queue worker verwerkt daadwerkelijk de jobs die door de scheduler zijn geplaatst. Dit moet als **continu draaiend proces** worden geconfigureerd:
+
+**Optie A: Supervisor (Aanbevolen voor productie)**
+
+Maak `/etc/supervisor/conf.d/openoverheid-worker.conf`:
+
+```ini
+[program:openoverheid-worker]
+process_name=%(program_name)s_%(process_num)02d
+command=php /path-to-project/artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+user=www-data
+numprocs=2
+redirect_stderr=true
+stdout_logfile=/path-to-project/storage/logs/worker.log
+stopwaitsecs=3600
+```
+
+Start supervisor:
+```bash
+sudo supervisorctl reread
+sudo supervisorctl update
+sudo supervisorctl start openoverheid-worker:*
+```
+
+**Optie B: Systemd**
+
+Maak `/etc/systemd/system/openoverheid-worker.service`:
+
+```ini
+[Unit]
+Description=Open Overheid Queue Worker
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+Restart=always
+ExecStart=/usr/bin/php /path-to-project/artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Start service:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable openoverheid-worker
+sudo systemctl start openoverheid-worker
+```
+
+**Optie C: Development (Handmatig)**
+
+Voor lokale ontwikkeling, start in een aparte terminal:
+```bash
+php artisan queue:work
+```
+
+#### Samenvatting: Wat moet er draaien?
+
+1. ✅ **Cron job**: `php artisan schedule:run` (elke minuut)
+2. ✅ **Queue worker**: `php artisan queue:work` (continu proces via Supervisor/Systemd)
+
+**Zonder queue worker zullen de scheduled jobs niet worden uitgevoerd!**
+
+De scheduler zorgt ervoor dat:
+- Open Overheid documenten dagelijks worden gesynchroniseerd
+- Typesense automatisch bijgewerkt blijft met nieuwe/gewijzigde documenten
 
 ## 🧪 Testing
 
