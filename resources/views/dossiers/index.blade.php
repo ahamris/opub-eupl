@@ -83,7 +83,7 @@
                                     <label for="datum-week" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                         Afgelopen week
                                     </label>
-                                    <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant" id="count-week">({{ $filterCounts['week'] ?? 0 }})</span>
+                                    <x-ui.badge size="sm" variant="primary-light" id="count-week">{{ $filterCounts['week'] ?? 0 }}</x-ui.badge>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <input 
@@ -102,7 +102,7 @@
                                     <label for="datum-maand" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                         Afgelopen maand
                                     </label>
-                                    <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant" id="count-maand">({{ $filterCounts['maand'] ?? 0 }})</span>
+                                    <x-ui.badge size="sm" variant="primary-light" id="count-maand">{{ $filterCounts['maand'] ?? 0 }}</x-ui.badge>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <input 
@@ -121,7 +121,7 @@
                                     <label for="datum-jaar" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                         Afgelopen jaar
                                     </label>
-                                    <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant" id="count-jaar">({{ $filterCounts['jaar'] ?? 0 }})</span>
+                                    <x-ui.badge size="sm" variant="primary-light" id="count-jaar">{{ $filterCounts['jaar'] ?? 0 }}</x-ui.badge>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <input 
@@ -213,7 +213,7 @@
                                         <label for="categorie-{{ md5($category) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                             {{ $category }}
                                         </label>
-                                        <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">({{ $filterCounts['informatiecategorie'][$category] ?? 0 }})</span>
+                                        <x-ui.badge size="sm" variant="primary-light">{{ $filterCounts['informatiecategorie'][$category] ?? 0 }}</x-ui.badge>
                                     </div>
                                 @endforeach
                                 @if(!empty($hiddenCategories))
@@ -236,7 +236,7 @@
                                             <label for="categorie-{{ md5($category) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                                 {{ $category }}
                                             </label>
-                                            <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">({{ $filterCounts['informatiecategorie'][$category] ?? 0 }})</span>
+                                            <x-ui.badge size="sm" variant="primary-light">{{ $filterCounts['informatiecategorie'][$category] ?? 0 }}</x-ui.badge>
                                         </div>
                                     @endforeach
                                 </div>
@@ -300,7 +300,7 @@
                                         <label for="soort-{{ str_replace(' ', '-', strtolower($type)) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                             {{ $type }}
                                         </label>
-                                        <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">({{ $filterCounts['documentsoort'][$type] ?? 0 }})</span>
+                                        <x-ui.badge size="sm" variant="primary-light">{{ $filterCounts['documentsoort'][$type] ?? 0 }}</x-ui.badge>
                                     </div>
                                 @endforeach
                                 @if(!empty($hiddenTypes))
@@ -323,7 +323,7 @@
                                             <label for="soort-{{ str_replace(' ', '-', strtolower($type)) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                                 {{ $type }}
                                             </label>
-                                            <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">({{ $filterCounts['documentsoort'][$type] ?? 0 }})</span>
+                                            <x-ui.badge size="sm" variant="primary-light">{{ $filterCounts['documentsoort'][$type] ?? 0 }}</x-ui.badge>
                                         </div>
                                     @endforeach
                                 </div>
@@ -372,7 +372,7 @@
                                         <label for="bestandstype-{{ strtolower(str_replace([' ', '-'], ['', ''], $label)) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                             {{ $label }}
                                         </label>
-                                        <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">({{ $filterCounts['bestandstype'][$label] ?? 0 }})</span>
+                                        <x-ui.badge size="sm" variant="primary-light">{{ $filterCounts['bestandstype'][$label] ?? 0 }}</x-ui.badge>
                                     </div>
                                 @endforeach
                                 <button 
@@ -412,7 +412,7 @@
                                         <label for="org-{{ md5($org) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                             {{ $org }}
                                         </label>
-                                        <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">({{ number_format($filterCounts['organisatie'][$org] ?? 0, 0, ',', '.') }})</span>
+                                        <x-ui.badge size="sm" variant="primary-light">{{ number_format($filterCounts['organisatie'][$org] ?? 0, 0, ',', '.') }}</x-ui.badge>
                                     </div>
                                 @endforeach
                                 @if(!empty($hiddenOrgs))
@@ -435,7 +435,7 @@
                                             <label for="org-{{ md5($org) }}" class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface)] cursor-pointer flex-1">
                                                 {{ $org }}
                                             </label>
-                                            <span class="text-[var(--font-size-label-medium)] text-[var(--color-on-surface)]-variant">({{ number_format($filterCounts['organisatie'][$org] ?? 0, 0, ',', '.') }})</span>
+                                            <x-ui.badge size="sm" variant="primary-light">{{ number_format($filterCounts['organisatie'][$org] ?? 0, 0, ',', '.') }}</x-ui.badge>
                                         </div>
                                     @endforeach
                                 </div>
