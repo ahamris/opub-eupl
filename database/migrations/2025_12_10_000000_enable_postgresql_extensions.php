@@ -45,3 +45,4 @@ return new class extends Migration
         // 3. It's safer to leave extensions enabled
     }
 };
+
