@@ -12,9 +12,14 @@ Schedule::command('open-overheid:sync --recent --days=7')
     ->dailyAt('02:00')
     ->name('sync-open-overheid-documents')
     ->withoutOverlapping()
-    ->onFailure(function () {
-        \Log::channel('sync_errors')->error('Open Overheid sync command failed');
-    });
+    ->onFailure(function (\Illuminate\Console\Scheduling\Event $event) {
+        \Log::channel('sync_errors')->error('Open Overheid sync command failed', [
+            'command' => $event->command,
+            'exit_code' => $event->exitCode,
+            'output' => $event->output ?? 'No output captured',
+        ]);
+    })
+    ->appendOutputTo(storage_path('logs/sync-command-output.log'));
 
 // Alternative: Use job instead of command (syncs ALL documents)
 // Uncomment if you prefer to sync all documents instead of recent ones
@@ -30,4 +35,10 @@ Schedule::command('open-overheid:sync --recent --days=7')
 Schedule::command('typesense:sync')
     ->everyMinute()
     ->name('sync-document-to-typesense')
-    ->withoutOverlapping();
+    ->withoutOverlapping()
+    ->onFailure(function (\Illuminate\Console\Scheduling\Event $event) {
+        \Log::channel('typesense_errors')->error('Typesense sync command failed', [
+            'command' => $event->command,
+            'exit_code' => $event->exitCode,
+        ]);
+    });
