@@ -89,7 +89,7 @@ class OpenOverheidSearchService
                 ->get($url);
 
             if (! $response->successful()) {
-                Log::error('Open Overheid API error (detail)', [
+                Log::channel('sync_errors')->error('Open Overheid API error (detail)', [
                     'url' => $url,
                     'id' => $id,
                     'status' => $response->status(),
