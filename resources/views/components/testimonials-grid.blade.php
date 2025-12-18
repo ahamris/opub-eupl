@@ -61,13 +61,6 @@
             'organization' => 'NGO Transparantie',
             'avatar' => 'https://images.unsplash.com/photo-1463453091185-61582044d556?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
         ],
-        [
-            'quote' => 'Uitstekende ervaring met dit platform. Het maakt het vinden van overheidsdocumenten veel eenvoudiger.',
-            'author' => 'Jan Pietersen',
-            'role' => 'Onderzoeker',
-            'organization' => 'Universiteit Utrecht',
-            'avatar' => 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        ],
     ];
 
     $testimonials = !empty($testimonials) ? $testimonials : $defaultTestimonials;
@@ -121,6 +114,27 @@
                     </figure>
                 </div>
                 @endforeach
+                
+                <!-- Show More Card -->
+                <div class="pt-8 sm:inline-block sm:w-full sm:px-4">
+                    <figure class="rounded-md bg-white p-8 ring-1 ring-slate-200/60 h-full flex flex-col items-center justify-center min-h-[280px] group hover:ring-[var(--color-primary)]/30 transition-all duration-200 cursor-pointer">
+                        <div class="flex flex-col items-center justify-center text-center space-y-4">
+                            <div class="w-12 h-12 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center group-hover:bg-[var(--color-primary)]/20 transition-colors duration-200">
+                                <svg class="w-6 h-6 text-[var(--color-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-lg font-semibold text-[var(--color-on-surface)] group-hover:text-[var(--color-primary)] transition-colors duration-200">
+                                    Meer tonen
+                                </p>
+                                <p class="text-sm text-[var(--color-on-surface-variant)] mt-1">
+                                    Bekijk alle testimonials
+                                </p>
+                            </div>
+                        </div>
+                    </figure>
+                </div>
             </div>
         </div>
     </div>

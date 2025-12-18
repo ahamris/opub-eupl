@@ -44,59 +44,6 @@
                         <input type="hidden" name="sort" id="hidden-sort" value="{{ request('sort', 'relevance') }}">
                         <input type="hidden" name="per_page" id="hidden-per-page" value="{{ request('per_page', 20) }}">
                         
-                        <!-- Search Keywords -->
-                        <div class="space-y-3">
-                            <x-input 
-                                type="text"
-                                name="zoeken"
-                                id="sidebar-zoeken"
-                                label="Zoekwoorden"
-                                value="{{ request('zoeken') }}"
-                                placeholder="Zoekwoorden..."
-                                class="w-full px-3 py-2 rounded-md 
-                                       border border-[var(--color-outline-variant)] bg-[var(--color-surface)]
-                                       text-sm text-[var(--color-on-surface)]
-                                       focus:outline-none focus:border-[var(--color-primary)]
-                                       transition-colors duration-200"
-                            />
-                            <div class="flex items-center gap-3">
-                                <input 
-                                    type="checkbox" 
-                                    id="sidebar-titles-only" 
-                                    name="titles_only" 
-                                    value="1"
-                                    {{ request('titles_only') ? 'checked' : '' }}
-                                    class="w-4 h-4 rounded border border-[var(--color-outline)]
-                                               focus:outline-none
-                                               cursor-pointer text-[var(--color-primary)]
-                                               checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)]
-                                               transition-all duration-200"
-                                >
-                                <label for="sidebar-titles-only" class="text-sm text-[var(--color-on-surface)] cursor-pointer">
-                                    Zoek alleen in titels
-                                </label>
-                            </div>
-                            <button 
-                                type="submit" 
-                                class="w-full bg-[var(--color-primary)] text-[var(--color-on-primary)] 
-                                       hover:bg-[var(--color-primary-dark)]
-                                       focus:outline-none
-                                       px-4 py-2 rounded-md font-medium text-sm
-                                       transition-colors duration-200">
-                                Zoeken
-                            </button>
-                            <button 
-                                type="button" 
-                                onclick="window.location.href='{{ route('themas.index') }}'"
-                                class="w-full border border-[var(--color-outline-variant)] text-[var(--color-primary)]
-                                       hover:bg-[var(--color-primary)]/10
-                                       focus:outline-none
-                                       px-4 py-2 rounded-md font-medium text-sm
-                                       transition-colors duration-200">
-                                Selectie wissen
-                            </button>
-                        </div>
-                        
                         <!-- Date Filter -->
                         <div class="space-y-3">
                             <h3 class="text-sm font-semibold text-[var(--color-on-surface)]">Datum beschikbaar</h3>
@@ -136,7 +83,7 @@
                                     <label for="datum-week" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                         Afgelopen week
                                     </label>
-                                    <span class="text-sm text-[var(--color-on-surface-variant)]" id="count-week">({{ $filterCounts['week'] ?? 0 }})</span>
+                                    <x-ui.badge size="sm" variant="primary-light" id="count-week">{{ $filterCounts['week'] ?? 0 }}</x-ui.badge>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <input 
@@ -155,7 +102,7 @@
                                     <label for="datum-maand" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                         Afgelopen maand
                                     </label>
-                                    <span class="text-sm text-[var(--color-on-surface-variant)]" id="count-maand">({{ $filterCounts['maand'] ?? 0 }})</span>
+                                    <x-ui.badge size="sm" variant="primary-light" id="count-maand">{{ $filterCounts['maand'] ?? 0 }}</x-ui.badge>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <input 
@@ -174,7 +121,7 @@
                                     <label for="datum-jaar" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                         Afgelopen jaar
                                     </label>
-                                    <span class="text-sm text-[var(--color-on-surface-variant)]" id="count-jaar">({{ $filterCounts['jaar'] ?? 0 }})</span>
+                                    <x-ui.badge size="sm" variant="primary-light" id="count-jaar">{{ $filterCounts['jaar'] ?? 0 }}</x-ui.badge>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <input 
@@ -260,7 +207,7 @@
                                         <label for="categorie-{{ md5($category) }}" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                             {{ $category }}
                                         </label>
-                                        <span class="text-sm text-[var(--color-on-surface-variant)]">({{ $filterCounts['informatiecategorie'][$category] ?? 0 }})</span>
+                                        <x-ui.badge size="sm" variant="primary-light">{{ $filterCounts['informatiecategorie'][$category] ?? 0 }}</x-ui.badge>
                                     </div>
                                 @endforeach
                                 @if(!empty($hiddenCategories))
@@ -283,7 +230,7 @@
                                             <label for="categorie-{{ md5($category) }}" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                                 {{ $category }}
                                             </label>
-                                            <span class="text-sm text-[var(--color-on-surface-variant)]">({{ $filterCounts['informatiecategorie'][$category] ?? 0 }})</span>
+                                            <x-ui.badge size="sm" variant="primary-light">{{ $filterCounts['informatiecategorie'][$category] ?? 0 }}</x-ui.badge>
                                         </div>
                                     @endforeach
                                 </div>
@@ -347,7 +294,7 @@
                                         <label for="soort-{{ str_replace(' ', '-', strtolower($type)) }}" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                             {{ $type }}
                                         </label>
-                                        <span class="text-sm text-[var(--color-on-surface-variant)]">({{ $filterCounts['documentsoort'][$type] ?? 0 }})</span>
+                                        <x-ui.badge size="sm" variant="primary-light">{{ $filterCounts['documentsoort'][$type] ?? 0 }}</x-ui.badge>
                                     </div>
                                 @endforeach
                                 @if(!empty($hiddenTypes))
@@ -370,7 +317,7 @@
                                             <label for="soort-{{ str_replace(' ', '-', strtolower($type)) }}" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                                 {{ $type }}
                                             </label>
-                                            <span class="text-sm text-[var(--color-on-surface-variant)]">({{ $filterCounts['documentsoort'][$type] ?? 0 }})</span>
+                                            <x-ui.badge size="sm" variant="primary-light">{{ $filterCounts['documentsoort'][$type] ?? 0 }}</x-ui.badge>
                                         </div>
                                     @endforeach
                                 </div>
@@ -419,7 +366,7 @@
                                         <label for="bestandstype-{{ strtolower(str_replace([' ', '-'], ['', ''], $label)) }}" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                             {{ $label }}
                                         </label>
-                                        <span class="text-sm text-[var(--color-on-surface-variant)]">({{ $filterCounts['bestandstype'][$label] ?? 0 }})</span>
+                                        <x-ui.badge size="sm" variant="primary-light">{{ $filterCounts['bestandstype'][$label] ?? 0 }}</x-ui.badge>
                                     </div>
                                 @endforeach
                                 <button 
@@ -459,7 +406,7 @@
                                         <label for="thema-{{ str_replace(' ', '-', strtolower($theme)) }}" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                             {{ $theme }}
                                         </label>
-                                        <span class="text-sm text-[var(--color-on-surface-variant)]">({{ $filterCounts['thema'][$theme] ?? 0 }})</span>
+                                        <x-ui.badge size="sm" variant="primary-light">{{ $filterCounts['thema'][$theme] ?? 0 }}</x-ui.badge>
                                     </div>
                                 @endforeach
                                 @if(!empty($hiddenThemes))
@@ -482,7 +429,7 @@
                                             <label for="thema-{{ str_replace(' ', '-', strtolower($theme)) }}" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                                 {{ $theme }}
                                             </label>
-                                            <span class="text-sm text-[var(--color-on-surface-variant)]">({{ $filterCounts['thema'][$theme] ?? 0 }})</span>
+                                            <x-ui.badge size="sm" variant="primary-light">{{ $filterCounts['thema'][$theme] ?? 0 }}</x-ui.badge>
                                         </div>
                                     @endforeach
                                 </div>
@@ -526,7 +473,7 @@
                                         <label for="org-{{ md5($org) }}" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                             {{ $org }}
                                         </label>
-                                        <span class="text-sm text-[var(--color-on-surface-variant)]">({{ number_format($filterCounts['organisatie'][$org] ?? 0, 0, ',', '.') }})</span>
+                                        <x-ui.badge size="sm" variant="primary-light">{{ number_format($filterCounts['organisatie'][$org] ?? 0, 0, ',', '.') }}</x-ui.badge>
                                     </div>
                                 @endforeach
                                 @if(!empty($hiddenOrgs))
@@ -549,7 +496,7 @@
                                             <label for="org-{{ md5($org) }}" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
                                                 {{ $org }}
                                             </label>
-                                            <span class="text-sm text-[var(--color-on-surface-variant)]">({{ number_format($filterCounts['organisatie'][$org] ?? 0, 0, ',', '.') }})</span>
+                                            <x-ui.badge size="sm" variant="primary-light">{{ number_format($filterCounts['organisatie'][$org] ?? 0, 0, ',', '.') }}</x-ui.badge>
                                         </div>
                                     @endforeach
                                 </div>
