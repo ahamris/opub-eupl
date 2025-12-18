@@ -15,10 +15,11 @@ return new class extends Migration
         if ($driver === 'pgsql') {
             // PostgreSQL: Add GIN index on metadata->'documentrelaties' for faster dossier queries
             // This significantly speeds up the EXISTS query with jsonb_array_elements
+            // Cast metadata to jsonb first, then extract the field
             DB::statement("
                 CREATE INDEX IF NOT EXISTS idx_open_overheid_documents_metadata_documentrelaties_gin 
                 ON open_overheid_documents 
-                USING GIN ((metadata->'documentrelaties'))
+                USING GIN ((metadata::jsonb->'documentrelaties'))
             ");
         }
         // MariaDB/MySQL: JSON indexing requires generated columns, which is complex for array data.
