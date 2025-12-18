@@ -2,16 +2,6 @@
 
 ## Fastest Method: Artisan Command
 
-Run this command to create the database automatically:
-
-```bash
-php artisan open-overheid:create-db
-```
-
-You'll be prompted for your PostgreSQL password. The command will:
-- Create the `open_overheid` database
-- Enable required extensions
-- Show you the `.env` configuration you need
 
 ## Manual Method: SQL Script
 

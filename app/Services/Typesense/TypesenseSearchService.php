@@ -125,7 +125,7 @@ class TypesenseSearchService
                 'facet_counts' => $results['facet_counts'] ?? [],
             ];
         } catch (\Exception $e) {
-            Log::error('Typesense search error', [
+            Log::channel('typesense_errors')->error('Typesense search error', [
                 'query' => $query,
                 'error' => $e->getMessage(),
             ]);
