@@ -27,7 +27,7 @@ Schedule::command('open-overheid:sync --recent --days=7')
 //     });
 
 // Schedule Typesense sync every minute
-Schedule::job(SyncDocumentToTypesense::class)
+Schedule::command('typesense:sync')
     ->everyMinute()
     ->name('sync-document-to-typesense')
     ->withoutOverlapping();
