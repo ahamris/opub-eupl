@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\Content\BlogController;
+use App\Http\Controllers\Admin\Content\BlogCategoryController;
 use App\Http\Controllers\Admin\Auth\AdminLoginController;
 use App\Http\Controllers\Admin\Auth\AdminPasswordResetLinkController;
 use App\Http\Controllers\Admin\Auth\AdminNewPasswordController;
@@ -37,6 +39,19 @@ Route::middleware(['auth', \App\Http\Middleware\CheckIfAdmin::class])->prefix('a
 
     // Users Resource Routes
     Route::resource('users', UserController::class);
+
+    // Content Routes
+    Route::prefix('content')->name('content.')->group(function () {
+        // Blog Category Routes
+        Route::resource('blog-category', BlogCategoryController::class)->parameters([
+            'blog-category' => 'blogCategory',
+        ]);
+
+        // Blog Routes
+        Route::resource('blog', BlogController::class);
+        Route::post('blog/{blog}/toggle-active', [BlogController::class, 'toggleActive'])->name('blog.toggle-active');
+        Route::post('blog/{blog}/toggle-featured', [BlogController::class, 'toggleFeatured'])->name('blog.toggle-featured');
+    });
 
     // Settings Routes
     Route::get('/settings/menu', MenuManager::class)->name('settings.menu');

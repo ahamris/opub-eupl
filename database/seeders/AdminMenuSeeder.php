@@ -64,6 +64,40 @@ class AdminMenuSeeder extends Seeder
                 'is_active' => true,
             ]);
 
+            // Content Section
+            $contentSection = AdminMenuItem::create([
+                'admin_menu_id' => $menu->id,
+                'item_type' => 'section',
+                'label' => 'CONTENT',
+                'slug' => Str::slug('CONTENT'),
+                'position' => $position++,
+                'is_active' => true,
+            ]);
+
+            AdminMenuItem::create([
+                'admin_menu_id' => $menu->id,
+                'parent_id' => $contentSection->id,
+                'item_type' => 'link',
+                'label' => 'Blog Categories',
+                'slug' => 'blog-categories',
+                'route_name' => 'admin.content.blog-category.index',
+                'icon' => 'folder',
+                'position' => 0,
+                'is_active' => true,
+            ]);
+
+            AdminMenuItem::create([
+                'admin_menu_id' => $menu->id,
+                'parent_id' => $contentSection->id,
+                'item_type' => 'link',
+                'label' => 'Blogs',
+                'slug' => 'blogs',
+                'route_name' => 'admin.content.blog.index',
+                'icon' => 'newspaper',
+                'position' => 1,
+                'is_active' => true,
+            ]);
+
             $systemSection = AdminMenuItem::create([
                 'admin_menu_id' => $menu->id,
                 'item_type' => 'section',
