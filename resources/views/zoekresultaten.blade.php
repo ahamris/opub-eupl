@@ -817,17 +817,30 @@
                         <div class="pt-4 border-t border-[var(--color-outline-variant)]">
                             <div class="flex items-center justify-between mb-2">
                                 <span class="text-sm font-medium text-[var(--color-on-surface)]">Actieve filters:</span>
-                                <a href="{{ isset($isDossier) ? route('dossiers.index') : route('zoeken') }}" 
-                                   class="inline-flex items-center gap-1 px-2 py-1 rounded-md 
-                                          bg-[var(--color-surface-variant)] text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]
-                                          hover:bg-[var(--color-surface-variant)]/80
-                                          focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20
-                                          transition-all duration-200 font-medium text-xs">
-                                    <i class="fas fa-times-circle text-xs" aria-hidden="true"></i>
-                                    <span>Alle filters wissen</span>
-                                </a>
+                                <div class="flex items-center gap-2">
+                                    <a href="{{ isset($isDossier) ? route('dossiers.index') : route('zoeken') }}" 
+                                       class="inline-flex items-center gap-1 px-2 py-1 rounded-md 
+                                              bg-[var(--color-surface-variant)] text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]
+                                              hover:bg-[var(--color-surface-variant)]/80
+                                              focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20
+                                              transition-all duration-200 font-medium text-xs">
+                                        <i class="fas fa-times-circle text-xs" aria-hidden="true"></i>
+                                        <span>Alle filters wissen</span>
+                                    </a>
+                                    
+                                    <!-- Subscription/Bell Icon -->
+                                    <button type="button" 
+                                            class="inline-flex items-center justify-center px-2 py-1 rounded-md 
+                                                   bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
+                                                   hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
+                                                   focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20
+                                                   transition-all duration-200 font-medium text-xs h-[26px]"
+                                            title="Abonneren op deze zoekopdracht">
+                                        <i class="fas fa-bell text-xs" aria-hidden="true"></i>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="flex flex-wrap items-center gap-2">
+                            <div class="flex flex-wrap items-center gap-2 relative">
                                 @foreach($activeFilters as $filter)
                                     @php
                                         $removeUrl = request()->fullUrlWithQuery(['pagina' => 1]);

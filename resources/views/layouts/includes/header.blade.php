@@ -47,6 +47,9 @@
             <a href="{{ route('verwijzingen') }}" class="nav-link px-3 py-2 text-sm font-medium {{ request()->routeIs('verwijzingen') ? 'nav-link-active text-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">
                 Verwijzingen
             </a>
+            <a href="{{ route('blog.index') }}" class="nav-link px-3 py-2 text-sm font-medium {{ request()->routeIs('blog.*') ? 'nav-link-active text-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">
+                Blog
+            </a>
             <a href="{{ route('over') }}" class="nav-link px-3 py-2 text-sm font-medium {{ request()->routeIs('over') ? 'nav-link-active text-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">
                 Over
             </a>
@@ -87,6 +90,9 @@
             </a>
             <a href="{{ route('verwijzingen') }}" class="block px-3 py-2.5 text-base font-medium {{ request()->routeIs('verwijzingen') ? 'text-[var(--color-primary-dark)] border-l-2 border-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">
                 Verwijzingen
+            </a>
+            <a href="{{ route('blog.index') }}" class="block px-3 py-2.5 text-base font-medium {{ request()->routeIs('blog.*') ? 'text-[var(--color-primary-dark)] border-l-2 border-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">
+                Blog
             </a>
             <a href="{{ route('over') }}" class="block px-3 py-2.5 text-base font-medium {{ request()->routeIs('over') ? 'text-[var(--color-primary-dark)] border-l-2 border-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">
                 Over

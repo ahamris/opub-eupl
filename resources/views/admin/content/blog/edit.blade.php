@@ -95,39 +95,46 @@
                 </div>
 
                 <!-- Long Body Field (Quill Editor) -->
-                <div x-data="{ editorContent: @js(old('long_body', $blog->long_body ?? '')) }">
+                <div x-data="{ 
+                    editorContent: @js(old('long_body', $blog->long_body ?? '')),
+                    editor: null,
+                    initQuill() {
+                        if (!window.Quill) {
+                            setTimeout(() => this.initQuill(), 100);
+                            return;
+                        }
+                        
+                        this.editor = new window.Quill(this.$refs.editor, {
+                            theme: 'snow',
+                            placeholder: 'Write your blog content here...',
+                            modules: {
+                                toolbar: [
+                                    [{ 'header': [1, 2, 3, false] }],
+                                    ['bold', 'italic', 'underline', 'strike'],
+                                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                    ['blockquote', 'code-block'],
+                                    ['link', 'image'],
+                                    ['clean']
+                                ]
+                            }
+                        });
+                        
+                        if (this.editorContent) {
+                            this.editor.root.innerHTML = this.editorContent;
+                        }
+                        
+                        this.editor.on('text-change', () => {
+                            this.editorContent = this.editor.root.innerHTML;
+                        });
+                    }
+                }" x-init="initQuill()">
                     <label class="block text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-2">
                         Content <span class="text-red-600 dark:text-red-400">*</span>
                     </label>
-                    <div
-                        x-data="{
-                            editor: null,
-                            init() {
-                                if (!window.Quill) {
-                                    setTimeout(() => this.init(), 100);
-                                    return;
-                                }
-                                
-                                this.editor = new window.Quill(this.$refs.editor, {
-                                    theme: 'snow',
-                                    placeholder: 'Write your blog content here...',
-                                });
-                                
-                                if (this.$root.editorContent) {
-                                    this.editor.root.innerHTML = this.$root.editorContent;
-                                }
-                                
-                                this.editor.on('text-change', () => {
-                                    this.$root.editorContent = this.editor.root.innerHTML;
-                                });
-                            }
-                        }"
-                        class="quill-wrapper"
-                        style="min-height: 400px;"
-                    >
+                    <div class="quill-wrapper" style="min-height: 400px;">
                         <div x-ref="editor" class="bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-b-md"></div>
                     </div>
-                    <input type="hidden" name="long_body" x-bind:value="editorContent">
+                    <input type="hidden" name="long_body" :value="editorContent">
                     @error('long_body')
                         <p class="mt-1 text-sm text-error">{{ $message }}</p>
                     @enderror

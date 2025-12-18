@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\OpenOverheid\DocumentController;
 use App\Http\Controllers\OpenOverheid\DossierController;
 use App\Http\Controllers\OpenOverheid\ReportController;
@@ -39,6 +40,10 @@ Route::get('/dossiers/{id}', [DossierController::class, 'show'])->name('dossiers
 Route::post('/dossiers/{id}/enhance', [DossierController::class, 'enhance'])->name('dossiers.enhance');
 Route::get('/dossiers/{id}/summary', [DossierController::class, 'getSummary'])->name('dossiers.summary');
 Route::get('/dossiers/{id}/audio', [DossierController::class, 'getAudio'])->name('dossiers.audio');
+
+// Blog routes
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 
 // Dashboard route
 Route::get('/dashboard', function () {
