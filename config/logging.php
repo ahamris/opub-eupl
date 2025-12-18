@@ -141,6 +141,13 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'ai_enhancement' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/ai-enhancement.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+
     ],
 
 ];

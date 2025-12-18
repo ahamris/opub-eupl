@@ -69,7 +69,7 @@ class OpenOverheidLocalSearchService
                 'hasPreviousPage' => $results->currentPage() > 1,
             ];
         } catch (\Exception $e) {
-            Log::error('Open Overheid local search error', [
+            Log::channel('sync_errors')->error('Open Overheid local search error', [
                 'query' => $query,
                 'exception' => $e->getMessage(),
             ]);

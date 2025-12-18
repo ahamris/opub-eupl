@@ -48,10 +48,11 @@ class OpenOverheidSearchService
 
         try {
             $response = Http::timeout(config('open_overheid.timeout'))
+                ->retry(2, 500) // Retry 2 times with 500ms delay for search requests
                 ->get($url, $params);
 
             if (! $response->successful()) {
-                Log::error('Open Overheid API error (search)', [
+                Log::channel('sync_errors')->error('Open Overheid API error (search)', [
                     'url' => $url,
                     'params' => $params,
                     'status' => $response->status(),
@@ -65,7 +66,7 @@ class OpenOverheidSearchService
 
             return $response->json();
         } catch (\Exception $e) {
-            Log::error('Open Overheid API exception (search)', [
+            Log::channel('sync_errors')->error('Open Overheid API exception (search)', [
                 'url' => $url,
                 'params' => $params,
                 'exception' => $e->getMessage(),
@@ -84,6 +85,7 @@ class OpenOverheidSearchService
 
         try {
             $response = Http::timeout(config('open_overheid.timeout'))
+                ->retry(3, 1000) // Retry 3 times with 1 second delay
                 ->get($url);
 
             if (! $response->successful()) {
@@ -101,7 +103,7 @@ class OpenOverheidSearchService
 
             return $response->json();
         } catch (\Exception $e) {
-            Log::error('Open Overheid API exception (detail)', [
+            Log::channel('sync_errors')->error('Open Overheid API exception (detail)', [
                 'url' => $url,
                 'id' => $id,
                 'exception' => $e->getMessage(),

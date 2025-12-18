@@ -28,6 +28,7 @@ return [
         'enabled' => env('OPEN_OVERHEID_SYNC_ENABLED', true),
         'batch_size' => env('OPEN_OVERHEID_SYNC_BATCH_SIZE', 50),
         'days_back' => env('OPEN_OVERHEID_SYNC_DAYS_BACK', 1), // Sync last N days (default: 1 = 24 hours)
+        'delay_between_requests' => env('OPEN_OVERHEID_SYNC_DELAY', 200), // Delay in milliseconds between document fetches (default: 200ms)
     ],
 
     /*

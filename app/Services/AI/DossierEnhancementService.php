@@ -24,7 +24,7 @@ class DossierEnhancementService
             $document = OpenOverheidDocument::where('external_id', $dossierExternalId)->first();
 
             if (! $document) {
-                Log::warning('Dossier document not found', ['external_id' => $dossierExternalId]);
+                Log::channel('ai_enhancement')->warning('Dossier document not found', ['external_id' => $dossierExternalId]);
 
                 return false;
             }
@@ -34,7 +34,7 @@ class DossierEnhancementService
             $allDocuments = $dossierMembers->push($document)->unique('id');
 
             if ($allDocuments->isEmpty()) {
-                Log::warning('No documents found in dossier', ['external_id' => $dossierExternalId]);
+                Log::channel('ai_enhancement')->warning('No documents found in dossier', ['external_id' => $dossierExternalId]);
 
                 return false;
             }
@@ -92,14 +92,14 @@ class DossierEnhancementService
             //     $this->enhanceDocument($doc);
             // }
 
-            Log::info('Dossier enhanced successfully', [
+            Log::channel('ai_enhancement')->info('Dossier enhanced successfully', [
                 'dossier_external_id' => $dossierExternalId,
                 'documents_count' => $allDocuments->count(),
             ]);
 
             return true;
         } catch (\Exception $e) {
-            Log::error('Dossier enhancement failed', [
+            Log::channel('ai_enhancement')->error('Dossier enhancement failed', [
                 'dossier_external_id' => $dossierExternalId,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -141,7 +141,7 @@ class DossierEnhancementService
 
             return true;
         } catch (\Exception $e) {
-            Log::error('Document enhancement failed', [
+            Log::channel('ai_enhancement')->error('Document enhancement failed', [
                 'document_id' => $document->id,
                 'error' => $e->getMessage(),
             ]);

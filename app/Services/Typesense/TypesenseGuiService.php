@@ -64,7 +64,7 @@ class TypesenseGuiService
         try {
             return $this->client->collections[$name]->retrieve();
         } catch (\Exception $e) {
-            Log::error('Typesense get collection error', [
+            Log::channel('typesense_errors')->error('Typesense get collection error', [
                 'collection' => $name,
                 'error' => $e->getMessage(),
             ]);
@@ -89,7 +89,7 @@ class TypesenseGuiService
                 'fields' => $collection['fields'] ?? [],
             ];
         } catch (\Exception $e) {
-            Log::error('Typesense get collection stats error', [
+            Log::channel('typesense_errors')->error('Typesense get collection stats error', [
                 'collection' => $name,
                 'error' => $e->getMessage(),
             ]);
@@ -137,7 +137,7 @@ class TypesenseGuiService
                 'facet_counts' => $results['facet_counts'] ?? [],
             ];
         } catch (\Exception $e) {
-            Log::error('Typesense search collection error', [
+            Log::channel('typesense_errors')->error('Typesense search collection error', [
                 'collection' => $collection,
                 'error' => $e->getMessage(),
             ]);
@@ -157,7 +157,7 @@ class TypesenseGuiService
                 ->documents[$id]
                 ->retrieve();
         } catch (\Exception $e) {
-            Log::warning('Typesense document not found', [
+            Log::channel('typesense_errors')->warning('Typesense document not found', [
                 'collection' => $collection,
                 'id' => $id,
                 'error' => $e->getMessage(),
@@ -180,7 +180,7 @@ class TypesenseGuiService
                 ->documents
                 ->upsert($data);
         } catch (\Exception $e) {
-            Log::error('Typesense add document error', [
+            Log::channel('typesense_errors')->error('Typesense add document error', [
                 'collection' => $collection,
                 'error' => $e->getMessage(),
             ]);
@@ -198,7 +198,7 @@ class TypesenseGuiService
                 ->documents[$id]
                 ->delete();
         } catch (\Exception $e) {
-            Log::error('Typesense delete document error', [
+            Log::channel('typesense_errors')->error('Typesense delete document error', [
                 'collection' => $collection,
                 'id' => $id,
                 'error' => $e->getMessage(),
@@ -215,7 +215,7 @@ class TypesenseGuiService
         try {
             return $this->client->collections[$name]->delete();
         } catch (\Exception $e) {
-            Log::error('Typesense delete collection error', [
+            Log::channel('typesense_errors')->error('Typesense delete collection error', [
                 'collection' => $name,
                 'error' => $e->getMessage(),
             ]);
@@ -234,7 +234,7 @@ class TypesenseGuiService
         try {
             return $this->client->collections->create($schema);
         } catch (\Exception $e) {
-            Log::error('Typesense create collection error', [
+            Log::channel('typesense_errors')->error('Typesense create collection error', [
                 'schema' => $schema,
                 'error' => $e->getMessage(),
             ]);

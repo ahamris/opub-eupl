@@ -162,7 +162,7 @@ class GeminiService
 
             return $url;
         } catch (\Exception $e) {
-            Log::error('Gemini TTS generation failed', [
+            Log::channel('ai_enhancement')->error('Gemini TTS generation failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
@@ -179,7 +179,7 @@ class GeminiService
         $apiKey = config('open_overheid.gemini.api_key', env('GEMINI_API_KEY'));
 
         if (empty($apiKey)) {
-            Log::warning('Gemini API key not configured');
+            Log::channel('ai_enhancement')->warning('Gemini API key not configured');
 
             return null;
         }
@@ -201,7 +201,7 @@ class GeminiService
 
             return null;
         } catch (\Exception $e) {
-            Log::error('Gemini API request failed', [
+            Log::channel('ai_enhancement')->error('Gemini API request failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);

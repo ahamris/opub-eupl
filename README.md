@@ -234,7 +234,9 @@ Het `open-overheid:sync` commando ondersteunt de volgende opties:
 
 | Parameter | Type | Beschrijving | Voorbeeld |
 |-----------|------|--------------|-----------|
-| `--recent` | flag | Sync recente documenten | `--recent` |
+| *(geen)* | - | Sync **alle** documenten (standaard gedrag) | `php artisan open-overheid:sync` |
+| `--all` | flag | Sync expliciet alle documenten (zelfde als standaard) | `--all` |
+| `--recent` | flag | Sync recente documenten (standaard: laatste 7 dagen) | `--recent` |
 | `--days=` | integer | Aantal dagen terug (bij gebruik van --recent, standaard: 7) | `--days=30` |
 | `--from=` | string | Startdatum in DD-MM-YYYY formaat | `--from=01-12-2024` |
 | `--to=` | string | Einddatum in DD-MM-YYYY formaat | `--to=31-12-2024` |
@@ -243,11 +245,24 @@ Het `open-overheid:sync` commando ondersteunt de volgende opties:
 | `--week` | flag | Sync alle documenten van deze week (maandag t/m zondag) | `--week` |
 | `--no-retry` | flag | Sla retry van gefaalde documenten over | `--no-retry` |
 
-**Let op:** Als geen parameters worden opgegeven, synchroniseert het commando **alle** documenten uit de API.
+**Let op:** 
+- **Standaard gedrag**: Als geen parameters worden opgegeven, synchroniseert het commando **alle** documenten uit de API (kan lang duren!).
+- **Aanbevolen**: Gebruik `--recent --days=7` voor dagelijkse syncs om alleen recente documenten te synchroniseren.
 
 ### Gebruiksvoorbeelden
 
-#### 1. Sync recente documenten (aanbevolen)
+#### 1. Sync alle documenten (standaard)
+```bash
+# Sync alle beschikbare documenten (kan lang duren!)
+php artisan open-overheid:sync
+
+# Of expliciet met --all flag (zelfde resultaat)
+php artisan open-overheid:sync --all
+```
+
+**⚠️ Waarschuwing**: Syncing alle documenten kan zeer lang duren en kan timeouts veroorzaken. Gebruik dit alleen voor initiële setup.
+
+#### 2. Sync recente documenten (aanbevolen)
 ```bash
 # Sync laatste 7 dagen (standaard)
 php artisan open-overheid:sync --recent --days=7
@@ -256,7 +271,7 @@ php artisan open-overheid:sync --recent --days=7
 php artisan open-overheid:sync --recent --days=30
 ```
 
-#### 2. Sync specifiek datum bereik
+#### 3. Sync specifiek datum bereik
 ```bash
 # Sync documenten van 1 december 2025 tot 10 december 2025
 php artisan open-overheid:sync --from=01-12-2025 --to=10-12-2025
@@ -268,16 +283,10 @@ php artisan open-overheid:sync --from=01-01-2024
 php artisan open-overheid:sync --to=31-12-2024
 ```
 
-#### 3. Skip directe Typesense sync
+#### 4. Skip directe Typesense sync
 ```bash
 # Sync naar PostgreSQL maar skip directe Typesense sync (scheduler blijft actief)
 php artisan open-overheid:sync --recent --skip-typesense
-```
-
-#### 4. Sync alle documenten
-```bash
-# Sync alle beschikbare documenten (kan lang duren!)
-php artisan open-overheid:sync
 ```
 
 #### 5. Sync een specifiek document

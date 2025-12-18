@@ -182,7 +182,7 @@ class TypesenseSearchService
                 'facet_counts' => $results['facet_counts'] ?? [],
             ];
         } catch (\Exception $e) {
-            Log::error('Typesense natural language search error', [
+            Log::channel('typesense_errors')->error('Typesense natural language search error', [
                 'query' => $query,
                 'error' => $e->getMessage(),
             ]);
@@ -202,7 +202,7 @@ class TypesenseSearchService
                 ->documents[$id]
                 ->retrieve();
         } catch (\Exception $e) {
-            Log::warning('Typesense document not found', [
+            Log::channel('typesense_errors')->warning('Typesense document not found', [
                 'id' => $id,
                 'error' => $e->getMessage(),
             ]);

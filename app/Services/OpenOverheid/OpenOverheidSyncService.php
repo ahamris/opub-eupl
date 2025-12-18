@@ -122,6 +122,13 @@ class OpenOverheidSyncService
                         // Fetch detailed document
                         $documentData = $this->searchService->getDocument($externalId);
 
+                        // Add small delay between requests to avoid overwhelming the API
+                        // Only delay if processing multiple documents (not for single document sync)
+                        if ($command && $totalResults > 1) {
+                            $delayMs = config('open_overheid.sync.delay_between_requests', 200);
+                            usleep($delayMs * 1000); // Convert milliseconds to microseconds
+                        }
+
                         // Sync the document
                         $result = $this->upsertDocument($externalId, $documentData);
 
@@ -360,6 +367,13 @@ class OpenOverheidSyncService
 
                         // Fetch detailed document
                         $documentData = $this->searchService->getDocument($externalId);
+
+                        // Add small delay between requests to avoid overwhelming the API
+                        // Only delay if processing multiple documents (not for single document sync)
+                        if ($command && $totalResults > 1) {
+                            $delayMs = config('open_overheid.sync.delay_between_requests', 200);
+                            usleep($delayMs * 1000); // Convert milliseconds to microseconds
+                        }
 
                         // Sync the document
                         $result = $this->upsertDocument($externalId, $documentData);
