@@ -25,24 +25,24 @@
         <div class="mx-auto max-w-2xl lg:col-span-5 lg:mx-0 xl:col-span-6">
             @if($badge || $badgeText)
             <div class="mb-8">
-                <div class="inline-flex items-center gap-x-3 rounded-full bg-white px-4 py-1.5 text-sm text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)] shadow-sm">
+                <div class="inline-flex items-center gap-x-3 rounded-md bg-white px-4 py-1.5 text-sm text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]">
                     @if($badge)
-                    <span class="font-semibold text-[var(--color-primary)]">{{ $badge }}</span>
+                    <span class="font-semibold text-[var(--color-purple)]">{{ $badge }}</span>
                     @endif
                     @if($badge && $badgeText)
                     <span aria-hidden="true" class="h-4 w-px bg-[var(--color-outline-variant)]"></span>
                     @endif
                     @if($badgeText)
-                    <a href="#" class="flex items-center gap-x-1.5 hover:text-[var(--color-primary)] transition-colors duration-200">
-                        {{ $badgeText }}
-                        <i class="fas fa-arrow-right text-xs" aria-hidden="true"></i>
+                    <a href="#" class="inline-flex items-center gap-x-1.5 hover:text-[var(--color-primary)] transition-colors duration-200">
+                        <span class="leading-none select-none">{{ $badgeText }}</span>
+                        <i class="fas fa-arrow-right text-[10px] leading-none transform translate-y-[0.5px] transition-transform" aria-hidden="true"></i>
                     </a>
                     @endif
                 </div>
             </div>
             @endif
             
-            <h1 class="text-4xl font-semibold tracking-tight text-pretty text-[var(--color-on-surface)] sm:text-5xl lg:text-6xl">
+            <h1 class="text-4xl font-semibold tracking-tight text-pretty sm:text-5xl lg:text-6xl">
                 {{ $title }}
             </h1>
             
@@ -52,7 +52,7 @@
             
             <div class="mt-8 flex items-center gap-x-2 text-sm font-medium text-[var(--color-on-surface-variant)]">
                 <span class="inline-flex items-center gap-2">
-                    <span class="inline-block w-2 h-2 rounded-full bg-[var(--color-primary)] animate-pulse" aria-hidden="true"></span>
+                    <span class="inline-block w-2 h-2 rounded-full bg-[var(--color-purple)] animate-pulse" aria-hidden="true"></span>
                     <span x-data="liveDocumentCounter({{ $documentCount }})">
                         <span class="font-semibold text-[var(--color-on-surface)]" x-text="formatNumber(count)"></span>
                         <span>documenten beschikbaar</span>
@@ -65,15 +65,15 @@
         <div class="mx-auto mt-16 w-full max-w-2xl lg:col-span-7 lg:mx-0 lg:mt-0 xl:col-span-6">
             <div class="relative isolate">
                 <!-- Enhanced Search Card -->
-                <div class="rounded-md bg-white p-8 border border-[var(--color-outline-variant)] shadow-sm transition-all duration-300 hover:shadow-md hover:border-[var(--color-primary)]/30">
+                <div class="rounded-md bg-white p-8 border border-[var(--color-outline-variant)] transition-all duration-300">
                     <!-- Header Section -->
                     <div class="mb-6">
                         <div class="flex items-center justify-between gap-4 mb-4">
                             <div>
-                                <h3 class="text-lg font-semibold text-[var(--color-on-surface)]">Slim zoeken</h3>
-                                <p class="mt-1 text-sm text-[var(--color-on-surface-variant)]">Zoek snel in alle documenten</p>
+                                <h3 class="text-xl font-semibold">Slim zoeken</h3>
+                                <p class="mt-1 text-sm">Zoek snel in alle documenten</p>
                             </div>
-                            <a href="{{ route('chat') }}" class="inline-flex items-center gap-2 rounded-md bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-[var(--color-on-primary)] hover:bg-[var(--color-primary-dark)] focus:outline-none transition-colors duration-200 whitespace-nowrap">
+                            <a href="{{ route('chat') }}" class="inline-flex items-center gap-2 rounded-md bg-[var(--color-primary-dark)] px-3 py-2 text-sm font-semibold text-[var(--color-on-primary)] hover:bg-[var(--color-primary)] focus:outline-none transition-colors duration-200 whitespace-nowrap">
                                 <i class="fas fa-comments" aria-hidden="true"></i>
                                 <span>Chat met AI</span>
                             </a>
@@ -85,17 +85,17 @@
                     
                     <!-- Quick Actions -->
                     <div class="mt-6">
-                        <p class="text-xs font-medium text-[var(--color-on-surface-variant)] mb-3 uppercase tracking-wide">Populaire zoekopdrachten</p>
+                        <p class="text-xs font-medium text-[var(--color-primary-dark)] mb-3 uppercase">Populaire zoekopdrachten</p>
                         <div class="flex flex-wrap gap-2">
-                            <a href="{{ route('themas.index') }}" class="inline-flex items-center gap-1.5 rounded-md bg-[var(--color-primary-light)]/50 px-3 py-1.5 text-xs font-medium text-[var(--color-primary)] hover:bg-[var(--color-primary-light)] transition-colors duration-200 border border-[var(--color-primary)]/20">
+                            <a href="{{ route('themas.index') }}" class="inline-flex items-center gap-1.5 rounded-md bg-[var(--color-primary-dark)] px-2.5 py-1.5 text-xs font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-primary-dark)]/80 transition-colors duration-200 border border-[var(--color-primary)]/20">
                                 <i class="fas fa-tags text-[10px]" aria-hidden="true"></i>
                                 <span>Thema's</span>
                             </a>
-                            <a href="{{ route('dossiers.index') }}" class="inline-flex items-center gap-1.5 rounded-md bg-[var(--color-primary-light)]/50 px-3 py-1.5 text-xs font-medium text-[var(--color-primary)] hover:bg-[var(--color-primary-light)] transition-colors duration-200 border border-[var(--color-primary)]/20">
+                            <a href="{{ route('dossiers.index') }}" class="inline-flex items-center gap-1.5 rounded-md bg-[var(--color-purple)] px-2.5 py-1.5 text-xs font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-purple)]/80 transition-colors duration-200 border border-[var(--color-primary)]/20">
                                 <i class="fas fa-folder text-[10px]" aria-hidden="true"></i>
                                 <span>Dossiers</span>
                             </a>
-                            <a href="{{ route('reports.index') }}" class="inline-flex items-center gap-1.5 rounded-md bg-[var(--color-primary-light)]/50 px-3 py-1.5 text-xs font-medium text-[var(--color-primary)] hover:bg-[var(--color-primary-light)] transition-colors duration-200 border border-[var(--color-primary)]/20">
+                            <a href="{{ route('reports.index') }}" class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-[var(--color-primary-dark)] hover:bg-[var(--color-primary)]/10 transition-colors duration-200 border border-[var(--color-primary)]/20">
                                 <i class="fas fa-chart-bar text-[10px]" aria-hidden="true"></i>
                                 <span>Rapporten</span>
                             </a>

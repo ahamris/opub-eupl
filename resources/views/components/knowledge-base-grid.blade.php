@@ -3,7 +3,6 @@
 ])
 
 @php
-    // Placeholder artikelen - later kunnen deze uit een database komen
     $defaultArticles = [
         [
             'title' => 'Wat is de Wet open overheid (Woo)?',
@@ -127,15 +126,15 @@
                     </div>
                     <div class="flex max-w-xl grow flex-col justify-between w-full">
                         <div class="mt-8 flex items-center gap-x-4 text-xs">
-                            <time datetime="{{ $article['date']->format('Y-m-d') }}" class="text-[var(--color-on-surface-variant)]">
+                            <time datetime="{{ $article['date']->format('Y-m-d') }}">
                                 {{ $article['date']->format('M d, Y') }}
                             </time>
-                            <a href="#" class="relative z-10 rounded-md bg-[var(--color-primary)]/10 px-3 py-1.5 font-medium text-[var(--color-primary)] border border-[var(--color-primary)]/20">
+                            <a href="#" class="relative z-10 text-xs rounded-md bg-[var(--color-purple)] text-white px-1.5 py-1 font-medium">
                                 {{ $article['category'] }}
                             </a>
                         </div>
                         <div class="relative grow">
-                            <h3 class="mt-3 text-lg font-semibold text-[var(--color-on-surface)]">
+                            <h3 class="mt-3 font-semibold">
                                 <a href="#">
                                     <span class="absolute inset-0"></span>
                                     {{ $article['title'] }}
@@ -154,7 +153,7 @@
                                         Open Overheid Team
                                     </a>
                                 </p>
-                                <p class="text-[var(--color-on-surface-variant)]">Redactie</p>
+                                <p>Redactie</p>
                             </div>
                         </div>
                     </div>

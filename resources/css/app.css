@@ -17,10 +17,11 @@
     --font-family-mono: "JetBrains Mono", "Fira Code", "Roboto Mono",
         ui-monospace, monospace;
 
-    /* Primary Colors */
-    --color-primary: #01689b;
-    --color-primary-dark: #004263;
-    --color-primary-light: #e5f0f9;
+    --color-primary: #4573d5;
+    --color-primary-dark: #072974;
+    --color-primary-light: #64dcff;
+    --color-purple: #b500c7;
+    --color-purple-light: #ff32ff;
     --color-on-primary: #ffffff;
 
     /* Surface Colors */

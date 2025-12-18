@@ -73,12 +73,12 @@
         
         <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-10">
             <div>
-                <p class="text-sm font-medium uppercase tracking-wider text-[var(--color-primary)]">Testimonials</p>
-                <h2 class="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-on-surface)] sm:text-4xl">
+                <p class="text-sm font-medium uppercase">Testimonials</p>
+                <h2 class="mt-2 font-semibold sm:text-4xl">
                     Wat gebruikers vinden
                 </h2>
             </div>
-            <p class="max-w-lg text-sm text-[var(--color-on-surface-variant)] lg:text-right">
+            <p class="max-w-sm text-sm lg:text-right">
                 Ontdek hoe anderen het platform gebruiken voor hun onderzoek en werk.
             </p>
         </div>
