@@ -117,7 +117,7 @@ function heroGrid() {
         canvas: null,
         ctx: null,
         cells: [],
-        gridSize: 40,
+        gridSize: 80,
         animationId: null,
         time: 0,
         mouseX: -1000,
