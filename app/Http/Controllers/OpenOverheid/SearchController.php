@@ -314,7 +314,7 @@ class SearchController extends Controller
                 'sources' => $sources,
             ]);
         } catch (\Exception $e) {
-            \Log::error('Natural language search error', [
+            \Log::channel('typesense_errors')->error('Natural language search error', [
                 'query' => $query,
                 'error' => $e->getMessage(),
             ]);
@@ -514,7 +514,7 @@ class SearchController extends Controller
                 'query' => $query, // Include original query for frontend
             ]);
         } catch (\Exception $e) {
-            \Log::error('Autocomplete error', ['error' => $e->getMessage()]);
+            \Log::channel('typesense_errors')->error('Autocomplete error', ['error' => $e->getMessage()]);
 
             return response()->json(['suggestions' => []], 500);
         }
@@ -667,7 +667,7 @@ class SearchController extends Controller
                     'search_time_ms' => $searchTime,
                 ]);
             } catch (\Exception $e) {
-                \Log::warning('Typesense live search failed, falling back to PostgreSQL', ['error' => $e->getMessage()]);
+                \Log::channel('typesense_errors')->warning('Typesense live search failed, falling back to PostgreSQL', ['error' => $e->getMessage()]);
                 // Fall through to PostgreSQL fallback
             }
         }
@@ -715,7 +715,7 @@ class SearchController extends Controller
                 'search_time_ms' => $searchTime,
             ]);
         } catch (\Exception $e) {
-            \Log::error('Live search error (both Typesense and PostgreSQL failed)', ['error' => $e->getMessage()]);
+            \Log::channel('typesense_errors')->error('Live search error (both Typesense and PostgreSQL failed)', ['error' => $e->getMessage()]);
 
             return response()->json([
                 'hits' => [],
@@ -814,7 +814,7 @@ class SearchController extends Controller
                     $results = $this->searchWithTypesense($query, false);
                 } catch (\Exception $typesenseException) {
                     // Typesense failed - show error instead of falling back to database
-                    \Log::error('Typesense search failed - cannot use database fallback', [
+                    \Log::channel('typesense_errors')->error('Typesense search failed - cannot use database fallback', [
                         'error' => $typesenseException->getMessage(),
                         'query' => $query->zoektekst ?? '',
                     ]);
@@ -846,7 +846,7 @@ class SearchController extends Controller
                     $filterCounts['jaar'] = $totalResults > 0 ? '~' : 0;
                 } else {
                     // Typesense search succeeded but no facets returned
-                    \Log::warning('Typesense search succeeded but no facet_counts returned');
+                    \Log::channel('typesense_errors')->warning('Typesense search succeeded but no facet_counts returned');
                     // Use empty filter counts - don't fall back to database!
                     $filterCounts = [
                         'week' => 0,
@@ -885,7 +885,7 @@ class SearchController extends Controller
                         ]);
                         return $countResults['found'] ?? 0;
                     } catch (\Exception $e) {
-                        \Log::warning('Typesense total count failed, using database fallback', ['error' => $e->getMessage()]);
+                        \Log::channel('typesense_errors')->warning('Typesense total count failed, using database fallback', ['error' => $e->getMessage()]);
                         return OpenOverheidDocument::count();
                     }
                 } else {
@@ -915,7 +915,7 @@ class SearchController extends Controller
                 'allFilterOptions' => $allFilterOptions,
             ]);
         } catch (\Exception $e) {
-            \Log::error('Search failed (both Typesense and PostgreSQL)', [
+            \Log::channel('typesense_errors')->error('Search failed (both Typesense and PostgreSQL)', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
@@ -1253,7 +1253,7 @@ class SearchController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Fast search failed', ['error' => $e->getMessage()]);
+            \Log::channel('typesense_errors')->error('Fast search failed', ['error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
                 'error' => 'Search failed',
@@ -1398,7 +1398,7 @@ class SearchController extends Controller
             $typesenseResults = $searchService->search($query->zoektekst ?? '', $options);
         } catch (\Typesense\Exceptions\TypesenseClientError $e) {
             // Log Typesense-specific errors
-            \Log::error('Typesense client error', [
+            \Log::channel('typesense_errors')->error('Typesense client error', [
                 'error' => $e->getMessage(),
                 'filters' => $filters ?? [],
                 'query' => $query->zoektekst ?? '',
@@ -1406,7 +1406,7 @@ class SearchController extends Controller
             throw $e;
         } catch (\Exception $e) {
             // Log other errors
-            \Log::error('Typesense search error', [
+            \Log::channel('typesense_errors')->error('Typesense search error', [
                 'error' => $e->getMessage(),
                 'filters' => $filters ?? [],
                 'query' => $query->zoektekst ?? '',
@@ -1510,7 +1510,7 @@ class SearchController extends Controller
                 }
             }
         } else {
-            \Log::warning('Typesense facet_counts is empty or invalid', [
+            \Log::channel('typesense_errors')->warning('Typesense facet_counts is empty or invalid', [
                 'facet_counts' => $facetCounts,
                 'type' => gettype($facetCounts),
             ]);
@@ -1616,7 +1616,7 @@ class SearchController extends Controller
             
             return $results['found'] ?? 0;
         } catch (\Exception $e) {
-            \Log::warning('Typesense date filter count failed', [
+            \Log::channel('typesense_errors')->warning('Typesense date filter count failed', [
                 'period' => $period,
                 'error' => $e->getMessage(),
             ]);
