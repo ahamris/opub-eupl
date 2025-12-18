@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\SyncDocumentToTypesense;
 use App\Jobs\SyncOpenOverheidDocumentsJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -15,5 +16,11 @@ Schedule::job(new SyncOpenOverheidDocumentsJob)
     ->name('sync-open-overheid-documents')
     ->withoutOverlapping()
     ->onFailure(function () {
-        \Log::error('Open Overheid sync job failed');
+        \Log::channel('sync_errors')->error('Open Overheid sync job failed');
     });
+
+// Schedule Typesense sync every minute
+Schedule::job(SyncDocumentToTypesense::class)
+    ->everyMinute()
+    ->name('sync-document-to-typesense')
+    ->withoutOverlapping();

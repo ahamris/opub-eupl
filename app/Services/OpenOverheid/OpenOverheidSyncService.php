@@ -13,15 +13,18 @@ class OpenOverheidSyncService
     ) {}
 
     /**
-     * Sync recent documents (last 24 hours or configured days)
+     * Sync recent documents (last N days)
+     *
+     * @param  int  $daysBack  Number of days back to sync (default: 7)
+     * @param  \Illuminate\Console\Command|null  $command
+     * @return array{total: int, synced: int, errors: int}
      */
-    public function syncRecent(): void
+    public function syncRecent(int $daysBack = 7, $command = null): array
     {
-        $daysBack = config('open_overheid.sync.days_back', 1);
         $from = now()->subDays($daysBack)->format('d-m-Y');
         $to = now()->format('d-m-Y');
 
-        $this->syncByDateRange($from, $to);
+        return $this->syncByDateRange($from, $to, $command);
     }
 
     /**
@@ -35,7 +38,7 @@ class OpenOverheidSyncService
     public function syncByDateRange(?string $from = null, ?string $to = null, $command = null): array
     {
         if (! config('open_overheid.sync.enabled', true)) {
-            Log::info('Open Overheid sync is disabled');
+            Log::channel('sync_errors')->info('Open Overheid sync is disabled');
             if ($command) {
                 $command->info('Open Overheid sync is disabled.');
             }
@@ -44,7 +47,7 @@ class OpenOverheidSyncService
         }
 
         $dateRange = $from && $to ? "{$from} to {$to}" : ($from ? "from {$from}" : ($to ? "until {$to}" : 'all'));
-        Log::info("Starting Open Overheid sync for date range: {$dateRange}");
+        Log::channel('sync_errors')->info("Starting Open Overheid sync for date range: {$dateRange}");
 
         // First, get total count for progress bar
         $firstQuery = new OpenOverheidSearchQuery(
@@ -104,7 +107,7 @@ class OpenOverheidSyncService
                         $externalId = $this->extractExternalId($document);
 
                         if (! $externalId) {
-                            Log::warning('Open Overheid item missing ID', ['item' => $item]);
+                            Log::channel('sync_errors')->warning('Open Overheid item missing ID', ['item' => $item]);
                             $totalErrors++;
                             $processed++;
 
@@ -244,7 +247,7 @@ class OpenOverheidSyncService
             }
         }
 
-        Log::info('Open Overheid sync completed', [
+        Log::channel('sync_errors')->info('Open Overheid sync completed', [
             'date_range' => $dateRange,
             'total_synced' => $totalSynced,
             'total_created' => $totalCreated,
@@ -275,7 +278,7 @@ class OpenOverheidSyncService
     public function syncAll($command = null): array
     {
         if (! config('open_overheid.sync.enabled', true)) {
-            Log::info('Open Overheid sync is disabled');
+            Log::channel('sync_errors')->info('Open Overheid sync is disabled');
             if ($command) {
                 $command->info('Open Overheid sync is disabled.');
             }
@@ -283,7 +286,7 @@ class OpenOverheidSyncService
             return ['total' => 0, 'synced' => 0, 'errors' => 0];
         }
 
-        Log::info('Starting Open Overheid full sync');
+        Log::channel('sync_errors')->info('Starting Open Overheid full sync');
 
         // First, get total count for progress bar
         $firstQuery = new OpenOverheidSearchQuery(
@@ -343,7 +346,7 @@ class OpenOverheidSyncService
                         $externalId = $this->extractExternalId($document);
 
                         if (! $externalId) {
-                            Log::warning('Open Overheid item missing ID', ['item' => $item]);
+                            Log::channel('sync_errors')->warning('Open Overheid item missing ID', ['item' => $item]);
                             $totalErrors++;
                             $processed++;
 
@@ -483,7 +486,7 @@ class OpenOverheidSyncService
             }
         }
 
-        Log::info('Open Overheid sync completed', [
+        Log::channel('sync_errors')->info('Open Overheid sync completed', [
             'total_synced' => $totalSynced,
             'total_created' => $totalCreated,
             'total_updated' => $totalUpdated,
@@ -539,7 +542,7 @@ class OpenOverheidSyncService
         if ($title && mb_strlen($title) > 1000) {
             $originalLength = mb_strlen($title);
             $title = mb_substr($title, 0, 1000);
-            Log::warning('Open Overheid title truncated', [
+            Log::channel('sync_errors')->warning('Open Overheid title truncated', [
                 'external_id' => $externalId,
                 'original_length' => $originalLength,
                 'truncated_length' => 1000,
@@ -678,7 +681,7 @@ class OpenOverheidSyncService
 
             return $parsed->format('Y-m-d');
         } catch (\Exception $e) {
-            Log::warning('Open Overheid date parse error', [
+            Log::channel('sync_errors')->warning('Open Overheid date parse error', [
                 'date' => $date,
                 'exception' => $e->getMessage(),
             ]);
@@ -768,7 +771,7 @@ class OpenOverheidSyncService
         
         if ($json === false) {
             // If encoding fails, log and return original
-            Log::warning('Failed to normalize metadata for database', [
+            Log::channel('sync_errors')->warning('Failed to normalize metadata for database', [
                 'json_error' => json_last_error_msg(),
             ]);
             return $metadata;
@@ -778,7 +781,7 @@ class OpenOverheidSyncService
         
         if ($normalized === null && json_last_error() !== JSON_ERROR_NONE) {
             // If decoding fails, log and return original
-            Log::warning('Failed to decode normalized metadata', [
+            Log::channel('sync_errors')->warning('Failed to decode normalized metadata', [
                 'json_error' => json_last_error_msg(),
             ]);
             return $metadata;

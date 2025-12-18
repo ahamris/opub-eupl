@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\SyncDocumentToTypesense;
 use App\Services\OpenOverheid\OpenOverheidSyncService;
 use Illuminate\Console\Command;
 
@@ -13,10 +14,13 @@ class SyncOpenOverheidDocuments extends Command
      * @var string
      */
     protected $signature = 'open-overheid:sync 
-                            {--id= : Sync a specific document by external ID}
-                            {--week : Sync documents from this week}
+                            {--recent : Sync recent documents}
+                            {--days=7 : Number of days back (when using --recent)}
                             {--from= : Start date (DD-MM-YYYY format)}
                             {--to= : End date (DD-MM-YYYY format)}
+                            {--skip-typesense : Skip immediate Typesense sync}
+                            {--id= : Sync a specific document by external ID}
+                            {--week : Sync documents from this week}
                             {--no-retry : Skip retrying failed documents}';
 
     /**
@@ -24,20 +28,28 @@ class SyncOpenOverheidDocuments extends Command
      *
      * @var string
      */
-    protected $description = 'Synchronize Open Overheid documents to PostgreSQL';
+    protected $description = 'Synchronize Open Overheid documents to PostgreSQL and Typesense';
 
     /**
      * Execute the console command.
      */
     public function handle(OpenOverheidSyncService $service): int
     {
+        $this->info('🚀 Starting Open Overheid sync...');
+        $this->newLine();
+
         $id = $this->option('id');
 
         if ($id) {
-            $this->info("Syncing document: {$id}");
+            $this->info("📥 Syncing document: {$id}");
             try {
                 $service->syncDocument($id);
                 $this->info('✅ Document synced successfully!');
+                
+                // Dispatch Typesense sync unless skipped
+                if (! $this->option('skip-typesense')) {
+                    $this->dispatchTypesenseSync();
+                }
 
                 return self::SUCCESS;
             } catch (\Exception $e) {
@@ -47,12 +59,22 @@ class SyncOpenOverheidDocuments extends Command
             }
         }
 
+        // Check for --recent option
+        $recent = $this->option('recent');
+        $days = (int) $this->option('days');
+
         // Check for date range options
         $from = $this->option('from');
         $to = $this->option('to');
         $week = $this->option('week');
 
-        if ($week) {
+        // Handle --recent option
+        if ($recent) {
+            $from = now()->subDays($days)->format('d-m-Y');
+            $to = now()->format('d-m-Y');
+            $this->info("📥 Step 1: Syncing from API to PostgreSQL...");
+            $this->line("   Fetching last {$days} days...");
+        } elseif ($week) {
             // Calculate this week's date range (Monday to Sunday)
             $now = now();
             $startOfWeek = $now->copy()->startOfWeek(); // Monday
@@ -61,21 +83,25 @@ class SyncOpenOverheidDocuments extends Command
             $from = $startOfWeek->format('d-m-Y');
             $to = $endOfWeek->format('d-m-Y');
 
-            $this->info("Syncing documents from this week ({$from} to {$to})...");
+            $this->info("📥 Step 1: Syncing from API to PostgreSQL...");
+            $this->line("   Syncing documents from this week ({$from} to {$to})...");
         } elseif ($from || $to) {
-            $this->info('Syncing documents from date range...');
+            $this->info("📥 Step 1: Syncing from API to PostgreSQL...");
+            $this->line('   Syncing documents from date range...');
             if ($from) {
-                $this->line("  From: {$from}");
+                $this->line("   From: {$from}");
             }
             if ($to) {
-                $this->line("  To: {$to}");
+                $this->line("   To: {$to}");
             }
         } else {
-            $this->info('Syncing documents to PostgreSQL...');
+            $this->info("📥 Step 1: Syncing from API to PostgreSQL...");
         }
 
         try {
-            if ($from || $to || $week) {
+            $result = null;
+            
+            if ($recent || $from || $to || $week) {
                 $result = $service->syncByDateRange($from, $to, $this);
             } else {
                 $result = $service->syncAll($this);
@@ -83,26 +109,42 @@ class SyncOpenOverheidDocuments extends Command
 
             if ($result['synced'] > 0 || $result['total'] > 0) {
                 $this->newLine();
-                $this->info('✅ Sync completed!');
-                $this->info("   Total: {$result['total']} documents");
+                $this->info("   ✓ Synced {$result['synced']} documents to PostgreSQL");
                 if (isset($result['created']) && $result['created'] > 0) {
-                    $this->info("   Created: {$result['created']} documents");
+                    $this->line("   Created: {$result['created']} documents");
                 }
                 if (isset($result['updated']) && $result['updated'] > 0) {
-                    $this->info("   Updated: {$result['updated']} documents");
+                    $this->line("   Updated: {$result['updated']} documents");
                 }
                 if (isset($result['skipped']) && $result['skipped'] > 0) {
                     $this->line("   Skipped: {$result['skipped']} documents (already up-to-date)");
                 }
                 if (isset($result['retried']) && $result['retried'] > 0) {
-                    $this->info("   Retried: {$result['retried']} documents");
+                    $this->line("   Retried: {$result['retried']} documents");
                 }
                 if ($result['errors'] > 0) {
                     $this->warn("   Errors: {$result['errors']} documents");
                     $this->line('   Check sync errors log for details: storage/logs/sync-errors.log');
                 }
             } else {
-                $this->info('No documents to sync.');
+                $this->info('   No documents to sync.');
+            }
+
+            // Step 2: Typesense sync
+            if (! $this->option('skip-typesense')) {
+                $this->newLine();
+                $this->info("📤 Step 2: Syncing PostgreSQL → Typesense...");
+                $this->dispatchTypesenseSync();
+            }
+
+            $this->newLine();
+            $this->info('✅ Sync completed successfully!');
+            
+            if (! $this->option('skip-typesense')) {
+                $this->newLine();
+                $this->line('💡 Tip: Typesense sync runs automatically every minute via scheduler');
+                $this->line('   Run: php artisan schedule:work (in development)');
+                $this->line('   Or set up cron: * * * * * cd /path && php artisan schedule:run');
             }
 
             return self::SUCCESS;
@@ -112,5 +154,15 @@ class SyncOpenOverheidDocuments extends Command
 
             return self::FAILURE;
         }
+    }
+
+    /**
+     * Dispatch Typesense sync job
+     */
+    protected function dispatchTypesenseSync(): void
+    {
+        SyncDocumentToTypesense::dispatch();
+        $this->info('   ✓ Typesense sync job dispatched');
+        $this->line('   ℹ️  Scheduled sync runs every minute automatically');
     }
 }

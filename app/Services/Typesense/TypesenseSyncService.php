@@ -28,6 +28,64 @@ class TypesenseSyncService
     }
 
     /**
+     * Sync pending documents to Typesense (for queue job - processes limited batch)
+     *
+     * @param  int  $limit  Maximum number of documents to process per run
+     * @return array{total: int, synced: int, errors: int}
+     */
+    public function syncPending(int $limit = 100): array
+    {
+        if (! config('open_overheid.typesense.enabled', true)) {
+            Log::channel('typesense_errors')->info('Typesense sync is disabled');
+
+            return ['total' => 0, 'synced' => 0, 'errors' => 0];
+        }
+
+        // Query documents that need Typesense sync
+        $documents = OpenOverheidDocument::needsTypesenseSync()
+            ->limit($limit)
+            ->get();
+
+        if ($documents->isEmpty()) {
+            Log::channel('typesense_errors')->info('No documents to sync to Typesense');
+
+            return ['total' => 0, 'synced' => 0, 'errors' => 0];
+        }
+
+        $totalPending = $documents->count();
+        Log::channel('typesense_errors')->info("Syncing {$totalPending} documents to Typesense (batch limit: {$limit})");
+
+        $synced = 0;
+        $errors = 0;
+
+        foreach ($documents as $document) {
+            try {
+                $this->indexDocument($document);
+                $document->update(['typesense_synced_at' => now()]);
+                $synced++;
+            } catch (\Exception $e) {
+                Log::channel('typesense_errors')->error('Typesense index error', [
+                    'external_id' => $document->external_id,
+                    'error' => $e->getMessage(),
+                ]);
+                $errors++;
+            }
+        }
+
+        Log::channel('typesense_errors')->info('Typesense sync batch completed', [
+            'total' => $totalPending,
+            'synced' => $synced,
+            'errors' => $errors,
+        ]);
+
+        return [
+            'total' => $totalPending,
+            'synced' => $synced,
+            'errors' => $errors,
+        ];
+    }
+
+    /**
      * Sync all pending documents to Typesense
      *
      * @param  \Illuminate\Console\Command|null  $command
@@ -36,20 +94,15 @@ class TypesenseSyncService
     public function syncToTypesense($command = null): array
     {
         if (! config('open_overheid.typesense.enabled', true)) {
-            Log::info('Typesense sync is disabled');
+            Log::channel('typesense_errors')->info('Typesense sync is disabled');
 
             return ['total' => 0, 'synced' => 0, 'errors' => 0];
         }
 
-        $totalPending = OpenOverheidDocument::query()
-            ->where(function ($query) {
-                $query->whereNull('typesense_synced_at')
-                    ->orWhereColumn('typesense_synced_at', '<', 'updated_at');
-            })
-            ->count();
+        $totalPending = OpenOverheidDocument::needsTypesenseSync()->count();
 
         if ($totalPending === 0) {
-            Log::info('No documents to sync to Typesense');
+            Log::channel('typesense_errors')->info('No documents to sync to Typesense');
             if ($command) {
                 $command->info('All documents are already synced.');
             }
@@ -62,18 +115,14 @@ class TypesenseSyncService
             $command->newLine();
         }
 
-        Log::info("Syncing {$totalPending} documents to Typesense");
+        Log::channel('typesense_errors')->info("Syncing {$totalPending} documents to Typesense");
 
         $synced = 0;
         $errors = 0;
         $batchSize = 100;
         $processed = 0;
 
-        $documents = OpenOverheidDocument::query()
-            ->where(function ($query) {
-                $query->whereNull('typesense_synced_at')
-                    ->orWhereColumn('typesense_synced_at', '<', 'updated_at');
-            })
+        $documents = OpenOverheidDocument::needsTypesenseSync()
             ->lazyById($batchSize);
 
         if ($command) {
@@ -94,7 +143,7 @@ class TypesenseSyncService
                     $bar->advance();
                 }
             } catch (\Exception $e) {
-                Log::error('Typesense index error', [
+                Log::channel('typesense_errors')->error('Typesense index error', [
                     'external_id' => $document->external_id,
                     'error' => $e->getMessage(),
                 ]);
@@ -116,7 +165,7 @@ class TypesenseSyncService
             $command->newLine();
         }
 
-        Log::info('Typesense sync completed', [
+        Log::channel('typesense_errors')->info('Typesense sync completed', [
             'total' => $totalPending,
             'synced' => $synced,
             'errors' => $errors,
@@ -159,10 +208,10 @@ class TypesenseSyncService
         try {
             $this->client->collections[$this->collection]->documents->upsert($data);
         } catch (\Exception $e) {
-            Log::error('Typesense upsert failed', [
-                'external_id' => $document->external_id,
-                'error' => $e->getMessage(),
-            ]);
+                Log::channel('typesense_errors')->error('Typesense upsert failed', [
+                    'external_id' => $document->external_id,
+                    'error' => $e->getMessage(),
+                ]);
             throw $e;
         }
     }
@@ -240,9 +289,9 @@ class TypesenseSyncService
 
         try {
             $this->client->collections->create($schema);
-            Log::info("Created Typesense collection: {$this->collection}");
+            Log::channel('typesense_errors')->info("Created Typesense collection: {$this->collection}");
         } catch (\Exception $e) {
-            Log::error('Failed to create Typesense collection', [
+            Log::channel('typesense_errors')->error('Failed to create Typesense collection', [
                 'error' => $e->getMessage(),
             ]);
             throw $e;

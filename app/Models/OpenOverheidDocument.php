@@ -225,6 +225,18 @@ class OpenOverheidDocument extends Model
     }
 
     /**
+     * Scope to filter documents that need Typesense sync.
+     * Documents need sync if typesense_synced_at is NULL or older than updated_at.
+     */
+    public function scopeNeedsTypesenseSync(Builder $query): Builder
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('typesense_synced_at')
+              ->orWhereColumn('typesense_synced_at', '<', 'updated_at');
+        });
+    }
+
+    /**
      * Scope to filter documents that are part of a dossier (have identiteitsgroep relations).
      */
     public function scopeInDossier(Builder $query): Builder
