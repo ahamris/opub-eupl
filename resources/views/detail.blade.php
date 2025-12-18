@@ -369,6 +369,15 @@
                             <span>Officielebekendmakingen.nl</span>
                         </a>
                     @endif
+                    <a href="{{ url()->current() }}?format=xml" 
+                       class="inline-flex items-center gap-2 px-4 py-2 rounded-md
+                              bg-[var(--color-primary)] text-[var(--color-on-primary)]
+                              hover:bg-[var(--color-primary-dark)]
+                              focus:outline-none
+                              transition-colors duration-200 text-sm font-medium">
+                        <i class="fas fa-download" aria-hidden="true"></i>
+                        <span>Download XML</span>
+                    </a>
                 </div>
             </div>
 
@@ -734,15 +743,6 @@
                                               transition-colors duration-200
                                               inline-flex items-center justify-center">
                                         Download JSON
-                                    </a>
-                                    <a href="{{ url()->current() }}?format=xml" 
-                                       class="bg-[var(--color-primary)] text-[var(--color-on-primary)]
-                                              hover:bg-[var(--color-primary-dark)]
-                                              focus:outline-none
-                                              px-4 py-2 rounded-md font-medium
-                                              transition-colors duration-200
-                                              inline-flex items-center justify-center">
-                                        Download XML
                                     </a>
                                 </div>
                             </div>
