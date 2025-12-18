@@ -142,8 +142,8 @@ class OpenOverheidSyncService
                     } catch (\Exception $e) {
                         $externalId = $this->extractExternalId($document ?? $item);
 
-                        // Enhanced error logging
-                        Log::error('Open Overheid sync error for document', [
+                        // Enhanced error logging to dedicated sync errors log
+                        Log::channel('sync_errors')->error('Open Overheid sync error for document', [
                             'external_id' => $externalId,
                             'error' => $e->getMessage(),
                             'error_class' => get_class($e),
@@ -177,7 +177,7 @@ class OpenOverheidSyncService
 
                 $page++;
             } catch (\Exception $e) {
-                Log::error('Open Overheid sync error on page', [
+                Log::channel('sync_errors')->error('Open Overheid sync error on page', [
                     'page' => $page,
                     'exception' => $e->getMessage(),
                     'error_class' => get_class($e),
@@ -226,7 +226,7 @@ class OpenOverheidSyncService
                     }
                     $totalErrors--;
                 } catch (\Exception $e) {
-                    Log::error('Open Overheid retry failed for document', [
+                    Log::channel('sync_errors')->error('Open Overheid retry failed for document', [
                         'external_id' => $failed['external_id'],
                         'original_error' => $failed['error'],
                         'retry_error' => $e->getMessage(),
@@ -381,8 +381,8 @@ class OpenOverheidSyncService
                     } catch (\Exception $e) {
                         $externalId = $this->extractExternalId($document ?? $item);
 
-                        // Enhanced error logging
-                        Log::error('Open Overheid sync error for document', [
+                        // Enhanced error logging to dedicated sync errors log
+                        Log::channel('sync_errors')->error('Open Overheid sync error for document', [
                             'external_id' => $externalId,
                             'error' => $e->getMessage(),
                             'error_class' => get_class($e),
@@ -416,7 +416,7 @@ class OpenOverheidSyncService
 
                 $page++;
             } catch (\Exception $e) {
-                Log::error('Open Overheid sync error on page', [
+                Log::channel('sync_errors')->error('Open Overheid sync error on page', [
                     'page' => $page,
                     'exception' => $e->getMessage(),
                     'error_class' => get_class($e),
@@ -465,7 +465,7 @@ class OpenOverheidSyncService
                     }
                     $totalErrors--;
                 } catch (\Exception $e) {
-                    Log::error('Open Overheid retry failed for document', [
+                    Log::channel('sync_errors')->error('Open Overheid retry failed for document', [
                         'external_id' => $failed['external_id'],
                         'original_error' => $failed['error'],
                         'retry_error' => $e->getMessage(),
@@ -512,7 +512,7 @@ class OpenOverheidSyncService
             $documentData = $this->searchService->getDocument($externalId);
             $this->upsertDocument($externalId, $documentData);
         } catch (\Exception $e) {
-            Log::error('Open Overheid sync error for single document', [
+            Log::channel('sync_errors')->error('Open Overheid sync error for single document', [
                 'external_id' => $externalId,
                 'exception' => $e->getMessage(),
             ]);
@@ -583,6 +583,10 @@ class OpenOverheidSyncService
                 : ($document['omschrijvingen'][0]['tekst'] ?? null);
         }
 
+        // Normalize metadata to ensure Unicode characters are properly encoded
+        // This prevents PostgreSQL SQL_ASCII encoding issues with Unicode escape sequences
+        $normalizedMetadata = $this->normalizeMetadataForDatabase($documentData);
+
         $data = [
             'external_id' => $externalId,
             'title' => $title,
@@ -593,7 +597,7 @@ class OpenOverheidSyncService
             'category' => $category,
             'theme' => $theme,
             'organisation' => $organisation,
-            'metadata' => $documentData, // Store full response for reference
+            'metadata' => $normalizedMetadata, // Store normalized response for reference
             'synced_at' => now(),
         ];
 
@@ -743,5 +747,43 @@ class OpenOverheidSyncService
         }
 
         return false;
+    }
+
+    /**
+     * Normalize metadata array to ensure Unicode characters are properly encoded.
+     * This converts Unicode escape sequences (like \u2018, \u00eb) to actual UTF-8 characters
+     * to prevent PostgreSQL SQL_ASCII encoding issues.
+     *
+     * Note: The custom UnicodeJson cast will also ensure proper encoding when storing,
+     * but this normalization provides an extra layer of safety.
+     *
+     * @param  array  $metadata
+     * @return array
+     */
+    protected function normalizeMetadataForDatabase(array $metadata): array
+    {
+        // Encode to JSON with UNESCAPED_UNICODE flag to convert escape sequences to actual UTF-8
+        // Then decode back to get the normalized array with proper UTF-8 characters
+        $json = json_encode($metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        
+        if ($json === false) {
+            // If encoding fails, log and return original
+            Log::warning('Failed to normalize metadata for database', [
+                'json_error' => json_last_error_msg(),
+            ]);
+            return $metadata;
+        }
+
+        $normalized = json_decode($json, true);
+        
+        if ($normalized === null && json_last_error() !== JSON_ERROR_NONE) {
+            // If decoding fails, log and return original
+            Log::warning('Failed to decode normalized metadata', [
+                'json_error' => json_last_error_msg(),
+            ]);
+            return $metadata;
+        }
+
+        return $normalized ?? $metadata;
     }
 }

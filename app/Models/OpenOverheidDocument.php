@@ -31,7 +31,7 @@ class OpenOverheidDocument extends Model
     ];
 
     protected $casts = [
-        'metadata' => 'array',
+        'metadata' => \App\Casts\UnicodeJson::class,
         'publication_date' => 'date',
         'synced_at' => 'datetime',
         'typesense_synced_at' => 'datetime',

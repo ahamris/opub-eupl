@@ -29,7 +29,7 @@ class SyncOpenOverheidDocumentsJob implements ShouldQueue
             $service->syncAll();
             Log::info('Open Overheid sync job completed');
         } catch (\Exception $e) {
-            Log::error('Open Overheid sync job failed', [
+            Log::channel('sync_errors')->error('Open Overheid sync job failed', [
                 'exception' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);

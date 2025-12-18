@@ -99,7 +99,7 @@ class SyncOpenOverheidDocuments extends Command
                 }
                 if ($result['errors'] > 0) {
                     $this->warn("   Errors: {$result['errors']} documents");
-                    $this->line('   Check logs for details: storage/logs/laravel.log');
+                    $this->line('   Check sync errors log for details: storage/logs/sync-errors.log');
                 }
             } else {
                 $this->info('No documents to sync.');
