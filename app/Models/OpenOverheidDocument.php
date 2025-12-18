@@ -248,7 +248,7 @@ class OpenOverheidDocument extends Model
             return $query->whereRaw(
                 "EXISTS (
                     SELECT 1 
-                    FROM jsonb_array_elements(metadata->'documentrelaties') AS rel
+                    FROM jsonb_array_elements(metadata::jsonb->'documentrelaties') AS rel
                     WHERE rel->>'role' LIKE ?
                 )",
                 ['%identiteitsgroep%']
@@ -330,11 +330,11 @@ class OpenOverheidDocument extends Model
                 // Find documents that have any of the dossier IDs in their relations
                 foreach ($allDossierIds as $dossierId) {
                     if ($isPostgres) {
-                        // PostgreSQL: Use jsonb_array_elements
+                        // PostgreSQL: Use jsonb_array_elements (cast to jsonb to ensure correct type)
                         $query->orWhereRaw(
                             "EXISTS (
                                 SELECT 1 
-                                FROM jsonb_array_elements(metadata->'documentrelaties') AS rel
+                                FROM jsonb_array_elements(metadata::jsonb->'documentrelaties') AS rel
                                 WHERE rel->>'relation' LIKE ?
                             )",
                             ['%'.$dossierId.'%']
