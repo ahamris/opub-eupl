@@ -24,10 +24,8 @@ class SearchController extends Controller
 
     public function searchPage(Request $request)
     {
-        // Minimal queries for homepage - only get document count
-        $documentCount = \Illuminate\Support\Facades\Cache::remember('open_overheid:document_count', 300, function () {
-            return OpenOverheidDocument::count();
-        });
+        // Get document count from Typesense (same source as live updates)
+        $documentCount = $this->getTypesenseDocumentCount();
 
         // Only load statistics if not on homepage (for search results page)
         if (! request()->routeIs('home')) {
@@ -174,7 +172,7 @@ class SearchController extends Controller
 
     public function v2026LandingPage(Request $request)
     {
-        $documentCount = OpenOverheidDocument::count();
+        $documentCount = $this->getTypesenseDocumentCount();
 
         return view('v2026', [
             'documentCount' => $documentCount,
@@ -183,7 +181,7 @@ class SearchController extends Controller
 
     public function newLandingPage(Request $request)
     {
-        $documentCount = OpenOverheidDocument::count();
+        $documentCount = $this->getTypesenseDocumentCount();
 
         // Get unique theme count
         $themeCount = OpenOverheidDocument::whereNotNull('theme')
@@ -217,9 +215,7 @@ class SearchController extends Controller
      */
     public function chatPage(Request $request)
     {
-        $documentCount = \Illuminate\Support\Facades\Cache::remember('open_overheid:document_count', 300, function () {
-            return OpenOverheidDocument::count();
-        });
+        $documentCount = $this->getTypesenseDocumentCount();
 
         return view('chat', [
             'documentCount' => $documentCount,
@@ -923,7 +919,7 @@ class SearchController extends Controller
             // If both Typesense and local search failed, try remote API as last resort
             try {
                 $results = $this->remoteService->search($query);
-                $documentCount = OpenOverheidDocument::count();
+                $documentCount = $this->getTypesenseDocumentCount();
 
                 // Safely get filter counts and options
                 try {
@@ -964,7 +960,7 @@ class SearchController extends Controller
                 return view('zoekresultaten', [
                     'results' => ['items' => collect([]), 'total' => 0],
                     'query' => $query,
-                    'documentCount' => OpenOverheidDocument::count(),
+                    'documentCount' => $this->getTypesenseDocumentCount(),
                     'filters' => $validated,
                     'filterCounts' => [],
                     'allFilterOptions' => $allFilterOptions,
@@ -977,7 +973,7 @@ class SearchController extends Controller
             return view('zoekresultaten', [
                 'results' => ['items' => [], 'total' => 0],
                 'query' => $query,
-                'documentCount' => OpenOverheidDocument::count(),
+                'documentCount' => $this->getTypesenseDocumentCount(),
                 'filters' => $validated,
                 'filterCounts' => [],
                 'allFilterOptions' => $allFilterOptions,
@@ -1622,5 +1618,35 @@ class SearchController extends Controller
             ]);
             return 0;
         }
+    }
+
+    /**
+     * Get total document count from Typesense (cached)
+     * This ensures consistent counts between initial page load and live updates
+     */
+    private function getTypesenseDocumentCount(): int
+    {
+        return Cache::remember('typesense_document_count', 300, function () {
+            $useTypesense = config('open_overheid.typesense.enabled', true);
+            
+            if ($useTypesense) {
+                try {
+                    $searchService = app(\App\Services\Typesense\TypesenseSearchService::class);
+                    $results = $searchService->search('', [
+                        'per_page' => 0,
+                        'page' => 1,
+                    ]);
+                    return $results['found'] ?? 0;
+                } catch (\Exception $e) {
+                    \Log::channel('typesense_errors')->warning('Typesense document count failed, falling back to database', [
+                        'error' => $e->getMessage(),
+                    ]);
+                    // Fallback to database
+                    return OpenOverheidDocument::count();
+                }
+            }
+            
+            return OpenOverheidDocument::count();
+        });
     }
 }
