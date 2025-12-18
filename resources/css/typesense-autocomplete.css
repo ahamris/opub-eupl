@@ -1,6 +1,6 @@
 /**
  * Typesense Autocomplete Custom Styles
- * Premium design inspired by modern search interfaces
+ * Modern design with Tailwind CSS utilities
  */
 
 /* ============================================
@@ -8,114 +8,103 @@
    ============================================ */
 
 .ts-autocomplete-form {
-    position: relative;
-    width: 100%;
+    @apply relative w-full;
 }
 
 .ts-autocomplete-input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    background: white;
-    border: 2px solid var(--color-outline-variant, #d1d5db);
-    border-radius: 0.5rem;
-    transition: all 0.2s ease;
-    overflow: hidden;
+    @apply relative flex items-center;
+    @apply bg-[var(--color-surface)] border border-[var(--color-outline-variant)];
+    @apply rounded-lg transition-all duration-200;
+    @apply min-h-[48px];
 }
 
 .ts-autocomplete-input-wrapper:focus-within {
-    border-color: var(--color-primary, #3b82f6);
+    @apply border-[var(--color-primary)];
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.ts-autocomplete-input-prefix {
-    display: flex;
-    align-items: center;
-    padding-left: 1rem;
-    color: var(--color-on-surface-variant, #6b7280);
-}
-
-.ts-autocomplete-input-prefix::after {
-    content: '\f002'; /* FontAwesome search icon */
-    font-family: 'Font Awesome 6 Free', 'Font Awesome 5 Free';
-    font-weight: 900;
-    font-size: 1rem;
-}
-
-.ts-autocomplete-input {
-    flex: 1;
-    padding: 0.875rem 1rem;
-    font-size: 1rem;
-    color: var(--color-on-surface, #1f2937);
-    background: transparent;
-    border: none;
     outline: none;
 }
 
+.ts-autocomplete-input-prefix {
+    @apply absolute left-0 top-0 bottom-0;
+    @apply flex items-center justify-center flex-shrink-0;
+    @apply pl-4 pr-0 text-[var(--color-on-surface-variant)];
+    @apply pointer-events-none z-10;
+    background: transparent !important;
+    border: none !important;
+    width: auto !important;
+    height: 100% !important;
+}
+
+.ts-autocomplete-input-prefix::before {
+    content: "\f002"; /* FontAwesome search icon */
+    font-family: "Font Awesome 6 Free", "Font Awesome 5 Free";
+    font-weight: 900;
+    @apply text-[15px];
+    display: inline-block;
+}
+
+/* Remove any child elements from prefix */
+.ts-autocomplete-input-prefix > * {
+    display: none !important;
+}
+
+.ts-autocomplete-input {
+    @apply flex-1 pl-12 pr-4 py-3;
+    @apply text-[15px] leading-normal;
+    @apply text-[var(--color-on-surface)] bg-transparent;
+    @apply border-none outline-none;
+    @apply min-h-[48px] w-full;
+}
+
 .ts-autocomplete-input::placeholder {
-    color: var(--color-on-surface-variant, #9ca3af);
+    @apply text-[var(--color-on-surface-variant)];
+    opacity: 0.7;
 }
 
 .ts-autocomplete-input-suffix {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding-right: 0.75rem;
+    @apply flex items-center gap-2 pr-3;
 }
 
 .ts-autocomplete-clear-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.5rem;
-    height: 1.5rem;
-    padding: 0;
-    background: var(--color-surface-variant, #f3f4f6);
-    border: none;
-    border-radius: 9999px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    color: var(--color-on-surface-variant, #6b7280);
+    @apply flex items-center justify-center;
+    @apply w-6 h-6 p-0 rounded-full;
+    @apply bg-[var(--color-surface-variant)] border-none;
+    @apply cursor-pointer transition-all duration-150;
+    @apply text-[var(--color-on-surface-variant)];
 }
 
 .ts-autocomplete-clear-button:hover {
-    background: var(--color-error-light, #fee2e2);
-    color: var(--color-error, #ef4444);
+    @apply bg-red-100 text-red-600;
 }
 
 .ts-autocomplete-submit-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem 1rem;
-    background: var(--color-primary, #3b82f6);
-    color: white;
-    border: none;
-    border-radius: 0.375rem;
-    font-weight: 600;
-    font-size: 0.875rem;
-    cursor: pointer;
-    transition: all 0.15s ease;
+    @apply flex items-center justify-center;
+    @apply px-5 py-2.5 m-1;
+    @apply bg-[var(--color-primary)] text-[var(--color-on-primary)];
+    @apply border-none rounded-md;
+    @apply font-medium text-sm cursor-pointer;
+    @apply transition-all duration-150;
+    @apply min-h-[40px] whitespace-nowrap;
 }
 
 .ts-autocomplete-submit-button:hover {
-    background: var(--color-primary-dark, #2563eb);
+    @apply bg-[var(--color-primary-dark)];
+}
+
+.ts-autocomplete-submit-button:focus {
+    @apply outline-2 outline-[var(--color-primary)] outline-offset-2;
 }
 
 .ts-autocomplete-loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding-right: 1rem;
+    @apply flex items-center justify-center pr-4;
 }
 
 .ts-autocomplete-loading::after {
-    content: '';
-    width: 1.25rem;
-    height: 1.25rem;
-    border: 2px solid var(--color-outline-variant, #d1d5db);
-    border-top-color: var(--color-primary, #3b82f6);
-    border-radius: 9999px;
+    content: "";
+    @apply w-5 h-5;
+    @apply border-2 border-[var(--color-outline-variant)];
+    border-top-color: var(--color-primary);
+    @apply rounded-full;
     animation: ts-spin 0.6s linear infinite;
 }
 
@@ -130,47 +119,35 @@
    ============================================ */
 
 .ts-autocomplete-panel {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    margin-top: 0.5rem;
-    background: white;
-    border: 1px solid var(--color-outline-variant, #e5e7eb);
-    border-radius: 0.75rem;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    overflow: hidden;
-    z-index: 99999;
-    max-height: 80vh;
-    overflow-y: auto;
+    @apply absolute top-full left-0 right-0 mt-2;
+    @apply bg-white border border-[var(--color-outline-variant)];
+    @apply rounded-xl shadow-xl overflow-hidden;
+    @apply z-[99999] max-h-[80vh] overflow-y-auto;
 }
 
 .ts-autocomplete-panel::-webkit-scrollbar {
-    width: 6px;
+    @apply w-1.5;
 }
 
 .ts-autocomplete-panel::-webkit-scrollbar-track {
-    background: transparent;
+    @apply bg-transparent;
 }
 
 .ts-autocomplete-panel::-webkit-scrollbar-thumb {
-    background: var(--color-outline-variant, #d1d5db);
-    border-radius: 3px;
+    @apply bg-[var(--color-outline-variant)] rounded-sm;
 }
 
 .ts-autocomplete-panel::-webkit-scrollbar-thumb:hover {
-    background: var(--color-outline, #9ca3af);
+    @apply bg-[var(--color-outline)];
 }
 
 /* Panel Layout */
 .ts-autocomplete-layout {
-    display: flex;
-    flex-direction: column;
+    @apply flex flex-col;
 }
 
 .ts-autocomplete-panel-layout {
-    display: flex;
-    flex-direction: column;
+    @apply flex flex-col;
 }
 
 /* ============================================
@@ -178,29 +155,19 @@
    ============================================ */
 
 .ts-source-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.75rem 1rem;
-    background: var(--color-surface-variant, #f9fafb);
-    border-bottom: 1px solid var(--color-outline-variant, #e5e7eb);
+    @apply flex items-center justify-between;
+    @apply px-4 py-3;
+    @apply bg-[var(--color-surface-variant)] border-b border-[var(--color-outline-variant)];
 }
 
 .ts-source-header-title {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-on-surface-variant, #6b7280);
+    @apply flex items-center gap-2;
+    @apply text-xs font-semibold uppercase tracking-wide;
+    @apply text-[var(--color-on-surface-variant)];
 }
 
 .ts-source-header-count {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--color-on-surface-variant, #9ca3af);
+    @apply text-xs font-medium text-[var(--color-on-surface-variant)];
 }
 
 /* ============================================
@@ -208,65 +175,53 @@
    ============================================ */
 
 .ts-autocomplete-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+    @apply list-none m-0 p-0;
 }
 
 .ts-autocomplete-item {
-    margin: 0;
-    padding: 0;
+    @apply m-0 p-0;
 }
 
 .ts-suggestion-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    text-decoration: none;
-    color: inherit;
-    transition: all 0.15s ease;
-    cursor: pointer;
-    border-bottom: 1px solid var(--color-outline-variant, #f3f4f6);
+    @apply flex items-center gap-3;
+    @apply px-4 py-3;
+    @apply no-underline text-inherit;
+    @apply transition-all duration-150 cursor-pointer;
+    @apply border-b border-[var(--color-outline-variant)];
 }
 
 .ts-suggestion-item:hover,
 .ts-autocomplete-item[aria-selected="true"] .ts-suggestion-item {
-    background: linear-gradient(to right, rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.04));
+    background: linear-gradient(
+        to right,
+        rgba(59, 130, 246, 0.08),
+        rgba(59, 130, 246, 0.04)
+    );
 }
 
 .ts-suggestion-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    background: var(--color-primary-light, #dbeafe);
-    color: var(--color-primary, #3b82f6);
-    border-radius: 0.5rem;
-    font-size: 0.75rem;
+    @apply flex items-center justify-center;
+    @apply w-8 h-8;
+    @apply bg-[var(--color-primary-light)] text-[var(--color-primary)];
+    @apply rounded-lg text-xs;
 }
 
 .ts-suggestion-content {
-    flex: 1;
-    min-width: 0;
+    @apply flex-1 min-w-0;
 }
 
 .ts-suggestion-label {
-    font-size: 0.9375rem;
-    font-weight: 500;
-    color: var(--color-on-surface, #1f2937);
+    @apply text-[15px] font-medium text-[var(--color-on-surface)];
 }
 
 .ts-suggestion-arrow {
-    color: var(--color-outline-variant, #d1d5db);
-    font-size: 0.75rem;
-    transition: all 0.15s ease;
+    @apply text-[var(--color-outline-variant)] text-xs;
+    @apply transition-all duration-150;
 }
 
 .ts-suggestion-item:hover .ts-suggestion-arrow,
 .ts-autocomplete-item[aria-selected="true"] .ts-suggestion-arrow {
-    color: var(--color-primary, #3b82f6);
+    @apply text-[var(--color-primary)];
     transform: translateX(2px);
 }
 
@@ -275,106 +230,76 @@
    ============================================ */
 
 .ts-document-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 1rem;
-    text-decoration: none;
-    color: inherit;
-    transition: all 0.15s ease;
-    cursor: pointer;
-    border-bottom: 1px solid var(--color-outline-variant, #f3f4f6);
+    @apply flex items-start gap-3;
+    @apply p-4;
+    @apply no-underline text-inherit;
+    @apply transition-all duration-150 cursor-pointer;
+    @apply border-b border-[var(--color-outline-variant)];
 }
 
 .ts-document-item:last-child {
-    border-bottom: none;
+    @apply border-b-0;
 }
 
 .ts-document-item:hover,
 .ts-autocomplete-item[aria-selected="true"] .ts-document-item {
-    background: linear-gradient(to right, rgba(59, 130, 246, 0.06), rgba(59, 130, 246, 0.02));
+    background: linear-gradient(
+        to right,
+        rgba(59, 130, 246, 0.06),
+        rgba(59, 130, 246, 0.02)
+    );
 }
 
 .ts-document-content {
-    flex: 1;
-    min-width: 0;
+    @apply flex-1 min-w-0;
 }
 
 .ts-document-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-bottom: 0.375rem;
+    @apply flex items-start justify-between gap-3 mb-1.5;
 }
 
 .ts-document-title {
-    font-size: 0.9375rem;
-    font-weight: 600;
-    color: var(--color-on-surface, #1f2937);
-    line-height: 1.4;
-    margin: 0;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    @apply text-[15px] font-semibold text-[var(--color-on-surface)];
+    @apply leading-snug m-0;
+    @apply line-clamp-2;
 }
 
 .ts-document-category {
-    flex-shrink: 0;
-    padding: 0.25rem 0.5rem;
-    font-size: 0.6875rem;
-    font-weight: 600;
-    border-radius: 0.25rem;
-    border: 1px solid var(--color-primary, #3b82f6);
-    background: var(--color-primary-light, #dbeafe);
-    color: var(--color-primary, #3b82f6);
-    white-space: nowrap;
-    max-width: 180px;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    @apply flex-shrink-0;
+    @apply px-2 py-1;
+    @apply text-[11px] font-semibold rounded;
+    @apply border border-[var(--color-primary)];
+    @apply bg-[var(--color-primary-light)] text-[var(--color-primary)];
+    @apply whitespace-nowrap max-w-[180px] truncate;
 }
 
 .ts-document-description {
-    font-size: 0.8125rem;
-    color: var(--color-on-surface-variant, #6b7280);
-    line-height: 1.5;
-    margin: 0.25rem 0 0.5rem;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    @apply text-[13px] text-[var(--color-on-surface-variant)];
+    @apply leading-relaxed my-1 mb-2;
+    @apply line-clamp-2;
 }
 
 .ts-document-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
+    @apply flex flex-wrap gap-3;
 }
 
 .ts-document-meta-item {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    font-size: 0.6875rem;
-    color: var(--color-on-surface-variant, #9ca3af);
+    @apply flex items-center gap-1.5;
+    @apply text-[11px] text-[var(--color-on-surface-variant)];
 }
 
 .ts-document-meta-item i {
-    font-size: 0.625rem;
-    opacity: 0.7;
+    @apply text-[10px] opacity-70;
 }
 
 .ts-document-arrow {
-    color: var(--color-outline-variant, #d1d5db);
-    font-size: 0.75rem;
-    margin-top: 0.25rem;
-    transition: all 0.15s ease;
+    @apply text-[var(--color-outline-variant)] text-xs mt-1;
+    @apply transition-all duration-150;
 }
 
 .ts-document-item:hover .ts-document-arrow,
 .ts-autocomplete-item[aria-selected="true"] .ts-document-arrow {
-    color: var(--color-primary, #3b82f6);
+    @apply text-[var(--color-primary)];
     transform: translateX(2px);
 }
 
@@ -383,10 +308,12 @@
    ============================================ */
 
 .ts-highlight {
-    background: linear-gradient(to bottom, transparent 40%, rgba(251, 191, 36, 0.4) 40%);
-    color: inherit;
-    font-weight: 600;
-    padding: 0 0.125rem;
+    background: linear-gradient(
+        to bottom,
+        transparent 40%,
+        rgba(251, 191, 36, 0.4) 40%
+    );
+    @apply text-inherit font-semibold px-0.5;
 }
 
 /* ============================================
@@ -394,24 +321,16 @@
    ============================================ */
 
 .ts-no-results {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 2rem 1rem;
-    text-align: center;
+    @apply flex flex-col items-center px-4 py-8 text-center;
 }
 
 .ts-no-results-text {
-    font-size: 0.9375rem;
-    font-weight: 500;
-    color: var(--color-on-surface, #1f2937);
-    margin: 0.5rem 0 0.25rem;
+    @apply text-[15px] font-medium text-[var(--color-on-surface)];
+    @apply my-2 mt-0.5;
 }
 
 .ts-no-results-hint {
-    font-size: 0.8125rem;
-    color: var(--color-on-surface-variant, #9ca3af);
-    margin: 0;
+    @apply text-[13px] text-[var(--color-on-surface-variant)] m-0;
 }
 
 /* ============================================
@@ -419,45 +338,28 @@
    ============================================ */
 
 .ts-autocomplete-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.625rem 1rem;
-    background: var(--color-surface-variant, #f9fafb);
-    border-top: 1px solid var(--color-outline-variant, #e5e7eb);
-    font-size: 0.6875rem;
+    @apply flex items-center justify-between;
+    @apply px-4 py-2.5;
+    @apply bg-[var(--color-surface-variant)] border-t border-[var(--color-outline-variant)];
+    @apply text-[11px];
 }
 
 .ts-footer-hint {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--color-on-surface-variant, #9ca3af);
+    @apply flex items-center gap-2 text-[var(--color-on-surface-variant)];
 }
 
 .ts-footer-hint kbd {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 1.25rem;
-    height: 1.25rem;
-    padding: 0 0.375rem;
-    background: white;
-    border: 1px solid var(--color-outline-variant, #d1d5db);
-    border-radius: 0.25rem;
-    font-size: 0.625rem;
-    font-family: inherit;
-    font-weight: 500;
-    color: var(--color-on-surface-variant, #6b7280);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    @apply inline-flex items-center justify-center;
+    @apply min-w-5 h-5 px-1.5;
+    @apply bg-white border border-[var(--color-outline-variant)];
+    @apply rounded text-[10px] font-medium;
+    @apply text-[var(--color-on-surface-variant)];
+    @apply shadow-sm;
 }
 
 .ts-footer-powered {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    color: var(--color-on-surface-variant, #9ca3af);
-    font-weight: 500;
+    @apply flex items-center gap-1.5;
+    @apply text-[var(--color-on-surface-variant)] font-medium;
 }
 
 /* ============================================
@@ -466,21 +368,19 @@
 
 @media (max-width: 640px) {
     .ts-autocomplete-panel {
-        border-radius: 0.5rem;
-        max-height: 70vh;
+        @apply rounded-lg max-h-[70vh];
     }
 
     .ts-document-header {
-        flex-direction: column;
-        gap: 0.5rem;
+        @apply flex-col gap-2;
     }
 
     .ts-document-category {
-        align-self: flex-start;
+        @apply self-start;
     }
 
     .ts-footer-hint {
-        display: none;
+        @apply hidden;
     }
 }
 
@@ -520,15 +420,151 @@
 
 /* Remove default Algolia theme styles that conflict */
 .aa-Panel {
-    --aa-panel-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    --aa-panel-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+        0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .aa-Form {
     border: none !important;
     box-shadow: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
 }
 
 .aa-Form:focus-within {
     box-shadow: none !important;
 }
 
+/* Ensure form wrapper has proper styling */
+.ts-autocomplete-wrapper .aa-Form {
+    @apply w-full;
+}
+
+/* Override Algolia's default input wrapper - Force override with !important */
+.aa-InputWrapper,
+.aa-Form .aa-InputWrapper {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    background: var(--color-surface) !important;
+    border: 1px solid var(--color-outline-variant) !important;
+    border-radius: 0.5rem !important;
+    transition: all 0.2s ease !important;
+    min-height: 48px !important;
+    width: 100% !important;
+    box-shadow: none !important;
+}
+
+.aa-InputWrapper:focus-within,
+.aa-Form .aa-InputWrapper:focus-within {
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+    outline: none !important;
+}
+
+/* Override Algolia's default input */
+.aa-Input,
+.aa-Form .aa-Input {
+    flex: 1 !important;
+    padding: 0.75rem 1rem 0.75rem 3rem !important;
+    font-size: 0.9375rem !important;
+    line-height: 1.5 !important;
+    color: var(--color-on-surface) !important;
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    min-height: 48px !important;
+    width: 100% !important;
+}
+
+.aa-Input::placeholder,
+.aa-Form .aa-Input::placeholder {
+    color: var(--color-on-surface-variant) !important;
+    opacity: 0.7 !important;
+}
+
+/* Override Algolia's submit button */
+.aa-SubmitButton,
+.aa-Form .aa-SubmitButton {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0.625rem 1.25rem !important;
+    margin: 0.25rem !important;
+    background: var(--color-primary) !important;
+    color: var(--color-on-primary) !important;
+    border: none !important;
+    border-radius: 0.375rem !important;
+    font-weight: 500 !important;
+    font-size: 0.875rem !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    min-height: 40px !important;
+    white-space: nowrap !important;
+}
+
+.aa-SubmitButton:hover,
+.aa-Form .aa-SubmitButton:hover {
+    background: var(--color-primary-dark) !important;
+}
+
+.aa-SubmitButton:focus,
+.aa-Form .aa-SubmitButton:focus {
+    outline: 2px solid var(--color-primary) !important;
+    outline-offset: 2px !important;
+}
+
+/* Override Algolia's prefix (search icon) - Position absolutely inside input */
+.aa-InputWrapperPrefix,
+.aa-Form .aa-InputWrapperPrefix,
+.aa-Autocomplete .aa-InputWrapperPrefix {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    padding-left: 1rem !important;
+    padding-right: 0 !important;
+    color: var(--color-on-surface-variant) !important;
+    background: transparent !important;
+    border: none !important;
+    width: auto !important;
+    height: 100% !important;
+    min-width: auto !important;
+    min-height: auto !important;
+    pointer-events: none !important;
+    z-index: 10 !important;
+}
+
+/* Add search icon to prefix using ::before */
+.aa-InputWrapperPrefix::before,
+.aa-Form .aa-InputWrapperPrefix::before,
+.aa-Autocomplete .aa-InputWrapperPrefix::before {
+    content: "\f002" !important; /* FontAwesome search icon */
+    font-family: "Font Awesome 6 Free", "Font Awesome 5 Free" !important;
+    font-weight: 900 !important;
+    font-size: 0.9375rem !important;
+    color: var(--color-on-surface-variant) !important;
+    display: inline-block !important;
+}
+
+/* Remove any default Algolia prefix content */
+.aa-InputWrapperPrefix > *,
+.aa-Form .aa-InputWrapperPrefix > *,
+.aa-Autocomplete .aa-InputWrapperPrefix > * {
+    display: none !important;
+}
+
+/* Override Algolia's suffix (clear button area) */
+.aa-InputWrapperSuffix,
+.aa-Form .aa-InputWrapperSuffix {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    padding-right: 0.75rem !important;
+}
