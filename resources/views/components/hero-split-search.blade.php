@@ -111,7 +111,7 @@
 
 @push('scripts')
 <script>
-// Animated Grid with Wave Effect - AI-inspired soft animation
+// Animated Grid with "Random Sparkle & Fade" Effect
 function heroGrid() {
     return {
         canvas: null,
@@ -119,39 +119,29 @@ function heroGrid() {
         cells: [],
         gridSize: 80,
         animationId: null,
-        time: 0,
         mouseX: -1000,
         mouseY: -1000,
         
-        // Soft, AI-inspired color palette
         colors: [
-            { r: 59, g: 130, b: 246 },   // blue-500
-            { r: 139, g: 92, b: 246 },   // violet-500
-            { r: 6, g: 182, b: 212 },    // cyan-500
-            { r: 99, g: 102, b: 241 },   // indigo-500
-            { r: 20, g: 184, b: 166 },   // teal-500
-            { r: 168, g: 85, b: 247 },   // purple-500
+            { r: 59, g: 130, b: 246 },
+            { r: 139, g: 92, b: 246 },
+            { r: 6, g: 182, b: 212 },
+            { r: 99, g: 102, b: 241 },
+            { r: 168, g: 85, b: 247 },
         ],
         
         init() {
             this.canvas = this.$refs.gridCanvas;
             if (!this.canvas) return;
-            
             this.ctx = this.canvas.getContext('2d');
             this.resize();
-            this.createGrid();
             this.animate();
-            
-            // Handle resize
             window.addEventListener('resize', () => this.resize());
-            
-            // Optional: mouse interaction for subtle ripple effect
             this.canvas.addEventListener('mousemove', (e) => {
                 const rect = this.canvas.getBoundingClientRect();
                 this.mouseX = e.clientX - rect.left;
                 this.mouseY = e.clientY - rect.top;
             });
-            
             this.canvas.addEventListener('mouseleave', () => {
                 this.mouseX = -1000;
                 this.mouseY = -1000;
@@ -161,12 +151,8 @@ function heroGrid() {
         resize() {
             const dpr = window.devicePixelRatio || 1;
             const rect = this.canvas.parentElement.getBoundingClientRect();
-            
             this.canvas.width = rect.width * dpr;
             this.canvas.height = rect.height * dpr;
-            this.canvas.style.width = rect.width + 'px';
-            this.canvas.style.height = rect.height + 'px';
-            
             this.ctx.scale(dpr, dpr);
             this.createGrid();
         },
@@ -174,28 +160,24 @@ function heroGrid() {
         createGrid() {
             this.cells = [];
             const rect = this.canvas.parentElement.getBoundingClientRect();
-            const cols = Math.ceil(rect.width / this.gridSize) + 1;
-            const rows = Math.ceil(rect.height / this.gridSize) + 1;
+            const cols = Math.ceil(rect.width / this.gridSize);
+            const rows = Math.ceil(rect.height / this.gridSize);
             
             for (let row = 0; row < rows; row++) {
                 for (let col = 0; col < cols; col++) {
-                    // Randomly select some cells to be colored
-                    if (Math.random() < 0.15) {
-                        this.cells.push({
-                            x: col * this.gridSize,
-                            y: row * this.gridSize,
-                            color: this.colors[Math.floor(Math.random() * this.colors.length)],
-                            phase: Math.random() * Math.PI * 2,
-                            speed: 0.25 + Math.random() * 0.2,
-                            baseOpacity: 0.08 + Math.random() * 0.12
-                        });
-                    }
+                    this.cells.push({
+                        x: col * this.gridSize,
+                        y: row * this.gridSize,
+                        color: this.colors[Math.floor(Math.random() * this.colors.length)],
+                        opacity: 0,
+                        state: 'idle', // idle, appearing, disappearing
+                        speed: 0.0002 + Math.random() * 0.00005 
+                    });
                 }
             }
         },
         
         animate() {
-            this.time += 0.005;
             this.draw();
             this.animationId = requestAnimationFrame(() => this.animate());
         },
@@ -204,79 +186,61 @@ function heroGrid() {
             const rect = this.canvas.parentElement.getBoundingClientRect();
             this.ctx.clearRect(0, 0, rect.width, rect.height);
             
-            // Draw grid lines
-            this.ctx.strokeStyle = 'rgba(191, 219, 254, 0.3)';
+            // Sabit Grid Çizgileri (Çok hafif)
+            this.ctx.strokeStyle = 'rgba(191, 219, 254, 0.08)';
             this.ctx.lineWidth = 0.5;
-            
-            const cols = Math.ceil(rect.width / this.gridSize) + 1;
-            const rows = Math.ceil(rect.height / this.gridSize) + 1;
-            
-            // Vertical lines
-            for (let col = 0; col <= cols; col++) {
-                const x = col * this.gridSize;
-                // Add subtle wave to line opacity
-                const waveOffset = Math.sin(this.time * 0.3 + col * 0.1) * 0.1 + 0.3;
-                this.ctx.strokeStyle = `rgba(191, 219, 254, ${waveOffset})`;
-                this.ctx.beginPath();
-                this.ctx.moveTo(x, 0);
-                this.ctx.lineTo(x, rect.height);
-                this.ctx.stroke();
+
+            // Çok nadir yeni kare başlat (Saniyede 1-2 tane)
+            if (Math.random() < 0.01) { 
+                const idleCells = this.cells.filter(c => c.state === 'idle');
+                if (idleCells.length > 0) {
+                    const cell = idleCells[Math.floor(Math.random() * idleCells.length)];
+                    cell.state = 'appearing';
+                }
             }
-            
-            // Horizontal lines
-            for (let row = 0; row <= rows; row++) {
-                const y = row * this.gridSize;
-                const waveOffset = Math.sin(this.time * 0.3 + row * 0.1) * 0.1 + 0.3;
-                this.ctx.strokeStyle = `rgba(191, 219, 254, ${waveOffset})`;
-                this.ctx.beginPath();
-                this.ctx.moveTo(0, y);
-                this.ctx.lineTo(rect.width, y);
-                this.ctx.stroke();
-            }
-            
-            // Draw animated colored cells
+
             this.cells.forEach(cell => {
-                // Calculate wave-based opacity
-                const waveValue = Math.sin(this.time * cell.speed + cell.phase);
-                const normalizedWave = (waveValue + 1) / 2; // 0 to 1
+                // Durum Yönetimi (Soft Belirme ve Kaybolma)
+                if (cell.state === 'appearing') {
+                    cell.opacity += cell.speed;
+                    if (cell.opacity >= 0.25) { // Max parlaklık %25
+                        cell.state = 'disappearing';
+                    }
+                } else if (cell.state === 'disappearing') {
+                    cell.opacity -= cell.speed;
+                    if (cell.opacity <= 0) {
+                        cell.opacity = 0;
+                        cell.state = 'idle';
+                    }
+                }
                 
-                // Mouse proximity effect (subtle)
-                let mouseEffect = 0;
+                // Mouse Etkisi (Bağımsız ve yumuşak)
+                let mouseOpacity = 0;
                 const dx = this.mouseX - (cell.x + this.gridSize / 2);
                 const dy = this.mouseY - (cell.y + this.gridSize / 2);
                 const distance = Math.sqrt(dx * dx + dy * dy);
-                if (distance < 150) {
-                    mouseEffect = (1 - distance / 150) * 0.15;
+                if (distance < 120) {
+                    mouseOpacity = (1 - distance / 120) * 0.12;
                 }
-                
-                // Global wave ripple effect
-                const centerX = rect.width * 0.7;
-                const centerY = rect.height * 0.3;
-                const distFromCenter = Math.sqrt(
-                    Math.pow(cell.x - centerX, 2) + 
-                    Math.pow(cell.y - centerY, 2)
-                );
-                const ripple = Math.sin(distFromCenter * 0.01 - this.time * 0.8) * 0.5 + 0.5;
-                
-                const opacity = (cell.baseOpacity * normalizedWave * 0.6 + ripple * 0.08 + mouseEffect) * 0.8;
-                
-                // Draw the cell with soft glow
-                this.ctx.fillStyle = `rgba(${cell.color.r}, ${cell.color.g}, ${cell.color.b}, ${opacity})`;
-                this.ctx.fillRect(cell.x + 1, cell.y + 1, this.gridSize - 2, this.gridSize - 2);
-                
-                // Add subtle inner glow for highlighted cells
-                if (normalizedWave > 0.7 || mouseEffect > 0.05) {
-                    const glowOpacity = opacity * 0.3;
-                    this.ctx.fillStyle = `rgba(255, 255, 255, ${glowOpacity})`;
-                    this.ctx.fillRect(cell.x + 4, cell.y + 4, this.gridSize - 8, this.gridSize - 8);
+
+                const finalOpacity = Math.max(cell.opacity, mouseOpacity);
+
+                if (finalOpacity > 0) {
+                    this.ctx.fillStyle = `rgba(${cell.color.r}, ${cell.color.g}, ${cell.color.b}, ${finalOpacity})`;
+                    this.ctx.fillRect(cell.x + 1, cell.y + 1, this.gridSize - 2, this.gridSize - 2);
+                    
+                    // Daha da yumuşak iç ışık
+                    if (finalOpacity > 0.05) {
+                        this.ctx.fillStyle = `rgba(255, 255, 255, ${finalOpacity * 0.2})`;
+                        this.ctx.fillRect(cell.x + this.gridSize*0.3, cell.y + this.gridSize*0.3, this.gridSize*0.4, this.gridSize*0.4);
+                    }
                 }
+                this.ctx.strokeRect(cell.x, cell.y, this.gridSize, this.gridSize);
             });
         },
         
         destroy() {
-            if (this.animationId) {
-                cancelAnimationFrame(this.animationId);
-            }
+            if (this.animationId) cancelAnimationFrame(this.animationId);
         }
     };
 }
