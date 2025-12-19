@@ -117,26 +117,35 @@
             <form action="#" method="POST" class="px-6 pt-20 pb-24 sm:pb-32 lg:px-8 lg:py-48">
                 <div class="mx-auto max-w-xl lg:mr-0 lg:max-w-lg">
                     <div class="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
-                        <div>
-                            <label for="first-name" class="block text-sm font-semibold text-[var(--color-on-surface)] mb-2">Voornaam</label>
+                        <!-- Organisation Name (Optional) -->
+                        <div class="sm:col-span-2">
+                            <div class="flex justify-between text-sm mb-2">
+                                <label for="organisation" class="block font-semibold text-[var(--color-on-surface)]">Organisatienaam</label>
+                                <p class="text-[var(--color-on-surface-variant)]">Optioneel</p>
+                            </div>
                             <x-input 
                                 type="text" 
-                                name="first-name" 
-                                id="first-name"
-                                autocomplete="given-name"
-                                placeholder="Uw voornaam"
+                                name="organisation" 
+                                id="organisation"
+                                autocomplete="organization"
+                                placeholder="Naam van uw organisatie"
                             />
                         </div>
-                        <div>
-                            <label for="last-name" class="block text-sm font-semibold text-[var(--color-on-surface)] mb-2">Achternaam</label>
+                        
+                        <!-- Name and Surname -->
+                        <div class="sm:col-span-2">
+                            <label for="full-name" class="block text-sm font-semibold text-[var(--color-on-surface)] mb-2">Volledige naam</label>
                             <x-input 
                                 type="text" 
-                                name="last-name" 
-                                id="last-name"
-                                autocomplete="family-name"
-                                placeholder="Uw achternaam"
+                                name="full-name" 
+                                id="full-name"
+                                autocomplete="name"
+                                placeholder="Uw voor- en achternaam"
+                                required
                             />
                         </div>
+                        
+                        <!-- Email Address -->
                         <div class="sm:col-span-2">
                             <label for="email" class="block text-sm font-semibold text-[var(--color-on-surface)] mb-2">E-mailadres</label>
                             <x-input 
@@ -148,6 +157,8 @@
                                 required
                             />
                         </div>
+                        
+                        <!-- Telephone Number (Optional) -->
                         <div class="sm:col-span-2">
                             <div class="flex justify-between text-sm mb-2">
                                 <label for="phone" class="block font-semibold text-[var(--color-on-surface)]">Telefoonnummer</label>
@@ -162,14 +173,37 @@
                                 placeholder="06-12345678"
                             />
                         </div>
+                        
+                        <!-- Subject Dropdown -->
+                        <div class="sm:col-span-2">
+                            <label for="subject" class="block text-sm font-semibold text-[var(--color-on-surface)] mb-2">Waar kunnen wij u mee helpen?</label>
+                            <select 
+                                id="subject" 
+                                name="subject"
+                                required
+                                class="block w-full rounded-md bg-[var(--color-surface)] px-3.5 py-2.5 text-sm text-[var(--color-on-surface)] border border-[var(--color-outline-variant)] focus:outline-none focus:border-[var(--color-primary-dark)] focus:ring-1 focus:ring-[var(--color-primary-dark)] transition-colors duration-200"
+                            >
+                                <option value="" disabled selected>Selecteer een onderwerp</option>
+                                <option value="algemeen">Algemene vraag</option>
+                                <option value="technisch">Technische ondersteuning</option>
+                                <option value="samenwerking">Samenwerking / Partnerschappen</option>
+                                <option value="data">Data & API toegang</option>
+                                <option value="feedback">Feedback & Suggesties</option>
+                                <option value="media">Media & Pers</option>
+                                <option value="anders">Anders</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Message (2x height) -->
                         <div class="sm:col-span-2">
                             <label for="message" class="block text-sm font-semibold text-[var(--color-on-surface)] mb-2">Bericht</label>
                             <textarea 
                                 id="message" 
                                 name="message" 
-                                rows="4"
+                                rows="8"
+                                required
                                 class="block w-full rounded-md bg-[var(--color-surface)] px-3.5 py-2 text-sm text-[var(--color-on-surface)] border border-[var(--color-outline-variant)] placeholder:text-[var(--color-on-surface-variant)] focus:outline-none focus:border-[var(--color-primary-dark)] focus:ring-1 focus:ring-[var(--color-primary-dark)] transition-colors duration-200"
-                                placeholder="Uw bericht..."
+                                placeholder="Beschrijf uw vraag of opmerking..."
                             ></textarea>
                         </div>
                     </div>

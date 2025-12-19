@@ -705,15 +705,28 @@
                         <div class="pt-4 border-t border-[var(--color-outline-variant)]">
                             <div class="flex items-center justify-between mb-2">
                                 <span class="text-sm font-medium text-[var(--color-on-surface)]">Actieve filters:</span>
-                                <a href="{{ route('themas.index') }}" 
-                                   class="inline-flex items-center gap-1 px-2 py-1 rounded-md 
-                                          bg-[var(--color-surface-variant)] text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]
-                                          hover:bg-[var(--color-surface-variant)]/80
-                                          focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20
-                                          transition-all duration-200 font-medium text-xs">
-                                    <i class="fas fa-times-circle text-xs" aria-hidden="true"></i>
-                                    <span>Alle filters wissen</span>
-                                </a>
+                                <div class="flex items-center gap-2">
+                                    <a href="{{ route('themas.index') }}" 
+                                       class="inline-flex items-center gap-1 px-2 py-1 rounded-md 
+                                              bg-[var(--color-surface-variant)] text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]
+                                              hover:bg-[var(--color-surface-variant)]/80
+                                              focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20
+                                              transition-all duration-200 font-medium text-xs">
+                                        <i class="fas fa-times-circle text-xs" aria-hidden="true"></i>
+                                        <span>Alle filters wissen</span>
+                                    </a>
+                                    
+                                    <!-- Subscription/Bell Icon -->
+                                    <button type="button" 
+                                            class="inline-flex items-center justify-center px-2 py-1 rounded-md 
+                                                   bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
+                                                   hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
+                                                   focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20
+                                                   transition-all duration-200 font-medium text-xs h-[26px]"
+                                            title="Abonneren op deze zoekopdracht">
+                                        <i class="fas fa-bell text-xs" aria-hidden="true"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="flex flex-wrap items-center gap-2">
                                 @foreach($activeFilters as $filter)
@@ -770,144 +783,106 @@
                         <p class="text-sm text-[var(--color-on-surface-variant)]">Probeer andere zoekwoorden of filters aan te passen.</p>
                     </div>
                 @else
-                    <!-- Simple List with Heading - Tailwind UI Style -->
-                    <div class="bg-[var(--color-surface)] rounded-md border border-[var(--color-outline-variant)] overflow-hidden">
-                        <div class="px-6 py-4 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface)]-variant/30">
-                            <h3 class="text-base font-medium text-[var(--color-on-surface)]">
-                                Documenten met thema
-                            </h3>
-                        </div>
-                        <ul role="list" class="divide-y divide-[var(--color-outline-variant)]">
-                            @foreach($results['items'] as $item)
-                                <li class="px-4 py-3 hover:bg-[var(--color-primary)]/5 transition-colors duration-150">
-                                    <a href="/open-overheid/documents/{{ $item->external_id }}" 
-                                       class="block focus:outline-none group">
-                                        <div class="flex items-start justify-between gap-3">
-                                            <div class="flex-1 min-w-0">
-                                                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-1.5">
-                                                    <h3 class="text-sm font-semibold text-[var(--color-on-surface)] group-hover:text-[var(--color-primary)] transition-colors duration-200 line-clamp-2 flex-1 pr-2">
-                                                        {{ $item->title ?? 'Geen titel' }}
-                                                    </h3>
-                                                    <div class="flex items-center gap-2 shrink-0 mt-1 sm:mt-0">
-                                                        @if($item->category)
-                                                            <a href="{{ route('themas.index') }}?informatiecategorie={{ urlencode($item->category) }}{{ request('zoeken') ? '&zoeken=' . urlencode(request('zoeken')) : '' }}" 
-                                                               onclick="event.stopPropagation();"
-                                                               class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium 
-                                                                      bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
-                                                                      hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
-                                                                      focus:outline-none
-                                                                      transition-all duration-200 shrink-0"
-                                                               title="Filter op {{ $item->formatted_category ?? $item->category }}">
-                                                                {{ $item->formatted_category ?? $item->category }}
-                                                            </a>
-                                                        @endif
-                                                        @if($item->external_id)
-                                                            <a href="https://open.overheid.nl/details/{{ $item->external_id }}" 
-                                                               target="_blank"
-                                                               rel="noopener noreferrer"
-                                                               onclick="event.stopPropagation();"
-                                                               class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md
-                                                                      bg-[var(--color-primary)]/5 text-[var(--color-primary)] border border-[var(--color-primary)]/20
-                                                                      hover:bg-[var(--color-primary)]/10 hover:border-[var(--color-primary)]/30
-                                                                      focus:outline-none
-                                                                      transition-all duration-200 text-[11px] font-medium
-                                                                      shrink-0"
-                                                               title="Bekijk op open.overheid.nl">
-                                                                <i class="fas fa-external-link-alt text-[10px]" aria-hidden="true"></i>
-                                                                <span class="hidden sm:inline">Open.overheid.nl</span>
-                                                            </a>
-                                                        @endif
-                                                    </div>
-                                                </div>
-                                            @if($item->description)
-                                                <p class="text-xs text-[var(--color-on-surface-variant)] mb-2.5 line-clamp-2 leading-relaxed">
-                                                    {{ \Illuminate\Support\Str::limit($item->description, 150) }}
-                                                </p>
-                                            @endif
-                                            
-                                            {{-- Metadata Grid - Modern & Compact --}}
-                                            <div class="mt-2.5 pt-2.5 border-t border-[var(--color-outline-variant)]/50">
-                                                <div class="flex flex-wrap items-center gap-2">
-                                                    {{-- File Type --}}
-                                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
-                                                           bg-[var(--color-surface-variant)]/50 text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]/50">
-                                                        <i class="fas fa-file-pdf text-[10px] text-red-500" aria-hidden="true"></i>
-                                                        <span>PDF</span>
-                                                    </span>
-                                                    
-                                                    {{-- Publication Date --}}
-                                                    @if($item->publication_date)
-                                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
-                                                               bg-[var(--color-surface-variant)]/50 text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]/50">
-                                                            <i class="fas fa-calendar text-[10px] text-[var(--color-primary)]" aria-hidden="true"></i>
-                                                            <span>{{ $item->publication_date->format('d-m-Y') }}</span>
-                                                        </span>
-                                                    @endif
-                                                    
-                                                    {{-- Updated Date --}}
-                                                    @if($item->updated_at)
-                                                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
-                                                               bg-[var(--color-surface-variant)]/50 text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]/50">
-                                                            <i class="fas fa-edit text-[10px] text-[var(--color-primary)]" aria-hidden="true"></i>
-                                                            <span>{{ $item->updated_at->format('d-m-Y') }}</span>
-                                                        </span>
-                                                    @endif
-                                                    
-                                                    {{-- Theme --}}
-                                                    @if($item->theme)
-                                                        <a href="{{ route('themas.index') }}?thema[]={{ urlencode($item->theme) }}" 
-                                                           onclick="event.stopPropagation();"
-                                                           class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
-                                                                  bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
-                                                                  hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
-                                                                  focus:outline-none
-                                                                  transition-all duration-200"
-                                                           title="Filter op {{ $item->theme }}">
-                                                            <i class="fas fa-tag text-[10px]" aria-hidden="true"></i>
-                                                            <span class="max-w-[100px] truncate">{{ $item->theme }}</span>
-                                                            <i class="fas fa-filter text-[9px] opacity-60" aria-hidden="true"></i>
-                                                        </a>
-                                                    @endif
-                                                    
-                                                    {{-- Organisation --}}
-                                                    @if($item->organisation)
-                                                        <a href="{{ route('themas.index') }}?organisatie[]={{ urlencode($item->organisation) }}" 
-                                                           onclick="event.stopPropagation();"
-                                                           class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
-                                                                  bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
-                                                                  hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
-                                                                  focus:outline-none
-                                                                  transition-all duration-200"
-                                                           title="Filter op {{ $item->organisation }}">
-                                                            <i class="fas fa-building text-[10px]" aria-hidden="true"></i>
-                                                            <span class="max-w-[120px] truncate">{{ $item->organisation }}</span>
-                                                            <i class="fas fa-filter text-[9px] opacity-60" aria-hidden="true"></i>
-                                                        </a>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                            
-                                            @if(isset($item->metadata) && isset($item->metadata['document']['weblocatie']))
-                                                <div class="mt-2.5 pt-2.5 border-t border-[var(--color-outline-variant)]/50">
-                                                    <a href="{{ $item->metadata['document']['weblocatie'] }}" 
-                                                       target="_blank" 
-                                                       rel="noopener noreferrer"
-                                                       onclick="event.stopPropagation();"
-                                                       class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium
-                                                              bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
-                                                              hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
-                                                              focus:outline-none
-                                                              transition-all duration-200">
-                                                        <i class="fas fa-external-link-alt text-[10px]" aria-hidden="true"></i>
-                                                        <span>Officielebekendmakingen.nl</span>
-                                                    </a>
-                                                </div>
-                                            @endif
-                                        </div>
+                    <!-- Columnar Full-Width Layout - Premium Design (matching zoeken page) -->
+                    <div class="flex flex-col gap-4">
+                        @foreach($results['items'] as $item)
+                            <article class="rounded-lg bg-[var(--color-surface)] border border-[var(--color-outline-variant)]/60 overflow-hidden hover:border-[var(--color-primary)]/40 transition-all duration-300">
+                                <!-- Item Header -->
+                                <div class="px-5 py-2.5 bg-[var(--color-surface-variant)]/50 border-b border-[var(--color-outline-variant)]/40 flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <span class="inline-flex items-center font-semibold rounded-full px-2.5 py-0.5 text-[11px] leading-tight tracking-wide bg-[var(--color-primary-dark)] text-[var(--color-on-primary)]">
+                                            DOCUMENT
+                                        </span>
+
+                                        @if($item->category)
+                                            <span class="h-4 w-px bg-[var(--color-outline-variant)]/40"></span>
+                                            <a href="{{ route('themas.index') }}?informatiecategorie={{ urlencode($item->category) }}{{ request('zoeken') ? '&zoeken=' . urlencode(request('zoeken')) : '' }}" class="text-[12px] font-semibold text-purple-700 dark:text-purple-400 uppercase tracking-wide flex items-center gap-1.5 hover:text-[var(--color-primary)] transition-colors">
+                                                <i class="fas fa-folder-open text-[10px] opacity-70"></i>
+                                                {{ $item->formatted_category ?? $item->category }}
+                                            </a>
+                                        @endif
                                     </div>
-                                </li>
-                            @endforeach
-                        </ul>
+                                    
+                                    <!-- Date Ribbon -->
+                                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[var(--color-surface)] text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]/50 text-[11px] font-medium tracking-wide">
+                                        <i class="far fa-calendar text-[10px] text-[var(--color-primary)] opacity-80"></i>
+                                        {{ $item->publication_date ? $item->publication_date->format('d-m-Y') : 'Geen datum' }}
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col md:flex-row items-stretch">
+                                    <!-- Column 1: Title, Organisation, Description & Keywords (Main Info) -->
+                                    <div class="flex-1 px-6 py-5 border-b md:border-b-0 md:border-r border-[var(--color-outline-variant)]/30">
+                                        <!-- Title -->
+                                        <h3 class="text-[17px] font-semibold text-[var(--color-on-surface)] leading-snug tracking-[-0.01em] mb-1.5">
+                                            <a href="/open-overheid/documents/{{ $item->external_id }}" class="hover:text-[var(--color-primary)] transition-colors duration-200">
+                                                {{ $item->title ?? 'Geen titel' }}
+                                            </a>
+                                        </h3>
+
+                                        <!-- Organisation -->
+                                        @if($item->organisation)
+                                            <div class="flex items-center gap-1.5 mb-2.5">
+                                                <i class="far fa-building text-[11px] text-[var(--color-primary)]/70" aria-hidden="true"></i>
+                                                <a href="{{ route('themas.index') }}?organisatie[]={{ urlencode($item->organisation) }}" class="text-[12px] font-medium text-[var(--color-on-surface-variant)] hover:text-[var(--color-primary)] transition-colors" title="{{ $item->organisation }}">
+                                                    {{ $item->organisation }}
+                                                </a>
+                                            </div>
+                                        @endif
+
+                                        <!-- Short Description -->
+                                        @if($item->description)
+                                            <p class="text-[14px] text-[var(--color-on-surface-variant)]/80 leading-relaxed line-clamp-2 tracking-[0.01em] mb-3">
+                                                {{ \Illuminate\Support\Str::limit($item->description, 150) }}
+                                            </p>
+                                        @endif
+
+                                        <!-- Keywords as Badges -->
+                                        @if(isset($item->keywords) && !empty($item->keywords))
+                                            <div class="flex flex-wrap gap-2">
+                                                @foreach(array_slice((array)$item->keywords, 0, 3) as $keyword)
+                                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                                        <i class="fas fa-hashtag text-[8px] mr-1 opacity-60"></i>
+                                                        {{ $keyword }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    <!-- Column 2: Themes -->
+                                    <div class="w-full md:w-56 px-5 py-4 bg-[var(--color-surface-variant)]/5 flex flex-col justify-center gap-2 border-b md:border-b-0 md:border-r border-[var(--color-outline-variant)]/30">
+                                        @if(isset($item->theme) || isset($item->themes))
+                                            <div class="text-[10px] font-semibold text-[var(--color-on-surface-variant)]/60 uppercase tracking-wider mb-1">Thema's</div>
+                                            @if(isset($item->themes) && is_array($item->themes))
+                                                @foreach($item->themes as $theme)
+                                                    <a href="{{ route('themas.index') }}?thema[]={{ urlencode($theme) }}" class="inline-flex items-center gap-1.5 text-[12px] text-[var(--color-on-surface-variant)] font-medium hover:text-[var(--color-primary)] transition-colors">
+                                                        <i class="fas fa-tag text-[10px] text-[var(--color-primary)]/70" aria-hidden="true"></i>
+                                                        {{ $theme }}
+                                                    </a>
+                                                @endforeach
+                                            @elseif(isset($item->theme))
+                                                <a href="{{ route('themas.index') }}?thema[]={{ urlencode($item->theme) }}" class="inline-flex items-center gap-1.5 text-[12px] text-[var(--color-on-surface-variant)] font-medium hover:text-[var(--color-primary)] transition-colors">
+                                                    <i class="fas fa-tag text-[10px] text-[var(--color-primary)]/70" aria-hidden="true"></i>
+                                                    {{ $item->theme }}
+                                                </a>
+                                            @endif
+                                        @else
+                                            <div class="text-[11px] text-[var(--color-on-surface-variant)]/50 italic">Geen thema's</div>
+                                        @endif
+                                    </div>
+
+                                    <!-- Column 3: Subtle Action Indicator -->
+                                    <div class="w-full md:w-14 flex items-center justify-center bg-[var(--color-surface-variant)]/5">
+                                        <a href="/open-overheid/documents/{{ $item->external_id }}" 
+                                           class="w-9 h-9 rounded-full border border-[var(--color-outline-variant)]/50 flex items-center justify-center text-[var(--color-outline-variant)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] hover:translate-x-0.5 transition-all duration-300"
+                                           title="Bekijk document">
+                                            <i class="fas fa-chevron-right text-xs" aria-hidden="true"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </article>
+                        @endforeach
                     </div>
                     
                     <!-- Pagination -->
