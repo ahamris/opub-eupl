@@ -11,23 +11,7 @@
             </div>
         </div>
 
-        <!-- Contact Submissions Table -->
-        <livewire:admin.table
-            resource="contact_submissions"
-            :columns="[
-                'id',
-                'full_name',
-                'email',
-                'organisation',
-                ['key' => 'subject', 'label' => 'Subject'],
-                ['key' => 'is_read', 'type' => 'toggle', 'label' => 'Read'],
-                ['key' => 'is_archived', 'type' => 'toggle', 'label' => 'Archived'],
-                ['key' => 'created_at', 'format' => 'date', 'label' => 'Received'],
-            ]"
-            route-prefix="admin.contact-submissions"
-            search-placeholder="Search messages..."
-            :paginate="15"
-            :actions="['view', 'delete']"
-        />
+        <!-- Livewire Table Component -->
+        <livewire:admin.contact-submissions-table />
     </div>
 </x-layouts.admin>

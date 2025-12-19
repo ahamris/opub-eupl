@@ -40,27 +40,6 @@
             'organization' => null,
             'avatar' => 'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
         ],
-        [
-            'quote' => 'Professioneel, snel en betrouwbaar. Dit is precies wat we nodig hadden voor ons onderzoek naar overheidsbeleid.',
-            'author' => 'David Mulder',
-            'role' => 'Onderzoeker',
-            'organization' => 'Clingendael Instituut',
-            'avatar' => 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        ],
-        [
-            'quote' => 'De API en zoekfunctionaliteit zijn uitstekend. Perfect voor onze integratie met andere systemen.',
-            'author' => 'Robert van Dijk',
-            'role' => 'Developer',
-            'organization' => 'Tech Solutions BV',
-            'avatar' => 'https://images.unsplash.com/photo-1517365830460-955ce3ccd263?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        ],
-        [
-            'quote' => 'Geweldige tool voor het monitoren van overheidsbesluiten. Helpt ons om beter geïnformeerd te blijven.',
-            'author' => 'Sophie de Boer',
-            'role' => 'Communicatieadviseur',
-            'organization' => 'NGO Transparantie',
-            'avatar' => 'https://images.unsplash.com/photo-1463453091185-61582044d556?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        ],
     ];
 
     $testimonials = !empty($testimonials) ? $testimonials : $defaultTestimonials;

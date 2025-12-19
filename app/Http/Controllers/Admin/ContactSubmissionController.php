@@ -15,24 +15,24 @@ class ContactSubmissionController extends AdminBaseController
      */
     public function index(Request $request): View
     {
-        $filter = $request->get('filter', 'all');
+        $filter = $request->get('filter', 'unread');
         
         $query = ContactSubmission::query()->latest();
         
         if ($filter === 'unread') {
-            $query->unread();
+            $query->unread()->active();
+        } elseif ($filter === 'read') {
+            $query->where('is_read', true)->active();
         } elseif ($filter === 'archived') {
             $query->archived();
-        } elseif ($filter === 'active') {
-            $query->active();
         }
         
         $submissions = $query->paginate(15);
         
         $counts = [
             'all' => ContactSubmission::count(),
-            'unread' => ContactSubmission::unread()->count(),
-            'active' => ContactSubmission::active()->count(),
+            'unread' => ContactSubmission::unread()->active()->count(),
+            'read' => ContactSubmission::where('is_read', true)->active()->count(),
             'archived' => ContactSubmission::archived()->count(),
         ];
         
@@ -74,12 +74,13 @@ class ContactSubmissionController extends AdminBaseController
         if ($contactSubmission->is_read) {
             $contactSubmission->markAsUnread();
             $message = 'Message marked as unread.';
+            // Redirect to index when marking as unread to avoid auto-marking as read again
+            return redirect()->route('admin.contact-submissions.index')->with('success', $message);
         } else {
             $contactSubmission->markAsRead();
             $message = 'Message marked as read.';
+            return redirect()->back()->with('success', $message);
         }
-        
-        return redirect()->back()->with('success', $message);
     }
 
     /**
