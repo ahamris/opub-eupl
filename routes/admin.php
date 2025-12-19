@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\ContactSubmissionController;
 use App\Http\Controllers\Admin\Content\BlogController;
 use App\Http\Controllers\Admin\Content\BlogCategoryController;
 use App\Http\Controllers\Admin\Auth\AdminLoginController;
@@ -39,6 +40,11 @@ Route::middleware(['auth', \App\Http\Middleware\CheckIfAdmin::class])->prefix('a
 
     // Users Resource Routes
     Route::resource('users', UserController::class);
+
+    // Contact Submissions Routes
+    Route::resource('contact-submissions', ContactSubmissionController::class)->only(['index', 'show', 'update', 'destroy']);
+    Route::post('contact-submissions/{contactSubmission}/toggle-read', [ContactSubmissionController::class, 'toggleRead'])->name('contact-submissions.toggle-read');
+    Route::post('contact-submissions/{contactSubmission}/toggle-archive', [ContactSubmissionController::class, 'toggleArchive'])->name('contact-submissions.toggle-archive');
 
     // Content Routes
     Route::prefix('content')->name('content.')->group(function () {

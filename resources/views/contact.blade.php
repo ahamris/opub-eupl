@@ -114,7 +114,35 @@
             </div>
             
             <!-- Right side: Contact Form -->
-            <form action="#" method="POST" class="px-6 pt-20 pb-24 sm:pb-32 lg:px-8 lg:py-48">
+            <form action="{{ route('contact.store') }}" method="POST" class="px-6 pt-20 pb-24 sm:pb-32 lg:px-8 lg:py-48">
+                @csrf
+                
+                <!-- Success Message -->
+                @if(session('success'))
+                    <div class="mb-6 rounded-lg bg-green-50 dark:bg-green-900/30 p-4 border border-green-200 dark:border-green-800">
+                        <div class="flex">
+                            <i class="fas fa-check-circle text-green-500 dark:text-green-400 mr-3 mt-0.5"></i>
+                            <p class="text-sm text-green-800 dark:text-green-200">{{ session('success') }}</p>
+                        </div>
+                    </div>
+                @endif
+                
+                <!-- Error Messages -->
+                @if($errors->any())
+                    <div class="mb-6 rounded-lg bg-red-50 dark:bg-red-900/30 p-4 border border-red-200 dark:border-red-800">
+                        <div class="flex">
+                            <i class="fas fa-exclamation-circle text-red-500 dark:text-red-400 mr-3 mt-0.5"></i>
+                            <div class="text-sm text-red-800 dark:text-red-200">
+                                <ul class="list-disc list-inside space-y-1">
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+                
                 <div class="mx-auto max-w-xl lg:mr-0 lg:max-w-lg">
                     <div class="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
                         <!-- Organisation Name (Optional) -->

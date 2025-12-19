@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BlogController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\OpenOverheid\DocumentController;
 use App\Http\Controllers\OpenOverheid\DossierController;
 use App\Http\Controllers\OpenOverheid\ReportController;
@@ -20,6 +21,7 @@ Route::get('/v2026', [SearchController::class, 'v2026LandingPage'])->name('v2026
 Route::get('/new', [SearchController::class, 'newLandingPage'])->name('new');
 Route::get('/over', [SearchController::class, 'aboutPage'])->name('over');
 Route::get('/contact', [SearchController::class, 'contactPage'])->name('contact');
+Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 Route::get('/chat', [SearchController::class, 'chatPage'])->name('chat');
 Route::get('/api/live-search', [SearchController::class, 'liveSearch'])->name('api.live-search');
 Route::get('/api/fast-search', [SearchController::class, 'fastSearch'])->name('api.fast-search');

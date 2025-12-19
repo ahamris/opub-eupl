@@ -1,28 +1,5 @@
 {{-- Card component with slot support (header, body, footer) or stat card style --}}
 
-@once
-    @push('styles')
-        <style>
-            /* Card header, body, footer styles */
-            .card-header {
-                @apply mb-4 pb-4 border-b border-gray-200 dark:border-gray-700;
-            }
-
-            .card-title {
-                @apply text-lg leading-6 tracking-[0.15px] font-medium text-gray-900 dark:text-gray-100;
-            }
-
-            .card-body {
-                @apply text-base leading-6 tracking-[0.5px] text-gray-700 dark:text-gray-300;
-            }
-
-            .card-footer {
-                @apply mt-4 pt-4 border-t border-gray-200 dark:border-gray-700;
-            }
-        </style>
-    @endpush
-@endonce
-
 @if($loading)
     {{-- Loading state --}}
     <div class="{{ $classes }}" {{ $attributes->except(['class']) }}>
@@ -57,13 +34,13 @@
         @endif
 
         @if(isset($header))
-            <div class="card-header">
+            <div class="mb-4">
                 {{ $header }}
             </div>
         @endif
 
         @if(isset($body))
-            <div class="card-body">
+            <div class="text-base leading-6 tracking-[0.5px] text-gray-700 dark:text-gray-300">
                 {{ $body }}
             </div>
         @elseif($slot->isNotEmpty())
@@ -71,7 +48,7 @@
         @endif
 
         @if(isset($footer))
-            <div class="card-footer">
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 {{ $footer }}
             </div>
         @endif
@@ -114,7 +91,7 @@
                         default => 'text-xl',
                     };
                 @endphp
-                <div class="{{ $iconSize }} rounded-lg {{ $colorClasses['bg'] }} {{ $colorClasses['bgDark'] }} flex items-center justify-center flex-shrink-0 shadow-sm">
+                <div class="{{ $iconSize }} rounded-lg {{ $colorClasses['bg'] }} {{ $colorClasses['bgDark'] }} flex items-center justify-center flex-shrink-0">
                     <i class="fas fa-{{ $icon }} {{ $colorClasses['text'] }} {{ $colorClasses['textDark'] }} {{ $iconTextSize }}"></i>
                 </div>
             @endif

@@ -64,6 +64,18 @@ class AdminMenuSeeder extends Seeder
                 'is_active' => true,
             ]);
 
+            AdminMenuItem::create([
+                'admin_menu_id' => $menu->id,
+                'parent_id' => $pagesSection->id,
+                'item_type' => 'link',
+                'label' => 'Contact Messages',
+                'slug' => 'contact-messages',
+                'route_name' => 'admin.contact-submissions.index',
+                'icon' => 'envelope',
+                'position' => 3,
+                'is_active' => true,
+            ]);
+
             // Content Section
             $contentSection = AdminMenuItem::create([
                 'admin_menu_id' => $menu->id,

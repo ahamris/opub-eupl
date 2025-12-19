@@ -21,8 +21,7 @@ class Card extends Component
         public string $value = '',
         public string $actionText = 'View details',
         public string $actionUrl = 'javascript:void(0)',
-        public bool $hover = true,
-        public string $variant = 'default', // default, outlined, filled, elevated
+        public string $variant = 'default', // default, outlined, filled
         public ?string $size = null, // sm, md, lg
         public ?string $image = null,
         public ?string $imageAlt = null,
@@ -37,25 +36,15 @@ class Card extends Component
             default => 'p-5',
         };
 
-        // Card base classes
-        $classes = 'bg-white dark:bg-zinc-800 rounded-lg transition-all duration-200 '.$this->paddingClasses;
+        // Card base classes (no shadow, no hover effects)
+        $classes = 'bg-white dark:bg-zinc-800 rounded-lg '.$this->paddingClasses;
 
-        // Variant classes
+        // Variant classes (no shadows)
         $classes .= match ($variant) {
             'outlined' => ' border-2 border-zinc-200 dark:border-zinc-700',
             'filled' => ' bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700',
-            'elevated' => ' border border-zinc-200 dark:border-zinc-700 shadow-lg dark:shadow-xl',
-            default => ' border border-zinc-200 dark:border-zinc-700 shadow-sm dark:shadow-none',
+            default => ' border border-zinc-200 dark:border-zinc-700',
         };
-
-        // Hover effects
-        if ($hover && ! $loading) {
-            if ($variant === 'elevated') {
-                $classes .= ' hover:shadow-xl dark:hover:shadow-2xl';
-            } else {
-                $classes .= ' hover:shadow-md dark:hover:shadow-lg';
-            }
-        }
 
         // Clickable card
         if ($clickable && $clickUrl) {
