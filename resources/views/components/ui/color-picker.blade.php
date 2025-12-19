@@ -182,6 +182,18 @@
 }" x-on:click.outside="showPicker = false">
     @php
         $inputId = $inputId ?? $id ?? $name ?? 'colorpicker-' . uniqid();
+        $error = $error ?? false;
+        $label = $label ?? '';
+        $required = $required ?? false;
+        $showInput = $showInput ?? true;
+        $disabled = $disabled ?? false;
+        $readonly = $readonly ?? false;
+        $classes = $classes ?? '';
+        $placeholder = $placeholder ?? '#000000';
+        $showPresets = $showPresets ?? true;
+        $presetColors = $presetColors ?? ['#000000', '#FFFFFF', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#FFA500', '#800080', '#FFC0CB', '#A52A2A', '#808080', '#000080', '#008000'];
+        $hint = $hint ?? '';
+        $errorMessage = $errorMessage ?? '';
     @endphp
     @if($label)
         <label for="{{ $inputId }}" class="block text-sm font-medium text-zinc-900 dark:text-zinc-100 {{ $error ? 'text-red-600 dark:text-red-400' : '' }}">
