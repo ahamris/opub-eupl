@@ -8,11 +8,18 @@
     'secondaryButtonUrl' => '#',
     'screenshotUrl' => null,
     'screenshotAlt' => 'App screenshot',
+    'variant' => 'purple', // 'purple' or 'primary'
 ])
+
+@php
+    $gradientClass = $variant === 'primary' 
+        ? 'bg-conic-135 from-[var(--color-primary-dark)] to-black' 
+        : 'bg-conic-135 from-[var(--color-purple)] to-black';
+@endphp
 
 <div class="bg-white dark:bg-gray-900">
     <div class="mx-auto max-w-7xl py-16 sm:px-6 sm:py-24 lg:px-8">
-        <div class="relative isolate overflow-hidden bg-conic-135 from-[var(--color-purple)] to-black px-6 pt-16 shadow-2xl sm:rounded-md sm:px-16 md:pt-24 lg:flex lg:gap-x-20 lg:px-24 lg:pt-0">
+        <div class="relative isolate overflow-hidden {{ $gradientClass }} px-6 pt-16 shadow-2xl sm:rounded-md sm:px-16 md:pt-24 lg:flex lg:gap-x-20 lg:px-24 lg:pt-0">
             {{-- Background gradient decoration --}}
             <svg viewBox="0 0 1024 1024" aria-hidden="true" class="absolute top-1/2 left-1/2 -z-10 size-[64rem] -translate-y-1/2 [mask-image:radial-gradient(closest-side,white,transparent)] sm:left-full sm:-ml-80 lg:left-1/2 lg:ml-0 lg:-translate-x-1/2 lg:translate-y-0">
                 <circle r="512" cx="512" cy="512" fill="url(#cta-gradient-{{ uniqid() }})" fill-opacity="0.7" />

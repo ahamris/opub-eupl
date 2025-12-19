@@ -17,6 +17,19 @@
         :description="'Vind en bekijk alle actief openbaar gemaakte overheidsdocumenten. Eenvoudig, betrouwbaar en volledig transparant.'"
         :documentCount="$documentCount"
     />
+    
+    <!-- CTA Section - Purple variant (after hero) -->
+    <x-cta-dark-panel 
+        title="Stel vragen aan onze AI-assistent"
+        description="Vraag in gewone taal naar overheidsdocumenten en ontvang direct antwoord. Onze AI doorzoekt honderden duizenden documenten en vindt precies wat u zoekt."
+        primaryButtonText="Probeer nu gratis"
+        primaryButtonUrl="{{ route('chat') }}"
+        secondaryButtonText="Hoe werkt het?"
+        secondaryButtonUrl="{{ route('over') }}"
+        screenshotUrl="{{ asset('images/ss.png') }}"
+        screenshotAlt="AI-gestuurde documentzoekmachine"
+        variant="purple"
+    />
     @endif
     
     <!-- Header Section - on Zoeken Page -->
@@ -219,16 +232,17 @@
         </div>
     </div>
     
-    <!-- CTA Section -->
+    <!-- CTA Section - Primary variant (bottom) -->
     <x-cta-dark-panel 
-        title="Stel vragen aan onze AI-assistent"
-        description="Vraag in gewone taal naar overheidsdocumenten en ontvang direct antwoord. Onze AI doorzoekt honderden duizenden documenten en vindt precies wat u zoekt."
-        primaryButtonText="Probeer nu gratis"
-        primaryButtonUrl="{{ route('chat') }}"
-        secondaryButtonText="Hoe werkt het?"
+        title="Begin vandaag nog met transparante publicaties"
+        description="Ontdek hoe OpenPublicaties uw organisatie kan helpen bij het voldoen aan de Wet open overheid. Eenvoudig, betrouwbaar en volledig open source."
+        primaryButtonText="Neem contact op"
+        primaryButtonUrl="{{ route('contact') }}"
+        secondaryButtonText="Meer informatie"
         secondaryButtonUrl="{{ route('over') }}"
         screenshotUrl="{{ asset('images/ss.png') }}"
-        screenshotAlt="AI-gestuurde documentzoekmachine"
+        screenshotAlt="OpenPublicaties platform"
+        variant="primary"
     />
     @endif
 @endsection
