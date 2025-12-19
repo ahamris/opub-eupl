@@ -180,6 +180,9 @@
         this.$dispatch('color-changed', hex);
     }
 }" x-on:click.outside="showPicker = false">
+    @php
+        $inputId = $inputId ?? $id ?? $name ?? 'colorpicker-' . uniqid();
+    @endphp
     @if($label)
         <label for="{{ $inputId }}" class="block text-sm font-medium text-zinc-900 dark:text-zinc-100 {{ $error ? 'text-red-600 dark:text-red-400' : '' }}">
             {{ $label }}
