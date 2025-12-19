@@ -4,7 +4,7 @@
     "name": "index"
   },
   "resources/css/admin.css": {
-    "file": "assets/admin-BxK_CGNu.css",
+    "file": "assets/admin-CJGzsgYG.css",
     "src": "resources/css/admin.css",
     "isEntry": true,
     "name": "admin",
@@ -13,7 +13,7 @@
     ]
   },
   "resources/css/app.css": {
-    "file": "assets/app-DAn4qIS7.css",
+    "file": "assets/app-DdqHr3SK.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "app",

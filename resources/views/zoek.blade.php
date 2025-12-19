@@ -17,18 +17,6 @@
         :description="'Vind en bekijk alle actief openbaar gemaakte overheidsdocumenten. Eenvoudig, betrouwbaar en volledig transparant.'"
         :documentCount="$documentCount"
     />
-    
-    <!-- CTA Section -->
-    <x-cta-dark-panel 
-        title="Stel vragen aan onze AI-assistent"
-        description="Vraag in gewone taal naar overheidsdocumenten en ontvang direct antwoord. Onze AI doorzoekt honderden duizenden documenten en vindt precies wat u zoekt."
-        primaryButtonText="Probeer nu gratis"
-        primaryButtonUrl="{{ route('chat') }}"
-        secondaryButtonText="Hoe werkt het?"
-        secondaryButtonUrl="{{ route('over') }}"
-        screenshotUrl="{{ asset('images/ss.png') }}"
-        screenshotAlt="AI-gestuurde documentzoekmachine"
-    />
     @endif
     
     <!-- Header Section - on Zoeken Page -->
@@ -230,5 +218,17 @@
             </div>
         </div>
     </div>
+    
+    <!-- CTA Section -->
+    <x-cta-dark-panel 
+        title="Stel vragen aan onze AI-assistent"
+        description="Vraag in gewone taal naar overheidsdocumenten en ontvang direct antwoord. Onze AI doorzoekt honderden duizenden documenten en vindt precies wat u zoekt."
+        primaryButtonText="Probeer nu gratis"
+        primaryButtonUrl="{{ route('chat') }}"
+        secondaryButtonText="Hoe werkt het?"
+        secondaryButtonUrl="{{ route('over') }}"
+        screenshotUrl="{{ asset('images/ss.png') }}"
+        screenshotAlt="AI-gestuurde documentzoekmachine"
+    />
     @endif
 @endsection
