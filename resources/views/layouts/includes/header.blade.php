@@ -32,6 +32,115 @@
             <a href="{{ route('home') }}" class="nav-link px-3 py-2 text-sm font-medium {{ request()->routeIs('home') || request()->routeIs('zoek') ? 'nav-link-active text-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">
                 Home
             </a>
+            
+            <!-- Producten Flyout Menu -->
+            <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+                <button 
+                    type="button"
+                    class="nav-link px-3 py-2 text-sm font-medium inline-flex items-center gap-x-1 text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]"
+                    @click="open = !open"
+                >
+                    <span>Producten</span>
+                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-5 transition-transform duration-200" :class="{ 'rotate-180': open }">
+                        <path d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
+                    </svg>
+                </button>
+
+                <!-- Flyout Panel -->
+                <div 
+                    x-show="open"
+                    x-cloak
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 translate-y-1"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    x-transition:leave="transition ease-in duration-150"
+                    x-transition:leave-start="opacity-100 translate-y-0"
+                    x-transition:leave-end="opacity-0 translate-y-1"
+                    class="absolute left-1/2 z-50 mt-3 w-screen max-w-md -translate-x-1/2"
+                >
+                    <div class="overflow-hidden rounded-md bg-white shadow-lg ring-1 ring-gray-900/5">
+                        <div class="p-4">
+                            <!-- Analytics -->
+                            <div class="group relative flex gap-x-6 rounded-lg p-4 hover:bg-gray-50">
+                                <div class="mt-1 flex size-11 flex-none items-center justify-center rounded-lg bg-gray-50 group-hover:bg-white">
+                                    <i class="fas fa-chart-pie text-lg text-gray-600 group-hover:text-[var(--color-primary-dark)]"></i>
+                                </div>
+                                <div>
+                                    <a href="#" class="font-semibold text-gray-900">
+                                        Analytics
+                                        <span class="absolute inset-0"></span>
+                                    </a>
+                                    <p class="mt-1 text-sm text-gray-600">Krijg beter inzicht in uw documentverkeer</p>
+                                </div>
+                            </div>
+                            <!-- Engagement -->
+                            <div class="group relative flex gap-x-6 rounded-lg p-4 hover:bg-gray-50">
+                                <div class="mt-1 flex size-11 flex-none items-center justify-center rounded-lg bg-gray-50 group-hover:bg-white">
+                                    <i class="fas fa-mouse-pointer text-lg text-gray-600 group-hover:text-[var(--color-primary-dark)]"></i>
+                                </div>
+                                <div>
+                                    <a href="#" class="font-semibold text-gray-900">
+                                        Engagement
+                                        <span class="absolute inset-0"></span>
+                                    </a>
+                                    <p class="mt-1 text-sm text-gray-600">Spreek direct met uw burgers</p>
+                                </div>
+                            </div>
+                            <!-- Security -->
+                            <div class="group relative flex gap-x-6 rounded-lg p-4 hover:bg-gray-50">
+                                <div class="mt-1 flex size-11 flex-none items-center justify-center rounded-lg bg-gray-50 group-hover:bg-white">
+                                    <i class="fas fa-fingerprint text-lg text-gray-600 group-hover:text-[var(--color-primary-dark)]"></i>
+                                </div>
+                                <div>
+                                    <a href="#" class="font-semibold text-gray-900">
+                                        Beveiliging
+                                        <span class="absolute inset-0"></span>
+                                    </a>
+                                    <p class="mt-1 text-sm text-gray-600">Gegevens blijven altijd veilig en beveiligd</p>
+                                </div>
+                            </div>
+                            <!-- Integrations -->
+                            <div class="group relative flex gap-x-6 rounded-lg p-4 hover:bg-gray-50">
+                                <div class="mt-1 flex size-11 flex-none items-center justify-center rounded-lg bg-gray-50 group-hover:bg-white">
+                                    <i class="fas fa-th-large text-lg text-gray-600 group-hover:text-[var(--color-primary-dark)]"></i>
+                                </div>
+                                <div>
+                                    <a href="#" class="font-semibold text-gray-900">
+                                        Integraties
+                                        <span class="absolute inset-0"></span>
+                                    </a>
+                                    <p class="mt-1 text-sm text-gray-600">Verbind met externe tools en systemen</p>
+                                </div>
+                            </div>
+                            <!-- Automations -->
+                            <div class="group relative flex gap-x-6 rounded-lg p-4 hover:bg-gray-50">
+                                <div class="mt-1 flex size-11 flex-none items-center justify-center rounded-lg bg-gray-50 group-hover:bg-white">
+                                    <i class="fas fa-sync-alt text-lg text-gray-600 group-hover:text-[var(--color-primary-dark)]"></i>
+                                </div>
+                                <div>
+                                    <a href="#" class="font-semibold text-gray-900">
+                                        Automatisering
+                                        <span class="absolute inset-0"></span>
+                                    </a>
+                                    <p class="mt-1 text-sm text-gray-600">Bouw strategische workflows die converteren</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Footer Actions -->
+                        <div class="grid grid-cols-2 divide-x divide-gray-900/5 bg-gray-50">
+                            <a href="#" class="flex items-center justify-center gap-x-2.5 p-3 text-sm font-semibold text-gray-900 hover:bg-gray-100">
+                                <i class="fas fa-play-circle text-purple"></i>
+                                Demo bekijken
+                            </a>
+                            <a href="{{ route('contact') }}" class="flex items-center justify-center gap-x-2.5 p-3 text-sm font-semibold text-gray-900 hover:bg-gray-100">
+                                <i class="fas fa-phone text-purple"></i>
+                                Contact opnemen
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <a href="{{ route('zoeken') }}" class="nav-link px-3 py-2 text-sm font-medium {{ request()->routeIs('zoeken') ? 'nav-link-active text-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">
                 Zoeken
             </a>
