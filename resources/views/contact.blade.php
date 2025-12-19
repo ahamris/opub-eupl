@@ -45,9 +45,9 @@
             
             <div class="mx-auto max-w-2xl lg:mx-0">
                 <p class="text-sm font-medium uppercase">Neem contact op</p>
-                <h1 class="mt-2 font-semibold">Contact</h1>
+                <h1 class="mt-2 font-semibold">Contactgegevens</h1>
                 <p class="mt-4 text-base text-[var(--color-on-surface-variant)] leading-relaxed">
-                    Heeft u vragen, suggesties of opmerkingen? Wij horen graag van u.
+                    Neem gerust contact met ons op via onderstaande gegevens of gebruik het contactformulier.
                 </p>
             </div>
         </div>
@@ -64,50 +64,57 @@
     <!-- Split with Pattern Section -->
     <div class="relative isolate bg-[var(--color-surface)]">
         <div class="mx-auto grid max-w-7xl grid-cols-1 lg:grid-cols-2">
-            <!-- Left side: Info with pattern background -->
+            <!-- Left side: Contact Info with pattern background -->
             <div class="relative px-6 pt-24 pb-20 sm:pt-32 lg:static lg:px-8 lg:py-48">
                 <div class="mx-auto max-w-xl lg:mx-0 lg:max-w-lg">
-                    
-                    <h2 class="text-4xl font-semibold tracking-tight text-pretty text-[var(--color-on-surface)] sm:text-5xl">
-                        Contactgegevens
-                    </h2>
-                    <p class="mt-6 text-lg text-[var(--color-on-surface-variant)]">
-                        Neem gerust contact met ons op via onderstaande gegevens of gebruik het contactformulier.
-                    </p>
+                    <!-- Pattern background -->
+                    <div class="absolute inset-y-0 left-0 -z-10 w-full overflow-hidden bg-slate-100 ring-1 ring-slate-900/10 lg:w-1/2 dark:bg-zinc-900 dark:ring-white/10">
+                        <svg aria-hidden="true" class="absolute inset-0 size-full mask-[radial-gradient(100%_100%_at_top_right,white,transparent)] stroke-slate-200 dark:stroke-white/10">
+                            <defs>
+                                <pattern id="contact-pattern" width="200" height="200" x="100%" y="-1" patternUnits="userSpaceOnUse">
+                                    <path d="M130 200V.5M.5 .5H200" fill="none" />
+                                </pattern>
+                            </defs>
+                            <rect width="100%" height="100%" stroke-width="0" class="fill-white dark:fill-zinc-900" />
+                            <svg x="100%" y="-1" class="overflow-visible fill-slate-50 dark:fill-zinc-800/20">
+                                <path d="M-470.5 0h201v201h-201Z" stroke-width="0" />
+                            </svg>
+                            <rect width="100%" height="100%" fill="url(#contact-pattern)" stroke-width="0" />
+                        </svg>
+                        <!-- Gradient blur decoration -->
+                        <div aria-hidden="true" class="absolute top-[calc(100%-13rem)] -left-56 hidden transform-gpu blur-3xl lg:top-[calc(50%-7rem)] lg:left-[max(-14rem,calc(100%-59rem))] lg:block">
+                            <div style="clip-path: polygon(74.1% 56.1%, 100% 38.6%, 97.5% 73.3%, 85.5% 100%, 80.7% 98.2%, 72.5% 67.7%, 60.2% 37.8%, 52.4% 32.2%, 47.5% 41.9%, 45.2% 65.8%, 27.5% 23.5%, 0.1% 35.4%, 17.9% 0.1%, 27.6% 23.5%, 76.1% 2.6%, 74.1% 56.1%)" class="aspect-[1155/678] w-[72.1875rem] bg-gradient-to-br from-[var(--color-primary-dark)] to-[var(--color-purple)] opacity-20 dark:opacity-30"></div>
+                        </div>
+                    </div>
                     
                     <!-- Contact Information -->
-                    <dl class="mt-10 space-y-4 text-base text-[var(--color-on-surface-variant)]">
+                    <dl class="mt-10 space-y-4 text-base/7 text-[var(--color-on-surface-variant)]">
                         <div class="flex gap-x-4">
                             <dt class="flex-none">
                                 <span class="sr-only">Adres</span>
-                                <i class="fas fa-map-marker-alt text-lg text-[var(--color-primary)]" aria-hidden="true"></i>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" class="h-7 w-6 text-slate-400 dark:text-zinc-500">
+                                    <path d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
                             </dt>
-                            <dd>
-                                Open Overheid Platform<br />
-                                Den Haag, Nederland
-                            </dd>
+                            <dd>Open Overheid Platform<br/>Den Haag, Nederland</dd>
                         </div>
                         <div class="flex gap-x-4">
                             <dt class="flex-none">
                                 <span class="sr-only">Telefoon</span>
-                                <i class="fas fa-phone text-lg text-[var(--color-primary)]" aria-hidden="true"></i>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" class="h-7 w-6 text-slate-400 dark:text-zinc-500">
+                                    <path d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
                             </dt>
-                            <dd>
-                                <a href="tel:+31123456789" class="text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition-colors duration-200">
-                                    +31 (0) 123 456 789
-                                </a>
-                            </dd>
+                            <dd><a href="tel:+31123456789" class="hover:text-[var(--color-on-surface)]">+31 (0) 123 456 789</a></dd>
                         </div>
                         <div class="flex gap-x-4">
                             <dt class="flex-none">
                                 <span class="sr-only">E-mail</span>
-                                <i class="fas fa-envelope text-lg text-[var(--color-primary)]" aria-hidden="true"></i>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" class="h-7 w-6 text-slate-400 dark:text-zinc-500">
+                                    <path d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
                             </dt>
-                            <dd>
-                                <a href="mailto:contact@openoverheid.nl" class="text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition-colors duration-200">
-                                    contact@openoverheid.nl
-                                </a>
-                            </dd>
+                            <dd><a href="mailto:contact@openoverheid.nl" class="hover:text-[var(--color-on-surface)]">contact@openoverheid.nl</a></dd>
                         </div>
                     </dl>
                 </div>
@@ -117,33 +124,33 @@
             <form action="{{ route('contact.store') }}" method="POST" class="px-6 pt-20 pb-24 sm:pb-32 lg:px-8 lg:py-48">
                 @csrf
                 
-                <!-- Success Message -->
-                @if(session('success'))
-                    <div class="mb-6 rounded-lg bg-green-50 dark:bg-green-900/30 p-4 border border-green-200 dark:border-green-800">
-                        <div class="flex">
-                            <i class="fas fa-check-circle text-green-500 dark:text-green-400 mr-3 mt-0.5"></i>
-                            <p class="text-sm text-green-800 dark:text-green-200">{{ session('success') }}</p>
-                        </div>
-                    </div>
-                @endif
-                
-                <!-- Error Messages -->
-                @if($errors->any())
-                    <div class="mb-6 rounded-lg bg-red-50 dark:bg-red-900/30 p-4 border border-red-200 dark:border-red-800">
-                        <div class="flex">
-                            <i class="fas fa-exclamation-circle text-red-500 dark:text-red-400 mr-3 mt-0.5"></i>
-                            <div class="text-sm text-red-800 dark:text-red-200">
-                                <ul class="list-disc list-inside space-y-1">
-                                    @foreach($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
+                <div class="mx-auto max-w-xl lg:mr-0 lg:max-w-lg">
+                    <!-- Success Message -->
+                    @if(session('success'))
+                        <div class="mb-6 rounded-lg bg-green-50 dark:bg-green-900/30 p-4 border border-green-200 dark:border-green-800">
+                            <div class="flex">
+                                <i class="fas fa-check-circle text-green-500 dark:text-green-400 mr-3 mt-0.5"></i>
+                                <p class="text-sm text-green-800 dark:text-green-200">{{ session('success') }}</p>
                             </div>
                         </div>
-                    </div>
-                @endif
-                
-                <div class="mx-auto max-w-xl lg:mr-0 lg:max-w-lg">
+                    @endif
+                    
+                    <!-- Error Messages -->
+                    @if($errors->any())
+                        <div class="mb-6 rounded-lg bg-red-50 dark:bg-red-900/30 p-4 border border-red-200 dark:border-red-800">
+                            <div class="flex">
+                                <i class="fas fa-exclamation-circle text-red-500 dark:text-red-400 mr-3 mt-0.5"></i>
+                                <div class="text-sm text-red-800 dark:text-red-200">
+                                    <ul class="list-disc list-inside space-y-1">
+                                        @foreach($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                    
                     <div class="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
                         <!-- Organisation Name (Optional) -->
                         <div class="sm:col-span-2">
