@@ -5,6 +5,7 @@
     'height' => '200px',
     'formats' => null, // array of format names to enable, null = all formats enabled
     'toolbar' => null, // custom toolbar configuration, null = default toolbar
+    'name' => null,
 ])
 
 @php
@@ -110,8 +111,7 @@
         }"
     @endif
     wire:ignore
-    {{ $attributes->whereDoesntStartWith('wire:model') }}
-    class="quill-wrapper"
+    {{ $attributes->whereDoesntStartWith('wire:model')->merge(['class' => 'quill-wrapper']) }}
     style="min-height: {{ $height }};"
 >
     <div 
@@ -119,6 +119,10 @@
         id="{{ $editorId }}"
         class="bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-b-md"
     ></div>
+    
+    @if($name)
+        <input type="hidden" name="{{ $name }}" x-model="content">
+    @endif
 </div>
 
 @once
@@ -127,7 +131,7 @@
             .quill-wrapper .ql-container {
                 @apply border-0 rounded-b-md;
                 min-height: inherit;
-                background-color: var(--color-zinc-50);
+                background-color: white;
             }
             
             .dark .quill-wrapper .ql-container {
@@ -283,6 +287,18 @@
             
             .dark .quill-wrapper > div {
                 border-color: var(--color-zinc-700);
+            }
+
+            /* Fixed height mode */
+            .quill-wrapper.fixed-height {
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .quill-wrapper.fixed-height .ql-container {
+                flex: 1;
+                overflow-y: auto;
+                min-height: 0 !important;
             }
         </style>
     @endpush
