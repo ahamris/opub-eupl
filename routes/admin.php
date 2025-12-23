@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\Auth\AdminLoginController;
 use App\Http\Controllers\Admin\Auth\AdminPasswordResetLinkController;
 use App\Http\Controllers\Admin\Auth\AdminNewPasswordController;
 use App\Livewire\Admin\MenuManager;
+use App\Livewire\Admin\HeaderMenuManager;
 use App\Livewire\Admin\ThemeManager;
 
 // Admin Auth Routes (Guest only)
@@ -65,5 +66,6 @@ Route::middleware(['auth', \App\Http\Middleware\CheckIfAdmin::class])->prefix('a
 
     // Settings Routes
     Route::get('/settings/menu', MenuManager::class)->name('settings.menu');
+    Route::get('/settings/header-menu', HeaderMenuManager::class)->name('settings.header-menu');
     Route::get('/settings/theme', ThemeManager::class)->name('settings.theme');
 });

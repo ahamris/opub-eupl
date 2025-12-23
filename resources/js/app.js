@@ -8,8 +8,10 @@ import { initTypesenseAutocomplete, destroyAutocomplete } from './typesense-auto
 import '@algolia/autocomplete-theme-classic';
 
 import Alpine from 'alpinejs';
+import focus from '@alpinejs/focus';
 
 window.Alpine = Alpine;
+Alpine.plugin(focus);
 
 // Expose autocomplete functions globally
 window.initTypesenseAutocomplete = initTypesenseAutocomplete;

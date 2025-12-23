@@ -1,3 +1,7 @@
+@php
+    $headerMenu = \App\Models\HeaderMenuItem::getMenuTree();
+@endphp
+
 <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/60" role="banner" x-data="{ mobileMenuOpen: false }">
     <nav aria-label="Global" class="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5 lg:px-8">
         <!-- Brand -->
@@ -29,120 +33,101 @@
 
         <!-- Desktop navigation -->
         <div class="hidden lg:flex lg:items-center lg:gap-x-1">
-            <a href="{{ route('zoeken') }}" class="nav-link px-3 py-2 text-sm font-medium {{ request()->routeIs('zoeken') ? 'nav-link-active text-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">
-                Zoeken
-            </a>
-            
-            <!-- Collection Flyout Menu -->
-            <div class="relative">
-                <button popovertarget="desktop-menu-collectie" class="nav-link px-3 py-2 text-sm font-medium inline-flex items-center gap-x-1 {{ request()->routeIs('dossiers.*') || request()->routeIs('themas.*') || request()->routeIs('verwijzingen') ? 'nav-link-active text-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">
-                    <span>Collectie</span>
-                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-5">
-                        <path d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
-                    </svg>
-                </button>
+            @foreach($headerMenu as $item)
+                @if($item->isDropdown() && $item->hasVisibleChildren())
+                    {{-- Dropdown Menu --}}
+                    @php
+                        $dropdownId = 'desktop-menu-' . $item->slug;
+                        $isActive = $item->isCurrentlyActive() || $item->hasActiveChild();
+                    @endphp
+                    <div class="relative">
+                        <button
+                            popovertarget="{{ $dropdownId }}"
+                            class="nav-link px-3 py-2 text-sm font-medium inline-flex items-center gap-x-1 {{ $isActive ? 'nav-link-active text-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}"
+                        >
+                            <span>{{ $item->label }}</span>
+                            @if($item->badge_text)
+                                <span class="inline-flex items-center rounded-full bg-{{ $item->badge_color ?? 'purple' }}-100 px-1.5 py-0.5 text-[10px] font-medium text-{{ $item->badge_color ?? 'purple' }}-700">{{ $item->badge_text }}</span>
+                            @endif
+                            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-5">
+                                <path d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
+                            </svg>
+                        </button>
 
-                <el-popover id="desktop-menu-collectie" anchor="bottom" popover class="w-screen max-w-max overflow-visible bg-transparent px-4 transition transition-discrete [--anchor-gap:--spacing(5)] backdrop:bg-transparent open:flex data-closed:translate-y-1 data-closed:opacity-0 data-enter:duration-200 data-enter:ease-out data-leave:duration-150 data-leave:ease-in">
-                    <div class="w-screen max-w-md flex-auto overflow-hidden rounded-md bg-white text-sm/6 shadow-lg ring-1 ring-gray-900/5">
-                        <div class="p-4">
-                            <!-- Dossiers -->
-                            <div class="group relative flex gap-x-6 rounded-lg p-4 hover:bg-gray-50">
-                                <div class="mt-1 flex size-11 flex-none items-center justify-center rounded-lg bg-gray-50 group-hover:bg-white">
-                                    <i class="fas fa-folder-open text-lg text-gray-600 group-hover:text-[var(--color-primary-dark)]"></i>
-                                </div>
-                                <div>
-                                    <a href="{{ route('dossiers.index') }}" class="font-semibold text-gray-900">
-                                        Dossiers
-                                        <span class="absolute inset-0"></span>
-                                    </a>
-                                    <p class="mt-1 text-sm text-gray-600">Bekijk alle overheidsdossiers en bijbehorende documenten</p>
+                        <el-popover id="{{ $dropdownId }}" anchor="bottom" popover class="w-screen max-w-max overflow-visible bg-transparent px-4 transition transition-discrete [--anchor-gap:--spacing(5)] backdrop:bg-transparent open:flex data-closed:translate-y-1 data-closed:opacity-0 data-enter:duration-200 data-enter:ease-out data-leave:duration-150 data-leave:ease-in">
+                            <div class="w-screen max-w-md flex-auto overflow-hidden rounded-md bg-white text-sm/6 shadow-lg ring-1 ring-gray-900/5">
+                                <div class="p-4">
+                                    @foreach($item->activeChildren as $child)
+                                        @if($child->is_disabled)
+                                            {{-- Disabled Item --}}
+                                            <div class="group relative flex gap-x-6 rounded-lg p-4 opacity-60 cursor-not-allowed">
+                                                @if($child->icon)
+                                                <div class="mt-1 flex size-11 flex-none items-center justify-center rounded-lg bg-gray-50">
+                                                    <i class="fas fa-{{ $child->icon }} text-lg text-gray-400"></i>
+                                                </div>
+                                                @endif
+                                                <div>
+                                                    <span class="font-semibold text-gray-500 inline-flex items-center gap-2">
+                                                        {{ $child->label }}
+                                                        @if($child->badge_text)
+                                                            <span class="inline-flex items-center rounded-full bg-{{ $child->badge_color ?? 'purple' }}-100 px-2 py-0.5 text-xs font-medium text-{{ $child->badge_color ?? 'purple' }}-700">{{ $child->badge_text }}</span>
+                                                        @endif
+                                                    </span>
+                                                    @if($child->description)
+                                                        <p class="mt-1 text-sm text-gray-400">{{ $child->description }}</p>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @else
+                                            {{-- Normal Item --}}
+                                            <div class="group relative flex gap-x-6 rounded-lg p-4 hover:bg-gray-50">
+                                                @if($child->icon)
+                                                <div class="mt-1 flex size-11 flex-none items-center justify-center rounded-lg bg-gray-50 group-hover:bg-white">
+                                                    <i class="fas fa-{{ $child->icon }} text-lg text-gray-600 group-hover:text-[var(--color-primary-dark)]"></i>
+                                                </div>
+                                                @endif
+                                                <div>
+                                                    <a href="{{ $child->resolved_url ?? '#' }}" class="font-semibold text-gray-900" @if($child->target) target="{{ $child->target }}" @endif>
+                                                        {{ $child->label }}
+                                                        @if($child->badge_text)
+                                                            <span class="inline-flex items-center rounded-full bg-{{ $child->badge_color ?? 'purple' }}-100 px-2 py-0.5 text-xs font-medium text-{{ $child->badge_color ?? 'purple' }}-700 ml-2">{{ $child->badge_text }}</span>
+                                                        @endif
+                                                        <span class="absolute inset-0"></span>
+                                                    </a>
+                                                    @if($child->description)
+                                                        <p class="mt-1 text-sm text-gray-600">{{ $child->description }}</p>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endif
+                                    @endforeach
                                 </div>
                             </div>
-                            <!-- Thema's -->
-                            <div class="group relative flex gap-x-6 rounded-lg p-4 hover:bg-gray-50">
-                                <div class="mt-1 flex size-11 flex-none items-center justify-center rounded-lg bg-gray-50 group-hover:bg-white">
-                                    <i class="fas fa-tags text-lg text-gray-600 group-hover:text-[var(--color-primary-dark)]"></i>
-                                </div>
-                                <div>
-                                    <a href="{{ route('themas.index') }}" class="font-semibold text-gray-900">
-                                        Thema's
-                                        <span class="absolute inset-0"></span>
-                                    </a>
-                                    <p class="mt-1 text-sm text-gray-600">Verken documenten op basis van thema en onderwerp</p>
-                                </div>
-                            </div>
-                            <!-- Verwijzingen -->
-                            <div class="group relative flex gap-x-6 rounded-lg p-4 hover:bg-gray-50">
-                                <div class="mt-1 flex size-11 flex-none items-center justify-center rounded-lg bg-gray-50 group-hover:bg-white">
-                                    <i class="fas fa-link text-lg text-gray-600 group-hover:text-[var(--color-primary-dark)]"></i>
-                                </div>
-                                <div>
-                                    <a href="{{ route('verwijzingen') }}" class="font-semibold text-gray-900">
-                                        Verwijzingen
-                                        <span class="absolute inset-0"></span>
-                                    </a>
-                                    <p class="mt-1 text-sm text-gray-600">Ontdek gerelateerde bronnen en externe koppelingen</p>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Footer Actions -->
-                        <div class="grid grid-cols-2 divide-x divide-gray-900/5 bg-gray-50">
-                            <a href="#" class="flex items-center justify-center gap-x-2.5 p-3 text-sm font-semibold text-gray-900 hover:bg-gray-100">
-                                <i class="fas fa-upload text-purple-500"></i>
-                                Ook aanleveren
-                            </a>
-                            <a href="{{ route('contact') }}" class="flex items-center justify-center gap-x-2.5 p-3 text-sm font-semibold text-gray-900 hover:bg-gray-100">
-                                <i class="fas fa-phone text-purple-500"></i>
-                                Contact opnemen
-                            </a>
-                        </div>
+                        </el-popover>
                     </div>
-                </el-popover>
-            </div>
-            
-            <a href="{{ route('reports.index') }}" class="nav-link px-3 py-2 text-sm font-medium {{ request()->routeIs('reports.*') ? 'nav-link-active text-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">
-                Dashboard
-            </a>
-            <a href="{{ route('blog.index') }}" class="nav-link px-3 py-2 text-sm font-medium {{ request()->routeIs('blog.*') ? 'nav-link-active text-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">
-                Kennisbank
-            </a>
-            
-            <!-- Contact Flyout Menu -->
-            <div class="relative">
-                <button popovertarget="desktop-menu-contact" class="nav-link px-3 py-2 text-sm font-medium inline-flex items-center gap-x-1 {{ request()->routeIs('contact') || request()->routeIs('over') ? 'nav-link-active text-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">
-                    <span>Contact</span>
-                    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="size-5">
-                        <path d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
-                    </svg>
-                </button>
-
-                <el-popover id="desktop-menu-contact" anchor="bottom-end" popover class="w-screen max-w-max overflow-visible bg-transparent px-4 transition transition-discrete [--anchor-gap:--spacing(5)] backdrop:bg-transparent open:flex data-closed:translate-y-1 data-closed:opacity-0 data-enter:duration-200 data-enter:ease-out data-leave:duration-150 data-leave:ease-in">
-                    <div class="w-72 flex-auto overflow-hidden rounded-md bg-white text-sm/6 shadow-lg ring-1 ring-gray-900/5">
-                        <div class="p-2">
-                            <!-- Contact -->
-                            <a href="{{ route('contact') }}" class="group flex items-center gap-x-3 rounded-lg p-3 hover:bg-gray-50">
-                                <div class="flex size-10 flex-none items-center justify-center rounded-lg bg-gray-50 group-hover:bg-white">
-                                    <i class="fas fa-envelope text-gray-600 group-hover:text-[var(--color-primary-dark)]"></i>
-                                </div>
-                                <div>
-                                    <span class="font-semibold text-gray-900">Contact</span>
-                                    <p class="text-xs text-gray-600">Neem contact met ons op</p>
-                                </div>
-                            </a>
-                            <!-- Over -->
-                            <a href="{{ route('over') }}" class="group flex items-center gap-x-3 rounded-lg p-3 hover:bg-gray-50">
-                                <div class="flex size-10 flex-none items-center justify-center rounded-lg bg-gray-50 group-hover:bg-white">
-                                    <i class="fas fa-info-circle text-gray-600 group-hover:text-[var(--color-primary-dark)]"></i>
-                                </div>
-                                <div>
-                                    <span class="font-semibold text-gray-900">Over ons</span>
-                                    <p class="text-xs text-gray-600">Meer over OpenPublicaties</p>
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-                </el-popover>
-            </div>
+                @else
+                    {{-- Simple Link --}}
+                    @if($item->is_disabled)
+                        <span class="nav-link px-3 py-2 text-sm font-medium text-gray-400 cursor-not-allowed inline-flex items-center gap-1.5">
+                            {{ $item->label }}
+                            @if($item->badge_text)
+                                <span class="inline-flex items-center rounded-full bg-{{ $item->badge_color ?? 'purple' }}-100 px-1.5 py-0.5 text-[10px] font-medium text-{{ $item->badge_color ?? 'purple' }}-700">{{ $item->badge_text }}</span>
+                            @endif
+                        </span>
+                    @else
+                        <a
+                            href="{{ $item->resolved_url ?? '#' }}"
+                            class="nav-link px-3 py-2 text-sm font-medium {{ $item->isCurrentlyActive() ? 'nav-link-active text-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}"
+                            @if($item->target) target="{{ $item->target }}" @endif
+                        >
+                            {{ $item->label }}
+                            @if($item->badge_text)
+                                <span class="inline-flex items-center rounded-full bg-{{ $item->badge_color ?? 'purple' }}-100 px-1.5 py-0.5 text-[10px] font-medium text-{{ $item->badge_color ?? 'purple' }}-700 ml-1">{{ $item->badge_text }}</span>
+                            @endif
+                        </a>
+                    @endif
+                @endif
+            @endforeach
         </div>
     </nav>
 
@@ -160,38 +145,63 @@
         class="lg:hidden border-t border-slate-200/60 bg-white/98 backdrop-blur-md"
     >
         <nav class="mx-auto max-w-7xl px-6 py-3 space-y-0.5" aria-label="Mobiele navigatie">
-            <a href="{{ route('zoeken') }}" class="block px-3 py-2.5 text-base font-medium {{ request()->routeIs('zoeken') ? 'text-[var(--color-primary-dark)] border-l-2 border-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">
-                Zoeken
-            </a>
-            
-            <!-- Collectie Section -->
-            <div class="pt-2 pb-1">
-                <span class="block px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Collectie</span>
-            </div>
-            <a href="{{ route('dossiers.index') }}" class="block px-3 py-2.5 text-base font-medium pl-6 {{ request()->routeIs('dossiers.*') ? 'text-[var(--color-primary-dark)] border-l-2 border-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">
-                Dossiers
-            </a>
-            <a href="{{ route('themas.index') }}" class="block px-3 py-2.5 text-base font-medium pl-6 {{ request()->routeIs('themas.*') ? 'text-[var(--color-primary-dark)] border-l-2 border-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">
-                Thema's
-            </a>
-            <a href="{{ route('verwijzingen') }}" class="block px-3 py-2.5 text-base font-medium pl-6 {{ request()->routeIs('verwijzingen') ? 'text-[var(--color-primary-dark)] border-l-2 border-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">
-                Verwijzingen
-            </a>
-            
-            <div class="border-t border-slate-200/60 my-2"></div>
-            
-            <a href="{{ route('reports.index') }}" class="block px-3 py-2.5 text-base font-medium {{ request()->routeIs('reports.*') ? 'text-[var(--color-primary-dark)] border-l-2 border-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">
-                Dashboard
-            </a>
-            <a href="{{ route('blog.index') }}" class="block px-3 py-2.5 text-base font-medium {{ request()->routeIs('blog.*') ? 'text-[var(--color-primary-dark)] border-l-2 border-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">
-                Kennisbank
-            </a>
-            <a href="{{ route('contact') }}" class="block px-3 py-2.5 text-base font-medium {{ request()->routeIs('contact') ? 'text-[var(--color-primary-dark)] border-l-2 border-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">
-                Contact
-            </a>
-            <a href="{{ route('over') }}" class="block px-3 py-2.5 text-base font-medium {{ request()->routeIs('over') ? 'text-[var(--color-primary-dark)] border-l-2 border-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">
-                Over ons
-            </a>
+            @foreach($headerMenu as $item)
+                @if($item->isDropdown() && $item->hasVisibleChildren())
+                    {{-- Dropdown Section Header --}}
+                    <div class="pt-2 pb-1">
+                        <span class="block px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[var(--color-on-surface-variant)]">{{ $item->label }}</span>
+                    </div>
+
+                    {{-- Dropdown Children --}}
+                    @foreach($item->activeChildren as $child)
+                        @if($child->is_disabled)
+                            <div class="block px-3 py-2.5 text-base font-medium pl-6 text-gray-400 cursor-not-allowed opacity-60 flex items-center gap-2">
+                                {{ $child->label }}
+                                @if($child->badge_text)
+                                    <span class="inline-flex items-center rounded-full bg-{{ $child->badge_color ?? 'purple' }}-100 px-2 py-0.5 text-xs font-medium text-{{ $child->badge_color ?? 'purple' }}-700">{{ $child->badge_text }}</span>
+                                @endif
+                            </div>
+                        @else
+                            <a
+                                href="{{ $child->resolved_url ?? '#' }}"
+                                class="block px-3 py-2.5 text-base font-medium pl-6 {{ $child->isCurrentlyActive() ? 'text-[var(--color-primary-dark)] border-l-2 border-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}"
+                                @if($child->target) target="{{ $child->target }}" @endif
+                            >
+                                {{ $child->label }}
+                                @if($child->badge_text)
+                                    <span class="inline-flex items-center rounded-full bg-{{ $child->badge_color ?? 'purple' }}-100 px-2 py-0.5 text-xs font-medium text-{{ $child->badge_color ?? 'purple' }}-700 ml-2">{{ $child->badge_text }}</span>
+                                @endif
+                            </a>
+                        @endif
+                    @endforeach
+                @else
+                    {{-- Simple Link --}}
+                    @if($item->is_disabled)
+                        <div class="block px-3 py-2.5 text-base font-medium text-gray-400 cursor-not-allowed opacity-60 flex items-center gap-2">
+                            {{ $item->label }}
+                            @if($item->badge_text)
+                                <span class="inline-flex items-center rounded-full bg-{{ $item->badge_color ?? 'purple' }}-100 px-2 py-0.5 text-xs font-medium text-{{ $item->badge_color ?? 'purple' }}-700">{{ $item->badge_text }}</span>
+                            @endif
+                        </div>
+                    @else
+                        <a
+                            href="{{ $item->resolved_url ?? '#' }}"
+                            class="block px-3 py-2.5 text-base font-medium {{ $item->isCurrentlyActive() ? 'text-[var(--color-primary-dark)] border-l-2 border-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}"
+                            @if($item->target) target="{{ $item->target }}" @endif
+                        >
+                            {{ $item->label }}
+                            @if($item->badge_text)
+                                <span class="inline-flex items-center rounded-full bg-{{ $item->badge_color ?? 'purple' }}-100 px-2 py-0.5 text-xs font-medium text-{{ $item->badge_color ?? 'purple' }}-700 ml-2">{{ $item->badge_text }}</span>
+                            @endif
+                        </a>
+                    @endif
+                @endif
+
+                {{-- Add divider after dropdowns --}}
+                @if($item->isDropdown() && !$loop->last)
+                    <div class="border-t border-slate-200/60 my-2"></div>
+                @endif
+            @endforeach
         </nav>
     </div>
 </header>

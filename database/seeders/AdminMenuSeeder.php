@@ -144,6 +144,19 @@ class AdminMenuSeeder extends Seeder
                 'position' => 1,
                 'is_active' => true,
             ]);
+
+            // Header Menu Settings
+            AdminMenuItem::create([
+                'admin_menu_id' => $menu->id,
+                'parent_id' => $systemSection->id,
+                'item_type' => 'link',
+                'label' => 'Header Menu',
+                'slug' => 'header-menu-settings',
+                'route_name' => 'admin.settings.header-menu',
+                'icon' => 'bars',
+                'position' => 2,
+                'is_active' => true,
+            ]);
         });
     }
 
