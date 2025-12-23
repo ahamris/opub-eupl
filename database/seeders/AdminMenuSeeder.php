@@ -145,16 +145,52 @@ class AdminMenuSeeder extends Seeder
                 'is_active' => true,
             ]);
 
-            // Header Menu Settings
+            // Settings Section
+            $settingsSection = AdminMenuItem::create([
+                'admin_menu_id' => $menu->id,
+                'item_type' => 'section',
+                'label' => 'SETTINGS',
+                'slug' => Str::slug('SETTINGS'),
+                'position' => $position++,
+                'is_active' => true,
+            ]);
+
+            // Site Settings (Dropdown/Parent)
+            $siteSettings = AdminMenuItem::create([
+                'admin_menu_id' => $menu->id,
+                'parent_id' => $settingsSection->id,
+                'item_type' => 'link',
+                'label' => 'Site Settings',
+                'slug' => 'site-settings',
+                'route_name' => null, // Default route, will be overridden by children
+                'icon' => 'gear',
+                'position' => 0,
+                'is_active' => true,
+            ]);
+
+            // Header Menu (Submenu)
             AdminMenuItem::create([
                 'admin_menu_id' => $menu->id,
-                'parent_id' => $systemSection->id,
+                'parent_id' => $siteSettings->id,
                 'item_type' => 'link',
                 'label' => 'Header Menu',
                 'slug' => 'header-menu-settings',
                 'route_name' => 'admin.settings.header-menu',
                 'icon' => 'bars',
-                'position' => 2,
+                'position' => 0,
+                'is_active' => true,
+            ]);
+
+            // Footer Menu (Submenu)
+            AdminMenuItem::create([
+                'admin_menu_id' => $menu->id,
+                'parent_id' => $siteSettings->id,
+                'item_type' => 'link',
+                'label' => 'Footer Menu',
+                'slug' => 'footer-menu-settings',
+                'route_name' => 'admin.settings.footer-menu',
+                'icon' => 'list',
+                'position' => 1,
                 'is_active' => true,
             ]);
         });

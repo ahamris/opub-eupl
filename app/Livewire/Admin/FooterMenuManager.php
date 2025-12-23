@@ -2,15 +2,15 @@
 
 namespace App\Livewire\Admin;
 
-use App\Livewire\Admin\Concerns\ManagesHeaderMenuReordering;
-use App\Models\HeaderMenuItem;
+use App\Livewire\Admin\Concerns\ManagesFooterMenuReordering;
+use App\Models\FooterMenuItem;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Livewire\Component;
 
-class HeaderMenuManager extends Component
+class FooterMenuManager extends Component
 {
-    use ManagesHeaderMenuReordering;
+    use ManagesFooterMenuReordering;
     // State
     public bool $showModal = false;
     public ?int $editingItemId = null;
@@ -63,7 +63,7 @@ class HeaderMenuManager extends Component
 
     public function render()
     {
-        return view('livewire.admin.header-menu-manager', [
+        return view('livewire.admin.footer-menu-manager', [
             'menuTree' => $this->getMenuTree(),
             'dropdownMenus' => $this->getDropdownMenus(),
         ]);
@@ -73,7 +73,7 @@ class HeaderMenuManager extends Component
 
     public function getMenuTree(): Collection
     {
-        return HeaderMenuItem::query()
+        return FooterMenuItem::query()
             ->with(['childrenRecursive' => fn($q) => $q->ordered()])
             ->whereNull('parent_id')
             ->ordered()
@@ -82,7 +82,7 @@ class HeaderMenuManager extends Component
 
     public function getDropdownMenus(): Collection
     {
-        $query = HeaderMenuItem::query()
+        $query = FooterMenuItem::query()
             ->where('item_type', 'dropdown')
             ->whereNull('parent_id')
             ->orderBy('label');
@@ -97,7 +97,7 @@ class HeaderMenuManager extends Component
 
     protected function getDefaultExpandedState(): array
     {
-        return HeaderMenuItem::whereNull('parent_id')
+        return FooterMenuItem::whereNull('parent_id')
             ->pluck('id')
             ->mapWithKeys(fn($id) => [$id => true])
             ->toArray();
@@ -142,7 +142,7 @@ class HeaderMenuManager extends Component
 
     public function edit(int $itemId): void
     {
-        $item = HeaderMenuItem::findOrFail($itemId);
+        $item = FooterMenuItem::findOrFail($itemId);
         $options = $item->options ?? [];
 
         $this->editingItemId = $item->id;
@@ -209,13 +209,13 @@ class HeaderMenuManager extends Component
         ];
 
         if ($this->editingItemId) {
-            $item = HeaderMenuItem::findOrFail($this->editingItemId);
+            $item = FooterMenuItem::findOrFail($this->editingItemId);
             $item->update($data);
             $message = 'Menu item updated.';
         } else {
             // Set position for new items
             $data['position'] = $this->getNextPosition($parentId);
-            $item = HeaderMenuItem::create($data);
+            $item = FooterMenuItem::create($data);
             $message = 'Menu item created.';
         }
 
@@ -225,7 +225,7 @@ class HeaderMenuManager extends Component
         }
 
         $this->closeModal();
-        HeaderMenuItem::clearCache();
+        FooterMenuItem::clearCache();
         $this->dispatch('notify', type: 'success', message: $message);
     }
 
@@ -257,7 +257,7 @@ class HeaderMenuManager extends Component
 
     protected function getNextPosition(?int $parentId): int
     {
-        $query = HeaderMenuItem::query();
+        $query = FooterMenuItem::query();
         
         if ($parentId) {
             $query->where('parent_id', $parentId);
@@ -281,12 +281,12 @@ class HeaderMenuManager extends Component
             return;
         }
 
-        $item = HeaderMenuItem::findOrFail($this->confirmingDeleteId);
+        $item = FooterMenuItem::findOrFail($this->confirmingDeleteId);
         $item->delete();
 
         $this->confirmingDeleteId = null;
         unset($this->expanded[$item->id]);
-        HeaderMenuItem::clearCache();
+        FooterMenuItem::clearCache();
         
         $this->dispatch('notify', type: 'success', message: 'Menu item deleted.');
     }
@@ -304,5 +304,6 @@ class HeaderMenuManager extends Component
     }
 
     // ==================== REORDERING ====================
-    // reorderFromFrontend method is provided by ManagesHeaderMenuReordering trait
+    // reorderFromFrontend method is provided by ManagesFooterMenuReordering trait
 }
+
