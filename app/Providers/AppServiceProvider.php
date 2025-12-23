@@ -52,6 +52,38 @@ class AppServiceProvider extends ServiceProvider
         // Configure mail settings from database
         $this->configureMailFromDatabase();
 
+        // Register Blade components only for admin routes
+        if ($this->isAdminRoute()) {
+            $this->registerAdminBladeComponents();
+        }
+    }
+
+    /**
+     * Check if the current request is an admin route.
+     */
+    protected function isAdminRoute(): bool
+    {
+        $request = request();
+        
+        // Check if route starts with admin prefix
+        if ($request->is('admin*')) {
+            return true;
+        }
+        
+        // Check if route name starts with admin prefix
+        $route = $request->route();
+        if ($route && str_starts_with($route->getName() ?? '', 'admin.')) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
+     * Register Blade components for admin panel.
+     */
+    protected function registerAdminBladeComponents(): void
+    {
         // Form Components
         Blade::component(Button::class, 'button');
         Blade::component(Button::class, 'ui.button');
