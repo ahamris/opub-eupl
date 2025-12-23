@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Setting;
 use App\Services\Typesense\TypesenseSearchService;
 use App\View\Components\Navigation\Breadcrumbs;
 use App\View\Components\UI\Accordion;
@@ -27,6 +28,7 @@ use App\View\Components\UI\Toast;
 use App\View\Components\UI\Toggle;
 use App\View\Components\UI\Tooltip;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -47,6 +49,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Configure mail settings from database
+        $this->configureMailFromDatabase();
+
         // Form Components
         Blade::component(Button::class, 'button');
         Blade::component(Button::class, 'ui.button');
@@ -93,5 +98,61 @@ class AppServiceProvider extends ServiceProvider
         // Navigation Components
         Blade::component(Pagination::class, 'ui.pagination');
         Blade::component(Breadcrumbs::class, 'navigation.breadcrumbs');
+    }
+
+    /**
+     * Configure mail settings from database settings.
+     */
+    protected function configureMailFromDatabase(): void
+    {
+        // Check if settings table exists (might not exist during migrations)
+        if (!Schema::hasTable('settings')) {
+            return;
+        }
+
+        try {
+            // Get SMTP settings from database
+            $smtpHost = Setting::get('smtp_host');
+            $smtpPort = Setting::get('smtp_port');
+            $smtpUsername = Setting::get('smtp_username');
+            $smtpPassword = Setting::get('smtp_password');
+            $smtpEncryption = Setting::get('smtp_encryption');
+            $fromAddress = Setting::get('smtp_from_address');
+            $fromName = Setting::get('smtp_from_name');
+
+            // Only override config if database values exist and are not empty
+            if (!empty($smtpHost)) {
+                config(['mail.mailers.smtp.host' => $smtpHost]);
+            }
+
+            if (!empty($smtpPort)) {
+                config(['mail.mailers.smtp.port' => (int) $smtpPort]);
+            }
+
+            if ($smtpUsername !== null) {
+                // Username can be empty string for some SMTP servers
+                config(['mail.mailers.smtp.username' => $smtpUsername]);
+            }
+
+            if ($smtpPassword !== null) {
+                // Password can be empty string for some SMTP servers
+                config(['mail.mailers.smtp.password' => $smtpPassword]);
+            }
+
+            if (!empty($smtpEncryption)) {
+                config(['mail.mailers.smtp.encryption' => $smtpEncryption]);
+            }
+
+            if (!empty($fromAddress)) {
+                config(['mail.from.address' => $fromAddress]);
+            }
+
+            if (!empty($fromName)) {
+                config(['mail.from.name' => $fromName]);
+            }
+        } catch (\Exception $e) {
+            // Silently fail if settings can't be loaded (e.g., during migrations)
+            // Fall back to config file values
+        }
     }
 }
