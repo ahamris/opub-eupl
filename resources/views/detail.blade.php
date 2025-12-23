@@ -336,10 +336,24 @@
                         <span>{{ number_format($fileSize, 0, ',', '.') }} bytes</span>
                     @endif
                     @if(isset($jsonData['publication_date']))
-                        <span>Gepubliceerd op: {{ \Carbon\Carbon::parse($jsonData['publication_date'])->format('d-m-Y') }}</span>
+                        @php
+                            try {
+                                $pubDate = \Carbon\Carbon::parse($jsonData['publication_date'])->format('d-m-Y');
+                            } catch (\Exception $e) {
+                                $pubDate = $jsonData['publication_date'];
+                            }
+                        @endphp
+                        <span>Gepubliceerd op: {{ $pubDate }}</span>
                     @endif
                     @if(isset($jsonData['updated_at']))
-                        <span>Laatst gewijzigd: {{ \Carbon\Carbon::parse($jsonData['updated_at'])->format('d-m-Y') }}</span>
+                        @php
+                            try {
+                                $updatedDate = \Carbon\Carbon::parse($jsonData['updated_at'])->format('d-m-Y');
+                            } catch (\Exception $e) {
+                                $updatedDate = $jsonData['updated_at'];
+                            }
+                        @endphp
+                        <span>Laatst gewijzigd: {{ $updatedDate }}</span>
                     @endif
                 </div>
                 <div class="flex flex-wrap gap-3 mt-4">
@@ -510,7 +524,14 @@
                             <div class="space-y-1">
                                 <span class="text-sm font-semibold text-[var(--color-on-surface)] block">Gepubliceerd op:</span>
                                 <span class="text-sm text-[var(--color-on-surface-variant)] block">
-                                    {{ \Carbon\Carbon::parse($firstVersion['openbaarmakingsdatum'])->format('d-m-Y, H:i') }}
+                                    @php
+                                        try {
+                                            $openbaarDate = \Carbon\Carbon::parse($firstVersion['openbaarmakingsdatum'])->format('d-m-Y, H:i');
+                                        } catch (\Exception $e) {
+                                            $openbaarDate = $firstVersion['openbaarmakingsdatum'];
+                                        }
+                                    @endphp
+                                    {{ $openbaarDate }}
                                 </span>
                             </div>
                             @endif
@@ -519,7 +540,14 @@
                             <div class="space-y-1">
                                 <span class="text-sm font-semibold text-[var(--color-on-surface)] block">Laatst gewijzigd:</span>
                                 <span class="text-sm text-[var(--color-on-surface-variant)] block">
-                                    {{ \Carbon\Carbon::parse($firstVersion['mutatiedatumtijd'])->format('d-m-Y, H:i') }}
+                                    @php
+                                        try {
+                                            $mutatieDate = \Carbon\Carbon::parse($firstVersion['mutatiedatumtijd'])->format('d-m-Y, H:i');
+                                        } catch (\Exception $e) {
+                                            $mutatieDate = $firstVersion['mutatiedatumtijd'];
+                                        }
+                                    @endphp
+                                    {{ $mutatieDate }}
                                 </span>
                             </div>
                             @endif
@@ -528,7 +556,14 @@
                             <div class="space-y-1">
                                 <span class="text-sm font-semibold text-[var(--color-on-surface)] block">Document creatiedatum:</span>
                                 <span class="text-sm text-[var(--color-on-surface-variant)] block">
-                                    {{ \Carbon\Carbon::parse($documentMeta['creatiedatum'])->format('Y-m-d') }}
+                                    @php
+                                        try {
+                                            $creatieDate = \Carbon\Carbon::parse($documentMeta['creatiedatum'])->format('Y-m-d');
+                                        } catch (\Exception $e) {
+                                            $creatieDate = $documentMeta['creatiedatum'];
+                                        }
+                                    @endphp
+                                    {{ $creatieDate }}
                                 </span>
                             </div>
                             @endif
@@ -553,7 +588,14 @@
                             <div class="space-y-1">
                                 <span class="text-sm font-semibold text-[var(--color-on-surface)] block">Geldig van:</span>
                                 <span class="text-sm text-[var(--color-on-surface-variant)] block">
-                                    {{ \Carbon\Carbon::parse($geldigheid['begindatum'])->format('d-m-Y, H:i') }}
+                                    @php
+                                        try {
+                                            $geldigDate = \Carbon\Carbon::parse($geldigheid['begindatum'])->format('d-m-Y, H:i');
+                                        } catch (\Exception $e) {
+                                            $geldigDate = $geldigheid['begindatum'];
+                                        }
+                                    @endphp
+                                    {{ $geldigDate }}
                                 </span>
                             </div>
                             @endif
