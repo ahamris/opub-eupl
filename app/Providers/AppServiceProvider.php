@@ -63,6 +63,9 @@ class AppServiceProvider extends ServiceProvider
      */
     protected function isAdminRoute(): bool
     {
+
+        return true;
+        
         $request = request();
         
         // Check if route starts with admin prefix
