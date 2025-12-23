@@ -35,13 +35,40 @@ class Setting extends Model
 
     /**
      * Set a setting value by key.
+     * Only creates if the key doesn't exist, does not update existing keys.
+     *
+     * @param string $key
+     * @param mixed $value
+     * @param string $group
+     * @return Setting|null
+     */
+    public static function set(string $key, $value, string $group = 'general'): ?Setting
+    {
+        // Check if key already exists
+        $existing = static::where('_key', $key)->first();
+        
+        if ($existing) {
+            // Key exists, return existing setting without updating
+            return $existing;
+        }
+        
+        // Key doesn't exist, create new setting
+        return static::create([
+            '_key' => $key,
+            '_value' => $value,
+            'group' => $group,
+        ]);
+    }
+
+    /**
+     * Force set a setting value by key (updates if exists, creates if not).
      *
      * @param string $key
      * @param mixed $value
      * @param string $group
      * @return Setting
      */
-    public static function set(string $key, $value, string $group = 'general'): Setting
+    public static function forceSet(string $key, $value, string $group = 'general'): Setting
     {
         return static::updateOrCreate(
             ['_key' => $key],

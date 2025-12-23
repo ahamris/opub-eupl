@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ContactSubmissionController;
 use App\Http\Controllers\Admin\Content\BlogController;
 use App\Http\Controllers\Admin\Content\BlogCategoryController;
+use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\Auth\AdminLoginController;
 use App\Http\Controllers\Admin\Auth\AdminPasswordResetLinkController;
 use App\Http\Controllers\Admin\Auth\AdminNewPasswordController;
@@ -57,6 +58,9 @@ Route::middleware(['auth', \App\Http\Middleware\CheckIfAdmin::class])->prefix('a
         Route::resource('blog', BlogController::class);
         Route::post('blog/{blog}/toggle-active', [BlogController::class, 'toggleActive'])->name('blog.toggle-active');
         Route::post('blog/{blog}/toggle-featured', [BlogController::class, 'toggleFeatured'])->name('blog.toggle-featured');
+
+        // Settings Routes
+        Route::resource('setting', SettingController::class);
     });
 
     // Settings Routes
