@@ -45,17 +45,17 @@
                 <el-popover id="desktop-menu-collectie" anchor="bottom" popover class="w-screen max-w-max overflow-visible bg-transparent px-4 transition transition-discrete [--anchor-gap:--spacing(5)] backdrop:bg-transparent open:flex data-closed:translate-y-1 data-closed:opacity-0 data-enter:duration-200 data-enter:ease-out data-leave:duration-150 data-leave:ease-in">
                     <div class="w-screen max-w-md flex-auto overflow-hidden rounded-md bg-white text-sm/6 shadow-lg ring-1 ring-gray-900/5">
                         <div class="p-4">
-                            <!-- Dossiers -->
-                            <div class="group relative flex gap-x-6 rounded-lg p-4 hover:bg-gray-50">
-                                <div class="mt-1 flex size-11 flex-none items-center justify-center rounded-lg bg-gray-50 group-hover:bg-white">
-                                    <i class="fas fa-folder-open text-lg text-gray-600 group-hover:text-[var(--color-primary-dark)]"></i>
+                            <!-- Dossiers (Coming Soon) -->
+                            <div class="group relative flex gap-x-6 rounded-lg p-4 opacity-60 cursor-not-allowed">
+                                <div class="mt-1 flex size-11 flex-none items-center justify-center rounded-lg bg-gray-50">
+                                    <i class="fas fa-folder-open text-lg text-gray-400"></i>
                                 </div>
                                 <div>
-                                    <a href="{{ route('dossiers.index') }}" class="font-semibold text-gray-900">
+                                    <span class="font-semibold text-gray-500 inline-flex items-center gap-2">
                                         Dossiers
-                                        <span class="absolute inset-0"></span>
-                                    </a>
-                                    <p class="mt-1 text-sm text-gray-600">Bekijk alle overheidsdossiers en bijbehorende documenten</p>
+                                        <span class="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">Coming Soon</span>
+                                    </span>
+                                    <p class="mt-1 text-sm text-gray-400">Bekijk alle overheidsdossiers en bijbehorende documenten</p>
                                 </div>
                             </div>
                             <!-- Thema's -->
@@ -168,9 +168,10 @@
             <div class="pt-2 pb-1">
                 <span class="block px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[var(--color-on-surface-variant)]">Collectie</span>
             </div>
-            <a href="{{ route('dossiers.index') }}" class="block px-3 py-2.5 text-base font-medium pl-6 {{ request()->routeIs('dossiers.*') ? 'text-[var(--color-primary-dark)] border-l-2 border-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">
+            <div class="block px-3 py-2.5 text-base font-medium pl-6 text-gray-400 cursor-not-allowed opacity-60 flex items-center gap-2">
                 Dossiers
-            </a>
+                <span class="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">Coming Soon</span>
+            </div>
             <a href="{{ route('themas.index') }}" class="block px-3 py-2.5 text-base font-medium pl-6 {{ request()->routeIs('themas.*') ? 'text-[var(--color-primary-dark)] border-l-2 border-[var(--color-primary-dark)]' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">
                 Thema's
             </a>

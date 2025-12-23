@@ -80,23 +80,24 @@
                     </div>
                 </a>
 
-                <a href="{{ route('dossiers.index') }}" class="group lg:col-span-2">
-                    <div class="relative h-full overflow-hidden rounded-md bg-white shadow-xs group">
+                <div class="lg:col-span-2 opacity-60 cursor-not-allowed">
+                    <div class="relative h-full overflow-hidden rounded-md bg-white shadow-xs">
                         <div class="overflow-hidden">
                             <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop"
                                  alt="Dossiers"
-                                 class="h-64 sm:h-80 w-full object-cover" />
+                                 class="h-64 sm:h-80 w-full object-cover grayscale" />
                         </div>
                         <div class="p-6">
-                            <h3 class="font-semibold text-[var(--color-purple)] group-hover:text-purple-light transition-colors duration-200">
+                            <h3 class="font-semibold text-gray-400 flex items-center gap-2">
                                 Dossiers
+                                <span class="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">Coming Soon</span>
                             </h3>
-                            <p class="mt-1.5 text-sm leading-relaxed">
+                            <p class="mt-1.5 text-sm leading-relaxed text-gray-400">
                                 Verken complete dossiers met alle bijbehorende documenten.
                             </p>
                         </div>
                     </div>
-                </a>
+                </div>
 
                 <a href="{{ route('zoeken') }}" class="group lg:col-span-2">
                     <div class="relative h-full overflow-hidden rounded-md bg-white shadow-xs">

@@ -93,10 +93,11 @@
                                 <i class="fas fa-tags text-[10px]" aria-hidden="true"></i>
                                 <span>Thema's</span>
                             </a>
-                            <a href="{{ route('dossiers.index') }}" class="inline-flex items-center gap-1.5 rounded-md bg-[var(--color-purple)] px-2.5 py-1.5 text-xs font-medium text-[var(--color-on-primary)] hover:bg-[var(--color-purple)]/80 transition-colors duration-200 border border-[var(--color-primary)]/20">
+                            <span class="inline-flex items-center gap-1.5 rounded-md bg-gray-300 px-2.5 py-1.5 text-xs font-medium text-gray-500 cursor-not-allowed border border-gray-200">
                                 <i class="fas fa-folder text-[10px]" aria-hidden="true"></i>
                                 <span>Dossiers</span>
-                            </a>
+                                <span class="inline-flex items-center rounded-full bg-purple-100 px-1.5 py-0.5 text-[10px] font-medium text-purple-700">Soon</span>
+                            </span>
                             <a href="{{ route('reports.index') }}" class="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium text-[var(--color-primary-dark)] hover:bg-[var(--color-primary)]/10 transition-colors duration-200 border border-[var(--color-primary)]/20">
                                 <i class="fas fa-chart-bar text-[10px]" aria-hidden="true"></i>
                                 <span>Rapporten</span>
