@@ -27,11 +27,11 @@
         x-data="{
             open: false,
             @if($wireModel->value())
-                value: @entangle($wireModel),
+            value: @entangle($wireModel),
             @else
-                value: null,
+            value: null,
             @endif
-            options: {{ json_encode($formattedOptions) }},
+            options: @js($formattedOptions),
             placeholderText: '{{ $placeholder }}',
             closeOnSelection: true,
             
@@ -49,19 +49,19 @@
 
             openMenu() {
                 this.open = true;
-                $nextTick(() => {
+                this.$nextTick(() => {
                     let selectedEl = this.$refs.list.querySelector('[data-selected=\'true\']');
                     if (selectedEl) {
-                        $focus.focus(selectedEl);
+                        this.$focus.focus(selectedEl);
                     } else {
-                        $focus.within(this.$refs.list).first();
+                        this.$focus.within(this.$refs.list).first();
                     }
                 });
             },
 
             closeMenu() {
                 this.open = false;
-                $nextTick(() => { $focus.focus(this.$refs.button); });
+                this.$nextTick(() => { this.$focus.focus(this.$refs.button); });
             },
 
             setSelected(option) {
@@ -89,12 +89,12 @@
 
                         if (focusedEl) {
                             if ((elements.length - 1) === focusedIndex) {
-                                $focus.focus(elements[0]);  
+                                this.$focus.focus(elements[0]);  
                             } else {
-                                $focus.focus(elements[focusedIndex + 1]);
+                                this.$focus.focus(elements[focusedIndex + 1]);
                             }
                         } else {
-                            $focus.focus(elements[0]);
+                            this.$focus.focus(elements[0]);
                         }
                     }
                 }, 50);

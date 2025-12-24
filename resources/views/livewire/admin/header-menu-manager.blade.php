@@ -165,7 +165,7 @@
         <div class="fixed inset-0 z-10 bg-gray-500/75 dark:bg-gray-900/75" wire:click="closeModal"></div>
 
         <div class="fixed inset-0 z-20 flex items-center justify-center p-4 pointer-events-none">
-            <div class="relative w-full max-w-2xl bg-white dark:bg-gray-800 shadow-xl rounded-lg p-6 pointer-events-auto max-h-[90vh] overflow-y-auto" wire:click.stop>
+            <div class="relative w-full max-w-2xl bg-white dark:bg-gray-800 shadow-xl rounded-lg p-6 pointer-events-auto max-h-[90vh] overflow-y-auto" @click.stop>
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                         @if($editingItemId)

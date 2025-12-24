@@ -4,7 +4,7 @@
         'type' => $tag === 'button' ? $type : null,
         'href' => ($tag === 'a' && ($disabled || $loading)) ? null : $href,
         'target' => $target,
-    ]) }}
+    ])->except(['size', 'variant', 'color', 'icon', 'iconPosition', 'loading', 'disabled']) }}
     @if($tag === 'button')
         @disabled($disabled || $loading)
     @endif
