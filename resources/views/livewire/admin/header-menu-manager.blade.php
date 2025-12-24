@@ -1,30 +1,32 @@
-<div class="space-y-8">
-    <div class="card">
-        <div class="card-header flex items-center justify-between gap-3 flex-wrap">
-            <div>
-                <h2 class="card-title">Header Menu</h2>
-                <p class="text-sm text-gray-600 dark:text-gray-400 m-0">Drag items to reorder. Changes save automatically.</p>
-            </div>
-            <div class="flex items-center gap-2">
-                <x-ui.dropdown>
-                    <x-slot:trigger>
-                        <x-button variant="primary" size="sm" icon="plus">
-                            Add New Item
-                        </x-button>
-                    </x-slot:trigger>
-                    <x-slot:content>
-                        <div class="py-1">
-                            <button type="button" class="w-full text-left px-4 py-2 text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700" wire:click="openAddModal('dropdown')">
-                                <i class="fa-solid fa-chevron-down mr-2"></i> Dropdown Menu
-                            </button>
-                            <button type="button" class="w-full text-left px-4 py-2 text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700" wire:click="openAddModal('link')">
-                                <i class="fa-solid fa-link mr-2"></i> Link Item
-                            </button>
-                        </div>
-                    </x-slot:content>
-                </x-ui.dropdown>
-            </div>
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-zinc-900 dark:text-white mb-2">Header Menu</h1>
+            <p class="text-zinc-600 dark:text-zinc-400">Manage header navigation menu items. Drag items to reorder. Changes save automatically.</p>
         </div>
+        <div class="flex items-center gap-3">
+            <x-ui.dropdown>
+                <x-slot:trigger>
+                    <x-button variant="primary" icon="plus" icon-position="left">
+                        Add New Item
+                    </x-button>
+                </x-slot:trigger>
+                <x-slot:content>
+                    <div class="py-1">
+                        <button type="button" class="w-full text-left px-4 py-2 text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700" wire:click="openAddModal('dropdown')">
+                            <i class="fa-solid fa-chevron-down mr-2"></i> Dropdown Menu
+                        </button>
+                        <button type="button" class="w-full text-left px-4 py-2 text-sm text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700" wire:click="openAddModal('link')">
+                            <i class="fa-solid fa-link mr-2"></i> Link Item
+                        </button>
+                    </div>
+                </x-slot:content>
+            </x-ui.dropdown>
+        </div>
+    </div>
+
+    <div class="card">
         <div class="card-body">
             @if($menuTree->isEmpty())
                 <p class="text-sm text-gray-600 dark:text-gray-400">No menu items yet. Create a new item.</p>

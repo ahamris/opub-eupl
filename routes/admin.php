@@ -14,8 +14,6 @@ use App\Livewire\Admin\MenuManager;
 use App\Livewire\Admin\HeaderMenuManager;
 use App\Livewire\Admin\FooterMenuManager;
 use App\Livewire\Admin\ThemeManager;
-use App\Livewire\Admin\PageManager;
-use App\Http\Controllers\Admin\PageController;
 
 // Admin Auth Routes (Guest only)
 Route::middleware('guest')->prefix('admin')->name('admin.')->group(function () {
