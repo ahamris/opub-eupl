@@ -37,7 +37,7 @@
 
     {{-- Global breadcrumb component (if $breadcrumbs is set) --}}
     {{-- Hide breadcrumb on pages that have header sections with breadcrumbs or on homepage --}}
-    @if(!empty($breadcrumbs ?? []) && !request()->routeIs('home') && !request()->routeIs('zoek') && !request()->routeIs('zoeken') && !request()->routeIs('themas.index') && !request()->routeIs('reports.index') && !request()->routeIs('verwijzingen') && !request()->routeIs('over') && !request()->routeIs('dossiers.index') && !request()->routeIs('contact') && !request()->is('open-overheid/documents/*') && !request()->routeIs('blog.index') && !request()->routeIs('blog.show'))
+    @if(!empty($breadcrumbs ?? []) && !request()->routeIs('home') && !request()->routeIs('zoek') && !request()->routeIs('zoeken') && !request()->routeIs('themas.index') && !request()->routeIs('reports.index') && !request()->routeIs('verwijzingen') && !request()->routeIs('over') && !request()->routeIs('dossiers.index') && !request()->routeIs('contact') && !request()->is('open-overheid/documents/*') && !request()->routeIs('blog.index') && !request()->routeIs('blog.show') && !request()->routeIs('page.show'))
         <div class="bg-[var(--color-surface)] border-b border-[var(--color-outline-variant)]">
             <div class="max-w-7xl mx-auto px-8 py-3">
                 <x-breadcrumbs :items="$breadcrumbs" />

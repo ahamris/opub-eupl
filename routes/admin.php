@@ -6,11 +6,14 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ContactSubmissionController;
 use App\Http\Controllers\Admin\Content\BlogController;
 use App\Http\Controllers\Admin\Content\BlogCategoryController;
+use App\Http\Controllers\Admin\Content\StaticPageController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\Auth\AdminLoginController;
 use App\Http\Controllers\Admin\Auth\AdminPasswordResetLinkController;
 use App\Http\Controllers\Admin\Auth\AdminNewPasswordController;
 use App\Livewire\Admin\MenuManager;
+use App\Livewire\Admin\HeaderMenuManager;
+use App\Livewire\Admin\FooterMenuManager;
 use App\Livewire\Admin\ThemeManager;
 
 // Admin Auth Routes (Guest only)
@@ -37,6 +40,7 @@ Route::middleware(['auth', \App\Http\Middleware\CheckIfAdmin::class])->prefix('a
     Route::controller(AdminController::class)->group(function () {
         Route::get('/', 'home')->name('home');
         Route::get('/analytics', 'analytics')->name('analytics');
+        Route::post('/clear-cache', 'clearCache')->name('clear-cache');
     });
 
     // Users Resource Routes
@@ -59,11 +63,19 @@ Route::middleware(['auth', \App\Http\Middleware\CheckIfAdmin::class])->prefix('a
         Route::post('blog/{blog}/toggle-active', [BlogController::class, 'toggleActive'])->name('blog.toggle-active');
         Route::post('blog/{blog}/toggle-featured', [BlogController::class, 'toggleFeatured'])->name('blog.toggle-featured');
 
+        // Static Page Routes
+        Route::resource('static-page', StaticPageController::class)->parameters([
+            'static-page' => 'staticPage',
+        ]);
+        Route::post('static-page/{staticPage}/toggle-active', [StaticPageController::class, 'toggleActive'])->name('static-page.toggle-active');
+
         // Settings Routes
         Route::resource('setting', SettingController::class);
     });
 
     // Settings Routes
     Route::get('/settings/menu', MenuManager::class)->name('settings.menu');
+    Route::get('/settings/header-menu', HeaderMenuManager::class)->name('settings.header-menu');
+    Route::get('/settings/footer-menu', FooterMenuManager::class)->name('settings.footer-menu');
     Route::get('/settings/theme', ThemeManager::class)->name('settings.theme');
 });
