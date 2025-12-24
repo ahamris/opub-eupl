@@ -7,6 +7,7 @@ use App\Http\Controllers\OpenOverheid\DossierController;
 use App\Http\Controllers\OpenOverheid\ReportController;
 use App\Http\Controllers\OpenOverheid\SearchController;
 use App\Http\Controllers\OpenOverheid\ThemaController;
+use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TypesenseGuiController;
 use Illuminate\Support\Facades\Route;
@@ -46,6 +47,9 @@ Route::get('/dossiers/{id}/audio', [DossierController::class, 'getAudio'])->name
 // Blog routes
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
+
+// Static Page routes
+Route::get('/pagina/{slug}', [PageController::class, 'show'])->name('page.show');
 
 // Dashboard route
 Route::get('/dashboard', function () {

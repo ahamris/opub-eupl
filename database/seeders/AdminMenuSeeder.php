@@ -110,6 +110,18 @@ class AdminMenuSeeder extends Seeder
                 'is_active' => true,
             ]);
 
+            AdminMenuItem::create([
+                'admin_menu_id' => $menu->id,
+                'parent_id' => $contentSection->id,
+                'item_type' => 'link',
+                'label' => 'Static Pages',
+                'slug' => 'static-pages',
+                'route_name' => 'admin.content.static-page.index',
+                'icon' => 'file-lines',
+                'position' => 2,
+                'is_active' => true,
+            ]);
+
             $systemSection = AdminMenuItem::create([
                 'admin_menu_id' => $menu->id,
                 'item_type' => 'section',
