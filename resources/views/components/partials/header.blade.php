@@ -33,6 +33,46 @@
 
         <!-- Right: Actions -->
         <div class="flex items-center gap-2 md:gap-3 flex-shrink-0">
+            <!-- Clear Cache Button -->
+            <button
+                type="button"
+                x-data="{
+                    isLoading: false,
+                    async clearCache() {
+                        if (this.isLoading) return;
+                        this.isLoading = true;
+                        
+                        try {
+                            const response = await fetch('{{ route('admin.clear-cache') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                },
+                            });
+                            
+                            const data = await response.json();
+                            
+                            if (data.success) {
+                                $dispatch('notify', { type: 'success', message: data.message || 'Cache cleared successfully.' });
+                            } else {
+                                $dispatch('notify', { type: 'error', message: data.message || 'Failed to clear cache.' });
+                            }
+                        } catch (error) {
+                            $dispatch('notify', { type: 'error', message: 'Failed to clear cache.' });
+                        } finally {
+                            this.isLoading = false;
+                        }
+                    }
+                }"
+                @click="clearCache()"
+                :disabled="isLoading"
+                class="inline-flex w-8 h-8 items-center justify-center text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Clear Cache"
+            >
+                <i class="fa-solid fa-rotate" :class="{ 'fa-spin': isLoading }"></i>
+            </button>
+
             <!-- Theme Toggle -->
             <div
                 class="mr-10"
