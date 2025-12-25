@@ -211,7 +211,9 @@ class SearchController extends Controller
 
     public function aboutPage(Request $request)
     {
-        return view('over');
+        $aboutSettings = \App\Models\AboutSetting::getInstance();
+        
+        return view('over', compact('aboutSettings'));
     }
 
     public function contactPage(Request $request)
