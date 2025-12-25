@@ -128,6 +128,50 @@
                     @endif
                 @endif
             @endforeach
+
+            <!-- Login/User Button -->
+            <div class="ml-4 pl-4 border-l border-slate-200">
+                @auth
+                    <div class="relative" x-data="{ open: false }">
+                        <button 
+                            @click="open = !open" 
+                            class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)] transition-colors"
+                        >
+                            <span class="w-7 h-7 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-white text-xs font-semibold">
+                                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                            </span>
+                            <span class="hidden xl:inline">{{ Str::limit(auth()->user()->name, 15) }}</span>
+                            <svg viewBox="0 0 20 20" fill="currentColor" class="size-4">
+                                <path d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" fill-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <div 
+                            x-show="open" 
+                            @click.away="open = false"
+                            x-transition
+                            class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black/5 py-1 z-50"
+                        >
+                            <a href="{{ route('user.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                <i class="fas fa-tachometer-alt mr-2 text-gray-400"></i> Dashboard
+                            </a>
+                            <form method="POST" action="{{ route('user.logout') }}">
+                                @csrf
+                                <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                    <i class="fas fa-sign-out-alt mr-2 text-gray-400"></i> Uitloggen
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                @else
+                    <a 
+                        href="{{ route('user.login') }}" 
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-[var(--color-primary)] rounded-md hover:bg-[var(--color-primary-dark)] transition-colors"
+                    >
+                        <i class="fas fa-sign-in-alt text-[10px]"></i>
+                        Inloggen
+                    </a>
+                @endauth
+            </div>
         </div>
     </nav>
 

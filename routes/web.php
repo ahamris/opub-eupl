@@ -48,6 +48,23 @@ Route::get('/dossiers/{id}/audio', [DossierController::class, 'getAudio'])->name
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 
+
+// User Authentication & Dashboard Routes
+Route::prefix('account')->name('user.')->group(function () {
+    Route::middleware('guest')->group(function () {
+        Route::get('login', [\App\Http\Controllers\User\AuthController::class, 'showLogin'])->name('login');
+        Route::post('login', [\App\Http\Controllers\User\AuthController::class, 'login']);
+        Route::get('register', [\App\Http\Controllers\User\AuthController::class, 'showRegister'])->name('register');
+        Route::post('register', [\App\Http\Controllers\User\AuthController::class, 'register']);
+    });
+    
+    Route::middleware('auth')->group(function () {
+        Route::post('logout', [\App\Http\Controllers\User\AuthController::class, 'logout'])->name('logout');
+        Route::get('dashboard', [\App\Http\Controllers\User\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('subscriptions', [\App\Http\Controllers\User\DashboardController::class, 'subscriptions'])->name('subscriptions');
+    });
+});
+
 // Static Page routes
 Route::get('/pagina/{slug}', [PageController::class, 'show'])->name('page.show');
 
