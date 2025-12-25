@@ -140,7 +140,7 @@ class AdminMenuSeeder extends Seeder
                 'admin_menu_id' => $menu->id,
                 'parent_id' => $homepage->id,
                 'item_type' => 'link',
-                'label' => 'Hero Settings',
+                'label' => 'Home Settings',
                 'slug' => 'homepage-settings',
                 'route_name' => 'admin.content.homepage.settings.edit',
                 'icon' => 'star',
