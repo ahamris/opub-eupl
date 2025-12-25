@@ -16,7 +16,7 @@ class Testimonial extends Model
         'author',
         'role',
         'organization',
-        'avatar',
+        'rating',
         'sort_order',
         'is_active',
     ];
@@ -24,6 +24,7 @@ class Testimonial extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'sort_order' => 'integer',
+        'rating' => 'integer',
     ];
 
     /**
@@ -40,22 +41,6 @@ class Testimonial extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('sort_order');
-    }
-
-    /**
-     * Get the avatar URL.
-     */
-    public function getAvatarUrlAttribute(): ?string
-    {
-        if (!$this->avatar) {
-            return null;
-        }
-
-        if (str_starts_with($this->avatar, 'http')) {
-            return $this->avatar;
-        }
-
-        return Storage::url($this->avatar);
     }
 
     /**

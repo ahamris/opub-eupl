@@ -69,6 +69,29 @@
                             hint="Show this testimonial"
                         />
 
+                        <!-- Star Rating -->
+                        <div>
+                            <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Rating</label>
+                            <div x-data="{ rating: {{ old('rating', $testimonial->rating ?? 5) }} }" class="flex items-center gap-1">
+                                <template x-for="star in [1, 2, 3, 4, 5]" :key="star">
+                                    <button 
+                                        type="button"
+                                        @click="rating = star"
+                                        class="p-1 transition hover:scale-110"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" 
+                                            class="w-6 h-6 transition-colors"
+                                            :class="star <= rating ? 'text-orange-500' : 'text-zinc-300 dark:text-zinc-600'"
+                                        >
+                                            <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z" clip-rule="evenodd"/>
+                                        </svg>
+                                    </button>
+                                </template>
+                                <input type="hidden" name="rating" :value="rating">
+                                <span class="ml-2 text-sm text-zinc-500" x-text="rating + '/5'"></span>
+                            </div>
+                        </div>
+
                         <x-input 
                             label="Sort Order"
                             name="sort_order" 
@@ -76,30 +99,6 @@
                             placeholder="0"
                             value="{{ old('sort_order', $testimonial->sort_order) }}"
                         />
-                    </div>
-
-                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-md p-6 space-y-4">
-                        <h2 class="text-lg font-semibold text-zinc-900 dark:text-white border-b border-zinc-200 dark:border-zinc-700 pb-3">Avatar</h2>
-                        
-                        @if($testimonial->avatar_url)
-                        <div class="mb-4">
-                            <p class="text-sm text-zinc-600 dark:text-zinc-400 mb-2">Current Avatar:</p>
-                            <div class="relative inline-block">
-                                <img src="{{ $testimonial->avatar_url }}" alt="{{ $testimonial->author }}" class="w-20 h-20 rounded-full object-cover border border-zinc-200 dark:border-zinc-700">
-                                <label class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center cursor-pointer hover:bg-red-600">
-                                    <input type="checkbox" name="remove_avatar" value="1" class="sr-only">
-                                    <i class="fas fa-times text-xs"></i>
-                                </label>
-                            </div>
-                        </div>
-                        @endif
-
-                        <x-ui.file-upload 
-                            name="avatar"
-                            label="Upload New Avatar"
-                            accept="image/*"
-                        />
-                        <p class="text-xs text-zinc-500 dark:text-zinc-400">Recommended: 256×256px square image</p>
                     </div>
                 </div>
             </div>

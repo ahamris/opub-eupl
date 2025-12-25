@@ -110,7 +110,7 @@ class HomepageSeeder extends Seeder
                 'author' => 'Sarah van der Berg',
                 'role' => 'Onderzoeker',
                 'organization' => 'Universiteit van Amsterdam',
-                'avatar' => 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+                'rating' => 5,
                 'sort_order' => 0,
             ],
             [
@@ -118,7 +118,7 @@ class HomepageSeeder extends Seeder
                 'author' => 'Mark Jansen',
                 'role' => 'Journalist',
                 'organization' => 'NRC Handelsblad',
-                'avatar' => 'https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+                'rating' => 5,
                 'sort_order' => 1,
             ],
             [
@@ -126,7 +126,7 @@ class HomepageSeeder extends Seeder
                 'author' => 'Lisa de Vries',
                 'role' => 'Beleidsmedewerker',
                 'organization' => 'Gemeente Rotterdam',
-                'avatar' => 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+                'rating' => 4,
                 'sort_order' => 2,
             ],
             [
@@ -134,7 +134,7 @@ class HomepageSeeder extends Seeder
                 'author' => 'Tom Bakker',
                 'role' => 'Advocaat',
                 'organization' => 'Bakker & Partners',
-                'avatar' => 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+                'rating' => 5,
                 'sort_order' => 3,
             ],
             [
@@ -142,7 +142,7 @@ class HomepageSeeder extends Seeder
                 'author' => 'Emma Smit',
                 'role' => 'Burger',
                 'organization' => null,
-                'avatar' => 'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+                'rating' => 4,
                 'sort_order' => 4,
             ],
         ];

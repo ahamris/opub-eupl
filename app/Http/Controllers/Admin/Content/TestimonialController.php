@@ -37,6 +37,7 @@ class TestimonialController extends AdminBaseController
             'role' => 'nullable|string|max:255',
             'organization' => 'nullable|string|max:255',
             'avatar' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:1024',
+            'rating' => 'nullable|integer|min:1|max:5',
             'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
         ]);
@@ -76,6 +77,7 @@ class TestimonialController extends AdminBaseController
             'role' => 'nullable|string|max:255',
             'organization' => 'nullable|string|max:255',
             'avatar' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:1024',
+            'rating' => 'nullable|integer|min:1|max:5',
             'sort_order' => 'nullable|integer|min:0',
             'is_active' => 'boolean',
         ]);

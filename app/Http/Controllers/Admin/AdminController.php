@@ -21,8 +21,8 @@ class AdminController extends AdminBaseController
     public function clearCache(): JsonResponse
     {
         try {
-            // Clear application cache
-            Cache::flush();
+            // Clear application cache (safer than Cache::flush())
+            Artisan::call('cache:clear');
 
             // Clear config cache
             Artisan::call('config:clear');
@@ -32,6 +32,9 @@ class AdminController extends AdminBaseController
 
             // Clear view cache
             Artisan::call('view:clear');
+
+            // Clear event cache
+            Artisan::call('event:clear');
 
             return response()->json([
                 'success' => true,

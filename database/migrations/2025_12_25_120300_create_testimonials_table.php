@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('author');
             $table->string('role')->nullable();
             $table->string('organization')->nullable();
-            $table->string('avatar')->nullable();
+            $table->unsignedTinyInteger('rating')->default(5);
             $table->integer('sort_order')->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();

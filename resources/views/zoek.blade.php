@@ -217,7 +217,7 @@
                 'author' => $t->author,
                 'role' => $t->role,
                 'organization' => $t->organization,
-                'avatar' => $t->avatar_url,
+                'rating' => $t->rating,
             ])->toArray() 
             : [];
     @endphp

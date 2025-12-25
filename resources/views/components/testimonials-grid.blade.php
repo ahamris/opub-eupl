@@ -1,48 +1,10 @@
 @props([
-    'testimonials' => [],
+    'testimonials' => null,
 ])
 
 @php
-    // Placeholder testimonials - later kunnen deze uit een database komen
-    $defaultTestimonials = [
-        [
-            'quote' => 'Dit platform maakt het zoeken naar overheidsdocumenten eindelijk eenvoudig. De zoekfunctie is snel en de filters helpen me precies te vinden wat ik nodig heb.',
-            'author' => 'Sarah van der Berg',
-            'role' => 'Onderzoeker',
-            'organization' => 'Universiteit van Amsterdam',
-            'avatar' => 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        ],
-        [
-            'quote' => 'Als journalist gebruik ik dit platform dagelijks. De transparantie en toegankelijkheid van documenten is ongeëvenaard.',
-            'author' => 'Mark Jansen',
-            'role' => 'Journalist',
-            'organization' => 'NRC Handelsblad',
-            'avatar' => 'https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        ],
-        [
-            'quote' => 'Fantastisch platform voor het vinden van overheidsinformatie. De interface is intuïtief en de documenten zijn goed georganiseerd.',
-            'author' => 'Lisa de Vries',
-            'role' => 'Beleidsmedewerker',
-            'organization' => 'Gemeente Rotterdam',
-            'avatar' => 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        ],
-        [
-            'quote' => 'De Woo-voorziening is een game-changer. Eindelijk kunnen we eenvoudig toegang krijgen tot alle openbare documenten.',
-            'author' => 'Tom Bakker',
-            'role' => 'Advocaat',
-            'organization' => 'Bakker & Partners',
-            'avatar' => 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        ],
-        [
-            'quote' => 'Als burger waardeer ik de transparantie enorm. Dit platform maakt de overheid toegankelijker voor iedereen.',
-            'author' => 'Emma Smit',
-            'role' => 'Burger',
-            'organization' => null,
-            'avatar' => 'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        ],
-    ];
-
-    $testimonials = !empty($testimonials) ? $testimonials : $defaultTestimonials;
+    // Get testimonials from database (cached)
+    $testimonials = $testimonials ?? \App\Models\Testimonial::getAllActive();
 @endphp
 
 <div class="bg-gradient-to-b from-white to-slate-50 py-16 sm:py-20">
@@ -65,28 +27,41 @@
         <div class="mx-auto flow-root max-w-2xl lg:mx-0 lg:max-w-none">
             <div class="-mt-8 sm:-mx-4 sm:columns-2 sm:text-[0] lg:columns-3">
                 @foreach($testimonials as $testimonial)
+                @php
+                    $isObject = is_object($testimonial);
+                    $rating = (int) ($isObject ? $testimonial->rating : ($testimonial['rating'] ?? 5));
+                    $quote = $isObject ? $testimonial->quote : $testimonial['quote'];
+                    $author = $isObject ? $testimonial->author : $testimonial['author'];
+                    $role = $isObject ? $testimonial->role : ($testimonial['role'] ?? null);
+                    $organization = $isObject ? $testimonial->organization : ($testimonial['organization'] ?? null);
+                @endphp
                 <div class="pt-8 sm:inline-block sm:w-full sm:px-4">
                     <figure class="rounded-md bg-white p-8 ring-1 ring-slate-200/60">
-                        <!-- Quote icon -->
-                        <svg class="h-6 w-6 text-[var(--color-primary)]/20 mb-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M4.583 17.321C3.553 16.227 3 15 3 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311 1.804.167 3.226 1.648 3.226 3.489a3.5 3.5 0 01-3.5 3.5c-1.073 0-2.099-.49-2.748-1.179zm10 0C13.553 16.227 13 15 13 13.011c0-3.5 2.457-6.637 6.03-8.188l.893 1.378c-3.335 1.804-3.987 4.145-4.247 5.621.537-.278 1.24-.375 1.929-.311 1.804.167 3.226 1.648 3.226 3.489a3.5 3.5 0 01-3.5 3.5c-1.073 0-2.099-.49-2.748-1.179z" />
-                        </svg>
+                        <!-- Star Rating (Debug: {{ $rating }}) -->
+                        <div class="flex items-center gap-0.5 mb-4">
+                            @for($i = 1; $i <= 5; $i++)
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" 
+                                    class="w-4 h-4 @if($i <= $rating) text-orange-400 @else text-gray-200 @endif">
+                                    <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z" clip-rule="evenodd"/>
+                                </svg>
+                            @endfor
+                        </div>
                         <blockquote class="text-[var(--color-on-surface)] leading-relaxed">
-                            <p>{{ $testimonial['quote'] }}</p>
+                            <p>{{ $quote }}</p>
                         </blockquote>
                         <figcaption class="mt-6 flex items-center gap-x-4 pt-6 border-t border-slate-100">
-                            <img
-                                src="{{ $testimonial['avatar'] }}"
-                                alt="{{ $testimonial['author'] }}"
-                                class="h-12 w-12 rounded-full object-cover ring-2 ring-white"
-                                loading="lazy"
-                            />
+                            <!-- User Icon instead of avatar -->
+                            <div class="h-12 w-12 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center ring-2 ring-white">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-[var(--color-primary)]">
+                                    <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
                             <div>
                                 <div class="font-semibold text-[var(--color-on-surface)]">
-                                    {{ $testimonial['author'] }}
+                                    {{ $author }}
                                 </div>
                                 <div class="text-sm text-[var(--color-on-surface-variant)]">
-                                    {{ $testimonial['role'] }}{{ $testimonial['organization'] ? ' · ' . $testimonial['organization'] : '' }}
+                                    {{ $role }}{{ $organization ? ' · ' . $organization : '' }}
                                 </div>
                             </div>
                         </figcaption>
