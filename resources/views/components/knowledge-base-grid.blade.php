@@ -3,45 +3,65 @@
 ])
 
 @php
-    $defaultArticles = [
-        [
-            'title' => 'Wat is de Wet open overheid (Woo)?',
-            'description' => 'Leer alles over de Woo en hoe deze wet transparantie bevordert in de Nederlandse overheid. Ontdek wat de Woo betekent voor burgers en organisaties.',
-            'category' => 'Basis',
-            'date' => now()->subDays(5),
-            'image' => 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=2070&auto=format&fit=crop',
-        ],
-        [
-            'title' => 'Hoe zoek je effectief in overheidsdocumenten?',
-            'description' => 'Tips en trucs om snel de juiste documenten te vinden met geavanceerde zoekfuncties en filters.',
-            'category' => 'Gebruik',
-            'date' => now()->subDays(12),
-            'image' => 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop',
-        ],
-        [
-            'title' => 'Open data en transparantie in Nederland',
-            'description' => 'Ontdek hoe open data bijdraagt aan een transparantere overheid en betere democratie.',
-            'category' => 'Achtergrond',
-            'date' => now()->subDays(20),
-            'image' => 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
-        ],
-        [
-            'title' => 'Woo-verzoeken indienen: een praktische gids',
-            'description' => 'Stap-voor-stap instructies voor het indienen van een Woo-verzoek en wat je kunt verwachten.',
-            'category' => 'Gebruik',
-            'date' => now()->subDays(30),
-            'image' => 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=2070&auto=format&fit=crop',
-        ],
-        [
-            'title' => 'Privacy en openbaarheid: de balans',
-            'description' => 'Hoe de Woo omgaat met privacy en welke informatie wel en niet openbaar gemaakt kan worden.',
-            'category' => 'Achtergrond',
-            'date' => now()->subDays(45),
-            'image' => 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=2070&auto=format&fit=crop',
-        ],
-    ];
+    // Try to fetch blogs from database first
+    $dbBlogs = \App\Models\Blog::getCachedCarouselBlogs(5);
     
-    $articles = !empty($articles) ? $articles : $defaultArticles;
+    if ($dbBlogs && $dbBlogs->count() > 0) {
+        $articles = $dbBlogs->map(fn($blog) => [
+            'title' => $blog->title,
+            'description' => $blog->short_body,
+            'category' => $blog->blog_category?->name ?? 'Algemeen',
+            'date' => $blog->created_at,
+            'image' => $blog->image ?? 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=2070&auto=format&fit=crop',
+            'url' => $blog->link_url,
+            'author' => $blog->author?->name ?? 'Open Overheid Team',
+            'author_avatar' => $blog->author?->profile_photo_url ?? 'https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+        ])->toArray();
+    } elseif (empty($articles)) {
+        // Fallback to static defaults if no DB blogs
+        $articles = [
+            [
+                'title' => 'Wat is de Wet open overheid (Woo)?',
+                'description' => 'Leer alles over de Woo en hoe deze wet transparantie bevordert in de Nederlandse overheid. Ontdek wat de Woo betekent voor burgers en organisaties.',
+                'category' => 'Basis',
+                'date' => now()->subDays(5),
+                'image' => 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=2070&auto=format&fit=crop',
+                'url' => '#',
+            ],
+            [
+                'title' => 'Hoe zoek je effectief in overheidsdocumenten?',
+                'description' => 'Tips en trucs om snel de juiste documenten te vinden met geavanceerde zoekfuncties en filters.',
+                'category' => 'Gebruik',
+                'date' => now()->subDays(12),
+                'image' => 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop',
+                'url' => '#',
+            ],
+            [
+                'title' => 'Open data en transparantie in Nederland',
+                'description' => 'Ontdek hoe open data bijdraagt aan een transparantere overheid en betere democratie.',
+                'category' => 'Achtergrond',
+                'date' => now()->subDays(20),
+                'image' => 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
+                'url' => '#',
+            ],
+            [
+                'title' => 'Woo-verzoeken indienen: een praktische gids',
+                'description' => 'Stap-voor-stap instructies voor het indienen van een Woo-verzoek en wat je kunt verwachten.',
+                'category' => 'Gebruik',
+                'date' => now()->subDays(30),
+                'image' => 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=2070&auto=format&fit=crop',
+                'url' => '#',
+            ],
+            [
+                'title' => 'Privacy en openbaarheid: de balans',
+                'description' => 'Hoe de Woo omgaat met privacy en welke informatie wel en niet openbaar gemaakt kan worden.',
+                'category' => 'Achtergrond',
+                'date' => now()->subDays(45),
+                'image' => 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=2070&auto=format&fit=crop',
+                'url' => '#',
+            ],
+        ];
+    }
 @endphp
 
 <div class="mx-auto mt-16 relative" x-data="{
@@ -129,13 +149,13 @@
                             <time datetime="{{ $article['date']->format('Y-m-d') }}">
                                 {{ $article['date']->format('M d, Y') }}
                             </time>
-                            <a href="#" class="relative z-10 text-xs rounded-md bg-[var(--color-purple)] text-white px-1.5 py-1 font-medium">
+                            <span class="relative z-10 text-xs rounded-md bg-[var(--color-purple)] text-white px-1.5 py-1 font-medium">
                                 {{ $article['category'] }}
-                            </a>
+                            </span>
                         </div>
                         <div class="relative grow">
                             <h3 class="mt-3 font-semibold">
-                                <a href="#">
+                                <a href="{{ $article['url'] ?? '#' }}">
                                     <span class="absolute inset-0"></span>
                                     {{ $article['title'] }}
                                 </a>
@@ -145,13 +165,10 @@
                             </p>
                         </div>
                         <div class="relative mt-8 flex items-center gap-x-4 justify-self-end">
-                            <img src="https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="" class="size-10 rounded-full bg-[var(--color-surface-variant)]" />
+                            <img src="{{ $article['author_avatar'] ?? 'https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80' }}" alt="" class="size-10 rounded-full bg-[var(--color-surface-variant)]" />
                             <div class="text-sm">
                                 <p class="font-semibold text-[var(--color-on-surface)]">
-                                    <a href="#">
-                                        <span class="absolute inset-0"></span>
-                                        Open Overheid Team
-                                    </a>
+                                    {{ $article['author'] ?? 'Open Overheid Team' }}
                                 </p>
                                 <p>Redactie</p>
                             </div>

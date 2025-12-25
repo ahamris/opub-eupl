@@ -69,6 +69,29 @@ Route::middleware(['auth', \App\Http\Middleware\CheckIfAdmin::class])->prefix('a
         ]);
         Route::post('static-page/{staticPage}/toggle-active', [StaticPageController::class, 'toggleActive'])->name('static-page.toggle-active');
 
+        // Homepage Management Routes
+        Route::prefix('homepage')->name('homepage.')->group(function () {
+            // Homepage Settings (singleton)
+            Route::get('settings', [\App\Http\Controllers\Admin\Content\HomepageSettingController::class, 'edit'])->name('settings.edit');
+            Route::put('settings', [\App\Http\Controllers\Admin\Content\HomepageSettingController::class, 'update'])->name('settings.update');
+            
+            // CTA Panels
+            Route::resource('cta-panel', \App\Http\Controllers\Admin\Content\CtaPanelController::class)->parameters([
+                'cta-panel' => 'ctaPanel',
+            ]);
+            Route::post('cta-panel/{ctaPanel}/toggle-active', [\App\Http\Controllers\Admin\Content\CtaPanelController::class, 'toggleActive'])->name('cta-panel.toggle-active');
+            
+            // Bento Items
+            Route::resource('bento-item', \App\Http\Controllers\Admin\Content\BentoItemController::class)->parameters([
+                'bento-item' => 'bentoItem',
+            ]);
+            Route::post('bento-item/{bentoItem}/toggle-active', [\App\Http\Controllers\Admin\Content\BentoItemController::class, 'toggleActive'])->name('bento-item.toggle-active');
+            
+            // Testimonials
+            Route::resource('testimonial', \App\Http\Controllers\Admin\Content\TestimonialController::class);
+            Route::post('testimonial/{testimonial}/toggle-active', [\App\Http\Controllers\Admin\Content\TestimonialController::class, 'toggleActive'])->name('testimonial.toggle-active');
+        });
+
         // Settings Routes
         Route::resource('setting', SettingController::class);
     });

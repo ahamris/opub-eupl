@@ -122,6 +122,68 @@ class AdminMenuSeeder extends Seeder
                 'is_active' => true,
             ]);
 
+            // Homepage Management (Parent with Submenu)
+            $homepage = AdminMenuItem::create([
+                'admin_menu_id' => $menu->id,
+                'parent_id' => $contentSection->id,
+                'item_type' => 'link',
+                'label' => 'Homepage',
+                'slug' => 'homepage',
+                'route_name' => null,
+                'icon' => 'home',
+                'position' => 3,
+                'is_active' => true,
+            ]);
+
+            // Homepage Submenu Items
+            AdminMenuItem::create([
+                'admin_menu_id' => $menu->id,
+                'parent_id' => $homepage->id,
+                'item_type' => 'link',
+                'label' => 'Hero Settings',
+                'slug' => 'homepage-settings',
+                'route_name' => 'admin.content.homepage.settings.edit',
+                'icon' => 'star',
+                'position' => 0,
+                'is_active' => true,
+            ]);
+
+            AdminMenuItem::create([
+                'admin_menu_id' => $menu->id,
+                'parent_id' => $homepage->id,
+                'item_type' => 'link',
+                'label' => 'CTA Panels',
+                'slug' => 'homepage-cta-panels',
+                'route_name' => 'admin.content.homepage.cta-panel.index',
+                'icon' => 'rectangle-ad',
+                'position' => 1,
+                'is_active' => true,
+            ]);
+
+            AdminMenuItem::create([
+                'admin_menu_id' => $menu->id,
+                'parent_id' => $homepage->id,
+                'item_type' => 'link',
+                'label' => 'Bento Items',
+                'slug' => 'homepage-bento-items',
+                'route_name' => 'admin.content.homepage.bento-item.index',
+                'icon' => 'th-large',
+                'position' => 2,
+                'is_active' => true,
+            ]);
+
+            AdminMenuItem::create([
+                'admin_menu_id' => $menu->id,
+                'parent_id' => $homepage->id,
+                'item_type' => 'link',
+                'label' => 'Testimonials',
+                'slug' => 'homepage-testimonials',
+                'route_name' => 'admin.content.homepage.testimonial.index',
+                'icon' => 'quote-left',
+                'position' => 3,
+                'is_active' => true,
+            ]);
+
             $systemSection = AdminMenuItem::create([
                 'admin_menu_id' => $menu->id,
                 'item_type' => 'section',

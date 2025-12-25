@@ -80,7 +80,11 @@ class Blog extends Model
         if (empty($this->slug)) {
             return '#';
         }
-        return route('blog.show', ['blog' => $this->slug]);
+        try {
+            return route('blog.show', ['slug' => $this->slug]);
+        } catch (\Exception $e) {
+            return '#';
+        }
     }
 
     public function sluggable(): array

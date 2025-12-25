@@ -164,9 +164,18 @@ class SearchController extends Controller
             ]);
         }
 
-        // Homepage - minimal data only
+        // Homepage - load homepage management data
+        $homepageSettings = \App\Models\HomepageSetting::getInstance();
+        $ctaPanels = \App\Models\CtaPanel::active()->ordered()->get();
+        $bentoItems = \App\Models\BentoItem::getAllActive();
+        $testimonials = \App\Models\Testimonial::getAllActive();
+
         return view('zoek', [
             'documentCount' => $documentCount,
+            'homepageSettings' => $homepageSettings,
+            'ctaPanels' => $ctaPanels,
+            'bentoItems' => $bentoItems,
+            'testimonials' => $testimonials,
         ]);
     }
 

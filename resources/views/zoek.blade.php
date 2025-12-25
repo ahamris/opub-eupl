@@ -9,26 +9,29 @@
 
 @section('content')
     <!-- Hero Section with Search - Only on Homepage -->
-    @if(request()->routeIs('home'))
+    @if(request()->routeIs('home') && (!isset($homepageSettings) || $homepageSettings->hero_is_active))
     <x-hero-split-search 
-        badge="Open source Woo-voorziening"
-        badgeText="Volledig operationeel"
-        title="OpenPublicaties: Open Source Woo-Voorziening"
-        :description="'Vind en bekijk alle actief openbaar gemaakte overheidsdocumenten. Eenvoudig, betrouwbaar en volledig transparant.'"
+        :badge="$homepageSettings->hero_badge ?? 'Open source Woo-voorziening'"
+        :badgeText="$homepageSettings->hero_badge_text ?? 'Volledig operationeel'"
+        :title="$homepageSettings->hero_title ?? 'OpenPublicaties: Open Source Woo-Voorziening'"
+        :description="$homepageSettings->hero_description ?? 'Vind en bekijk alle actief openbaar gemaakte overheidsdocumenten. Eenvoudig, betrouwbaar en volledig transparant.'"
         :documentCount="$documentCount"
     />
     
-    <!-- CTA Section - Purple variant (after hero) -->
+    <!-- CTA Section - AI Assistant (from database or fallback) -->
+    @php
+        $aiCtaPanel = isset($ctaPanels) ? $ctaPanels->where('slug', 'ai-assistant')->first() : null;
+    @endphp
     <x-cta-dark-panel 
-        title="Stel vragen aan onze AI-assistent"
-        description="Vraag in gewone taal naar overheidsdocumenten en ontvang direct antwoord. Onze AI doorzoekt honderden duizenden documenten en vindt precies wat u zoekt."
-        primaryButtonText="Probeer nu gratis"
-        primaryButtonUrl="{{ route('chat') }}"
-        secondaryButtonText="Hoe werkt het?"
-        secondaryButtonUrl="{{ route('over') }}"
-        screenshotUrl="{{ asset('images/ss.png') }}"
-        screenshotAlt="AI-gestuurde documentzoekmachine"
-        variant="purple"
+        :title="$aiCtaPanel->title ?? 'Stel vragen aan onze AI-assistent'"
+        :description="$aiCtaPanel->description ?? 'Vraag in gewone taal naar overheidsdocumenten en ontvang direct antwoord. Onze AI doorzoekt honderden duizenden documenten en vindt precies wat u zoekt.'"
+        :primaryButtonText="$aiCtaPanel->primary_button_text ?? 'Probeer nu gratis'"
+        :primaryButtonUrl="$aiCtaPanel->primary_button_url ?? route('chat')"
+        :secondaryButtonText="$aiCtaPanel->secondary_button_text ?? 'Hoe werkt het?'"
+        :secondaryButtonUrl="$aiCtaPanel->secondary_button_url ?? route('over')"
+        :screenshotUrl="$aiCtaPanel && $aiCtaPanel->screenshot ? asset('storage/' . $aiCtaPanel->screenshot) : asset('images/ss.png')"
+        :screenshotAlt="$aiCtaPanel->screenshot_alt ?? 'AI-gestuurde documentzoekmachine'"
+        :variant="$aiCtaPanel->variant ?? 'purple'"
     />
     @endif
     
@@ -43,25 +46,67 @@
     @endif
     
     <!-- Quick Actions Section - Bento Grid - Only on Homepage -->
-    @if(request()->routeIs('home'))
+    @if(request()->routeIs('home') && (!isset($homepageSettings) || $homepageSettings->bento_is_active))
     <div class="bg-gray-50 py-16 sm:py-20">
         <div class="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
             <!-- Section Header -->
             <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-10">
                 <div>
-                    <p class="text-sm font-medium uppercase">Snel aan de slag</p>
+                    <p class="text-sm font-medium uppercase">{{ $homepageSettings->bento_eyebrow ?? 'Snel aan de slag' }}</p>
                     <h2 class="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-                        Alles wat je nodig hebt
+                        {{ $homepageSettings->bento_title ?? 'Alles wat je nodig hebt' }}
                     </h2>
                 </div>
                 <p class="max-w-sm text-sm lg:text-right">
-                    Verken de verschillende manieren om overheidsdocumenten te vinden en te raadplegen.
+                    {{ $homepageSettings->bento_description ?? 'Verken de verschillende manieren om overheidsdocumenten te vinden en te raadplegen.' }}
                 </p>
             </div>
 
-            <!-- Bento Grid -->
+            <!-- Bento Grid - Dynamic from database or fallback -->
             <div class="grid grid-cols-1 gap-6 lg:grid-cols-6 lg:grid-rows-2">
-
+                @if(isset($bentoItems) && $bentoItems->count() > 0)
+                    @foreach($bentoItems as $item)
+                    @if($item->is_coming_soon)
+                    <div class="lg:col-span-{{ $item->col_span }} opacity-60 cursor-not-allowed">
+                        <div class="relative h-full overflow-hidden rounded-md bg-white shadow-xs">
+                            <div class="overflow-hidden">
+                                <img src="{{ $item->image_url ?? 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop' }}"
+                                     alt="{{ $item->title }}"
+                                     class="h-64 sm:h-80 w-full object-cover grayscale" />
+                            </div>
+                            <div class="p-6">
+                                <h3 class="font-semibold text-gray-400 flex items-center gap-2">
+                                    {{ $item->title }}
+                                    <span class="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">{{ $item->coming_soon_text ?? 'Coming Soon' }}</span>
+                                </h3>
+                                <p class="mt-1.5 text-sm leading-relaxed text-gray-400">
+                                    {{ $item->description }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    @else
+                    <a href="{{ $item->url ?? '#' }}" class="group lg:col-span-{{ $item->col_span }}">
+                        <div class="relative h-full overflow-hidden rounded-md bg-white shadow-xs group">
+                            <div class="overflow-hidden">
+                                <img src="{{ $item->image_url ?? 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=2070&auto=format&fit=crop' }}"
+                                     alt="{{ $item->title }}"
+                                     class="h-64 sm:h-80 w-full object-cover object-center" />
+                            </div>
+                            <div class="p-6 {{ $item->col_span == 4 ? 'lg:p-8' : '' }}">
+                                <h3 class="font-semibold group-hover:text-primary transition-colors duration-200">
+                                    {{ $item->title }}
+                                </h3>
+                                <p class="mt-1.5 text-sm leading-relaxed">
+                                    {{ $item->description }}
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                    @endif
+                    @endforeach
+                @else
+                {{-- Fallback static bento items --}}
                 <a href="{{ route('themas.index') }}" class="group lg:col-span-4">
                     <div class="relative h-full overflow-hidden rounded-md bg-white shadow-xs group">
                         <div class="overflow-hidden">
@@ -134,13 +179,14 @@
                         </div>
                     </div>
                 </a>
+                @endif
             </div>
         </div>
     </div>
     @endif
 
     <!-- Kennisbank Section -->
-    @if(request()->routeIs('home'))
+    @if(request()->routeIs('home') && (!isset($homepageSettings) || $homepageSettings->kennisbank_is_active))
     <div class="bg-white py-16 sm:py-20">
         <div class="mx-auto max-w-7xl px-6 lg:px-8">
             <!-- Section divider -->
@@ -148,13 +194,13 @@
             
             <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-10">
                 <div>
-                    <p class="text-sm font-medium uppercase">Leren & ontdekken</p>
+                    <p class="text-sm font-medium uppercase">{{ $homepageSettings->kennisbank_eyebrow ?? 'Leren & ontdekken' }}</p>
                     <h2 class="mt-2 font-semibold sm:text-4xl">
-                        Kennisbank
+                        {{ $homepageSettings->kennisbank_title ?? 'Kennisbank' }}
                     </h2>
                 </div>
                 <p class="max-w-sm text-sm lg:text-right">
-                    Leer meer over open data, transparantie en hoe je het platform effectief gebruikt.
+                    {{ $homepageSettings->kennisbank_description ?? 'Leer meer over open data, transparantie en hoe je het platform effectief gebruikt.' }}
                 </p>
             </div>
             <x-knowledge-base-grid />
@@ -163,12 +209,23 @@
     @endif
 
     <!-- Testimonials Section -->
-    @if(request()->routeIs('home'))
-    <x-testimonials-grid />
+    @if(request()->routeIs('home') && (!isset($homepageSettings) || $homepageSettings->testimonials_is_active))
+    @php
+        $testimonialsArray = isset($testimonials) && $testimonials->count() > 0 
+            ? $testimonials->map(fn($t) => [
+                'quote' => $t->quote,
+                'author' => $t->author,
+                'role' => $t->role,
+                'organization' => $t->organization,
+                'avatar' => $t->avatar_url,
+            ])->toArray() 
+            : [];
+    @endphp
+    <x-testimonials-grid :testimonials="$testimonialsArray" />
     @endif
 
     <!-- Newsletter Section -->
-    @if(request()->routeIs('home'))
+    @if(request()->routeIs('home') && (!isset($homepageSettings) || $homepageSettings->newsletter_is_active))
     <div class="relative isolate bg-gradient-to-b from-slate-50 to-white py-16 sm:py-20">
         <!-- Section divider at top -->
         <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
@@ -176,12 +233,12 @@
         <div class="mx-auto max-w-7xl px-6 lg:px-8">
             <div class="mx-auto grid max-w-2xl grid-cols-1 gap-x-12 gap-y-12 lg:max-w-none lg:grid-cols-2 lg:items-center">
                 <div class="max-w-xl">
-                    <p class="text-sm font-medium uppercase">Nieuwsbrief</p>
+                    <p class="text-sm font-medium uppercase">{{ $homepageSettings->newsletter_eyebrow ?? 'Nieuwsbrief' }}</p>
                     <h2 class="mt-2 font-semibold">
-                        Blijf op de hoogte
+                        {{ $homepageSettings->newsletter_title ?? 'Blijf op de hoogte' }}
                     </h2>
                     <p class="mt-4 text-sm ">
-                        Schrijf je in voor updates en ontvang het laatste nieuws over nieuwe documenten en platformupdates.
+                        {{ $homepageSettings->newsletter_description ?? 'Schrijf je in voor updates en ontvang het laatste nieuws over nieuwe documenten en platformupdates.' }}
                     </p>
                     <form action="#" method="POST" class="mt-6 flex flex-col sm:flex-row w-full gap-3">
                         @csrf
@@ -197,7 +254,7 @@
                             />
                         </div>
                         <x-primary-button class="flex-shrink-0 rounded-md px-5 py-2.5 text-sm font-semibold whitespace-nowrap w-full sm:w-auto">
-                            Inschrijven
+                            {{ $homepageSettings->newsletter_button_text ?? 'Inschrijven' }}
                         </x-primary-button>
                     </form>
                 </div>
@@ -209,10 +266,10 @@
                             </svg>
                         </div>
                         <h3 class="text-base font-semibold text-[var(--color-on-surface)]">
-                            Regelmatige updates
+                            {{ $homepageSettings->newsletter_feature_1_title ?? 'Regelmatige updates' }}
                         </h3>
                         <p class="mt-2 text-sm text-[var(--color-on-surface-variant)] leading-relaxed">
-                            Wekelijks overzicht van nieuwe documenten en ontwikkelingen.
+                            {{ $homepageSettings->newsletter_feature_1_description ?? 'Wekelijks overzicht van nieuwe documenten en ontwikkelingen.' }}
                         </p>
                     </div>
                     <div class="relative rounded-md bg-white p-6 ring-1 ring-slate-200/60">
@@ -222,10 +279,10 @@
                             </svg>
                         </div>
                         <h3 class="text-base font-semibold text-[var(--color-on-surface)]">
-                            Geen spam
+                            {{ $homepageSettings->newsletter_feature_2_title ?? 'Geen spam' }}
                         </h3>
                         <p class="mt-2 text-sm text-[var(--color-on-surface-variant)] leading-relaxed">
-                            Alleen relevante updates. Je kunt je altijd uitschrijven.
+                            {{ $homepageSettings->newsletter_feature_2_description ?? 'Alleen relevante updates. Je kunt je altijd uitschrijven.' }}
                         </p>
                     </div>
                 </div>
@@ -233,17 +290,20 @@
         </div>
     </div>
     
-    <!-- CTA Section - Primary variant (bottom) -->
+    <!-- CTA Section - Primary variant (bottom, from database or fallback) -->
+    @php
+        $bottomCtaPanel = isset($ctaPanels) ? $ctaPanels->where('slug', 'bottom-cta')->first() : null;
+    @endphp
     <x-cta-dark-panel 
-        title="Begin vandaag nog met transparante publicaties"
-        description="Ontdek hoe OpenPublicaties uw organisatie kan helpen bij het voldoen aan de Wet open overheid. Eenvoudig, betrouwbaar en volledig open source."
-        primaryButtonText="Neem contact op"
-        primaryButtonUrl="{{ route('contact') }}"
-        secondaryButtonText="Meer informatie"
-        secondaryButtonUrl="{{ route('over') }}"
-        screenshotUrl="{{ asset('images/ss.png') }}"
-        screenshotAlt="OpenPublicaties platform"
-        variant="primary"
+        :title="$bottomCtaPanel->title ?? 'Begin vandaag nog met transparante publicaties'"
+        :description="$bottomCtaPanel->description ?? 'Ontdek hoe OpenPublicaties uw organisatie kan helpen bij het voldoen aan de Wet open overheid. Eenvoudig, betrouwbaar en volledig open source.'"
+        :primaryButtonText="$bottomCtaPanel->primary_button_text ?? 'Neem contact op'"
+        :primaryButtonUrl="$bottomCtaPanel->primary_button_url ?? route('contact')"
+        :secondaryButtonText="$bottomCtaPanel->secondary_button_text ?? 'Meer informatie'"
+        :secondaryButtonUrl="$bottomCtaPanel->secondary_button_url ?? route('over')"
+        :screenshotUrl="$bottomCtaPanel && $bottomCtaPanel->screenshot ? asset('storage/' . $bottomCtaPanel->screenshot) : asset('images/ss.png')"
+        :screenshotAlt="$bottomCtaPanel->screenshot_alt ?? 'OpenPublicaties platform'"
+        :variant="$bottomCtaPanel->variant ?? 'primary'"
     />
     @endif
 @endsection
