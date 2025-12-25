@@ -7,6 +7,9 @@
         ['label' => 'Home', 'href' => route('home')],
         ['label' => 'Verwijzingen', 'href' => null, 'current' => true],
     ];
+    
+    // Get references from database
+    $references = \App\Models\Reference::getCachedReferences();
 @endphp
 
 @section('content')
@@ -65,65 +68,35 @@
     <main class="flex-1 max-w-7xl mx-auto w-full px-6 lg:px-8 pt-10 pb-20">
         <div class="mx-auto max-w-2xl lg:max-w-none">
             <dl class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-12 lg:max-w-none lg:grid-cols-3">
+                @forelse($references as $reference)
                 <div class="flex flex-col">
                     <dt class="text-base font-semibold leading-7 text-[var(--color-on-surface)]">
                         <div class="mb-4 inline-flex items-center justify-center w-10 h-10 rounded-md bg-[var(--color-primary)]/10">
-                            <i class="fas fa-gavel text-lg text-[var(--color-primary)]" aria-hidden="true"></i>
+                            <i class="{{ $reference->icon }} text-lg text-[var(--color-primary)]" aria-hidden="true"></i>
                         </div>
-                        Wet- en regelgeving
+                        {{ $reference->title }}
                     </dt>
                     <dd class="mt-1 flex flex-auto flex-col text-sm leading-6 text-[var(--color-on-surface-variant)]">
                         <p class="flex-auto">
-                            Officiële publicaties van wet- en regelgeving van de Nederlandse overheid.
+                            {{ $reference->description }}
                         </p>
+                        @if($reference->link_url)
                         <p class="mt-4">
-                            <a href="https://wetten.overheid.nl" target="_blank" rel="noopener noreferrer" class="text-sm font-semibold leading-6 text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] focus:outline-none transition-colors duration-200 inline-flex items-center gap-1.5">
-                                wetten.nl
+                            <a href="{{ $reference->link_url }}" target="_blank" rel="noopener noreferrer" class="text-sm font-semibold leading-6 text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] focus:outline-none transition-colors duration-200 inline-flex items-center gap-1.5">
+                                {{ $reference->link_text ?: $reference->link_url }}
                                 <i class="fas fa-external-link-alt text-xs" aria-hidden="true"></i>
                             </a>
                         </p>
+                        @endif
                     </dd>
                 </div>
-                <div class="flex flex-col">
-                    <dt class="text-base font-semibold leading-7 text-[var(--color-on-surface)]">
-                        <div class="mb-4 inline-flex items-center justify-center w-10 h-10 rounded-md bg-[var(--color-primary)]/10">
-                            <i class="fas fa-search text-lg text-[var(--color-primary)]" aria-hidden="true"></i>
-                        </div>
-                        Woo-index
-                    </dt>
-                    <dd class="mt-1 flex flex-auto flex-col text-sm leading-6 text-[var(--color-on-surface-variant)]">
-                        <p class="flex-auto">
-                            Vind contactgegevens van bestuursorganen voor het indienen van Woo-verzoeken.
-                        </p>
-                        <p class="mt-4">
-                            <a href="https://www.woo-index.nl" target="_blank" rel="noopener noreferrer" class="text-sm font-semibold leading-6 text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] focus:outline-none transition-colors duration-200 inline-flex items-center gap-1.5">
-                                woo-index.nl
-                                <i class="fas fa-external-link-alt text-xs" aria-hidden="true"></i>
-                            </a>
-                        </p>
-                    </dd>
+                @empty
+                <div class="col-span-full text-center py-12 text-[var(--color-on-surface-variant)]">
+                    <i class="fas fa-link text-4xl mb-4"></i>
+                    <p>Geen verwijzingen beschikbaar.</p>
                 </div>
-                <div class="flex flex-col">
-                    <dt class="text-base font-semibold leading-7 text-[var(--color-on-surface)]">
-                        <div class="mb-4 inline-flex items-center justify-center w-10 h-10 rounded-md bg-[var(--color-primary)]/10">
-                            <i class="fas fa-building text-lg text-[var(--color-primary)]" aria-hidden="true"></i>
-                        </div>
-                        Overheid.nl
-                    </dt>
-                    <dd class="mt-1 flex flex-auto flex-col text-sm leading-6 text-[var(--color-on-surface-variant)]">
-                        <p class="flex-auto">
-                            Centrale toegangspoort tot alle informatie van de Nederlandse overheid.
-                        </p>
-                        <p class="mt-4">
-                            <a href="https://www.overheid.nl" target="_blank" rel="noopener noreferrer" class="text-sm font-semibold leading-6 text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] focus:outline-none transition-colors duration-200 inline-flex items-center gap-1.5">
-                                overheid.nl
-                                <i class="fas fa-external-link-alt text-xs" aria-hidden="true"></i>
-                            </a>
-                        </p>
-                    </dd>
-                </div>
+                @endforelse
             </dl>
         </div>
     </main>
 @endsection
-

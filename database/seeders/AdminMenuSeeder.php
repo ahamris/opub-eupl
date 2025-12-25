@@ -114,11 +114,23 @@ class AdminMenuSeeder extends Seeder
                 'admin_menu_id' => $menu->id,
                 'parent_id' => $contentSection->id,
                 'item_type' => 'link',
+                'label' => 'References',
+                'slug' => 'references',
+                'route_name' => 'admin.content.reference.index',
+                'icon' => 'external-link-alt',
+                'position' => 2,
+                'is_active' => true,
+            ]);
+
+            AdminMenuItem::create([
+                'admin_menu_id' => $menu->id,
+                'parent_id' => $contentSection->id,
+                'item_type' => 'link',
                 'label' => 'About Us',
                 'slug' => 'about-us',
                 'route_name' => 'admin.content.about.edit',
                 'icon' => 'info-circle',
-                'position' => 2,
+                'position' => 3,
                 'is_active' => true,
             ]);
 

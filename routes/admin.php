@@ -69,6 +69,10 @@ Route::middleware(['auth', \App\Http\Middleware\CheckIfAdmin::class])->prefix('a
         ]);
         Route::post('static-page/{staticPage}/toggle-active', [StaticPageController::class, 'toggleActive'])->name('static-page.toggle-active');
 
+        // Reference Routes
+        Route::resource('reference', \App\Http\Controllers\Admin\Content\ReferenceController::class);
+        Route::post('reference/{reference}/toggle-active', [\App\Http\Controllers\Admin\Content\ReferenceController::class, 'toggleActive'])->name('reference.toggle-active');
+
         // About Page Settings (singleton)
         Route::get('about', [\App\Http\Controllers\Admin\Content\AboutSettingController::class, 'edit'])->name('about.edit');
         Route::put('about', [\App\Http\Controllers\Admin\Content\AboutSettingController::class, 'update'])->name('about.update');
