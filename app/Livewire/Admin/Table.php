@@ -17,7 +17,9 @@ class Table extends Component
     use WithPagination;
 
     // Component Configuration Props
-    protected string $modelClass; // Resolved model class
+    public ?string $modelClass = null; // Resolved model class (public for Livewire serialization)
+
+    public ?string $originalResource = null; // Store original resource for re-resolution after Livewire serialization
 
     protected array $resources = [];
 
@@ -77,6 +79,13 @@ class Table extends Component
         bool $showBulkDelete = true,
         ?string $customActionsView = null,
     ): void {
+        // Store original resource for re-resolution after Livewire serialization
+        if ($resource instanceof Model) {
+            $this->originalResource = $resource::class;
+        } elseif (is_string($resource)) {
+            $this->originalResource = $resource;
+        }
+
         // Resolve model class from resource
         if ($resource instanceof Model) {
             // Direct model instance provided
@@ -132,16 +141,22 @@ class Table extends Component
 
     protected function getModelInstance(): Model
     {
-        // Re-resolve model class if not set (e.g. on subsequent requests)
-        if (! isset($this->modelClass)) {
-            // Try resources array first (legacy)
-            if (array_key_exists($this->resource, $this->resources)) {
-                $this->modelClass = $this->resources[$this->resource];
-            } elseif (class_exists($this->resource) && is_subclass_of($this->resource, Model::class)) {
-                // Resource is already a model class
+        // Re-resolve model class if not set (e.g. on subsequent requests after Livewire serialization)
+        if (empty($this->modelClass)) {
+            // First priority: Use originalResource (most reliable - stored during mount)
+            if (!empty($this->originalResource) && is_string($this->originalResource) && class_exists($this->originalResource) && is_subclass_of($this->originalResource, Model::class)) {
+                $this->modelClass = $this->originalResource;
+            }
+            // Second: Try if resource is already a model class string
+            elseif (!empty($this->resource) && is_string($this->resource) && class_exists($this->resource) && is_subclass_of($this->resource, Model::class)) {
                 $this->modelClass = $this->resource;
-            } else {
-                // Try convention-based auto-resolve: App\Models\{Resource}
+            }
+            // Third: Try resources array (legacy)
+            elseif (!empty($this->resource) && array_key_exists($this->resource, $this->resources)) {
+                $this->modelClass = $this->resources[$this->resource];
+            }
+            // Fourth: Try convention-based auto-resolve: App\Models\{Resource}
+            elseif (!empty($this->resource)) {
                 $singular = str($this->resource)->singular()->toString();
                 $modelName = str($singular)->camel()->ucfirst()->toString();
                 $modelClass = "\\App\\Models\\{$modelName}";
@@ -149,9 +164,28 @@ class Table extends Component
                 if (class_exists($modelClass) && is_subclass_of($modelClass, Model::class)) {
                     $this->modelClass = $modelClass;
                 } else {
+                    \Log::error('getModelInstance: Could not resolve model class', [
+                        'originalResource' => $this->originalResource ?? 'not set',
+                        'resource' => $this->resource ?? 'not set',
+                        'attempted_class' => $modelClass,
+                    ]);
                     abort(403, 'Invalid resource.');
                 }
+            } else {
+                \Log::error('getModelInstance: No resource or modelClass available', [
+                    'originalResource' => $this->originalResource ?? 'not set',
+                    'resource' => $this->resource ?? 'not set',
+                    'modelClass' => $this->modelClass ?? 'not set',
+                ]);
+                abort(403, 'Invalid resource.');
             }
+        }
+
+        if (empty($this->modelClass) || !class_exists($this->modelClass)) {
+            \Log::error('getModelInstance: modelClass is invalid', [
+                'modelClass' => $this->modelClass ?? 'not set',
+            ]);
+            abort(403, 'Invalid resource.');
         }
 
         return new $this->modelClass;
