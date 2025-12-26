@@ -28,6 +28,8 @@ use App\View\Components\UI\Toast;
 use App\View\Components\UI\Toggle;
 use App\View\Components\UI\Tooltip;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
@@ -57,6 +59,24 @@ class AppServiceProvider extends ServiceProvider
         // Register Blade components only for admin routes
         if ($this->isAdminRoute()) {
             $this->registerAdminBladeComponents();
+        }
+
+        // Fix for database queue transaction issues
+        // Clean up any stuck transactions when queue loops
+        if (config('queue.default') === 'database') {
+            Queue::looping(function () {
+                try {
+                    $connection = DB::connection();
+                    if ($connection->transactionLevel() > 0) {
+                        // Rollback any stuck transactions
+                        while ($connection->transactionLevel() > 0) {
+                            $connection->rollBack();
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Silently ignore - connection might already be closed
+                }
+            });
         }
     }
 

@@ -6,10 +6,10 @@ use App\DataTransferObjects\OpenOverheid\OpenOverheidSearchQuery;
 use App\Models\OpenOverheidDocument;
 use Illuminate\Support\Facades\Log;
 
-class OpenOverheidSyncService
+readonly class OpenOverheidSyncService
 {
     public function __construct(
-        private readonly OpenOverheidSearchService $searchService
+        private OpenOverheidSearchService $searchService
     ) {}
 
     /**
@@ -28,20 +28,17 @@ class OpenOverheidSyncService
     }
 
     /**
-     * Perform a sync of documents within a date range.
-     *
-     * @param  string|null  $from  Start date (DD-MM-YYYY format)
-     * @param  string|null  $to  End date (DD-MM-YYYY format)
-     * @param  \Illuminate\Console\Command|null  $command
-     * @return array{total: int, synced: int, errors: int}
+     * @param string|null $from
+     * @param string|null $to
+     * @param $command
+     * @return array|int[]
+     * @throws \Exception
      */
     public function syncByDateRange(?string $from = null, ?string $to = null, $command = null): array
     {
         if (! config('open_overheid.sync.enabled', true)) {
             Log::channel('sync_errors')->info('Open Overheid sync is disabled');
-            if ($command) {
-                $command->info('Open Overheid sync is disabled.');
-            }
+            $command?->info('Open Overheid sync is disabled.');
 
             return ['total' => 0, 'synced' => 0, 'errors' => 0];
         }
@@ -69,9 +66,13 @@ class OpenOverheidSyncService
         $page = 1;
         $perPage = 50; // Use maximum page size for efficiency
         $totalSynced = 0;
+        $totalCreated = 0;
+        $totalUpdated = 0;
+        $totalSkipped = 0;
         $totalErrors = 0;
         $hasMorePages = true;
         $processed = 0;
+        $failedDocuments = []; // Track failed documents for retry
 
         if ($command && $totalResults > 0) {
             $bar = $command->getOutput()->createProgressBar($totalResults);
@@ -782,7 +783,7 @@ class OpenOverheidSyncService
         // Encode to JSON with UNESCAPED_UNICODE flag to convert escape sequences to actual UTF-8
         // Then decode back to get the normalized array with proper UTF-8 characters
         $json = json_encode($metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        
+
         if ($json === false) {
             // If encoding fails, log and return original
             Log::channel('sync_errors')->warning('Failed to normalize metadata for database', [
@@ -792,7 +793,7 @@ class OpenOverheidSyncService
         }
 
         $normalized = json_decode($json, true);
-        
+
         if ($normalized === null && json_last_error() !== JSON_ERROR_NONE) {
             // If decoding fails, log and return original
             Log::channel('sync_errors')->warning('Failed to decode normalized metadata', [
