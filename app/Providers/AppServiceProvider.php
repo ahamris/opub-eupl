@@ -49,6 +49,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        require_once app_path('Helpers/functions.php');
+
         // Configure mail settings from database
         $this->configureMailFromDatabase();
 
@@ -65,20 +67,20 @@ class AppServiceProvider extends ServiceProvider
     {
 
         return true;
-        
+
         $request = request();
-        
+
         // Check if route starts with admin prefix
         if ($request->is('admin*')) {
             return true;
         }
-        
+
         // Check if route name starts with admin prefix
         $route = $request->route();
         if ($route && str_starts_with($route->getName() ?? '', 'admin.')) {
             return true;
         }
-        
+
         return false;
     }
 
@@ -147,13 +149,13 @@ class AppServiceProvider extends ServiceProvider
 
         try {
             // Get SMTP settings from database
-            $smtpHost = Setting::get('smtp_host');
-            $smtpPort = Setting::get('smtp_port');
-            $smtpUsername = Setting::get('smtp_username');
-            $smtpPassword = Setting::get('smtp_password');
-            $smtpEncryption = Setting::get('smtp_encryption');
-            $fromAddress = Setting::get('smtp_from_address');
-            $fromName = Setting::get('smtp_from_name');
+            $smtpHost = Setting::getValue('smtp_host');
+            $smtpPort = Setting::getValue('smtp_port');
+            $smtpUsername = Setting::getValue('smtp_username');
+            $smtpPassword = Setting::getValue('smtp_password');
+            $smtpEncryption = Setting::getValue('smtp_encryption');
+            $fromAddress = Setting::getValue('smtp_from_address');
+            $fromName = Setting::getValue('smtp_from_name');
 
             // Only override config if database values exist and are not empty
             if (!empty($smtpHost)) {
