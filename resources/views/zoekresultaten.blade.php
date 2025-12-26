@@ -830,6 +830,8 @@
                                     
                                     <!-- Subscription/Bell Icon -->
                                     <button type="button" 
+                                            command="show-modal" 
+                                            commandfor="subscription-drawer"
                                             class="inline-flex items-center justify-center px-2 py-1 rounded-md 
                                                    bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
                                                    hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
@@ -1587,16 +1589,19 @@
             
             // Show loading state in results area
             const resultsArea = document.getElementById('search-results-area');
-            if (resultsArea) {
-                resultsArea.innerHTML = `
-                    <div class="flex items-center justify-center py-12">
-                        <div class="text-center">
-                            <i class="fas fa-spinner fa-spin text-3xl text-[var(--color-primary)] mb-4"></i>
-                            <p class="text-[var(--color-on-surface-variant)]">Zoeken naar "${escapeHtml(query)}"...</p>
-                        </div>
-                    </div>
-                `;
+            if (!resultsArea) {
+                console.error('Results area not found');
+                return;
             }
+            
+            resultsArea.innerHTML = `
+                <div class="flex items-center justify-center py-12">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin text-3xl text-[var(--color-primary)] mb-4"></i>
+                        <p class="text-[var(--color-on-surface-variant)]">Zoeken naar "${escapeHtml(query)}"...</p>
+                    </div>
+                </div>
+            `;
             
             try {
                 // Use LIGHTNING FAST search API - single Typesense query
@@ -1609,13 +1614,23 @@
                 
                 // Preserve existing filters
                 const currentUrl = new URL(window.location.href);
-                ['beschikbaarSinds', 'publicatiedatum_van', 'publicatiedatum_tot', 'sort'].forEach(filter => {
+                
+                // Preserve single value filters
+                ['beschikbaarSinds', 'publicatiedatum_van', 'publicatiedatum_tot', 'sort', 'status', 'informatiecategorie', 'titles_only'].forEach(filter => {
                     const val = currentUrl.searchParams.get(filter);
-                    if (val) params.set(filter, val);
+                    if (val) {
+                        params.set(filter, val);
+                    }
                 });
-                // Handle array params
-                ['documentsoort[]', 'thema[]', 'organisatie[]', 'informatiecategorie[]'].forEach(filter => {
-                    currentUrl.searchParams.getAll(filter).forEach(val => params.append(filter, val));
+                
+                // Handle array params (correct format: key[])
+                ['thema', 'organisatie', 'documentsoort', 'bestandstype'].forEach(key => {
+                    const values = currentUrl.searchParams.getAll(key + '[]');
+                    values.forEach(val => {
+                        if (val) {
+                            params.append(key + '[]', val);
+                        }
+                    });
                 });
                 
                 const response = await fetch(`${fastSearchEndpoint}?${params.toString()}`);
@@ -1626,6 +1641,7 @@
                 }
                 
                 // Store search state for pagination (reuse currentUrl from above)
+                // Note: We now read from URL directly in loadPage, but keep state for reference
                 currentSearchState = {
                     query: query,
                     filters: {},
@@ -1633,13 +1649,17 @@
                 };
                 
                 // Preserve existing filters in state (reuse currentUrl)
-                ['beschikbaarSinds', 'publicatiedatum_van', 'publicatiedatum_tot', 'sort'].forEach(filter => {
+                ['beschikbaarSinds', 'publicatiedatum_van', 'publicatiedatum_tot', 'sort', 'status', 'informatiecategorie', 'titles_only'].forEach(filter => {
                     const val = currentUrl.searchParams.get(filter);
-                    if (val) currentSearchState.filters[filter] = val;
+                    if (val) {
+                        currentSearchState.filters[filter] = val;
+                    }
                 });
-                ['documentsoort', 'thema', 'organisatie', 'informatiecategorie'].forEach(filter => {
+                ['thema', 'organisatie', 'documentsoort', 'bestandstype'].forEach(filter => {
                     const vals = currentUrl.searchParams.getAll(filter + '[]');
-                    if (vals.length > 0) currentSearchState.filters[filter] = vals;
+                    if (vals.length > 0) {
+                        currentSearchState.filters[filter] = vals;
+                    }
                 });
                 
                 // Update URL without reload - append zoeken parameter (multiple searches allowed)
@@ -1659,9 +1679,7 @@
                 updateActiveFilters();
                 
                 // Render results with pagination using shared function
-                if (resultsArea) {
-                    renderSearchResults(resultsArea, data);
-                }
+                renderSearchResults(resultsArea, data);
                 
                 // Update filter counts if available
                 if (data.filter_counts) {
@@ -1670,14 +1688,12 @@
                 
             } catch (error) {
                 console.error('Fast search error:', error);
-                if (resultsArea) {
-                    resultsArea.innerHTML = `
-                        <div class="text-center py-12">
-                            <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
-                            <p class="text-red-600">Fout bij zoeken. Probeer het opnieuw.</p>
-                        </div>
-                    `;
-                }
+                resultsArea.innerHTML = `
+                    <div class="text-center py-12">
+                        <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+                        <p class="text-red-600">Fout bij zoeken. Probeer het opnieuw.</p>
+                    </div>
+                `;
             }
         }
         
@@ -1977,38 +1993,60 @@
         // Load specific page via AJAX
         async function loadPage(page) {
             const resultsArea = document.getElementById('search-results-area');
-            if (resultsArea) {
-                resultsArea.innerHTML = `
-                    <div class="flex items-center justify-center py-12">
-                        <div class="text-center">
-                            <i class="fas fa-spinner fa-spin text-3xl text-[var(--color-primary)] mb-4"></i>
-                            <p class="text-[var(--color-on-surface-variant)]">Pagina ${page} laden...</p>
-                        </div>
-                    </div>
-                `;
+            if (!resultsArea) {
+                console.error('Results area not found');
+                return;
             }
+            
+            resultsArea.innerHTML = `
+                <div class="flex items-center justify-center py-12">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin text-3xl text-[var(--color-primary)] mb-4"></i>
+                        <p class="text-[var(--color-on-surface-variant)]">Pagina ${page} laden...</p>
+                    </div>
+                </div>
+            `;
             
             try {
                 const fastSearchEndpoint = '{{ route("api.fast-search") }}';
                 const params = new URLSearchParams({
                     page: page,
-                    per_page: currentSearchState.perPage,
+                    per_page: 20,
                 });
                 
-                if (currentSearchState.query) {
-                    params.set('q', currentSearchState.query);
+                // Read all filters from URL (more reliable than state)
+                const currentUrl = new URL(window.location.href);
+                
+                // Get search query
+                const zoeken = currentUrl.searchParams.get('zoeken');
+                if (zoeken) {
+                    params.set('q', zoeken);
                 }
                 
-                // Add stored filters
-                Object.entries(currentSearchState.filters).forEach(([key, values]) => {
-                    if (Array.isArray(values)) {
-                        values.forEach(v => params.append(key, v));
-                    } else if (values) {
-                        params.set(key, values);
+                // Preserve existing single value filters
+                ['beschikbaarSinds', 'publicatiedatum_van', 'publicatiedatum_tot', 'status', 'informatiecategorie', 'titles_only', 'sort'].forEach(key => {
+                    const val = currentUrl.searchParams.get(key);
+                    if (val) {
+                        params.set(key, val);
                     }
                 });
                 
+                // Preserve existing array filters (correct format: key[])
+                ['thema', 'organisatie', 'documentsoort', 'bestandstype'].forEach(key => {
+                    const values = currentUrl.searchParams.getAll(key + '[]');
+                    values.forEach(v => {
+                        if (v) {
+                            params.append(key + '[]', v);
+                        }
+                    });
+                });
+                
                 const response = await fetch(`${fastSearchEndpoint}?${params.toString()}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
                 
                 if (!data.success) {
@@ -2034,67 +2072,151 @@
                 
             } catch (error) {
                 console.error('Page load error:', error);
-                if (resultsArea) {
-                    resultsArea.innerHTML = `
-                        <div class="text-center py-12">
-                            <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
-                            <p class="text-red-600">Fout bij laden van pagina. Probeer het opnieuw.</p>
-                        </div>
-                    `;
-                }
+                resultsArea.innerHTML = `
+                    <div class="text-center py-12">
+                        <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+                        <p class="text-red-600">Fout bij laden van pagina. Probeer het opnieuw.</p>
+                    </div>
+                `;
             }
         }
         
         // Shared function to render search results with pagination
         function renderSearchResults(container, data) {
             if (data.hits && data.hits.length > 0) {
-                let html = `
-                    <!-- Results List -->
-                    <div class="bg-[var(--color-surface)] rounded-md border border-[var(--color-outline-variant)] overflow-hidden">
-                        <div class="px-6 py-4 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-variant)]/30">
-                            <h3 class="text-sm font-semibold text-[var(--color-on-surface)]">Documenten</h3>
-                        </div>
-                        <ul role="list" class="divide-y divide-[var(--color-outline-variant)]">
-                `;
+                let html = `<div class="flex flex-col gap-4">`;
                 
                 data.hits.forEach(hit => {
+                    // Format publication date
+                    let pubDate = '';
+                    if (hit.publication_date) {
+                        try {
+                            const date = new Date(hit.publication_date);
+                            if (!isNaN(date.getTime())) {
+                                const day = String(date.getDate()).padStart(2, '0');
+                                const month = String(date.getMonth() + 1).padStart(2, '0');
+                                const year = date.getFullYear();
+                                pubDate = `${day}-${month}-${year}`;
+                            }
+                        } catch(e) {
+                            pubDate = hit.publication_date;
+                        }
+                    }
+                    
+                    // Determine type badge colors
+                    const type = (hit.document_type || 'DOCUMENT').toUpperCase();
+                    const typeColors = {
+                        'DOCUMENT': { bg: 'bg-[var(--color-primary-dark)]', text: 'text-[var(--color-on-primary)]' },
+                        'THEMA': { bg: 'bg-[var(--color-primary)]', text: 'text-[var(--color-on-primary)]' },
+                        'DOSSIER': { bg: 'bg-sky-100 dark:bg-sky-900/50', text: 'text-sky-700 dark:text-sky-300' },
+                        'REPORT': { bg: 'bg-yellow-100 dark:bg-yellow-900/50', text: 'text-yellow-700 dark:text-yellow-300' }
+                    };
+                    const badgeColors = typeColors[type] || typeColors['DOCUMENT'];
+                    
                     html += `
-                        <li class="px-6 py-5 hover:bg-[var(--color-surface-variant)]/30 transition-colors duration-150">
-                            <div class="flex items-start justify-between gap-4">
-                                <div class="flex-1 min-w-0">
-                                    <a href="/open-overheid/documents/${hit.id}" 
-                                       class="text-sm font-medium text-[var(--color-on-surface)] hover:text-[var(--color-primary)] hover:underline">
-                                        ${escapeHtml(hit.title || 'Geen titel')}
-                                    </a>
-                                    ${hit.description ? `<p class="text-sm text-[var(--color-on-surface-variant)] mt-1 line-clamp-2">${escapeHtml(hit.description)}</p>` : ''}
-                                    <div class="flex flex-wrap gap-2 mt-2 text-xs">
-                                        ${hit.document_type ? `<span class="bg-[var(--color-surface-variant)] text-[var(--color-on-surface-variant)] px-2 py-1 rounded">${escapeHtml(hit.document_type)}</span>` : ''}
-                                        ${hit.organisation ? `<span class="bg-[var(--color-surface-variant)] text-[var(--color-on-surface-variant)] px-2 py-1 rounded">${escapeHtml(hit.organisation)}</span>` : ''}
-                                        ${hit.publication_date ? `<span class="text-gray-400"><i class="far fa-calendar-alt mr-1"></i>${hit.publication_date}</span>` : ''}
+                        <article class="rounded-lg bg-[var(--color-surface)] border border-[var(--color-outline-variant)]/60 overflow-hidden hover:border-[var(--color-primary)]/40 transition-all duration-300">
+                            <!-- Item Header -->
+                            <div class="px-5 py-2.5 bg-[var(--color-surface-variant)]/50 border-b border-[var(--color-outline-variant)]/40 flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <span class="inline-flex items-center font-semibold rounded-full px-2.5 py-0.5 text-[11px] leading-tight tracking-wide ${badgeColors.bg} ${badgeColors.text}">
+                                        ${type}
+                                    </span>
+                                    ${hit.category ? `
+                                        <span class="h-4 w-px bg-[var(--color-outline-variant)]/40"></span>
+                                        <span class="text-[12px] font-semibold text-purple-700 dark:text-purple-400 uppercase tracking-wide flex items-center gap-1.5">
+                                            <i class="fas fa-folder-open text-[10px] opacity-70"></i>
+                                            ${escapeHtml(hit.category)}
+                                        </span>
+                                    ` : ''}
+                                </div>
+                                ${pubDate ? `
+                                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[var(--color-surface)] text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]/50 text-[11px] font-medium tracking-wide">
+                                        <i class="far fa-calendar text-[10px] text-[var(--color-primary)] opacity-80"></i>
+                                        ${pubDate}
                                     </div>
+                                ` : ''}
+                            </div>
+
+                            <div class="flex flex-col md:flex-row items-stretch">
+                                <!-- Column 1: Title, Organisation, Description -->
+                                <div class="flex-1 px-6 py-5 border-b md:border-b-0 md:border-r border-[var(--color-outline-variant)]/30">
+                                    <h3 class="text-[17px] font-semibold text-[var(--color-on-surface)] leading-snug tracking-[-0.01em] mb-1.5">
+                                        <a href="/open-overheid/documents/${hit.id}" class="hover:text-[var(--color-primary)] transition-colors duration-200">
+                                            ${escapeHtml(hit.title || 'Geen titel')}
+                                        </a>
+                                    </h3>
+                                    ${hit.organisation ? `
+                                        <div class="flex items-center gap-1.5 mb-2.5">
+                                            <i class="far fa-building text-[11px] text-[var(--color-primary)]/70" aria-hidden="true"></i>
+                                            <span class="text-[12px] font-medium text-[var(--color-on-surface-variant)]">
+                                                ${escapeHtml(hit.organisation)}
+                                            </span>
+                                        </div>
+                                    ` : ''}
+                                    ${hit.description ? `
+                                        <p class="text-[14px] text-[var(--color-on-surface-variant)]/80 leading-relaxed line-clamp-2 tracking-[0.01em] mb-3">
+                                            ${escapeHtml(hit.description.length > 150 ? hit.description.substring(0, 150) + '...' : hit.description)}
+                                        </p>
+                                    ` : ''}
+                                </div>
+
+                                <!-- Column 2: Themes (if available) -->
+                                <div class="w-full md:w-56 px-5 py-4 bg-[var(--color-surface-variant)]/5 flex flex-col justify-center gap-2 border-b md:border-b-0 md:border-r border-[var(--color-outline-variant)]/30">
+                                    ${hit.theme ? `
+                                        <div class="text-[10px] font-semibold text-[var(--color-on-surface-variant)]/60 uppercase tracking-wider mb-1">Thema's</div>
+                                        <a href="#" 
+                                           onclick="event.preventDefault(); applyThemeFilter('${escapeHtml(hit.theme)}'); return false;"
+                                           class="inline-flex items-center gap-1.5 text-[12px] text-[var(--color-on-surface-variant)] font-medium hover:text-[var(--color-primary)] transition-colors">
+                                            <i class="fas fa-tag text-[10px] text-[var(--color-primary)]/70" aria-hidden="true"></i>
+                                            ${escapeHtml(hit.theme)}
+                                        </a>
+                                    ` : '<div class="text-[11px] text-[var(--color-on-surface-variant)]/50 italic">Geen thema\'s</div>'}
+                                </div>
+
+                                <!-- Column 3: Action Button -->
+                                <div class="w-full md:w-14 flex items-center justify-center bg-[var(--color-surface-variant)]/5">
+                                    <a href="/open-overheid/documents/${hit.id}" 
+                                       class="w-9 h-9 rounded-full border border-[var(--color-outline-variant)]/50 flex items-center justify-center text-[var(--color-outline-variant)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] hover:translate-x-0.5 transition-all duration-300"
+                                       title="Bekijk document">
+                                        <i class="fas fa-chevron-right text-xs" aria-hidden="true"></i>
+                                    </a>
                                 </div>
                             </div>
-                        </li>
+                        </article>
                     `;
                 });
                 
-                html += `</ul>`;
+                html += `</div>`;
                 
                 // Add pagination
-                html += renderPagination(data.page, data.total_pages, data.per_page);
-                
-                html += `</div>`;
+                if (data.total_pages > 1) {
+                    html += renderPagination(data.page, data.total_pages, data.per_page);
+                }
                 
                 container.innerHTML = html;
             } else {
                 container.innerHTML = `
-                    <div class="bg-white rounded-md p-12 text-center border border-[var(--color-outline-variant)]">
-                        <i class="fas fa-search text-4xl text-gray-300 mb-4"></i>
-                        <p class="text-[var(--color-on-surface-variant)] mb-2">Geen resultaten gevonden.</p>
-                        <p class="text-sm text-[var(--color-on-surface-variant)]">Probeer andere zoekwoorden of filters aan te passen.</p>
+                    <div class="bg-[var(--color-surface)] rounded-md p-12 text-center border border-[var(--color-outline-variant)]">
+                        <p class="text-[var(--font-size-body-large)] text-[var(--color-on-surface-variant)] mb-2">Geen resultaten gevonden.</p>
+                        <p class="text-[var(--font-size-body-medium)] text-[var(--color-on-surface-variant)]">Probeer andere zoekwoorden of filters aan te passen.</p>
                     </div>
                 `;
             }
+        }
+        
+        // Apply theme filter (wrapper for applyFilterViaAjax)
+        async function applyThemeFilter(themeValue) {
+            // Get current URL to preserve existing filters
+            const currentUrl = new URL(window.location.href);
+            const existingThemes = currentUrl.searchParams.getAll('thema[]');
+            
+            // Check if theme is already in filters
+            if (existingThemes.includes(themeValue)) {
+                return; // Already filtered
+            }
+            
+            // Apply the theme filter
+            await applyFilterViaAjax('thema', themeValue);
         }
         
         // Apply filter via AJAX (lightning fast)
@@ -2106,16 +2228,19 @@
             
             // Show loading state
             const resultsArea = document.getElementById('search-results-area');
-            if (resultsArea) {
-                resultsArea.innerHTML = `
-                    <div class="flex items-center justify-center py-12">
-                        <div class="text-center">
-                            <i class="fas fa-spinner fa-spin text-3xl text-[var(--color-primary)] mb-4"></i>
-                            <p class="text-[var(--color-on-surface-variant)]">Filter toepassen...</p>
-                        </div>
-                    </div>
-                `;
+            if (!resultsArea) {
+                console.error('Results area not found');
+                return;
             }
+            
+            resultsArea.innerHTML = `
+                <div class="flex items-center justify-center py-12">
+                    <div class="text-center">
+                        <i class="fas fa-spinner fa-spin text-3xl text-[var(--color-primary)] mb-4"></i>
+                        <p class="text-[var(--color-on-surface-variant)]">Filter toepassen...</p>
+                    </div>
+                </div>
+            `;
             
             try {
                 const fastSearchEndpoint = '{{ route("api.fast-search") }}';
@@ -2124,14 +2249,34 @@
                     per_page: 20,
                 });
                 
-                // Get current search query
+                // Get current search query and all existing filters
                 const currentUrl = new URL(window.location.href);
                 const currentQuery = currentUrl.searchParams.get('zoeken') || '';
                 if (currentQuery) params.set('q', currentQuery);
                 
+                // Preserve existing filters
+                ['beschikbaarSinds', 'publicatiedatum_van', 'publicatiedatum_tot', 'status', 'informatiecategorie', 'titles_only'].forEach(key => {
+                    const val = currentUrl.searchParams.get(key);
+                    if (val) params.set(key, val);
+                });
+                
+                // Preserve existing array filters
+                ['thema', 'organisatie', 'documentsoort', 'bestandstype'].forEach(key => {
+                    const values = currentUrl.searchParams.getAll(key + '[]');
+                    values.forEach(v => {
+                        if (v && v !== filterValue) { // Don't duplicate the new filter value
+                            params.append(key + '[]', v);
+                        }
+                    });
+                });
+                
                 // Add the new filter
-                const paramName = filterType === 'informatiecategorie' ? filterType : filterType;
-                params.set(paramName, filterValue);
+                if (filterType === 'informatiecategorie') {
+                    params.set(filterType, filterValue);
+                } else {
+                    // For array filters, append the new value
+                    params.append(filterType + '[]', filterValue);
+                }
                 
                 const response = await fetch(`${fastSearchEndpoint}?${params.toString()}`);
                 const data = await response.json();
@@ -2141,39 +2286,67 @@
                 }
                 
                 // Store search state for pagination
+                const existingFilters = {};
+                ['beschikbaarSinds', 'publicatiedatum_van', 'publicatiedatum_tot', 'status', 'informatiecategorie', 'titles_only'].forEach(key => {
+                    const val = currentUrl.searchParams.get(key);
+                    if (val) existingFilters[key] = val;
+                });
+                ['thema', 'organisatie', 'documentsoort', 'bestandstype'].forEach(key => {
+                    const values = currentUrl.searchParams.getAll(key + '[]');
+                    if (values.length > 0) {
+                        existingFilters[key] = values;
+                    }
+                });
+                
+                // Add new filter to state
+                if (filterType === 'informatiecategorie') {
+                    existingFilters[filterType] = filterValue;
+                } else {
+                    if (!existingFilters[filterType]) {
+                        existingFilters[filterType] = [];
+                    }
+                    if (!existingFilters[filterType].includes(filterValue)) {
+                        existingFilters[filterType].push(filterValue);
+                    }
+                }
+                
                 currentSearchState = {
                     query: currentQuery,
-                    filters: {
-                        [filterType]: filterValue
-                    },
+                    filters: existingFilters,
                     perPage: data.per_page || 20
                 };
                 
-                // Update URL
+                // Update URL - preserve all existing params and add new filter
                 const newUrl = new URL(window.location.href);
                 newUrl.searchParams.set('pagina', '1');
-                const urlParamName = filterType === 'informatiecategorie' ? filterType : `${filterType}[]`;
-                newUrl.searchParams.append(urlParamName, filterValue);
+                
+                // Add the new filter to URL
+                if (filterType === 'informatiecategorie') {
+                    newUrl.searchParams.set(filterType, filterValue);
+                } else {
+                    // Check if already exists
+                    const existingValues = newUrl.searchParams.getAll(filterType + '[]');
+                    if (!existingValues.includes(filterValue)) {
+                        newUrl.searchParams.append(filterType + '[]', filterValue);
+                    }
+                }
+                
                 history.pushState({}, '', newUrl.toString());
                 
                 // Update results header with new count
                 updateResultsHeader(data);
                 
                 // Render results with pagination using shared function
-                if (resultsArea) {
-                    renderSearchResults(resultsArea, data);
-                }
+                renderSearchResults(resultsArea, data);
                 
             } catch (error) {
                 console.error('Filter apply error:', error);
-                if (resultsArea) {
-                    resultsArea.innerHTML = `
-                        <div class="text-center py-12">
-                            <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
-                            <p class="text-red-600">Fout bij toepassen filter. Probeer het opnieuw.</p>
-                        </div>
-                    `;
-                }
+                resultsArea.innerHTML = `
+                    <div class="text-center py-12">
+                        <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+                        <p class="text-red-600">Fout bij toepassen filter. Probeer het opnieuw.</p>
+                    </div>
+                `;
             }
         }
 
@@ -2182,7 +2355,295 @@
         // Initialize custom date range visibility on page load
         document.addEventListener('DOMContentLoaded', function() {
             toggleCustomDateRange();
+            
+            // Check if TWPLUS elements are loaded (silently)
+            if (!customElements.get('el-dialog')) {
+                window.addEventListener('elements:ready', function() {
+                    // TWPLUS elements ready
+                });
+            }
+
+            // Handle subscription form submission
+            const subscriptionForm = document.getElementById('subscription-form');
+            if (subscriptionForm) {
+                subscriptionForm.addEventListener('submit', function(e) {
+                    // Collect all current filters from URL
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const allFilters = {};
+                    
+                    // Get search query
+                    const zoeken = urlParams.get('zoeken');
+                    if (zoeken) {
+                        allFilters['zoeken'] = zoeken;
+                    }
+                    
+                    // Get array filters - try both formats: key[] and key
+                    ['thema', 'organisatie', 'documentsoort', 'bestandstype'].forEach(key => {
+                        let values = [];
+                        
+                        // Try with brackets first (thema[])
+                        const valuesWithBrackets = urlParams.getAll(key + '[]');
+                        if (valuesWithBrackets.length > 0) {
+                            values = valuesWithBrackets;
+                        } else {
+                            // Try without brackets (thema)
+                            const valuesWithoutBrackets = urlParams.getAll(key);
+                            if (valuesWithoutBrackets.length > 0) {
+                                values = valuesWithoutBrackets;
+                            } else {
+                                // Try single value
+                                const singleValue = urlParams.get(key);
+                                if (singleValue) {
+                                    values = [singleValue];
+                                }
+                            }
+                        }
+                        
+                        // Filter out empty values
+                        values = values.filter(v => v && v.trim() !== '');
+                        
+                        if (values.length > 0) {
+                            allFilters[key] = values;
+                        }
+                    });
+                    
+                    // Get single value filters
+                    ['status', 'informatiecategorie', 'beschikbaarSinds', 'publicatiedatum_van', 'publicatiedatum_tot', 'titles_only'].forEach(key => {
+                        const value = urlParams.get(key);
+                        if (value && value.trim() !== '') {
+                            allFilters[key] = value;
+                        }
+                    });
+                    
+                    // Update hidden input with collected filters
+                    const filtersInput = subscriptionForm.querySelector('input[name="filters"]');
+                    if (filtersInput) {
+                        filtersInput.value = JSON.stringify(allFilters);
+                        console.log('Filters collected from URL:', allFilters);
+                        console.log('Filters JSON:', filtersInput.value);
+                    }
+                    
+                    // Add loading state
+                    const submitButton = subscriptionForm.querySelector('button[type="submit"]');
+                    if (submitButton) {
+                        submitButton.disabled = true;
+                        submitButton.textContent = 'Bezig met verzenden...';
+                    }
+                });
+            }
         });
     </script>
+
+    <!-- Subscription Drawer -->
+    <el-dialog>
+        <dialog id="subscription-drawer" aria-labelledby="subscription-drawer-title" class="fixed inset-0 size-auto max-h-none max-w-none overflow-hidden bg-transparent not-open:hidden backdrop:bg-transparent">
+            <el-dialog-backdrop class="absolute inset-0 bg-gray-500/75 transition-opacity duration-500 ease-in-out data-closed:opacity-0 dark:bg-gray-900/50"></el-dialog-backdrop>
+
+            <div tabindex="0" class="absolute inset-0 pl-10 focus:outline-none sm:pl-16">
+                <el-dialog-panel class="ml-auto block size-full max-w-md transform transition duration-500 ease-in-out data-closed:translate-x-full sm:duration-700">
+                    <div class="relative flex h-full flex-col overflow-y-auto bg-white py-6 shadow-xl dark:bg-gray-800 dark:after:absolute dark:after:inset-y-0 dark:after:left-0 dark:after:w-px dark:after:bg-white/10">
+                        <div class="px-4 sm:px-6">
+                            <div class="flex items-start justify-between">
+                                <h2 id="subscription-drawer-title" class="text-base font-semibold text-gray-900 dark:text-white">Abonneren op de laatste documenten</h2>
+                                <div class="ml-3 flex h-7 items-center">
+                                    <button type="button" command="close" commandfor="subscription-drawer" class="relative rounded-md text-gray-400 hover:text-gray-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:hover:text-white dark:focus-visible:outline-indigo-500">
+                                        <span class="absolute -inset-2.5"></span>
+                                        <span class="sr-only">Sluiten</span>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" data-slot="icon" aria-hidden="true" class="size-6">
+                                            <path d="M6 18 18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="relative mt-6 flex-1 px-4 sm:px-6 pb-6">
+                        <form id="subscription-form" method="POST" action="{{ route('subscriptions.store') }}" class="space-y-6">
+                            @csrf
+                            
+                            <!-- Store current search query -->
+                            <input type="hidden" name="search_query" value="{{ request('zoeken') }}">
+                            
+                            <!-- Store all active filters -->
+                            @php
+                                $allFilters = [];
+                                
+                                // Search query
+                                if (request('zoeken')) {
+                                    $allFilters['zoeken'] = request('zoeken');
+                                }
+                                
+                                // Array filters (thema[], organisatie[], documentsoort[], bestandstype[])
+                                foreach (['thema', 'organisatie', 'documentsoort', 'bestandstype'] as $filterKey) {
+                                    $values = request($filterKey, []);
+                                    if (!empty($values)) {
+                                        $allFilters[$filterKey] = is_array($values) ? $values : [$values];
+                                    }
+                                }
+                                
+                                // Single value filters
+                                if (request('status')) {
+                                    $allFilters['status'] = request('status');
+                                }
+                                
+                                if (request('informatiecategorie')) {
+                                    $allFilters['informatiecategorie'] = request('informatiecategorie');
+                                }
+                                
+                                if (request('beschikbaarSinds')) {
+                                    $allFilters['beschikbaarSinds'] = request('beschikbaarSinds');
+                                }
+                                
+                                if (request('publicatiedatum_van')) {
+                                    $allFilters['publicatiedatum_van'] = request('publicatiedatum_van');
+                                }
+                                
+                                if (request('publicatiedatum_tot')) {
+                                    $allFilters['publicatiedatum_tot'] = request('publicatiedatum_tot');
+                                }
+                                
+                                if (request('titles_only')) {
+                                    $allFilters['titles_only'] = request('titles_only');
+                                }
+                            @endphp
+                            <input type="hidden" name="filters" value="{{ json_encode($allFilters) }}">
+
+                            <!-- Active Filters Display -->
+                            @if(!empty($activeFilters))
+                            <div class="bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                                <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                                    <i class="fas fa-filter text-[var(--color-primary)] text-xs"></i>
+                                    Actieve filters
+                                </h3>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    @foreach($activeFilters as $filter)
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md 
+                                                   bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
+                                                   text-xs font-medium">
+                                            <i class="fas fa-tag text-[10px]"></i>
+                                            {{ $filter['label'] }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @endif
+
+                            <!-- Frequentie (Frequency) -->
+                            <div>
+                                <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                                    Frequentie <span class="text-red-500">(verplicht)</span>
+                                </h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                    Selecteer met welke frequentie u e-mailattenderingen wilt ontvangen.
+                                </p>
+                                <div class="space-y-3">
+                                    <label class="flex items-start gap-3 cursor-pointer">
+                                        <input type="radio" name="frequency" value="immediate" class="mt-1 h-4 w-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)] border-gray-300">
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-900 dark:text-white">Direct na publicatie</span>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-start gap-3 cursor-pointer">
+                                        <input type="radio" name="frequency" value="daily" checked class="mt-1 h-4 w-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)] border-gray-300">
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-900 dark:text-white">Dagelijks</span>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-start gap-3 cursor-pointer">
+                                        <input type="radio" name="frequency" value="weekly" class="mt-1 h-4 w-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)] border-gray-300">
+                                        <div>
+                                            <span class="text-sm font-medium text-gray-900 dark:text-white">Wekelijks</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- E-mailadres -->
+                            <div>
+                                <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                                    E-mailadres <span class="text-red-500">(verplicht)</span>
+                                </h3>
+                                <input type="email" 
+                                       name="email" 
+                                       required
+                                       placeholder="naam@domein.nl"
+                                       class="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)] sm:text-sm px-3 py-2">
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    Voer hier uw e-mailadres in. Voorbeeld: 'naam@domein.nl'
+                                </p>
+                            </div>
+
+                            <!-- Wat doen we met uw gegevens? -->
+                            <div>
+                                <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                                    Wat doen we met uw gegevens?
+                                </h3>
+                                <div class="text-sm text-gray-700 dark:text-gray-300 space-y-2">
+                                    <p>
+                                        Deze website gebruikt diensten van het ministerie van Algemene Zaken (AZ). 
+                                        AZ gebruikt uw e-mailadres om u de afgesproken e-maileditie te sturen. 
+                                        Uw gegevens worden gedeeld met een e-mailserviceprovider.
+                                    </p>
+                                    <p>
+                                        We verzamelen verzendstatistieken. We gebruiken een pixel om te zien of u de e-mail heeft geopend. 
+                                        We gebruiken unieke ID's voor hyperlinks om te zien of u op een link heeft geklikt. 
+                                        AZ gebruikt alleen geanonimiseerde gegevens om de e-maileditie te optimaliseren.
+                                    </p>
+                                    <p>
+                                        Uw e-mailadres bewaren we totdat u zich uitschrijft.
+                                    </p>
+                                </div>
+                                
+                                <!-- Expandable extra information -->
+                                <div x-data="{ open: false }" class="mt-3">
+                                    <button type="button" 
+                                            @click="open = !open"
+                                            class="flex items-center gap-2 text-sm text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] focus:outline-none">
+                                        <svg :class="{'rotate-180': open}" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                        <span>Toon extra informatie over de verwerking van uw persoonsgegevens</span>
+                                    </button>
+                                    <div x-show="open" 
+                                         x-transition
+                                         class="mt-3 text-sm text-gray-700 dark:text-gray-300 space-y-2">
+                                        <p>
+                                            Voor meer informatie over hoe we uw persoonsgegevens verwerken, 
+                                            verwijzen we u naar ons privacybeleid. U heeft het recht om uw 
+                                            persoonsgegevens in te zien, te corrigeren of te verwijderen.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Akkoordverklaring -->
+                            <div>
+                                <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                                    Akkoordverklaring <span class="text-red-500">(verplicht)</span>
+                                </h3>
+                                <label class="flex items-start gap-3 cursor-pointer">
+                                    <input type="checkbox" 
+                                           name="consent" 
+                                           required
+                                           class="mt-1 h-4 w-4 text-[var(--color-primary)] focus:ring-[var(--color-primary)] border-gray-300 rounded">
+                                    <span class="text-sm text-gray-900 dark:text-white">
+                                        Ik ga akkoord en begrijp wat er met mijn persoonsgegevens wordt gedaan.
+                                    </span>
+                                </label>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="pt-4">
+                                <button type="submit" 
+                                        class="w-full rounded-md bg-[var(--color-primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[var(--color-primary-dark)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] transition-colors duration-200">
+                                    Aanvragen
+                                </button>
+                            </div>
+                        </form>
+                        </div>
+                    </div>
+                </el-dialog-panel>
+            </div>
+        </dialog>
+    </el-dialog>
 @endsection
 

@@ -127,33 +127,33 @@
                     </p>
                 </div>
 
-                <div class="bg-[var(--color-surface)] border border-[var(--color-outline-variant)] rounded-md p-6">
+                <div class="bg-[var(--color-surface)] border border-[var(--color-outline-variant)] rounded-md p-6 opacity-60 cursor-not-allowed relative" title="Deze functie komt binnenkort beschikbaar">
                     <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 rounded-md bg-[var(--color-primary)]/10 flex items-center justify-center shrink-0">
-                            <i class="fas fa-clock text-[var(--color-primary)] text-base" aria-hidden="true"></i>
+                        <div class="w-10 h-10 rounded-md bg-[var(--color-outline-variant)]/30 flex items-center justify-center shrink-0">
+                            <i class="fas fa-clock text-[var(--color-on-surface-variant)]/50 text-base" aria-hidden="true"></i>
                         </div>
-                        <h3 class="text-base font-semibold text-[var(--color-on-surface)]">In behandeling</h3>
+                        <h3 class="text-base font-semibold text-[var(--color-on-surface)]/60">In behandeling</h3>
                     </div>
-                    <p class="text-3xl font-bold text-[var(--color-primary)] mb-1">
-                        {{ number_format($documentsInProgress, 0, ',', '.') }}
+                    <p class="text-3xl font-bold text-[var(--color-on-surface-variant)]/50 mb-1">
+                        —
                     </p>
-                    <p class="text-sm text-[var(--color-on-surface-variant)]/70">
-                        Recent gepubliceerd
+                    <p class="text-sm text-[var(--color-on-surface-variant)]/50">
+                        Binnenkort beschikbaar
                     </p>
                 </div>
 
-                <div class="bg-[var(--color-surface)] border border-[var(--color-outline-variant)] rounded-md p-6">
+                <div class="bg-[var(--color-surface)] border border-[var(--color-outline-variant)] rounded-md p-6 opacity-60 cursor-not-allowed relative" title="Deze functie komt binnenkort beschikbaar">
                     <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 rounded-md bg-[var(--color-primary-dark)]/10 flex items-center justify-center shrink-0">
-                            <i class="fas fa-chart-line text-[var(--color-primary-dark)] text-base" aria-hidden="true"></i>
+                        <div class="w-10 h-10 rounded-md bg-[var(--color-outline-variant)]/30 flex items-center justify-center shrink-0">
+                            <i class="fas fa-chart-line text-[var(--color-on-surface-variant)]/50 text-base" aria-hidden="true"></i>
                         </div>
-                        <h3 class="text-base font-semibold text-[var(--color-on-surface)]">Gemiddelde tijd</h3>
+                        <h3 class="text-base font-semibold text-[var(--color-on-surface)]/60">Gemiddelde tijd</h3>
                     </div>
-                    <p class="text-3xl font-bold text-[var(--color-primary-dark)] mb-1">
-                        {{ $avgProcessingDays }} dagen
+                    <p class="text-3xl font-bold text-[var(--color-on-surface-variant)]/50 mb-1">
+                        —
                     </p>
-                    <p class="text-sm text-[var(--color-on-surface-variant)]/70">
-                        Verwerkingstijd
+                    <p class="text-sm text-[var(--color-on-surface-variant)]/50">
+                        Binnenkort beschikbaar
                     </p>
                 </div>
             </div>

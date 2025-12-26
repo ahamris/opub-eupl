@@ -76,6 +76,18 @@ class AdminMenuSeeder extends Seeder
                 'is_active' => true,
             ]);
 
+            AdminMenuItem::create([
+                'admin_menu_id' => $menu->id,
+                'parent_id' => $pagesSection->id,
+                'item_type' => 'link',
+                'label' => 'Search Subscriptions',
+                'slug' => 'search-subscriptions',
+                'route_name' => 'admin.search-subscriptions.index',
+                'icon' => 'bell',
+                'position' => 4,
+                'is_active' => true,
+            ]);
+
             // Content Section
             $contentSection = AdminMenuItem::create([
                 'admin_menu_id' => $menu->id,
@@ -143,6 +155,18 @@ class AdminMenuSeeder extends Seeder
                 'route_name' => 'admin.content.static-page.index',
                 'icon' => 'file-lines',
                 'position' => 3,
+                'is_active' => true,
+            ]);
+
+            AdminMenuItem::create([
+                'admin_menu_id' => $menu->id,
+                'parent_id' => $contentSection->id,
+                'item_type' => 'link',
+                'label' => 'Cookie Settings',
+                'slug' => 'cookie-settings',
+                'route_name' => 'admin.content.cookie-settings.index',
+                'icon' => 'cookie-bite',
+                'position' => 4,
                 'is_active' => true,
             ]);
 

@@ -4,9 +4,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ContactSubmissionController;
+use App\Http\Controllers\Admin\SearchSubscriptionController;
 use App\Http\Controllers\Admin\Content\BlogController;
 use App\Http\Controllers\Admin\Content\BlogCategoryController;
 use App\Http\Controllers\Admin\Content\StaticPageController;
+use App\Http\Controllers\Admin\Content\CookieSettingController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\Auth\AdminLoginController;
 use App\Http\Controllers\Admin\Auth\AdminPasswordResetLinkController;
@@ -50,6 +52,10 @@ Route::middleware(['auth', \App\Http\Middleware\CheckIfAdmin::class])->prefix('a
     Route::resource('contact-submissions', ContactSubmissionController::class)->only(['index', 'show', 'update', 'destroy']);
     Route::post('contact-submissions/{contactSubmission}/toggle-read', [ContactSubmissionController::class, 'toggleRead'])->name('contact-submissions.toggle-read');
     Route::post('contact-submissions/{contactSubmission}/toggle-archive', [ContactSubmissionController::class, 'toggleArchive'])->name('contact-submissions.toggle-archive');
+
+    // Search Subscriptions Routes
+    Route::resource('search-subscriptions', SearchSubscriptionController::class)->only(['index', 'show', 'update', 'destroy']);
+    Route::post('search-subscriptions/{searchSubscription}/toggle-active', [SearchSubscriptionController::class, 'toggleActive'])->name('search-subscriptions.toggle-active');
 
     // Content Routes
     Route::prefix('content')->name('content.')->group(function () {
@@ -102,6 +108,10 @@ Route::middleware(['auth', \App\Http\Middleware\CheckIfAdmin::class])->prefix('a
 
         // Settings Routes
         Route::resource('setting', SettingController::class);
+
+        // Cookie Settings (singleton)
+        Route::get('cookie-settings', [\App\Http\Controllers\Admin\Content\CookieSettingController::class, 'index'])->name('cookie-settings.index');
+        Route::put('cookie-settings', [\App\Http\Controllers\Admin\Content\CookieSettingController::class, 'update'])->name('cookie-settings.update');
     });
 
     // Settings Routes

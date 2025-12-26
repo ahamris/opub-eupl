@@ -54,6 +54,9 @@
         @include('layouts.includes.footer')
     @endif
     
+    {{-- GDPR Cookie Banner --}}
+    <x-front.gdpr-banner />
+    
     @stack('scripts')
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
