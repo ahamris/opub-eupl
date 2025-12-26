@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Cache;
 
 /**
  * Static Page Model
+ *
+ * @mixin IdeHelperStaticPage
  */
 class StaticPage extends Model
 {

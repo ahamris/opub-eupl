@@ -425,20 +425,35 @@ class Table extends Component
 
     public function delete(int $id): void
     {
-        if (! in_array('delete', $this->actions)) {
-            return;
+        try {
+            if (! in_array('delete', $this->actions)) {
+                \Log::warning('Delete action rejected: Action not in allowed list', [
+                    'id' => $id,
+                    'model' => $this->modelClass ?? 'unknown',
+                    'allowed_actions' => $this->actions,
+                ]);
+                return;
+            }
+
+            $modelInstance = $this->getModelInstance();
+            $item = $modelInstance->query()->findOrFail($id);
+            $itemName = $item->name ?? $item->email ?? $item->title ?? "#{$id}";
+            $modelName = class_basename($this->modelClass);
+
+            $item->delete();
+            $this->selected = array_filter($this->selected, fn ($item) => $item !== $id);
+
+            $message = str($modelName)->ucfirst()->toString()." '{$itemName}' deleted successfully.";
+            $this->dispatch('notify', type: 'success', message: $message);
+        } catch (\Exception $e) {
+            \Log::error('Delete action error', [
+                'id' => $id,
+                'model' => $this->modelClass ?? 'unknown',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw $e;
         }
-
-        $modelInstance = $this->getModelInstance();
-        $item = $modelInstance->query()->findOrFail($id);
-        $itemName = $item->name ?? $item->email ?? $item->title ?? "#{$id}";
-        $modelName = class_basename($this->modelClass);
-
-        $item->delete();
-        $this->selected = array_filter($this->selected, fn ($item) => $item !== $id);
-
-        $message = str($modelName)->ucfirst()->toString()." '{$itemName}' deleted successfully.";
-        $this->dispatch('notify', type: 'success', message: $message);
     }
 
     public function getRoute(string $action, int $id): ?string
@@ -523,48 +538,83 @@ class Table extends Component
 
     public function toggleField(int $id, string $field): void
     {
-        // Security: Only allow toggling fields that are explicitly defined as toggle type in columns
-        $columnType = $this->getColumnType($field);
-        if ($columnType !== 'toggle') {
-            abort(403, 'Invalid field for toggle operation.');
-        }
-
-        // Security: Validate field exists in columns to prevent mass assignment
-        $allowedFields = [];
-        foreach ($this->columns as $column) {
-            if (($column['type'] ?? null) === 'toggle') {
-                $allowedFields[] = $column['key'] ?? null;
+        try {
+            // Security: Only allow toggling fields that are explicitly defined as toggle type in columns
+            $columnType = $this->getColumnType($field);
+            if ($columnType !== 'toggle') {
+                \Log::warning('Toggle field rejected: Invalid column type', [
+                    'field' => $field,
+                    'column_type' => $columnType,
+                    'model' => $this->modelClass ?? 'unknown',
+                    'columns' => $this->columns,
+                ]);
+                abort(403, 'Invalid field for toggle operation.');
             }
+
+            // Security: Validate field exists in columns to prevent mass assignment
+            $allowedFields = [];
+            foreach ($this->columns as $column) {
+                if (($column['type'] ?? null) === 'toggle') {
+                    $allowedFields[] = $column['key'] ?? null;
+                }
+            }
+
+            if (! in_array($field, $allowedFields, true)) {
+                \Log::warning('Toggle field rejected: Field not in allowed list', [
+                    'field' => $field,
+                    'allowed_fields' => $allowedFields,
+                    'model' => $this->modelClass ?? 'unknown',
+                ]);
+                abort(403, 'Field not allowed for toggle operation.');
+            }
+
+            $modelInstance = $this->getModelInstance();
+            $item = $modelInstance->query()->findOrFail($id);
+
+            // Security: Ensure field exists on model
+            // Check if field exists in attributes or is a cast/accessor
+            $hasField = array_key_exists($field, $item->getAttributes()) 
+                || (method_exists($item, 'hasAttribute') && $item->hasAttribute($field))
+                || (method_exists($item, 'hasCast') && $item->hasCast($field))
+                || property_exists($item, $field);
+            
+            if (! $hasField) {
+                \Log::warning('Toggle field rejected: Field not found on model', [
+                    'field' => $field,
+                    'model' => $this->modelClass ?? 'unknown',
+                    'item_id' => $id,
+                    'attributes' => array_keys($item->getAttributes()),
+                    'casts' => method_exists($item, 'getCasts') ? array_keys($item->getCasts()) : [],
+                ]);
+                abort(404, 'Field not found on model.');
+            }
+
+            $oldValue = $item->$field;
+            $newValue = ! $oldValue;
+
+            // Security: Use fillable/guarded protection - only update the specific allowed field
+            $item->update([$field => $newValue]);
+
+            // Get field label for toast message
+            $fieldLabel = $this->getColumnLabel($field);
+            $modelName = class_basename($this->modelClass);
+            $itemName = $item->name ?? $item->email ?? "#{$item->id}";
+
+            $status = $newValue ? 'activated' : 'deactivated';
+            $variant = $newValue ? 'success' : 'warning';
+            $message = str($modelName)->ucfirst()->toString()." '{$itemName}' {$status} successfully.";
+
+            $this->dispatch('notify', type: $variant, message: $message);
+        } catch (\Exception $e) {
+            \Log::error('Toggle field error', [
+                'field' => $field,
+                'id' => $id,
+                'model' => $this->modelClass ?? 'unknown',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw $e;
         }
-
-        if (! in_array($field, $allowedFields, true)) {
-            abort(403, 'Field not allowed for toggle operation.');
-        }
-
-        $modelInstance = $this->getModelInstance();
-        $item = $modelInstance->query()->findOrFail($id);
-
-        // Security: Ensure field exists on model
-        if (! isset($item->$field)) {
-            abort(404, 'Field not found on model.');
-        }
-
-        $oldValue = $item->$field;
-        $newValue = ! $oldValue;
-
-        // Security: Use fillable/guarded protection - only update the specific allowed field
-        $item->update([$field => $newValue]);
-
-        // Get field label for toast message
-        $fieldLabel = $this->getColumnLabel($field);
-        $modelName = class_basename($this->modelClass);
-        $itemName = $item->name ?? $item->email ?? "#{$item->id}";
-
-        $status = $newValue ? 'activated' : 'deactivated';
-        $variant = $newValue ? 'success' : 'warning';
-        $message = str($modelName)->ucfirst()->toString()." '{$itemName}' {$status} successfully.";
-
-        $this->dispatch('notify', type: $variant, message: $message);
     }
 
     public function getColumnType(string $field): ?string

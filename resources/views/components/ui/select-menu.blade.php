@@ -6,30 +6,54 @@
     'required' => false,
     'error' => null,
     'hint' => null,
+    'name' => null,
+    'value' => null,
 ])
 
 @php
     $uuid = Str::uuid();
     $wireModel = $attributes->wire('model');
+    $isLivewire = $wireModel->value();
+    $inputName = $name ?? ($attributes->get('name') ?? '');
+    $initialValue = $value ?? ($attributes->get('value') ?? null);
     
     // Format options for Alpine: [{id, label, value}]
-    $formattedOptions = collect($options)->map(function($label, $value) {
-        return [
-            'id' => $value,
-            'label' => $label,
-            'value' => $value,
-        ];
-    })->values()->toArray();
+    // Support both ['value' => 'label'] and [['value' => '', 'label' => '']] formats
+    $formattedOptions = [];
+    if (!empty($options)) {
+        $firstOption = reset($options);
+        if (is_array($firstOption) && isset($firstOption['value']) && isset($firstOption['label'])) {
+            // Format: [['value' => 1, 'label' => 'Title'], ...]
+            foreach ($options as $option) {
+                if (is_array($option) && isset($option['value']) && isset($option['label'])) {
+                    $formattedOptions[] = [
+                        'id' => (string) $option['value'],
+                        'label' => $option['label'],
+                        'value' => (string) $option['value'],
+                    ];
+                }
+            }
+        } else {
+            // Format: ['value' => 'label']
+            foreach ($options as $optionValue => $optionLabel) {
+                $formattedOptions[] = [
+                    'id' => (string) $optionValue,
+                    'label' => $optionLabel,
+                    'value' => (string) $optionValue,
+                ];
+            }
+        }
+    }
 @endphp
 
 <div class="w-full" {{ $attributes->whereDoesntStartWith('wire:model') }}>
     <div
         x-data="{
             open: false,
-            @if($wireModel->value())
+            @if($isLivewire)
             value: @entangle($wireModel),
             @else
-            value: null,
+            value: @js($initialValue),
             @endif
             options: @js($formattedOptions),
             placeholderText: '{{ $placeholder }}',
@@ -39,7 +63,17 @@
             keyboardTimeout: false,
 
             init() {
+                @if(!$isLivewire)
+                // Update hidden input when value changes (for normal forms)
+                this.$watch('value', (newValue) => {
+                    this.updateSelected();
+                    if (this.$refs.hiddenInput) {
+                        this.$refs.hiddenInput.value = newValue || '';
+                    }
+                });
+                @else
                 this.$watch('value', () => this.updateSelected());
+                @endif
                 this.updateSelected();
             },
 
@@ -66,6 +100,12 @@
 
             setSelected(option) {
                 this.value = option.value;
+                @if(!$isLivewire)
+                // Update hidden input for normal forms
+                if (this.$refs.hiddenInput) {
+                    this.$refs.hiddenInput.value = option.value || '';
+                }
+                @endif
                 if (this.closeOnSelection) this.closeMenu();
             },
 
@@ -109,6 +149,11 @@
             'w-full': '{{ $size }}' === 'full'
         }"
     >
+        <!-- Hidden input for normal forms (non-Livewire) -->
+        @if(!$isLivewire && $inputName)
+            <input type="hidden" name="{{ $inputName }}" x-ref="hiddenInput" value="{{ $initialValue ?? '' }}" />
+        @endif
+
         <!-- Label -->
         @if($label)
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5" x-on:click="openMenu()">
@@ -188,11 +233,17 @@
             <p class="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">{{ $hint }}</p>
         @endif
         
-        @php
-            $errorName = $wireModel->value();
-        @endphp
-        @error($errorName)
-            <p class="mt-1.5 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
-        @enderror
+        @if($isLivewire)
+            @php
+                $errorName = $wireModel->value();
+            @endphp
+            @error($errorName)
+                <p class="mt-1.5 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+            @enderror
+        @elseif($inputName)
+            @error($inputName)
+                <p class="mt-1.5 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+            @enderror
+        @endif
     </div>
 </div>

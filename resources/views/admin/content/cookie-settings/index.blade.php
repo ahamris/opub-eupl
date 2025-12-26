@@ -131,11 +131,12 @@
                 </div>
 
                 <div id="static-page-group" style="display: {{ old('cookie_settings_page_type', get_setting('cookie_settings_page_type', 'custom')) == 'static' ? 'block' : 'none' }};">
-                    <x-ui.select 
+                    <x-ui.select-menu 
                         label="Select Static Page" 
                         name="cookie_settings_page_id"
-                        :options="$staticPages->map(fn($page) => ['value' => $page->id, 'label' => $page->title])->toArray()"
-                        :selected="old('cookie_settings_page_id', get_setting('cookie_settings_page_id', ''))"
+                        :options="$staticPages->map(fn($page) => ['value' => (string)$page->id, 'label' => $page->title])->toArray()"
+                        placeholder="Select a page..."
+                        :value="old('cookie_settings_page_id', get_setting('cookie_settings_page_id', ''))"
                     />
                 </div>
             </div>

@@ -24,7 +24,7 @@ class Toggle extends Component
         public ?string $id = null,
         public bool $required = false
     ) {
-        $this->toggleId = $id ?? ($name ?: 'toggle-'.uniqid());
+        $this->toggleId = $id ?? ($name ?: 'toggle-'.uniqid('', true));
 
         // Base input classes - Tailwind only
         $inputClasses = [

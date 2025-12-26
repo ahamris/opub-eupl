@@ -5,6 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
+/**
+ * @mixin IdeHelperAboutSetting
+ */
 class AboutSetting extends Model
 {
     protected $table = 'about_settings';

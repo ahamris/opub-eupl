@@ -9,6 +9,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
+/**
+ * @mixin IdeHelperFooterMenuItem
+ */
 class FooterMenuItem extends Model
 {
     use HasFactory;

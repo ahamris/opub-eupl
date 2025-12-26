@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * @mixin IdeHelperTestimonial
+ */
 class Testimonial extends Model
 {
     use HasFactory;

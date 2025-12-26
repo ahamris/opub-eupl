@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Admin\AdminBaseController;
 use App\Models\SearchSubscription;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
