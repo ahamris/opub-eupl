@@ -77,11 +77,11 @@
             <div
                 class="mr-10"
                 x-data="{
-                    darkModePreference: 'system', // 'system', 'on' or 'off',
+                    darkModePreference: 'system', // 'system', 'dark' or 'light',
                     useLocalStorage: true, // true or false
 
-                    // Helper variables
-                    localStorageKey: 'dark-mode',
+                    // Helper variables - Use 'theme' key to match admin.js and FOUC prevention
+                    localStorageKey: 'theme',
 
                     // Initialize dark mode on component load
                     init() {
@@ -104,10 +104,11 @@
                     // Load dark mode preference from localStorage
                     loadDarkModePreference() {
                         const stored = localStorage.getItem(this.localStorageKey);
-                        if (stored === 'on' || stored === 'off' || stored === 'system') {
+                        if (stored === 'dark' || stored === 'light') {
                             return stored;
                         }
-                        return this.darkModePreference;
+                        // 'system' is default when no value is stored
+                        return 'system';
                     },
 
                     // Apply dark mode based on current preference
@@ -117,7 +118,7 @@
                         if (this.darkModePreference === 'system') {
                             darkModeActive = window.matchMedia('(prefers-color-scheme: dark)').matches;
                         } else {
-                            darkModeActive = this.darkModePreference === 'on';
+                            darkModeActive = this.darkModePreference === 'dark';
                         }
 
                         document.documentElement.classList.toggle('dark', darkModeActive);
@@ -129,7 +130,11 @@
                         
                         // Save preference to localStorage
                         if (this.useLocalStorage) {
-                            localStorage.setItem(this.localStorageKey, value);
+                            if (value === 'system') {
+                                localStorage.removeItem(this.localStorageKey);
+                            } else {
+                                localStorage.setItem(this.localStorageKey, value);
+                            }
                         }
 
                         this.applyDarkMode();
@@ -142,9 +147,9 @@
                             x-cloak
                             class="toggle-indicator absolute inset-y-0 left-0 w-1/3 rounded-full bg-white shadow-sm transition-transform duration-150 ease-out dark:bg-zinc-700/75"
                             x-bind:class="{
-                                'translate-x-0': darkModePreference === 'off',
+                                'translate-x-0': darkModePreference === 'light',
                                 'translate-x-full': darkModePreference === 'system',
-                                'translate-x-[200%]': darkModePreference === 'on',
+                                'translate-x-[200%]': darkModePreference === 'dark',
                             }"
                         ></div>
                         <label class="group relative flex">
@@ -153,9 +158,9 @@
                                 id="dark-mode-off"
                                 name="dark-mode-switch"
                                 type="radio"
-                                value="off"
-                                x-bind:checked="darkModePreference === 'off'"
-                                x-on:change="setDarkMode('off')"
+                                value="light"
+                                x-bind:checked="darkModePreference === 'light'"
+                                x-on:change="setDarkMode('light')"
                             />
                             <span
                                 class="relative flex cursor-pointer items-center justify-center rounded-lg p-2 text-zinc-500 transition-transform duration-150 ease-out peer-checked:text-zinc-900 peer-focus-visible:ring-3 peer-focus-visible:ring-zinc-200 hover:text-zinc-900 active:scale-97 dark:text-zinc-400 dark:peer-checked:text-white dark:peer-focus-visible:ring-zinc-500/50 dark:hover:text-white"
@@ -226,9 +231,9 @@
                                 id="dark-mode-on"
                                 name="dark-mode-switch"
                                 type="radio"
-                                value="on"
-                                x-bind:checked="darkModePreference === 'on'"
-                                x-on:change="setDarkMode('on')"
+                                value="dark"
+                                x-bind:checked="darkModePreference === 'dark'"
+                                x-on:change="setDarkMode('dark')"
                             />
                             <span
                                 class="relative flex cursor-pointer items-center justify-center rounded-lg p-2 text-zinc-500 transition-transform duration-150 ease-out peer-checked:text-zinc-900 peer-focus-visible:ring-3 peer-focus-visible:ring-zinc-200 hover:text-zinc-900 active:scale-97 dark:text-zinc-400 dark:peer-checked:text-white dark:peer-focus-visible:ring-zinc-500/50 dark:hover:text-white"

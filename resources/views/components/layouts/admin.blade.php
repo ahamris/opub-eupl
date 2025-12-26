@@ -6,6 +6,40 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'Admin Panel' }} - {{ config('app.name', 'Laravel') }}</title>
     
+    {{-- FOUC Prevention - Inline script must run immediately before any rendering --}}
+    <script>
+        (function () {
+            try {
+                // Check localStorage for theme preference
+                const stored = localStorage.getItem("theme");
+                const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+                
+                // Determine if dark mode should be active
+                let isDark = false;
+                if (stored === "dark") {
+                    isDark = true;
+                } else if (stored === "light") {
+                    isDark = false;
+                } else {
+                    // System preference (no stored value)
+                    isDark = prefersDark;
+                }
+                
+                // Apply dark class immediately before any content renders
+                if (isDark) {
+                    document.documentElement.classList.add("dark");
+                } else {
+                    document.documentElement.classList.remove("dark");
+                }
+            } catch (e) {
+                // Fallback: check system preference only
+                if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                    document.documentElement.classList.add("dark");
+                }
+            }
+        })();
+    </script>
+    
     {{-- Fonts --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,9 +63,6 @@
     @vite(['resources/css/admin.css', 'resources/js/admin.js'])
     @livewireStyles
     @stack('styles')
-    
-    {{-- FOUC Prevention - Direct JS import --}}
-    <script src="{{ asset('js/fouc-prevention.js') }}"></script>
     
     {{-- Flash Messages Data --}}
     @php
