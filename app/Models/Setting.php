@@ -22,7 +22,8 @@ class Setting extends Model
     public static function getValue($key, $default = null)
     {
         return Cache::remember("settings.{$key}", 60 * 60, function () use ($key, $default) {
-            return self::where('_key', $key)->first()->value ?? $default;
+            $setting = self::where('_key', $key)->first();
+            return $setting?->_value ?? $default;
         });
     }
 
@@ -48,15 +49,39 @@ class Setting extends Model
         return $setting;
     }
 
+    /**
+     * Force set a setting value (alias for setValue)
+     * This method always updates or creates the setting regardless of existing value
+     */
+    public static function forceSet($key, $value, string $group = 'general')
+    {
+        return self::setValue($key, $value, $group);
+    }
+
+    /**
+     * Clear all settings cache
+     */
+    public static function clearCache(): void
+    {
+        // Clear individual setting caches
+        $settings = self::query()->get();
+        foreach ($settings as $setting) {
+            Cache::forget("settings.{$setting->_key}");
+        }
+        
+        // Clear the general settings cache
+        Cache::forget('settings');
+    }
+
     protected static function boot()
     {
         parent::boot();
         static::saved(function ($setting) {
-            Cache::forget("settings.{$setting->key}");
+            Cache::forget("settings.{$setting->_key}");
         });
 
         static::deleted(function ($setting) {
-            Cache::forget("settings.{$setting->key}");
+            Cache::forget("settings.{$setting->_key}");
         });
     }
 
