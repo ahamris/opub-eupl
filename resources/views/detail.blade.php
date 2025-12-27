@@ -332,75 +332,65 @@
                     </div>
 
                     <!-- Main Text Content -->
-                    <div class="prose prose-slate max-w-none">
+                    <article class="max-w-none">
                         @if($aiSummary)
-                            <p class="text-lg text-[var(--color-on-surface-variant)] leading-relaxed">
+                            <p class="text-base text-[var(--color-on-surface)] leading-relaxed">
                                 {!! nl2br(e($aiSummary)) !!}
                             </p>
                         @elseif($description)
-                            <p class="text-lg text-[var(--color-on-surface-variant)] leading-relaxed">
+                            <p class="text-base text-[var(--color-on-surface)] leading-relaxed">
                                 {{ $description }}
                             </p>
                         @else
-                            <p class="text-[var(--color-on-surface-variant)] italic">
+                            <p class="text-[var(--color-on-surface-variant)]">
                                 Geen samenvatting beschikbaar voor dit document.
                             </p>
                         @endif
                         
                         <!-- Action Info Box -->
                         @if(isset($jsonData['ai_analysis']['action_needed']) && $jsonData['ai_analysis']['action_needed'])
-                        <div class="my-8 bg-[var(--color-primary)]/5 rounded-xl p-6 border border-[var(--color-primary)]/20">
-                            <h3 class="text-[var(--color-primary-dark)] text-base font-bold uppercase tracking-wider mb-4 mt-0">Wat betekent dit voor u?</h3>
-                            <ul class="list-none p-0 m-0 space-y-3">
-                                <li class="flex gap-3">
-                                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--color-primary)]/20 text-[var(--color-primary)] flex items-center justify-center text-xs font-bold">1</span>
-                                    <span class="text-[var(--color-on-surface-variant)] text-sm"><strong>Voor omwonenden:</strong> Er verandert mogelijk iets in uw omgeving. Het is slim om te kijken wat er precies verandert.</span>
-                                </li>
-                                <li class="flex gap-3">
-                                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--color-primary)]/20 text-[var(--color-primary)] flex items-center justify-center text-xs font-bold">2</span>
-                                    <span class="text-[var(--color-on-surface-variant)] text-sm"><strong>Voor betrokkenen:</strong> Dit document bevat mogelijk regels waar u zich aan moet houden.</span>
-                                </li>
-                                <li class="flex gap-3">
-                                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--color-primary)]/20 text-[var(--color-primary)] flex items-center justify-center text-xs font-bold">!</span>
-                                    <span class="text-[var(--color-on-surface-variant)] text-sm"><strong>Status:</strong> Controleer of u actie moet ondernemen (bijv. een zienswijze indienen).</span>
-                                </li>
+                        <div class="mt-6 p-4 rounded-lg border border-[var(--color-outline-variant)]">
+                            <h4 class="text-sm font-medium text-[var(--color-on-surface)] mb-2">Wat betekent dit voor u?</h4>
+                            <ul class="space-y-1 text-sm text-[var(--color-on-surface-variant)]">
+                                <li>• Controleer of dit document invloed heeft op uw situatie</li>
+                                <li>• Mogelijk moet u actie ondernemen (bijv. zienswijze indienen)</li>
                             </ul>
                         </div>
                         @endif
 
                         <!-- Document Link -->
-                        <div class="mt-6 pt-6 border-t border-[var(--color-outline-variant)]">
-                            <h3 class="text-lg font-semibold mb-4 text-[var(--color-on-surface)]">Bekijk origineel</h3>
+                        <div class="mt-8 pt-6 border-t border-[var(--color-outline-variant)]">
+                            <h3 class="text-sm font-semibold text-[var(--color-on-surface-variant)] uppercase tracking-wider mb-4">Bekijk origineel</h3>
                             <div class="flex flex-wrap gap-3">
                                 @if(isset($jsonData['external_id']))
                                     <a href="https://open.overheid.nl/details/{{ $jsonData['external_id'] }}" 
                                        target="_blank"
                                        rel="noopener noreferrer"
-                                       class="inline-flex items-center gap-2 px-4 py-2 rounded-md
-                                              bg-[var(--color-primary)] text-[var(--color-on-primary)] border border-[var(--color-primary)]
+                                       class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg
+                                              bg-[var(--color-primary)] text-[var(--color-on-primary)]
                                               hover:bg-[var(--color-primary-dark)]
-                                              focus:outline-none
+                                              focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20
                                               transition-colors duration-200 text-sm font-medium">
-                                        <i class="fas fa-external-link-alt" aria-hidden="true"></i>
-                                        <span>Bekijk op open.overheid.nl</span>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                        <span>open.overheid.nl</span>
                                     </a>
                                 @endif
                                 @if(isset($documentMeta['weblocatie']))
                                     <a href="{{ $documentMeta['weblocatie'] }}" 
                                        target="_blank" 
                                        rel="noopener noreferrer"
-                                       class="inline-flex items-center gap-2 px-4 py-2 rounded-md
+                                       class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg
                                               bg-[var(--color-surface)] text-[var(--color-on-surface)] border border-[var(--color-outline-variant)]
-                                              hover:bg-[var(--color-surface-variant)]
-                                              focus:outline-none
+                                              hover:bg-[var(--color-surface-variant)] hover:border-[var(--color-outline)]
+                                              focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20
                                               transition-colors duration-200 text-sm font-medium">
-                                        <i class="fas fa-external-link-alt" aria-hidden="true"></i>
-                                        <span>Officielebekendmakingen.nl</span>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                        <span>officielebekendmakingen.nl</span>
                                     </a>
                                 @endif
                             </div>
                         </div>
-                    </div>
+                    </article>
                         </div>
                         <!-- END Context Tab -->
 
@@ -415,12 +405,10 @@
                         >
                     
                     <!-- Woo Classificatie Section -->
-                    <div class="bg-[var(--color-surface)] rounded-lg border border-[var(--color-outline-variant)] overflow-hidden mb-6">
-                        <div class="px-6 py-4 border-b border-[var(--color-outline-variant)] bg-[var(--color-primary)]/5 flex items-center gap-2">
-                            <h3 class="text-base font-bold text-[var(--color-on-surface)]">Woo-Classificatie</h3>
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[var(--color-surface)] text-[var(--color-primary)] border border-[var(--color-primary)]/20">
-                                Wet open overheid
-                            </span>
+                    <div class="rounded-lg border border-[var(--color-outline-variant)] overflow-hidden mb-6">
+                        <div class="px-6 py-4 border-b border-[var(--color-outline-variant)] flex items-center justify-between">
+                            <h3 class="text-sm font-medium text-[var(--color-on-surface)]">Woo-Classificatie</h3>
+                            <span class="text-xs text-[var(--color-on-surface-variant)]">Wet open overheid</span>
                         </div>
                         <dl class="divide-y divide-[var(--color-outline-variant)]">
                             @if($wooInfoCategorie)
@@ -462,9 +450,9 @@
                     </div>
 
                     <!-- Technical Details Section -->
-                    <div class="bg-[var(--color-surface)] rounded-lg border border-[var(--color-outline-variant)] overflow-hidden">
-                        <div class="px-6 py-4 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-variant)]">
-                            <h3 class="text-base font-semibold text-[var(--color-on-surface)]">Documentdetails</h3>
+                    <div class="rounded-lg border border-[var(--color-outline-variant)] overflow-hidden">
+                        <div class="px-6 py-4 border-b border-[var(--color-outline-variant)]">
+                            <h3 class="text-sm font-medium text-[var(--color-on-surface)]">Documentdetails</h3>
                         </div>
                         <dl class="divide-y divide-[var(--color-outline-variant)]">
                             @if(isset($jsonData['external_id']))
@@ -624,65 +612,43 @@
             <!-- RIGHT COLUMN: Sidebar (4 cols) -->
             <div class="lg:col-span-4 space-y-6">
                 
-                <!-- Action Card / Downloads -->
-                <div class="bg-[var(--color-surface)] p-5 rounded-lg border border-[var(--color-outline-variant)]">
-                    <h3 class="font-semibold text-[var(--color-on-surface)] mb-4 text-sm uppercase tracking-wide">Downloads</h3>
-                    
-                    <!-- PDF Button -->
-                    @if($pdfUrl)
-                    <a href="{{ $pdfUrl }}" target="_blank" class="group block w-full mb-3 text-decoration-none">
-                        <div class="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-[var(--color-on-primary)] font-medium py-3 px-4 rounded-md transition-all flex items-center justify-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                <!-- Downloads -->
+                <div>
+                    <h3 class="text-sm font-medium text-[var(--color-on-surface)] mb-3">Downloads</h3>
+                    <div class="space-y-2">
+                        @if($pdfUrl)
+                        <a href="{{ $pdfUrl }}" target="_blank" class="block w-full bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-[var(--color-on-primary)] font-medium py-2.5 px-4 rounded-lg transition-colors text-center text-sm">
                             Download PDF
-                        </div>
-                        <div class="text-xs text-[var(--color-on-surface-variant)] text-center mt-1 group-hover:text-[var(--color-primary)] transition-colors">
-                            Inclusief samenvatting & metadata
-                        </div>
-                    </a>
-                    @endif
-
-                    <!-- XML Button -->
-                    <a href="{{ url()->current() }}?format=xml" class="group block w-full text-decoration-none">
-                        <div class="bg-[var(--color-surface)] border border-[var(--color-outline-variant)] hover:bg-[var(--color-surface-variant)] text-[var(--color-on-surface)] font-medium py-2.5 px-4 rounded-md transition-colors flex items-center justify-center gap-2">
-                            <svg class="w-5 h-5 text-[var(--color-on-surface-variant)] group-hover:text-[var(--color-on-surface)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
-                            Download XML (Bron)
-                        </div>
-                    </a>
+                        </a>
+                        @endif
+                        <a href="{{ url()->current() }}?format=xml" class="block w-full border border-[var(--color-outline-variant)] hover:border-[var(--color-outline)] text-[var(--color-on-surface)] font-medium py-2 px-4 rounded-lg transition-colors text-center text-sm">
+                            Download XML
+                        </a>
+                    </div>
                 </div>
 
-                <!-- Location Card / Betreft Locatie -->
+                <!-- Location -->
                 @if($orgName)
-                <div class="bg-[var(--color-surface)] p-5 rounded-lg border border-[var(--color-outline-variant)]">
-                    <h3 class="font-semibold text-[var(--color-on-surface)] mb-3 text-sm uppercase tracking-wide">Betreft Locatie</h3>
-                    <div class="relative w-full h-40 bg-[var(--color-surface-variant)] rounded-md mb-3 overflow-hidden flex items-center justify-center group cursor-pointer border border-[var(--color-outline-variant)]">
-                        <!-- Simple Map Pattern -->
-                        <div class="absolute inset-0 opacity-20">
-                            <svg class="w-full h-full text-[var(--color-outline)]" fill="currentColor" viewBox="0 0 100 100"><rect x="0" y="0" width="10" height="100"/><rect x="20" y="0" width="10" height="100"/><rect x="50" y="0" width="30" height="100"/><rect x="0" y="40" width="100" height="5"/></svg>
-                        </div>
-                        <div class="z-10 bg-[var(--color-surface)] p-2 rounded shadow-md transform group-hover:-translate-y-1 transition-transform">
-                            <svg class="w-6 h-6 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
-                        </div>
+                <div>
+                    <h3 class="text-sm font-medium text-[var(--color-on-surface)] mb-3">Betreft Locatie</h3>
+                    <div class="text-sm">
+                        <p class="text-[var(--color-on-surface)]">{{ $orgName }}</p>
+                        <p class="text-[var(--color-on-surface-variant)]">Nederland</p>
+                        <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($orgName) }}" target="_blank" class="inline-flex items-center gap-1 text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] mt-2 transition-colors">
+                            Bekijk op kaart →
+                        </a>
                     </div>
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="font-medium text-[var(--color-on-surface)]">{{ $orgName }}</p>
-                            <p class="text-sm text-[var(--color-on-surface-variant)]">Nederland</p>
-                        </div>
-                    </div>
-                    <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($orgName) }}" target="_blank" class="mt-3 inline-flex items-center text-sm text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] font-medium">
-                        Open in Google Maps <span class="ml-1">&rarr;</span>
-                    </a>
                 </div>
                 @endif
 
-                <!-- Tags / Onderwerpen -->
+                <!-- Tags -->
                 @if(!empty($tagLabels))
                 <div>
-                    <h3 class="font-semibold text-[var(--color-on-surface)] mb-3 text-sm uppercase tracking-wide">Onderwerpen</h3>
+                    <h3 class="text-sm font-medium text-[var(--color-on-surface)] mb-3">Onderwerpen</h3>
                     <div class="flex flex-wrap gap-2">
                         @foreach($tagLabels as $tag)
                             <a href="/zoeken?thema[]={{ urlencode($tag) }}"
-                               class="px-2.5 py-1 bg-[var(--color-surface-variant)] text-[var(--color-on-surface-variant)] rounded border border-[var(--color-outline-variant)] text-xs font-medium hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary)] hover:border-[var(--color-primary)]/20 cursor-pointer transition-colors">
+                               class="px-2.5 py-1 rounded text-xs border border-[var(--color-outline-variant)] text-[var(--color-on-surface-variant)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors">
                                 {{ ucfirst($tag) }}
                             </a>
                         @endforeach
