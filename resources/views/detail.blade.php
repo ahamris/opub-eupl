@@ -169,61 +169,71 @@
 
 @section('content')
     <!-- Header Section -->
-    <x-page-header 
-        eyebrow="Document details"
-        :title="$jsonData['ai_enhanced_title'] ?? $jsonData['title'] ?? 'Geen titel beschikbaar'"
-        :breadcrumbs="$breadcrumbs"
-    />
-
-    <!-- Main Container -->
-    <main class="flex-1 max-w-7xl mx-auto w-full px-6 lg:px-8 pt-8 pb-20">
-        
-        <!-- Back link -->
-        <a href="/zoeken{{ request()->get('from') ? '?zoeken=' . urlencode(request()->get('from')) : '' }}" 
-           class="text-[var(--color-primary)] font-medium inline-flex items-center gap-2
-                  hover:text-[var(--color-primary-dark)] focus:outline-none
-                  transition-colors duration-200 mb-6">
-            <i class="fas fa-arrow-left" aria-hidden="true"></i>
-            <span>Terug naar zoekresultaten</span>
-        </a>
-
-        <!-- Document Header Badges -->
-        <div class="mb-6">
-            <div class="flex flex-wrap gap-2 mb-3">
+    <header class="bg-[var(--color-surface)] border-b border-[var(--color-outline-variant)]">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+            
+            <!-- Breadcrumb -->
+            <nav class="flex items-center gap-2 text-sm text-[var(--color-on-surface-variant)] mb-4" aria-label="Breadcrumb">
+                @foreach($breadcrumbs as $index => $crumb)
+                    @if($index > 0)
+                        <span class="text-[var(--color-outline)]">›</span>
+                    @endif
+                    @if(isset($crumb['current']) && $crumb['current'])
+                        <span class="font-medium text-[var(--color-on-surface)]">{{ $crumb['label'] }}</span>
+                    @else
+                        <a href="{{ $crumb['href'] }}" class="hover:text-[var(--color-primary)] transition-colors">{{ $crumb['label'] }}</a>
+                    @endif
+                @endforeach
+            </nav>
+            
+            <!-- Badges and Date -->
+            <div class="flex flex-wrap items-center gap-2 mb-4">
                 @if(isset($jsonData['status']))
-                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
-                        ● {{ $jsonData['status'] }}
+                    <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
+                        {{ ucfirst($jsonData['status']) }}
                     </span>
                 @endif
-                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-[var(--color-surface-variant)] text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]">
+                <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20">
                     {{ $documentType }}
                 </span>
                 @if($pubDate)
-                    <span class="text-xs text-[var(--color-on-surface-variant)] self-center ml-1">Gepubliceerd {{ $pubDate }}</span>
+                    <span class="text-sm text-[var(--color-on-surface-variant)]">Gepubliceerd {{ $pubDate }}</span>
                 @endif
             </div>
             
+            <!-- Title -->
+            <h1 class="text-2xl lg:text-3xl font-bold text-[var(--color-on-surface)] mb-2">
+                {{ $jsonData['ai_enhanced_title'] ?? $jsonData['title'] ?? 'Geen titel beschikbaar' }}
+            </h1>
+            
+            <!-- Official Title -->
             @if(isset($jsonData['title']) && isset($jsonData['ai_enhanced_title']) && $jsonData['title'] !== $jsonData['ai_enhanced_title'])
-                <p class="text-[var(--color-on-surface-variant)] text-sm">
+                <p class="text-[var(--color-on-surface-variant)]">
                     Officieel: <span class="italic">{{ $jsonData['title'] }}</span>
                 </p>
             @endif
+            
         </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl mx-auto w-full px-6 lg:px-8 pt-8 pb-20">
 
         <!-- Main Layout with Tabs and Sidebar -->
         <div x-data="{
                 activeTab: 'context',
                 isPlaying: false,
-                showExtended: false
+                showExtended: true
             }">
             
-            <!-- Nav Tabs (Full Width) -->
+            <!-- Nav Tabs -->
             <div
                 x-on:keydown.right.prevent.stop="$focus.wrap().next()"
                 x-on:keydown.left.prevent.stop="$focus.wrap().previous()"
                 x-on:keydown.home.prevent.stop="$focus.first()"
                 x-on:keydown.end.prevent.stop="$focus.last()"
-                class="flex items-center text-sm lg:max-w-[66.666667%]"
+                class="flex items-center gap-1 border-b border-[var(--color-outline-variant)] lg:max-w-[66.666667%]"
             >
                 <button
                     x-on:click="activeTab = 'context'"
@@ -235,12 +245,12 @@
                     x-bind:aria-selected="activeTab === 'context' ? 'true' : 'false'"
                     x-bind:tabindex="activeTab === 'context' ? '0' : '-1'"
                     x-bind:class="{
-                        'text-[var(--color-on-surface)] border-[var(--color-outline-variant)] bg-[var(--color-surface)]': activeTab === 'context',
-                        'text-[var(--color-on-surface-variant)] border-transparent hover:text-[var(--color-primary)]': activeTab !== 'context',
+                        'text-[var(--color-primary)] border-[var(--color-primary)]': activeTab === 'context',
+                        'text-[var(--color-on-surface-variant)] border-transparent hover:text-[var(--color-on-surface)] hover:border-[var(--color-outline)]': activeTab !== 'context',
                     }"
-                    class="z-10 -mb-px flex items-center gap-2 rounded-t-lg border-x border-t px-5 py-3 font-medium focus:outline-none transition-colors duration-200"
+                    class="-mb-px px-4 py-3 text-sm font-medium border-b-2 focus:outline-none transition-colors duration-200"
                 >
-                    Context
+                    Samenvatting & Context
                 </button>
                 <button
                     x-on:click="activeTab = 'metadata'"
@@ -252,10 +262,10 @@
                     x-bind:aria-selected="activeTab === 'metadata' ? 'true' : 'false'"
                     x-bind:tabindex="activeTab === 'metadata' ? '0' : '-1'"
                     x-bind:class="{
-                        'text-[var(--color-on-surface)] border-[var(--color-outline-variant)] bg-[var(--color-surface)]': activeTab === 'metadata',
-                        'text-[var(--color-on-surface-variant)] border-transparent hover:text-[var(--color-primary)]': activeTab !== 'metadata',
+                        'text-[var(--color-primary)] border-[var(--color-primary)]': activeTab === 'metadata',
+                        'text-[var(--color-on-surface-variant)] border-transparent hover:text-[var(--color-on-surface)] hover:border-[var(--color-outline)]': activeTab !== 'metadata',
                     }"
-                    class="z-10 -mb-px flex items-center gap-2 rounded-t-lg border-x border-t px-5 py-3 font-medium focus:outline-none transition-colors duration-200"
+                    class="-mb-px px-4 py-3 text-sm font-medium border-b-2 focus:outline-none transition-colors duration-200"
                 >
                     Metadata
                 </button>
@@ -269,10 +279,10 @@
                     x-bind:aria-selected="activeTab === 'json' ? 'true' : 'false'"
                     x-bind:tabindex="activeTab === 'json' ? '0' : '-1'"
                     x-bind:class="{
-                        'text-[var(--color-on-surface)] border-[var(--color-outline-variant)] bg-[var(--color-surface)]': activeTab === 'json',
-                        'text-[var(--color-on-surface-variant)] border-transparent hover:text-[var(--color-primary)]': activeTab !== 'json',
+                        'text-[var(--color-primary)] border-[var(--color-primary)]': activeTab === 'json',
+                        'text-[var(--color-on-surface-variant)] border-transparent hover:text-[var(--color-on-surface)] hover:border-[var(--color-outline)]': activeTab !== 'json',
                     }"
-                    class="z-10 -mb-px flex items-center gap-2 rounded-t-lg border-x border-t px-5 py-3 font-medium focus:outline-none transition-colors duration-200"
+                    class="-mb-px px-4 py-3 text-sm font-medium border-b-2 focus:outline-none transition-colors duration-200"
                 >
                     JSON
                 </button>
@@ -285,8 +295,8 @@
                 <!-- LEFT COLUMN: Tab Content (8 cols) -->
                 <div class="lg:col-span-8">
                     
-                    <!-- Tab Content Container -->
-                    <div class="rounded-b-lg lg:rounded-tr-lg border border-[var(--color-outline-variant)] bg-[var(--color-surface)] p-5">
+                    <!-- Tab Content -->
+                    <div class="pt-6">
                         
                         <!-- Context Tab -->
                         <div
@@ -406,7 +416,7 @@
                         >
                     
                     <!-- Woo Classificatie Section -->
-                    <div class="bg-[var(--color-surface)] rounded-lg border border-[var(--color-outline-variant)] shadow-sm overflow-hidden mb-6">
+                    <div class="bg-[var(--color-surface)] rounded-lg border border-[var(--color-outline-variant)] overflow-hidden mb-6">
                         <div class="px-6 py-4 border-b border-[var(--color-outline-variant)] bg-[var(--color-primary)]/5 flex items-center gap-2">
                             <h3 class="text-base font-bold text-[var(--color-on-surface)]">Woo-Classificatie</h3>
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[var(--color-surface)] text-[var(--color-primary)] border border-[var(--color-primary)]/20">
@@ -453,7 +463,7 @@
                     </div>
 
                     <!-- Technical Details Section -->
-                    <div class="bg-[var(--color-surface)] rounded-lg border border-[var(--color-outline-variant)] shadow-sm overflow-hidden">
+                    <div class="bg-[var(--color-surface)] rounded-lg border border-[var(--color-outline-variant)] overflow-hidden">
                         <div class="px-6 py-4 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-variant)]">
                             <h3 class="text-base font-semibold text-[var(--color-on-surface)]">Documentdetails</h3>
                         </div>
@@ -539,7 +549,7 @@
                         <div class="px-6 py-4 border-t border-[var(--color-outline-variant)]">
                             <button @click="showExtended = !showExtended"
                                     class="text-sm font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition-colors">
-                                <span x-text="showExtended ? 'Toon minder kenmerken' : 'Toon alle kenmerken'"></span>
+                                <span x-text="showExtended ? 'Minder tonen' : 'Meer tonen'"></span>
                                 <i class="fas ml-1" :class="showExtended ? 'fa-chevron-up' : 'fa-chevron-down'" aria-hidden="true"></i>
                             </button>
                         </div>
@@ -608,7 +618,7 @@
                         <!-- END JSON Tab -->
 
                     </div>
-                    <!-- END Tab Content Container -->
+                    <!-- END Tab Content -->
                 </div>
                 <!-- END LEFT COLUMN -->
 
@@ -616,13 +626,13 @@
             <div class="lg:col-span-4 space-y-6">
                 
                 <!-- Action Card / Downloads -->
-                <div class="bg-[var(--color-surface)] p-5 rounded-lg border border-[var(--color-outline-variant)] shadow-sm">
+                <div class="bg-[var(--color-surface)] p-5 rounded-lg border border-[var(--color-outline-variant)]">
                     <h3 class="font-semibold text-[var(--color-on-surface)] mb-4 text-sm uppercase tracking-wide">Downloads</h3>
                     
                     <!-- PDF Button -->
                     @if($pdfUrl)
                     <a href="{{ $pdfUrl }}" target="_blank" class="group block w-full mb-3 text-decoration-none">
-                        <div class="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-[var(--color-on-primary)] font-medium py-3 px-4 rounded-md transition-all shadow-sm flex items-center justify-center gap-2">
+                        <div class="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-[var(--color-on-primary)] font-medium py-3 px-4 rounded-md transition-all flex items-center justify-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                             Download PDF
                         </div>
@@ -643,7 +653,7 @@
 
                 <!-- Location Card / Betreft Locatie -->
                 @if($orgName)
-                <div class="bg-[var(--color-surface)] p-5 rounded-lg border border-[var(--color-outline-variant)] shadow-sm">
+                <div class="bg-[var(--color-surface)] p-5 rounded-lg border border-[var(--color-outline-variant)]">
                     <h3 class="font-semibold text-[var(--color-on-surface)] mb-3 text-sm uppercase tracking-wide">Betreft Locatie</h3>
                     <div class="relative w-full h-40 bg-[var(--color-surface-variant)] rounded-md mb-3 overflow-hidden flex items-center justify-center group cursor-pointer border border-[var(--color-outline-variant)]">
                         <!-- Simple Map Pattern -->
