@@ -308,24 +308,23 @@
                         >
                     
                     <!-- AI Badge & Audio Player -->
-                    <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100">
-                            ✨ Gegenereerd met AI
+                    <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100">
+                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1.5a1 1 0 01-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-4-6a6 6 0 00-6 6c0 3.314 2.686 6 6 6s6-2.686 6-6a6 6 0 00-6-6zm-1 3a1 1 0 112 0v3.5a1 1 0 01-2 0V7z"/></svg>
+                            Gegenereerd met AI
                         </span>
                         
-                        <!-- Slim Audio Player -->
-                        <div :class="{ 'playing': isPlaying }" 
-                             class="flex items-center gap-3 bg-[var(--color-surface-variant)] border border-[var(--color-outline-variant)] rounded-full pl-1 pr-4 py-1 transition-all hover:border-[var(--color-primary)]">
-                            <button @click="isPlaying = !isPlaying" 
-                                    class="w-8 h-8 rounded-full bg-[var(--color-surface)] border border-[var(--color-outline-variant)] flex items-center justify-center text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 focus:outline-none transition-colors">
-                                <svg x-show="!isPlaying" class="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" /></svg>
-                                <svg x-show="isPlaying" x-cloak class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
-                            </button>
-                            <span class="text-xs font-medium text-[var(--color-on-surface-variant)]" x-text="isPlaying ? 'Aan het voorlezen...' : 'Lees voor (1:15)'"></span>
-                            <div class="flex items-center gap-0.5 h-3">
-                                <div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                            </div>
-                        </div>
+                        <!-- Audio Player -->
+                        <button 
+                            @click="isPlaying = !isPlaying"
+                            :class="isPlaying ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)]' : 'bg-[var(--color-surface)] text-[var(--color-on-surface)]'"
+                            class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--color-outline-variant)] hover:border-[var(--color-primary)] transition-all focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20"
+                        >
+                            <svg x-show="!isPlaying" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/></svg>
+                            <svg x-show="isPlaying" x-cloak class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                            <span class="text-sm font-medium" x-text="isPlaying ? 'Voorlezen...' : 'Lees voor'"></span>
+                            <span class="text-xs opacity-70">(1:15)</span>
+                        </button>
                     </div>
 
                     <!-- Main Text Content -->
