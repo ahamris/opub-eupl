@@ -1,285 +1,54 @@
 @extends('layouts.app')
 
-@section('title', ($jsonData['title'] ?? 'Document Details') . ' - Open Overheid')
+@section('title', ($jsonData['ai_enhanced_title'] ?? $jsonData['title'] ?? 'Document Details') . ' - Open Overheid')
     
 @push('styles')
     <style>
-        .document-detail {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #fff;
+        /* Tab transitions */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.2s ease-out;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(2px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .back-link {
-            display: inline-block;
-            margin-bottom: 16px;
-            color: #01689b;
-            text-decoration: none;
-            font-size: 14px;
+        /* Audio Visualizer Animation */
+        .bar {
+            width: 3px;
+            background: var(--color-outline);
+            border-radius: 2px;
+            height: 4px;
+            transition: height 0.2s, background-color 0.2s;
         }
-
-        .back-link:hover {
-            text-decoration: underline;
+        .playing .bar {
+            background: var(--color-primary);
+            animation: bounce 1s infinite ease-in-out;
         }
-
-        .document-title-block {
-            background-color: #e3f2fd;
-            padding: 20px;
-            margin-bottom: 20px;
-            border-radius: 4px;
+        @keyframes bounce {
+            0%, 100% { height: 6px; }
+            50% { height: 16px; }
         }
+        .playing .bar:nth-child(1) { animation-delay: 0.1s; }
+        .playing .bar:nth-child(2) { animation-delay: 0.3s; }
+        .playing .bar:nth-child(3) { animation-delay: 0.2s; }
+        .playing .bar:nth-child(4) { animation-delay: 0.4s; }
 
-        .document-title {
-            font-size: 24px;
-            font-weight: 600;
-            margin: 0 0 12px 0;
-            color: #333;
-        }
+        /* JSON Syntax Highlighting - Theme Compatible */
+        .json-key { color: var(--color-primary); font-weight: 600; }
+        .json-string { color: var(--color-secondary, #0b6e99); }
+        .json-number { color: var(--color-tertiary, #0b6e99); }
+        .json-boolean { color: var(--color-tertiary, #0b6e99); font-weight: 600; }
+        .json-null { color: var(--color-on-surface-variant); font-style: italic; }
 
-        .document-quick-info {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 12px;
-        }
-
-        .document-quick-info span {
-            margin-right: 16px;
-        }
-
-        .document-external-link {
-            display: inline-block;
-            color: #01689b;
-            text-decoration: none;
-            font-size: 14px;
-            margin-top: 8px;
-        }
-
-        .document-external-link:hover {
-            text-decoration: underline;
-        }
-
-        .document-external-link svg {
-            display: inline-block;
-            margin-left: 4px;
-            vertical-align: middle;
-        }
-
-        .characteristics-section {
-            margin-top: 24px;
-        }
-
-        .characteristics-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: #333;
-        }
-
-        .characteristics-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px 32px;
-        }
-
-        .characteristic-item {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .characteristic-label {
-            font-weight: 600;
-            font-size: 14px;
-            color: #333;
-            margin-bottom: 4px;
-        }
-
-        .characteristic-value {
-            font-size: 14px;
-            color: #666;
-        }
-
-        .characteristic-value:empty::before {
-            content: 'Onbekend';
-            color: #999;
-            font-style: italic;
-        }
-
+        /* Extended characteristics toggle */
         .characteristics-extended {
             display: none;
         }
-
-        .characteristics-extended.show {
-            display: contents;
-        }
-
-        .show-more-button,         .show-more-button, .show-less-button {
-            background-color: #e3f2fd;
-            color: #01689b;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            margin-top: 16px;
-        }
-
-        .show-more-button:hover, .show-less-button:hover {
-            background-color: #bbdefb;
-        }
-
-        .show-more-button.hidden, .show-less-button.hidden {
-            display: none;
-        }
-
-        .publisher-info {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-            font-size: 14px;
-            color: #666;
-        }
-
-        .view-toggle {
-            margin: 20px 0;
-            display: flex;
-            gap: 12px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #e0e0e0;
-        }
-
-        .view-toggle-button {
-            background: none;
-            border: none;
-            padding: 8px 16px;
-            font-size: 14px;
-            color: #666;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            margin-bottom: -14px;
-            position: relative;
-        }
-
-        .view-toggle-button.active {
-            color: #01689b;
-            border-bottom-color: #01689b;
-            font-weight: 600;
-        }
-
-        .view-toggle-button:hover {
-            color: #01689b;
-        }
-
-        .json-view {
-            display: none;
-        }
-
-        .json-view.active {
-            display: block;
-        }
-
-        .metadata-view {
-            display: block;
-        }
-
-        .metadata-view.hidden {
-            display: none;
-        }
-
-        .json-container {
-            background-color: #fff;
-            border-radius: 4px;
-            border: 1px solid #e0e0e0;
-            overflow: hidden;
-            margin-top: 20px;
-        }
-
-        .json-header {
-            background-color: #f5f5f5;
-            padding: 16px 20px;
-            border-bottom: 1px solid #e0e0e0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .json-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .json-actions {
-            display: flex;
-            gap: 12px;
-        }
-
-        .json-button {
-            background-color: #01689b;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .json-button:hover {
-            background-color: #014d74;
-        }
-
-        .json-button.secondary {
-            background-color: #666;
-        }
-
-        .json-button.secondary:hover {
-            background-color: #555;
-        }
-
-        .json-content {
-            padding: 20px;
-            overflow-x: auto;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            font-size: 13px;
-            line-height: 1.6;
-            background-color: #fafafa;
-        }
-
-        .json-content pre {
-            margin: 0;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-
-        .json-key {
-            color: #881391;
-            font-weight: 600;
-        }
-
-        .json-string {
-            color: #1a1aa6;
-        }
-
-        .json-number {
-            color: #0b6e99;
-        }
-
-        .json-boolean {
-            color: #0b6e99;
-            font-weight: 600;
-        }
-
-        .json-null {
-            color: #808080;
-            font-style: italic;
-        }
-
-        .characteristics-extended {
-            display: none;
-        }
-
         .characteristics-extended.show {
             display: contents;
         }
@@ -289,516 +58,633 @@
 @php
     $breadcrumbs = [
         ['label' => 'Home', 'href' => route('home')],
-        ['label' => 'Zoekresultaten', 'href' => route('zoeken')],
-        ['label' => 'Document', 'href' => null, 'current' => true],
+        ['label' => 'Open Overheid', 'href' => route('zoeken')],
+        ['label' => Str::limit($jsonData['title'] ?? 'Document', 50), 'href' => null, 'current' => true],
     ];
+    
+    // Extract metadata (nested JSON data from API)
+    $metadata = $jsonData['metadata'] ?? [];
+    $documentMeta = $metadata['document'] ?? [];
+    $versies = $metadata['versies'] ?? [];
+    $firstVersion = $versies[0] ?? [];
+    $bestanden = $firstVersion['bestanden'] ?? [];
+    $firstBestand = $bestanden[0] ?? [];
+    $classificatie = $documentMeta['classificatiecollectie'] ?? [];
+    $documentsoorten = $classificatie['documentsoorten'] ?? [];
+    $informatiecategorieen = $classificatie['informatiecategorieen'] ?? [];
+    $themasMeta = $classificatie['themas'] ?? [];
+    $verantwoordelijke = $documentMeta['verantwoordelijke'] ?? [];
+    $publisher = $documentMeta['publisher'] ?? [];
+    $geldigheid = $documentMeta['geldigheid'] ?? [];
+    
+    // Publication date - use model's publication_date first
+    $pubDate = null;
+    if (isset($jsonData['publication_date'])) {
+        try {
+            $pubDate = \Carbon\Carbon::parse($jsonData['publication_date'])->format('d M Y');
+        } catch (\Exception $e) {
+            $pubDate = $jsonData['publication_date'];
+        }
+    }
+    
+    // Organisation - use model's organisation field first, then fallback to metadata
+    $orgName = $jsonData['organisation'] 
+        ?? $publisher['label'] 
+        ?? $verantwoordelijke['naam'] 
+        ?? null;
+    
+    // Woo info category - check woo_informatiecategorie first, then category, then metadata
+    $wooInfoCategorie = $jsonData['woo_informatiecategorie'] 
+        ?? $jsonData['category'] 
+        ?? ($informatiecategorieen[0]['label'] ?? null);
+    
+    // Theme - use model's theme field first, then fallback to metadata
+    $theme = $jsonData['theme'] 
+        ?? (!empty($themasMeta) ? $themasMeta[0]['label'] : null);
+    
+    // AI keywords for tags - use ai_keywords array if available
+    $aiKeywords = $jsonData['ai_keywords'] ?? [];
+    
+    // Build tags from ai_keywords, theme, or metadata themas
+    $tagLabels = [];
+    if (!empty($aiKeywords) && is_array($aiKeywords)) {
+        $tagLabels = $aiKeywords;
+    } elseif (!empty($themasMeta)) {
+        foreach ($themasMeta as $t) {
+            if (isset($t['label'])) {
+                $tagLabels[] = $t['label'];
+            }
+        }
+    } elseif ($theme) {
+        $tagLabels = [$theme];
+    }
+    
+    // Document type - use model's document_type field first
+    $documentType = $jsonData['document_type'] 
+        ?? ($documentsoorten[0]['label'] ?? 'Document');
+    
+    // AI enhanced title
+    $aiTitle = $jsonData['ai_enhanced_title'] ?? null;
+    
+    // AI summary - check ai_analysis.summary first, then other fields
+    $aiAnalysis = $jsonData['ai_analysis'] ?? [];
+    $aiSummary = $aiAnalysis['summary'] 
+        ?? $jsonData['ai_summary'] 
+        ?? $jsonData['ai_enhanced_description'] 
+        ?? null;
+    $actionNeeded = $aiAnalysis['action_needed'] ?? false;
+    
+    // Get geldig vanaf date from metadata
+    $geldigVanaf = null;
+    if (isset($geldigheid['begindatum'])) {
+        try {
+            $geldigVanaf = \Carbon\Carbon::parse($geldigheid['begindatum'])->format('d F Y');
+        } catch (\Exception $e) {
+            $geldigVanaf = $geldigheid['begindatum'];
+        }
+    }
+    
+    // PDF URL from metadata
+    $pdfUrl = $firstBestand['bestandsnaam'] ?? null;
+    if ($pdfUrl && !str_starts_with($pdfUrl, 'http')) {
+        $pdfUrl = 'https://repository.overheid.nl/' . $pdfUrl;
+    }
+    
+    // Description/summary
+    $description = $jsonData['description'] ?? $jsonData['summary'] ?? null;
+    
+    // Web location for original source link
+    $weblocatie = $documentMeta['weblocatie'] ?? null;
+    
+    // Format publication date for display
+    $pubDateFormatted = null;
+    if (isset($jsonData['publication_date'])) {
+        try {
+            $pubDateFormatted = \Carbon\Carbon::parse($jsonData['publication_date'])->format('d F Y');
+        } catch (\Exception $e) {
+            $pubDateFormatted = $pubDate;
+        }
+    }
 @endphp
 
 @section('content')
     <!-- Header Section -->
     <x-page-header 
         eyebrow="Document details"
-        :title="$jsonData['title'] ?? 'Geen titel beschikbaar'"
+        :title="$jsonData['ai_enhanced_title'] ?? $jsonData['title'] ?? 'Geen titel beschikbaar'"
         :breadcrumbs="$breadcrumbs"
     />
 
-    <!-- Main Content -->
-    <main class="flex-1 max-w-7xl mx-auto w-full px-6 lg:px-8 pt-10 pb-20">
-        <div class="space-y-6">
-            <a href="/zoeken{{ request()->get('from') ? '?zoeken=' . urlencode(request()->get('from')) : '' }}" 
-               class="text-[var(--color-primary)] font-medium inline-flex items-center gap-2
-                      hover:text-[var(--color-primary-dark)] focus:outline-none
-                      transition-colors duration-200">
-                <i class="fas fa-arrow-left" aria-hidden="true"></i>
-                <span>Terug naar zoekresultaten</span>
-            </a>
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl mx-auto w-full px-6 lg:px-8 pt-8 pb-20">
+        
+        <!-- Back link -->
+        <a href="/zoeken{{ request()->get('from') ? '?zoeken=' . urlencode(request()->get('from')) : '' }}" 
+           class="text-[var(--color-primary)] font-medium inline-flex items-center gap-2
+                  hover:text-[var(--color-primary-dark)] focus:outline-none
+                  transition-colors duration-200 mb-6">
+            <i class="fas fa-arrow-left" aria-hidden="true"></i>
+            <span>Terug naar zoekresultaten</span>
+        </a>
 
-            <div class="bg-[var(--color-surface)] rounded-md p-6 border border-[var(--color-outline-variant)]">
-                <div class="flex flex-wrap gap-4 mb-4 text-sm text-[var(--color-on-surface-variant)]">
-                    @php
-                        $metadata = $jsonData['metadata'] ?? [];
-                        $documentMeta = $metadata['document'] ?? [];
-                        $versies = $metadata['versies'] ?? [];
-                        $firstVersion = $versies[0] ?? [];
-                        $bestanden = $firstVersion['bestanden'] ?? [];
-                        $firstBestand = $bestanden[0] ?? [];
-                        $pageCount = $firstBestand['aantalPaginas'] ?? null;
-                        $fileSize = $firstBestand['grootte'] ?? null;
-                    @endphp
-                    <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20">
-                        <i class="fas fa-file-pdf text-sm" aria-hidden="true"></i>
-                        <span class="font-medium">PDF</span>
+        <!-- Document Header Badges -->
+        <div class="mb-6">
+            <div class="flex flex-wrap gap-2 mb-3">
+                @if(isset($jsonData['status']))
+                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
+                        ● {{ $jsonData['status'] }}
                     </span>
-                    @if($pageCount)
-                        <span>{{ $pageCount }} pagina's</span>
-                    @endif
-                    @if($fileSize)
-                        <span>{{ number_format($fileSize, 0, ',', '.') }} bytes</span>
-                    @endif
-                    @if(isset($jsonData['publication_date']))
-                        @php
-                            try {
-                                $pubDate = \Carbon\Carbon::parse($jsonData['publication_date'])->format('d-m-Y');
-                            } catch (\Exception $e) {
-                                $pubDate = $jsonData['publication_date'];
-                            }
-                        @endphp
-                        <span>Gepubliceerd op: {{ $pubDate }}</span>
-                    @endif
-                    @if(isset($jsonData['updated_at']))
-                        @php
-                            try {
-                                $updatedDate = \Carbon\Carbon::parse($jsonData['updated_at'])->format('d-m-Y');
-                            } catch (\Exception $e) {
-                                $updatedDate = $jsonData['updated_at'];
-                            }
-                        @endphp
-                        <span>Laatst gewijzigd: {{ $updatedDate }}</span>
-                    @endif
-                </div>
-                <div class="flex flex-wrap gap-3 mt-4">
-                    @if(isset($jsonData['external_id']))
-                        <a href="https://open.overheid.nl/details/{{ $jsonData['external_id'] }}" 
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           class="inline-flex items-center gap-2 px-4 py-2 rounded-md
-                                  bg-[var(--color-primary)] text-[var(--color-on-primary)] border border-[var(--color-primary)]
-                                  hover:bg-[var(--color-primary-dark)]
-                                  focus:outline-none
-                                  transition-colors duration-200 text-sm font-medium">
-                            <i class="fas fa-external-link-alt" aria-hidden="true"></i>
-                            <span>Bekijk op open.overheid.nl</span>
-                        </a>
-                    @endif
-                    @if(isset($documentMeta['weblocatie']))
-                        <a href="{{ $documentMeta['weblocatie'] }}" 
-                           target="_blank" 
-                           rel="noopener noreferrer"
-                           class="inline-flex items-center gap-2 px-4 py-2 rounded-md
-                                  bg-[var(--color-surface)] text-[var(--color-on-surface)] border border-[var(--color-outline-variant)]
-                                  hover:bg-[var(--color-surface-variant)]
-                                  focus:outline-none
-                                  transition-colors duration-200 text-sm font-medium">
-                            <i class="fas fa-external-link-alt" aria-hidden="true"></i>
-                            <span>Officielebekendmakingen.nl</span>
-                        </a>
-                    @endif
-                    <a href="{{ url()->current() }}?format=xml" 
-                       class="inline-flex items-center gap-2 px-4 py-2 rounded-md
-                              bg-[var(--color-primary)] text-[var(--color-on-primary)]
-                              hover:bg-[var(--color-primary-dark)]
-                              focus:outline-none
-                              transition-colors duration-200 text-sm font-medium">
-                        <i class="fas fa-download" aria-hidden="true"></i>
-                        <span>Download XML</span>
-                    </a>
-                </div>
+                @endif
+                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-[var(--color-surface-variant)] text-[var(--color-on-surface-variant)] border border-[var(--color-outline-variant)]">
+                    {{ $documentType }}
+                </span>
+                @if($pubDate)
+                    <span class="text-xs text-[var(--color-on-surface-variant)] self-center ml-1">Gepubliceerd {{ $pubDate }}</span>
+                @endif
             </div>
+            
+            @if(isset($jsonData['title']) && isset($jsonData['ai_enhanced_title']) && $jsonData['title'] !== $jsonData['ai_enhanced_title'])
+                <p class="text-[var(--color-on-surface-variant)] text-sm">
+                    Officieel: <span class="italic">{{ $jsonData['title'] }}</span>
+                </p>
+            @endif
+        </div>
 
-            <!-- Tabs -->
+        <!-- Main Layout with Tabs and Sidebar -->
+        <div x-data="{
+                activeTab: 'context',
+                isPlaying: false,
+                showExtended: false
+            }">
+            
+            <!-- Nav Tabs (Full Width) -->
             <div
-                x-data="{
-                    active: 'metadata',
-                }"
-                class="flex flex-col mt-6"
+                x-on:keydown.right.prevent.stop="$focus.wrap().next()"
+                x-on:keydown.left.prevent.stop="$focus.wrap().previous()"
+                x-on:keydown.home.prevent.stop="$focus.first()"
+                x-on:keydown.end.prevent.stop="$focus.last()"
+                class="flex items-center text-sm lg:max-w-[66.666667%]"
             >
-                <!-- Nav Tabs -->
-                <div
-                    x-on:keydown.right.prevent.stop="$focus.wrap().next()"
-                    x-on:keydown.left.prevent.stop="$focus.wrap().previous()"
-                    x-on:keydown.home.prevent.stop="$focus.first()"
-                    x-on:keydown.end.prevent.stop="$focus.last()"
-                    class="flex items-center text-sm"
+                <button
+                    x-on:click="activeTab = 'context'"
+                    x-on:focus="activeTab = 'context'"
+                    type="button"
+                    id="context-tab"
+                    role="tab"
+                    aria-controls="context-tab-pane"
+                    x-bind:aria-selected="activeTab === 'context' ? 'true' : 'false'"
+                    x-bind:tabindex="activeTab === 'context' ? '0' : '-1'"
+                    x-bind:class="{
+                        'text-[var(--color-on-surface)] border-[var(--color-outline-variant)] bg-[var(--color-surface)]': activeTab === 'context',
+                        'text-[var(--color-on-surface-variant)] border-transparent hover:text-[var(--color-primary)]': activeTab !== 'context',
+                    }"
+                    class="z-10 -mb-px flex items-center gap-2 rounded-t-lg border-x border-t px-5 py-3 font-medium focus:outline-none transition-colors duration-200"
                 >
-                    <button
-                        x-on:click="active = 'metadata'"
-                        x-on:focus="active = 'metadata'"
-                        type="button"
-                        id="metadata-tab"
-                        role="tab"
-                        aria-controls="metadata-tab-pane"
-                        x-bind:aria-selected="active === 'metadata' ? 'true' : 'false'"
-                        x-bind:tabindex="active === 'metadata' ? '0' : '-1'"
-                        x-bind:class="{
-                            'text-[var(--color-on-surface)] border-[var(--color-outline-variant)] bg-[var(--color-surface)]': active === 'metadata',
-                            'text-[var(--color-on-surface-variant)] border-transparent hover:text-[var(--color-primary)]': active !== 'metadata',
-                        }"
-                        class="z-10 -mb-px flex items-center gap-2 rounded-t-md border-x border-t px-5 py-3 font-medium focus:outline-none transition-colors duration-200"
-                    >
-                        Metadata
-                    </button>
-                    <button
-                        x-on:click="active = 'json'"
-                        x-on:focus="active = 'json'"
-                        type="button"
-                        id="json-tab"
-                        role="tab"
-                        aria-controls="json-tab-pane"
-                        x-bind:aria-selected="active === 'json' ? 'true' : 'false'"
-                        x-bind:tabindex="active === 'json' ? '0' : '-1'"
-                        x-bind:class="{
-                            'text-[var(--color-on-surface)] border-[var(--color-outline-variant)] bg-[var(--color-surface)]': active === 'json',
-                            'text-[var(--color-on-surface-variant)] border-transparent hover:text-[var(--color-primary)]': active !== 'json',
-                        }"
-                        class="z-10 -mb-px flex items-center gap-2 rounded-t-md border-x border-t px-5 py-3 font-medium focus:outline-none transition-colors duration-200"
-                    >
-                        JSON
-                    </button>
-                </div>
-                <!-- END Nav Tabs -->
-
-                <!-- Tab Content -->
-                <div
-                    class="rounded-b-md rounded-tr-md border border-[var(--color-outline-variant)] bg-[var(--color-surface)] p-5"
+                    Context
+                </button>
+                <button
+                    x-on:click="activeTab = 'metadata'"
+                    x-on:focus="activeTab = 'metadata'"
+                    type="button"
+                    id="metadata-tab"
+                    role="tab"
+                    aria-controls="metadata-tab-pane"
+                    x-bind:aria-selected="activeTab === 'metadata' ? 'true' : 'false'"
+                    x-bind:tabindex="activeTab === 'metadata' ? '0' : '-1'"
+                    x-bind:class="{
+                        'text-[var(--color-on-surface)] border-[var(--color-outline-variant)] bg-[var(--color-surface)]': activeTab === 'metadata',
+                        'text-[var(--color-on-surface-variant)] border-transparent hover:text-[var(--color-primary)]': activeTab !== 'metadata',
+                    }"
+                    class="z-10 -mb-px flex items-center gap-2 rounded-t-lg border-x border-t px-5 py-3 font-medium focus:outline-none transition-colors duration-200"
                 >
-                    <!-- Metadata Tab -->
-                    <div
-                        x-show="active === 'metadata'"
-                        id="metadata-tab-pane"
-                        role="tabpanel"
-                        aria-labelledby="metadata-tab"
-                        tabindex="0"
-                    >
-                        <div>
-                <div class="mt-6">
-                    <h2 class="text-xl font-semibold mb-6 text-[var(--color-on-surface)]">Kenmerken</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        @php
-                            $classificatie = $documentMeta['classificatiecollectie'] ?? [];
-                            $documentsoorten = $classificatie['documentsoorten'] ?? [];
-                            $informatiecategorieen = $classificatie['informatiecategorieen'] ?? [];
-                            $themas = $classificatie['themas'] ?? [];
-                            $wooInfoCategorie = $informatiecategorieen[0]['label'] ?? null;
-                            $verantwoordelijke = $documentMeta['verantwoordelijke'] ?? [];
-                            $publisher = $documentMeta['publisher'] ?? [];
-                            $opsteller = $documentMeta['opsteller'] ?? [];
-                            $geldigheid = $documentMeta['geldigheid'] ?? [];
-                            $identifiers = $documentMeta['identifiers'] ?? [];
-                            $language = $documentMeta['language'] ?? [];
-                            $vergaderjaar = $documentMeta['extrametadata']['vergaderjaar'] ?? null;
-                            $documentsubsoort = $documentMeta['extrametadata']['documentsubsoort'] ?? null;
-                        @endphp
+                    Metadata
+                </button>
+                <button
+                    x-on:click="activeTab = 'json'"
+                    x-on:focus="activeTab = 'json'"
+                    type="button"
+                    id="json-tab"
+                    role="tab"
+                    aria-controls="json-tab-pane"
+                    x-bind:aria-selected="activeTab === 'json' ? 'true' : 'false'"
+                    x-bind:tabindex="activeTab === 'json' ? '0' : '-1'"
+                    x-bind:class="{
+                        'text-[var(--color-on-surface)] border-[var(--color-outline-variant)] bg-[var(--color-surface)]': activeTab === 'json',
+                        'text-[var(--color-on-surface-variant)] border-transparent hover:text-[var(--color-primary)]': activeTab !== 'json',
+                    }"
+                    class="z-10 -mb-px flex items-center gap-2 rounded-t-lg border-x border-t px-5 py-3 font-medium focus:outline-none transition-colors duration-200"
+                >
+                    JSON
+                </button>
+            </div>
+            <!-- END Nav Tabs -->
 
-                        <!-- Basic characteristics (always visible) -->
-                        <div class="space-y-1">
-                            <span class="text-sm font-semibold text-[var(--color-on-surface)] block">Documentsoort:</span>
-                            <span class="text-sm text-[var(--color-on-surface-variant)] block">{{ $jsonData['document_type'] ?? ($documentsoorten[0]['label'] ?? 'Onbekend') }}</span>
+            <!-- Two Column Grid (Tab Content + Sidebar) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                <!-- LEFT COLUMN: Tab Content (8 cols) -->
+                <div class="lg:col-span-8">
+                    
+                    <!-- Tab Content Container -->
+                    <div class="rounded-b-lg lg:rounded-tr-lg border border-[var(--color-outline-variant)] bg-[var(--color-surface)] p-5">
+                        
+                        <!-- Context Tab -->
+                        <div
+                            x-show="activeTab === 'context'"
+                            id="context-tab-pane"
+                            role="tabpanel"
+                            aria-labelledby="context-tab"
+                            tabindex="0"
+                        >
+                    
+                    <!-- AI Badge & Audio Player -->
+                    <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100">
+                            ✨ Gegenereerd met AI
+                        </span>
+                        
+                        <!-- Slim Audio Player -->
+                        <div :class="{ 'playing': isPlaying }" 
+                             class="flex items-center gap-3 bg-[var(--color-surface-variant)] border border-[var(--color-outline-variant)] rounded-full pl-1 pr-4 py-1 transition-all hover:border-[var(--color-primary)]">
+                            <button @click="isPlaying = !isPlaying" 
+                                    class="w-8 h-8 rounded-full bg-[var(--color-surface)] border border-[var(--color-outline-variant)] flex items-center justify-center text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 focus:outline-none transition-colors">
+                                <svg x-show="!isPlaying" class="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 20 20"><path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" /></svg>
+                                <svg x-show="isPlaying" x-cloak class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                            </button>
+                            <span class="text-xs font-medium text-[var(--color-on-surface-variant)]" x-text="isPlaying ? 'Aan het voorlezen...' : 'Lees voor (1:15)'"></span>
+                            <div class="flex items-center gap-0.5 h-3">
+                                <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                            </div>
                         </div>
+                    </div>
 
-                        @if($wooInfoCategorie)
-                        <div class="space-y-1">
-                            <span class="text-sm font-semibold text-[var(--color-on-surface)] block">Woo-Informatiecategorie:</span>
-                            <span class="text-sm text-[var(--color-on-surface-variant)] block">{{ $wooInfoCategorie }}</span>
+                    <!-- Main Text Content -->
+                    <div class="prose prose-slate max-w-none">
+                        @if($aiSummary)
+                            <p class="text-lg text-[var(--color-on-surface-variant)] leading-relaxed">
+                                {!! nl2br(e($aiSummary)) !!}
+                            </p>
+                        @elseif($description)
+                            <p class="text-lg text-[var(--color-on-surface-variant)] leading-relaxed">
+                                {{ $description }}
+                            </p>
+                        @else
+                            <p class="text-lg text-[var(--color-on-surface-variant)] leading-relaxed">
+                                @if($orgName)
+                                    <strong>{{ $orgName }}</strong> heeft dit document gepubliceerd.
+                                @else
+                                    Geen samenvatting beschikbaar voor dit document.
+                                @endif
+                            </p>
+                        @endif
+                        
+                        <!-- Action Info Box -->
+                        @if(isset($jsonData['ai_analysis']['action_needed']) && $jsonData['ai_analysis']['action_needed'])
+                        <div class="my-8 bg-[var(--color-primary)]/5 rounded-xl p-6 border border-[var(--color-primary)]/20">
+                            <h3 class="text-[var(--color-primary-dark)] text-base font-bold uppercase tracking-wider mb-4 mt-0">Wat betekent dit voor u?</h3>
+                            <ul class="list-none p-0 m-0 space-y-3">
+                                <li class="flex gap-3">
+                                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--color-primary)]/20 text-[var(--color-primary)] flex items-center justify-center text-xs font-bold">1</span>
+                                    <span class="text-[var(--color-on-surface-variant)] text-sm"><strong>Voor omwonenden:</strong> Er verandert mogelijk iets in uw omgeving. Het is slim om te kijken wat er precies verandert.</span>
+                                </li>
+                                <li class="flex gap-3">
+                                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--color-primary)]/20 text-[var(--color-primary)] flex items-center justify-center text-xs font-bold">2</span>
+                                    <span class="text-[var(--color-on-surface-variant)] text-sm"><strong>Voor betrokkenen:</strong> Dit document bevat mogelijk regels waar u zich aan moet houden.</span>
+                                </li>
+                                <li class="flex gap-3">
+                                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--color-primary)]/20 text-[var(--color-primary)] flex items-center justify-center text-xs font-bold">!</span>
+                                    <span class="text-[var(--color-on-surface-variant)] text-sm"><strong>Status:</strong> Controleer of u actie moet ondernemen (bijv. een zienswijze indienen).</span>
+                                </li>
+                            </ul>
                         </div>
                         @endif
 
-                        <div class="space-y-1">
-                            <span class="text-sm font-semibold text-[var(--color-on-surface)] block mb-2">Publicerende organisatie:</span>
-                            @php
-                                // Use Eloquent model organisation first, then fallback to metadata
-                                $orgName = (isset($document) && is_object($document) && $document->organisation) 
-                                    ? $document->organisation 
-                                    : ($jsonData['organisation'] ?? $publisher['label'] ?? null);
-                            @endphp
-                            @if($orgName)
-                                <a href="/zoeken?organisatie[]={{ urlencode($orgName) }}" 
-                                   class="inline-flex items-center gap-2 px-4 py-2 rounded-md 
-                                          bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
-                                          hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
-                                          focus:outline-none
-                                          transition-colors duration-200 font-medium text-sm
-                                          group"
-                                   title="Filter op {{ $orgName }}">
-                                    <i class="fas fa-building text-xs" aria-hidden="true"></i>
-                                    <span>{{ $orgName }}</span>
-                                    <i class="fas fa-filter text-xs opacity-70 group-hover:opacity-100 transition-opacity" aria-hidden="true"></i>
-                                </a>
-                            @else
-                                <span class="text-sm text-[var(--color-on-surface-variant)] block">Onbekend</span>
-                            @endif
-                        </div>
-
-                        <!-- Extended characteristics (hidden by default) -->
-                        <div class="characteristics-extended" id="extended-characteristics">
-                            @if(isset($firstVersion['openbaarmakingsdatum']))
-                            <div class="space-y-1">
-                                <span class="text-sm font-semibold text-[var(--color-on-surface)] block">Gepubliceerd op:</span>
-                                <span class="text-sm text-[var(--color-on-surface-variant)] block">
-                                    @php
-                                        try {
-                                            $openbaarDate = \Carbon\Carbon::parse($firstVersion['openbaarmakingsdatum'])->format('d-m-Y, H:i');
-                                        } catch (\Exception $e) {
-                                            $openbaarDate = $firstVersion['openbaarmakingsdatum'];
-                                        }
-                                    @endphp
-                                    {{ $openbaarDate }}
-                                </span>
+                        <!-- Document Link -->
+                        <div class="mt-6 pt-6 border-t border-[var(--color-outline-variant)]">
+                            <h3 class="text-lg font-semibold mb-4 text-[var(--color-on-surface)]">Bekijk origineel</h3>
+                            <div class="flex flex-wrap gap-3">
+                                @if(isset($jsonData['external_id']))
+                                    <a href="https://open.overheid.nl/details/{{ $jsonData['external_id'] }}" 
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       class="inline-flex items-center gap-2 px-4 py-2 rounded-md
+                                              bg-[var(--color-primary)] text-[var(--color-on-primary)] border border-[var(--color-primary)]
+                                              hover:bg-[var(--color-primary-dark)]
+                                              focus:outline-none
+                                              transition-colors duration-200 text-sm font-medium">
+                                        <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                                        <span>Bekijk op open.overheid.nl</span>
+                                    </a>
+                                @endif
+                                @if(isset($documentMeta['weblocatie']))
+                                    <a href="{{ $documentMeta['weblocatie'] }}" 
+                                       target="_blank" 
+                                       rel="noopener noreferrer"
+                                       class="inline-flex items-center gap-2 px-4 py-2 rounded-md
+                                              bg-[var(--color-surface)] text-[var(--color-on-surface)] border border-[var(--color-outline-variant)]
+                                              hover:bg-[var(--color-surface-variant)]
+                                              focus:outline-none
+                                              transition-colors duration-200 text-sm font-medium">
+                                        <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                                        <span>Officielebekendmakingen.nl</span>
+                                    </a>
+                                @endif
                             </div>
-                            @endif
-
-                            @if(isset($firstVersion['mutatiedatumtijd']))
-                            <div class="space-y-1">
-                                <span class="text-sm font-semibold text-[var(--color-on-surface)] block">Laatst gewijzigd:</span>
-                                <span class="text-sm text-[var(--color-on-surface-variant)] block">
-                                    @php
-                                        try {
-                                            $mutatieDate = \Carbon\Carbon::parse($firstVersion['mutatiedatumtijd'])->format('d-m-Y, H:i');
-                                        } catch (\Exception $e) {
-                                            $mutatieDate = $firstVersion['mutatiedatumtijd'];
-                                        }
-                                    @endphp
-                                    {{ $mutatieDate }}
-                                </span>
-                            </div>
-                            @endif
-
-                            @if(isset($documentMeta['creatiedatum']))
-                            <div class="space-y-1">
-                                <span class="text-sm font-semibold text-[var(--color-on-surface)] block">Document creatiedatum:</span>
-                                <span class="text-sm text-[var(--color-on-surface-variant)] block">
-                                    @php
-                                        try {
-                                            $creatieDate = \Carbon\Carbon::parse($documentMeta['creatiedatum'])->format('Y-m-d');
-                                        } catch (\Exception $e) {
-                                            $creatieDate = $documentMeta['creatiedatum'];
-                                        }
-                                    @endphp
-                                    {{ $creatieDate }}
-                                </span>
-                            </div>
-                            @endif
-
-                            <div class="space-y-1">
-                                <span class="text-sm font-semibold text-[var(--color-on-surface)] block">Verantwoordelijke:</span>
-                                <span class="text-sm text-[var(--color-on-surface-variant)] block">{{ $verantwoordelijke['label'] ?? 'Onbekend' }}</span>
-                            </div>
-
-                            <div class="space-y-1">
-                                <span class="text-sm font-semibold text-[var(--color-on-surface)] block">Thema's:</span>
-                                <span class="text-sm text-[var(--color-on-surface-variant)] block">
-                                    @if(!empty($themas))
-                                        {{ implode(', ', array_column($themas, 'label')) }}
-                                    @else
-                                        {{ $jsonData['theme'] ?? 'Onbekend' }}
-                                    @endif
-                                </span>
-                            </div>
-
-                            @if(isset($geldigheid['begindatum']))
-                            <div class="space-y-1">
-                                <span class="text-sm font-semibold text-[var(--color-on-surface)] block">Geldig van:</span>
-                                <span class="text-sm text-[var(--color-on-surface-variant)] block">
-                                    @php
-                                        try {
-                                            $geldigDate = \Carbon\Carbon::parse($geldigheid['begindatum'])->format('d-m-Y, H:i');
-                                        } catch (\Exception $e) {
-                                            $geldigDate = $geldigheid['begindatum'];
-                                        }
-                                    @endphp
-                                    {{ $geldigDate }}
-                                </span>
-                            </div>
-                            @endif
-
-                            <div class="space-y-1">
-                                <span class="text-sm font-semibold text-[var(--color-on-surface)] block">Opsteller:</span>
-                                <span class="text-sm text-[var(--color-on-surface-variant)] block">{{ $opsteller['label'] ?? 'Onbekend' }}</span>
-                            </div>
-
-                            @if(!empty($identifiers))
-                            <div class="space-y-1">
-                                <span class="text-sm font-semibold text-[var(--color-on-surface)] block">Identificatiekenmerk:</span>
-                                <span class="text-sm text-[var(--color-on-surface-variant)] block">{{ is_array($identifiers) ? $identifiers[0] : $identifiers }}</span>
-                            </div>
-                            @endif
-
-                            @if(!empty($firstBestand))
-                            <div class="space-y-1">
-                                <span class="text-sm font-semibold text-[var(--color-on-surface)] block">Bestandstype:</span>
-                                <span class="text-sm text-[var(--color-on-surface-variant)] block">
-                                    @php
-                                        $mimeType = $firstBestand['mime-type'] ?? 'application/pdf';
-                                        if (str_contains($mimeType, 'pdf')) {
-                                            echo 'PDF';
-                                        } else {
-                                            echo strtoupper($mimeType);
-                                        }
-                                    @endphp
-                                </span>
-                            </div>
-                            @endif
-
-                            @if(!empty($language))
-                            <div class="space-y-1">
-                                <span class="text-sm font-semibold text-[var(--color-on-surface)] block">Taal:</span>
-                                <span class="text-sm text-[var(--color-on-surface-variant)] block">{{ $language['label'] ?? 'Nederlands' }}</span>
-                            </div>
-                            @endif
-
-                            @if($vergaderjaar)
-                            <div class="space-y-1">
-                                <span class="text-sm font-semibold text-[var(--color-on-surface)] block">vergaderjaar:</span>
-                                <span class="text-sm text-[var(--color-on-surface-variant)] block">{{ $vergaderjaar }}</span>
-                            </div>
-                            @endif
-
-                            @if($documentsubsoort)
-                            <div class="space-y-1">
-                                <span class="text-sm font-semibold text-[var(--color-on-surface)] block">documentsubsoort:</span>
-                                <span class="text-sm text-[var(--color-on-surface-variant)] block">{{ $documentsubsoort }}</span>
-                            </div>
-                            @endif
-
-                            @if(isset($jsonData['category']))
-                            <div class="space-y-1">
-                                <span class="text-sm font-semibold text-[var(--color-on-surface)] block">Informatiecategorie:</span>
-                                <span class="text-sm text-[var(--color-on-surface-variant)] block">{{ $jsonData['category'] }}</span>
-                            </div>
-                            @endif
                         </div>
                     </div>
-                    <button 
-                        class="mt-6 bg-[var(--color-primary)] text-[var(--color-on-primary)] 
-                               hover:bg-[var(--color-primary-dark)]
-                               focus:outline-none
-                               px-6 py-2 rounded-md font-medium
-                               transition-colors duration-200"
-                        id="show-more-btn" 
-                        onclick="toggleCharacteristics()">
-                        Toon alle kenmerken
-                    </button>
-                    <button 
-                        class="mt-6 bg-[var(--color-primary)] text-[var(--color-on-primary)] hidden
-                               hover:bg-[var(--color-primary-dark)]
-                               focus:outline-none
-                               px-6 py-2 rounded-md font-medium
-                               transition-colors duration-200"
-                        id="show-less-btn" 
-                        onclick="toggleCharacteristics()">
-                        Toon minder kenmerken
-                    </button>
+                        </div>
+                        <!-- END Context Tab -->
+
+                        <!-- Metadata Tab -->
+                        <div
+                            x-cloak
+                            x-show="activeTab === 'metadata'"
+                            id="metadata-tab-pane"
+                            role="tabpanel"
+                            aria-labelledby="metadata-tab"
+                            tabindex="0"
+                        >
+                    
+                    <!-- Woo Classificatie Section -->
+                    <div class="bg-[var(--color-surface)] rounded-lg border border-[var(--color-outline-variant)] shadow-sm overflow-hidden mb-6">
+                        <div class="px-6 py-4 border-b border-[var(--color-outline-variant)] bg-[var(--color-primary)]/5 flex items-center gap-2">
+                            <h3 class="text-base font-bold text-[var(--color-on-surface)]">Woo-Classificatie</h3>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[var(--color-surface)] text-[var(--color-primary)] border border-[var(--color-primary)]/20">
+                                Wet open overheid
+                            </span>
+                        </div>
+                        <dl class="divide-y divide-[var(--color-outline-variant)]">
+                            @if($wooInfoCategorie)
+                            <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4 hover:bg-[var(--color-surface-variant)] transition-colors">
+                                <dt class="text-sm font-medium text-[var(--color-on-surface-variant)]">Informatiecategorie</dt>
+                                <dd class="text-sm font-semibold text-[var(--color-on-surface)] sm:col-span-2">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
+                                        {{ $wooInfoCategorie }}
+                                    </span>
+                                </dd>
+                            </div>
+                            @endif
+                            @if($theme)
+                            <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4 hover:bg-[var(--color-surface-variant)] transition-colors">
+                                <dt class="text-sm font-medium text-[var(--color-on-surface-variant)]">Thema</dt>
+                                <dd class="text-sm text-[var(--color-on-surface)] sm:col-span-2">{{ $theme }}</dd>
+                            </div>
+                            @endif
+                            <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4 hover:bg-[var(--color-surface-variant)] transition-colors">
+                                <dt class="text-sm font-medium text-[var(--color-on-surface-variant)]">Documentsoort</dt>
+                                <dd class="text-sm text-[var(--color-on-surface)] sm:col-span-2">{{ $documentType }}</dd>
+                            </div>
+                            @if(isset($dossierMembers) && $dossierMembers->isNotEmpty())
+                            <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4 hover:bg-[var(--color-surface-variant)] transition-colors">
+                                <dt class="text-sm font-medium text-[var(--color-on-surface-variant)]">Dossier / Rubriek</dt>
+                                <dd class="text-sm text-[var(--color-on-surface)] sm:col-span-2">
+                                    {{ $dossierMembers->count() }} gerelateerde documenten
+                                </dd>
+                            </div>
+                            @else
+                            <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4 hover:bg-[var(--color-surface-variant)] transition-colors">
+                                <dt class="text-sm font-medium text-[var(--color-on-surface-variant)]">Dossier / Rubriek</dt>
+                                <dd class="text-sm text-[var(--color-on-surface-variant)] sm:col-span-2 italic">
+                                    Geen dossier gekoppeld
+                                </dd>
+                            </div>
+                            @endif
+                        </dl>
+                    </div>
+
+                    <!-- Technical Details Section -->
+                    <div class="bg-[var(--color-surface)] rounded-lg border border-[var(--color-outline-variant)] shadow-sm overflow-hidden">
+                        <div class="px-6 py-4 border-b border-[var(--color-outline-variant)] bg-[var(--color-surface-variant)]">
+                            <h3 class="text-base font-semibold text-[var(--color-on-surface)]">Documentdetails</h3>
+                        </div>
+                        <dl class="divide-y divide-[var(--color-outline-variant)]">
+                            @if(isset($jsonData['external_id']))
+                            <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4 hover:bg-[var(--color-surface-variant)] transition-colors">
+                                <dt class="text-sm font-medium text-[var(--color-on-surface-variant)]">Document ID</dt>
+                                <dd class="text-sm text-[var(--color-on-surface-variant)] sm:col-span-2 font-mono">{{ $jsonData['external_id'] }}</dd>
+                            </div>
+                            @endif
+                            @if($pubDateFormatted)
+                            <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4 hover:bg-[var(--color-surface-variant)] transition-colors">
+                                <dt class="text-sm font-medium text-[var(--color-on-surface-variant)]">Publicatiedatum</dt>
+                                <dd class="text-sm text-[var(--color-on-surface)] sm:col-span-2">{{ $pubDateFormatted }}</dd>
+                            </div>
+                            @endif
+                            @if($geldigVanaf)
+                            <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4 hover:bg-[var(--color-surface-variant)] transition-colors">
+                                <dt class="text-sm font-medium text-[var(--color-on-surface-variant)]">Geldig vanaf</dt>
+                                <dd class="text-sm text-[var(--color-on-surface)] sm:col-span-2">{{ $geldigVanaf }}</dd>
+                            </div>
+                            @endif
+                            @if($orgName)
+                            <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4 hover:bg-[var(--color-surface-variant)] transition-colors">
+                                <dt class="text-sm font-medium text-[var(--color-on-surface-variant)]">Organisatie</dt>
+                                <dd class="text-sm text-[var(--color-on-surface)] sm:col-span-2">{{ $orgName }}</dd>
+                            </div>
+                            @endif
+                            @if($weblocatie || isset($jsonData['external_id']))
+                            <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4 hover:bg-[var(--color-surface-variant)] transition-colors">
+                                <dt class="text-sm font-medium text-[var(--color-on-surface-variant)]">Originele bron</dt>
+                                <dd class="text-sm text-[var(--color-on-surface)] sm:col-span-2">
+                                    <a href="{{ $weblocatie ?? 'https://open.overheid.nl/details/' . $jsonData['external_id'] }}" target="_blank" class="text-[var(--color-primary)] hover:underline inline-flex items-center">
+                                        {{ $weblocatie ? 'officielebekendmakingen.nl' : 'open.overheid.nl' }}
+                                        <svg class="ml-1 w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                    </a>
+                                </dd>
+                            </div>
+                            @endif
+
+                            <!-- Extended characteristics -->
+                            <template x-if="showExtended">
+                                <div class="contents">
+                                    @if(isset($verantwoordelijke['label']))
+                                    <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4 hover:bg-[var(--color-surface-variant)] transition-colors">
+                                        <dt class="text-sm font-medium text-[var(--color-on-surface-variant)]">Verantwoordelijke</dt>
+                                        <dd class="text-sm text-[var(--color-on-surface)] sm:col-span-2">{{ $verantwoordelijke['label'] }}</dd>
+                                    </div>
+                                    @endif
+                                    @php
+                                        $opsteller = $documentMeta['opsteller'] ?? [];
+                                    @endphp
+                                    @if(isset($opsteller['label']))
+                                    <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4 hover:bg-[var(--color-surface-variant)] transition-colors">
+                                        <dt class="text-sm font-medium text-[var(--color-on-surface-variant)]">Opsteller</dt>
+                                        <dd class="text-sm text-[var(--color-on-surface)] sm:col-span-2">{{ $opsteller['label'] }}</dd>
+                                    </div>
+                                    @endif
+                                    @if(isset($firstBestand['aantalPaginas']))
+                                    <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4 hover:bg-[var(--color-surface-variant)] transition-colors">
+                                        <dt class="text-sm font-medium text-[var(--color-on-surface-variant)]">Aantal pagina's</dt>
+                                        <dd class="text-sm text-[var(--color-on-surface)] sm:col-span-2">{{ $firstBestand['aantalPaginas'] }}</dd>
+                                    </div>
+                                    @endif
+                                    @if(isset($firstBestand['grootte']))
+                                    <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4 hover:bg-[var(--color-surface-variant)] transition-colors">
+                                        <dt class="text-sm font-medium text-[var(--color-on-surface-variant)]">Bestandsgrootte</dt>
+                                        <dd class="text-sm text-[var(--color-on-surface)] sm:col-span-2">{{ number_format($firstBestand['grootte'], 0, ',', '.') }} bytes</dd>
+                                    </div>
+                                    @endif
+                                    @php
+                                        $language = $documentMeta['language'] ?? [];
+                                    @endphp
+                                    @if(isset($language['label']))
+                                    <div class="px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4 hover:bg-[var(--color-surface-variant)] transition-colors">
+                                        <dt class="text-sm font-medium text-[var(--color-on-surface-variant)]">Taal</dt>
+                                        <dd class="text-sm text-[var(--color-on-surface)] sm:col-span-2">{{ $language['label'] }}</dd>
+                                    </div>
+                                    @endif
+                                </div>
+                            </template>
+                        </dl>
+                        <div class="px-6 py-4 border-t border-[var(--color-outline-variant)]">
+                            <button @click="showExtended = !showExtended"
+                                    class="text-sm font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition-colors">
+                                <span x-text="showExtended ? 'Toon minder kenmerken' : 'Toon alle kenmerken'"></span>
+                                <i class="fas ml-1" :class="showExtended ? 'fa-chevron-up' : 'fa-chevron-down'" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Dossier Section -->
+                    @if(isset($dossierMembers) && $dossierMembers->isNotEmpty())
+                    <div class="mt-8 pt-6 border-t border-[var(--color-outline-variant)]">
+                        <h2 class="text-xl font-semibold mb-4 text-[var(--color-on-surface)]">Dossier</h2>
+                        <p class="text-sm text-[var(--color-on-surface-variant)] mb-4">
+                            Dit document maakt deel uit van een dossier met {{ $dossierMembers->count() }} gerelateerd{{ $dossierMembers->count() !== 1 ? 'e' : '' }} document{{ $dossierMembers->count() !== 1 ? 'en' : '' }}:
+                        </p>
+                        <div class="space-y-3">
+                            @foreach($dossierMembers as $member)
+                                <a href="/open-overheid/documents/{{ $member->external_id }}{{ request()->get('from') ? '?from=' . urlencode(request()->get('from')) : '' }}" 
+                                   class="block p-4 rounded-md border border-[var(--color-outline-variant)]
+                                          bg-[var(--color-surface)] hover:bg-[var(--color-surface-variant)]
+                                          focus:outline-none
+                                          transition-colors duration-200
+                                          group">
+                                    <div class="flex items-start justify-between gap-4">
+                                        <div class="flex-1 min-w-0">
+                                            <h3 class="text-base font-medium text-[var(--color-on-surface)] group-hover:text-[var(--color-primary)] transition-colors mb-2 line-clamp-2">
+                                                {{ $member->title ?? 'Geen titel beschikbaar' }}
+                                            </h3>
+                                            <div class="flex flex-wrap gap-3 text-xs text-[var(--color-on-surface-variant)]">
+                                                @if($member->document_type)
+                                                    <span class="inline-flex items-center gap-1.5">
+                                                        <i class="fas fa-file-alt text-xs" aria-hidden="true"></i>
+                                                        <span>{{ $member->document_type }}</span>
+                                                    </span>
+                                                @endif
+                                                @if($member->publication_date)
+                                                    <span class="inline-flex items-center gap-1.5">
+                                                        <i class="fas fa-calendar text-xs" aria-hidden="true"></i>
+                                                        <span>{{ $member->publication_date->format('d-m-Y') }}</span>
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <i class="fas fa-chevron-right text-[var(--color-on-surface-variant)] group-hover:text-[var(--color-primary)] transition-colors mt-1 flex-shrink-0" aria-hidden="true"></i>
+                                    </div>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
+                        </div>
+                        <!-- END Metadata Tab -->
+
+                        <!-- JSON Tab -->
+                        <div
+                            x-cloak
+                            x-show="activeTab === 'json'"
+                            x-init="$watch('activeTab', value => { if(value === 'json') initJSONDisplay() })"
+                            id="json-tab-pane"
+                            role="tabpanel"
+                            aria-labelledby="json-tab"
+                            tabindex="0"
+                        >
+                            <div class="relative bg-[var(--color-surface-variant)] rounded-lg p-4 font-mono text-sm overflow-x-auto border border-[var(--color-outline-variant)]">
+                                <button onclick="copyJSON(event)" class="absolute top-4 right-4 text-xs bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-[var(--color-on-primary)] px-3 py-1 rounded transition-colors">Kopieer</button>
+                                <pre id="json-display" class="text-[var(--color-on-surface)]"><code></code></pre>
+                            </div>
+                        </div>
+                        <!-- END JSON Tab -->
+
+                    </div>
+                    <!-- END Tab Content Container -->
+                </div>
+                <!-- END LEFT COLUMN -->
+
+            <!-- RIGHT COLUMN: Sidebar (4 cols) -->
+            <div class="lg:col-span-4 space-y-6">
+                
+                <!-- Action Card / Downloads -->
+                <div class="bg-[var(--color-surface)] p-5 rounded-lg border border-[var(--color-outline-variant)] shadow-sm">
+                    <h3 class="font-semibold text-[var(--color-on-surface)] mb-4 text-sm uppercase tracking-wide">Downloads</h3>
+                    
+                    <!-- PDF Button -->
+                    @if($pdfUrl)
+                    <a href="{{ $pdfUrl }}" target="_blank" class="group block w-full mb-3 text-decoration-none">
+                        <div class="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-[var(--color-on-primary)] font-medium py-3 px-4 rounded-md transition-all shadow-sm flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            Download PDF
+                        </div>
+                        <div class="text-xs text-[var(--color-on-surface-variant)] text-center mt-1 group-hover:text-[var(--color-primary)] transition-colors">
+                            Inclusief samenvatting & metadata
+                        </div>
+                    </a>
+                    @endif
+
+                    <!-- XML Button -->
+                    <a href="{{ url()->current() }}?format=xml" class="group block w-full text-decoration-none">
+                        <div class="bg-[var(--color-surface)] border border-[var(--color-outline-variant)] hover:bg-[var(--color-surface-variant)] text-[var(--color-on-surface)] font-medium py-2.5 px-4 rounded-md transition-colors flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5 text-[var(--color-on-surface-variant)] group-hover:text-[var(--color-on-surface)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                            Download XML (Bron)
+                        </div>
+                    </a>
                 </div>
 
-                @if(isset($dossierMembers) && $dossierMembers->isNotEmpty())
-                <div class="mt-8 pt-6 border-t border-[var(--color-outline-variant)]">
-                    <h2 class="text-xl font-semibold mb-4 text-[var(--color-on-surface)]">Dossier</h2>
-                    <p class="text-sm text-[var(--color-on-surface-variant)] mb-4">
-                        Dit document maakt deel uit van een dossier met {{ $dossierMembers->count() }} gerelateerd{{ $dossierMembers->count() !== 1 ? 'e' : '' }} document{{ $dossierMembers->count() !== 1 ? 'en' : '' }}:
-                    </p>
-                    <div class="space-y-3">
-                        @foreach($dossierMembers as $member)
-                            <a href="/open-overheid/documents/{{ $member->external_id }}{{ request()->get('from') ? '?from=' . urlencode(request()->get('from')) : '' }}" 
-                               class="block p-4 rounded-md border border-[var(--color-outline-variant)]
-                                      bg-[var(--color-surface)] hover:bg-[var(--color-surface-variant)]
-                                      focus:outline-none
-                                      transition-colors duration-200
-                                      group">
-                                <div class="flex items-start justify-between gap-4">
-                                    <div class="flex-1 min-w-0">
-                                        <h3 class="text-base font-medium text-[var(--color-on-surface)] group-hover:text-[var(--color-primary)] transition-colors mb-2 line-clamp-2">
-                                            {{ $member->title ?? 'Geen titel beschikbaar' }}
-                                        </h3>
-                                        <div class="flex flex-wrap gap-3 text-xs text-[var(--color-on-surface-variant)]">
-                                            @if($member->document_type)
-                                                <span class="inline-flex items-center gap-1.5">
-                                                    <i class="fas fa-file-alt text-xs" aria-hidden="true"></i>
-                                                    <span>{{ $member->document_type }}</span>
-                                                </span>
-                                            @endif
-                                            @if($member->publication_date)
-                                                <span class="inline-flex items-center gap-1.5">
-                                                    <i class="fas fa-calendar text-xs" aria-hidden="true"></i>
-                                                    <span>{{ $member->publication_date->format('d-m-Y') }}</span>
-                                                </span>
-                                            @endif
-                                            @if($member->organisation)
-                                                <span class="inline-flex items-center gap-1.5">
-                                                    <i class="fas fa-building text-xs" aria-hidden="true"></i>
-                                                    <span>{{ $member->organisation }}</span>
-                                                </span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    <i class="fas fa-chevron-right text-[var(--color-on-surface-variant)] group-hover:text-[var(--color-primary)] transition-colors mt-1 flex-shrink-0" aria-hidden="true"></i>
-                                </div>
+                <!-- Location Card / Betreft Locatie -->
+                @if($orgName)
+                <div class="bg-[var(--color-surface)] p-5 rounded-lg border border-[var(--color-outline-variant)] shadow-sm">
+                    <h3 class="font-semibold text-[var(--color-on-surface)] mb-3 text-sm uppercase tracking-wide">Betreft Locatie</h3>
+                    <div class="relative w-full h-40 bg-[var(--color-surface-variant)] rounded-md mb-3 overflow-hidden flex items-center justify-center group cursor-pointer border border-[var(--color-outline-variant)]">
+                        <!-- Simple Map Pattern -->
+                        <div class="absolute inset-0 opacity-20">
+                            <svg class="w-full h-full text-[var(--color-outline)]" fill="currentColor" viewBox="0 0 100 100"><rect x="0" y="0" width="10" height="100"/><rect x="20" y="0" width="10" height="100"/><rect x="50" y="0" width="30" height="100"/><rect x="0" y="40" width="100" height="5"/></svg>
+                        </div>
+                        <div class="z-10 bg-[var(--color-surface)] p-2 rounded shadow-md transform group-hover:-translate-y-1 transition-transform">
+                            <svg class="w-6 h-6 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-medium text-[var(--color-on-surface)]">{{ $orgName }}</p>
+                            <p class="text-sm text-[var(--color-on-surface-variant)]">Nederland</p>
+                        </div>
+                    </div>
+                    <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($orgName) }}" target="_blank" class="mt-3 inline-flex items-center text-sm text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] font-medium">
+                        Open in Google Maps <span class="ml-1">&rarr;</span>
+                    </a>
+                </div>
+                @endif
+
+                <!-- Tags / Onderwerpen -->
+                @if(!empty($tagLabels))
+                <div>
+                    <h3 class="font-semibold text-[var(--color-on-surface)] mb-3 text-sm uppercase tracking-wide">Onderwerpen</h3>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($tagLabels as $tag)
+                            <a href="/zoeken?thema[]={{ urlencode($tag) }}"
+                               class="px-2.5 py-1 bg-[var(--color-surface-variant)] text-[var(--color-on-surface-variant)] rounded border border-[var(--color-outline-variant)] text-xs font-medium hover:bg-[var(--color-primary)]/10 hover:text-[var(--color-primary)] hover:border-[var(--color-primary)]/20 cursor-pointer transition-colors">
+                                {{ ucfirst($tag) }}
                             </a>
                         @endforeach
                     </div>
                 </div>
                 @endif
 
-                @php
-                    $publisherOrg = $document->organisation ?? $publisher['label'] ?? null;
-                @endphp
-                @if($publisherOrg)
-                <div class="mt-8 pt-6 border-t border-[var(--color-outline-variant)]">
-                    <p class="text-sm text-[var(--color-on-surface-variant)] mb-3">
-                        Dit document is gepubliceerd door:
-                    </p>
-                    <a href="/zoeken?organisatie[]={{ urlencode($publisherOrg) }}" 
-                       class="inline-flex items-center gap-2 px-4 py-2 rounded-md 
-                              bg-[var(--color-primary)]/10 text-[var(--color-primary)] border border-[var(--color-primary)]/20
-                              hover:bg-[var(--color-primary)]/20 hover:border-[var(--color-primary)]/30
-                              focus:outline-none
-                              transition-colors duration-200 font-medium text-sm
-                              group">
-                        <i class="fas fa-building text-xs" aria-hidden="true"></i>
-                        <span>{{ $publisherOrg }}</span>
-                        <i class="fas fa-filter text-xs opacity-70 group-hover:opacity-100 transition-opacity" aria-hidden="true"></i>
-                    </a>
-                </div>
-                @endif
-                        </div>
-                    </div>
-                    <!-- END Metadata Tab -->
-
-                    <!-- JSON Tab -->
-                    <div
-                        x-cloak
-                        x-show="active === 'json'"
-                        x-init="initJSONDisplay()"
-                        id="json-tab-pane"
-                        role="tabpanel"
-                        aria-labelledby="json-tab"
-                        tabindex="0"
-                    >
-                        <div>
-                            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-                                <h2 class="text-xl font-semibold text-[var(--color-on-surface)]">JSON Data</h2>
-                                <div class="flex flex-wrap gap-3">
-                                    <button 
-                                        class="bg-[var(--color-primary)] text-[var(--color-on-primary)]
-                                               hover:bg-[var(--color-primary-dark)]
-                                               focus:outline-none
-                                               px-4 py-2 rounded-md font-medium
-                                               transition-colors duration-200"
-                                        onclick="copyJSON(event)">
-                                        Kopieer JSON
-                                    </button>
-                                    <a href="{{ url()->current() }}?format=json" 
-                                       target="_blank"
-                                       rel="noopener noreferrer"
-                                       class="bg-[var(--color-primary)] text-[var(--color-on-primary)]
-                                              hover:bg-[var(--color-primary-dark)]
-                                              focus:outline-none
-                                              px-4 py-2 rounded-md font-medium
-                                              transition-colors duration-200
-                                              inline-flex items-center justify-center">
-                                        Download JSON
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="p-6 overflow-x-auto bg-[var(--color-surface-variant)] rounded-md">
-                                <pre id="json-display" class="font-mono text-xs text-[var(--color-on-surface-variant)]"></pre>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- END JSON Tab -->
-                </div>
-                <!-- END Tab Content -->
             </div>
-            <!-- END Tabs -->
+            <!-- END RIGHT COLUMN -->
         </div>
+
     </main>
 @endsection
 
@@ -821,7 +707,6 @@
             }
             
             if (typeof value === 'string') {
-                // Escape HTML and preserve special characters
                 const escaped = value
                     .replace(/&/g, '&amp;')
                     .replace(/</g, '&lt;')
@@ -872,37 +757,14 @@
         // Initialize JSON display when JSON tab is shown
         function initJSONDisplay() {
             const display = document.getElementById('json-display');
-            if (display && (!display.innerHTML || display.innerHTML.trim() === '')) {
+            if (display && (!display.innerHTML || display.innerHTML.trim() === '' || display.innerHTML.trim() === '<code></code>')) {
                 try {
                     const jsonData = @json($jsonData);
                     display.innerHTML = formatJSONValue(jsonData);
                 } catch (error) {
                     console.error('Error formatting JSON:', error);
-                    display.innerHTML = '<span class="text-error">Error loading JSON data</span>';
+                    display.innerHTML = '<span class="text-red-400">Error loading JSON data</span>';
                 }
-            }
-        }
-
-        function toggleCharacteristics() {
-            const extended = document.getElementById('extended-characteristics');
-            const showMoreBtn = document.getElementById('show-more-btn');
-            const showLessBtn = document.getElementById('show-less-btn');
-            
-            if (!extended || !showMoreBtn || !showLessBtn) {
-                console.error('Elements not found for toggleCharacteristics');
-                return;
-            }
-            
-            if (extended.classList.contains('show')) {
-                // Hide extended characteristics
-                extended.classList.remove('show');
-                showMoreBtn.classList.remove('hidden');
-                showLessBtn.classList.add('hidden');
-            } else {
-                // Show extended characteristics
-                extended.classList.add('show');
-                showMoreBtn.classList.add('hidden');
-                showLessBtn.classList.remove('hidden');
             }
         }
 
@@ -921,7 +783,7 @@
             });
         }
 
-        // Initialize JSON display on page load (for download)
+        // Handle format=json download
         document.addEventListener('DOMContentLoaded', function() {
             @if(request('format') === 'json')
                 const jsonData = @json($jsonData);
