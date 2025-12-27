@@ -631,12 +631,28 @@
                 @if($orgName)
                 <div>
                     <h3 class="text-sm font-medium text-[var(--color-on-surface)] mb-3">Betreft Locatie</h3>
+                    
+                    <!-- Map Placeholder -->
+                    <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($orgName . ', Nederland') }}" 
+                       target="_blank" 
+                       class="block w-full h-32 bg-[var(--color-surface-variant)] rounded-lg mb-3 overflow-hidden relative group border border-[var(--color-outline-variant)]">
+                        <!-- Static Map from OpenStreetMap -->
+                        <img src="https://staticmap.openstreetmap.de/staticmap.php?center=52.1326,5.2913&zoom=7&size=400x160&maptype=osmarenderer" 
+                             alt="Kaart van Nederland" 
+                             class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                             loading="lazy">
+                        <!-- Overlay -->
+                        <div class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors">
+                            <div class="bg-white/90 px-3 py-1.5 rounded-full text-xs font-medium text-[var(--color-on-surface)] flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5 text-[var(--color-primary)]" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
+                                Bekijk op kaart
+                            </div>
+                        </div>
+                    </a>
+                    
                     <div class="text-sm">
                         <p class="text-[var(--color-on-surface)]">{{ $orgName }}</p>
                         <p class="text-[var(--color-on-surface-variant)]">Nederland</p>
-                        <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($orgName) }}" target="_blank" class="inline-flex items-center gap-1 text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] mt-2 transition-colors">
-                            Bekijk op kaart →
-                        </a>
                     </div>
                 </div>
                 @endif
