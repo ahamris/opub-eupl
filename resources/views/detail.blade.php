@@ -342,12 +342,8 @@
                                 {{ $description }}
                             </p>
                         @else
-                            <p class="text-lg text-[var(--color-on-surface-variant)] leading-relaxed">
-                                @if($orgName)
-                                    <strong>{{ $orgName }}</strong> heeft dit document gepubliceerd.
-                                @else
-                                    Geen samenvatting beschikbaar voor dit document.
-                                @endif
+                            <p class="text-[var(--color-on-surface-variant)] italic">
+                                Geen samenvatting beschikbaar voor dit document.
                             </p>
                         @endif
                         
