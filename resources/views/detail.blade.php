@@ -635,17 +635,24 @@
                     <!-- Map Placeholder -->
                     <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($orgName . ', Nederland') }}" 
                        target="_blank" 
-                       class="block w-full h-32 bg-[var(--color-surface-variant)] rounded-lg mb-3 overflow-hidden relative group border border-[var(--color-outline-variant)]">
-                        <!-- Static Map from OpenStreetMap -->
-                        <img src="https://staticmap.openstreetmap.de/staticmap.php?center=52.1326,5.2913&zoom=7&size=400x160&maptype=osmarenderer" 
-                             alt="Kaart van Nederland" 
-                             class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                             loading="lazy">
-                        <!-- Overlay -->
-                        <div class="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors">
-                            <div class="bg-white/90 px-3 py-1.5 rounded-full text-xs font-medium text-[var(--color-on-surface)] flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5 text-[var(--color-primary)]" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
-                                Bekijk op kaart
+                       class="block w-full h-28 bg-[var(--color-surface-variant)] rounded-lg mb-3 overflow-hidden relative group border border-[var(--color-outline-variant)]">
+                        <!-- Grid Pattern -->
+                        <div class="absolute inset-0 opacity-20">
+                            <svg class="w-full h-full text-[var(--color-on-surface-variant)]" viewBox="0 0 100 100" fill="currentColor">
+                                <rect x="10" y="0" width="1" height="100"/>
+                                <rect x="30" y="0" width="1" height="100"/>
+                                <rect x="50" y="0" width="1" height="100"/>
+                                <rect x="70" y="0" width="1" height="100"/>
+                                <rect x="90" y="0" width="1" height="100"/>
+                                <rect x="0" y="20" width="100" height="1"/>
+                                <rect x="0" y="50" width="100" height="1"/>
+                                <rect x="0" y="80" width="100" height="1"/>
+                            </svg>
+                        </div>
+                        <!-- Pin Icon -->
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="bg-[var(--color-surface)] p-2 rounded-full border border-[var(--color-outline-variant)] group-hover:border-[var(--color-primary)] transition-colors">
+                                <svg class="w-5 h-5 text-[var(--color-primary)]" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
                             </div>
                         </div>
                     </a>
