@@ -170,6 +170,18 @@ class AdminMenuSeeder extends Seeder
                 'is_active' => true,
             ]);
 
+            AdminMenuItem::create([
+                'admin_menu_id' => $menu->id,
+                'parent_id' => $contentSection->id,
+                'item_type' => 'link',
+                'label' => 'Data Management',
+                'slug' => 'data-management',
+                'route_name' => 'admin.content.data-management.index',
+                'icon' => 'database',
+                'position' => 5,
+                'is_active' => true,
+            ]);
+
             // Homepage Management (Parent with Submenu)
             $homepage = AdminMenuItem::create([
                 'admin_menu_id' => $menu->id,

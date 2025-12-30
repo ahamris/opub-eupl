@@ -41,48 +41,60 @@ class TypesenseSyncService
             return ['total' => 0, 'synced' => 0, 'errors' => 0];
         }
 
-        // Query documents that need Typesense sync
-        $documents = OpenOverheidDocument::needsTypesenseSync()
-            ->limit($limit)
-            ->get();
+        // Mark sync as running
+        \Illuminate\Support\Facades\Cache::put('typesense_sync_running', true, 300);
+        \Illuminate\Support\Facades\Cache::put('typesense_sync_started_at', now(), 300);
 
-        if ($documents->isEmpty()) {
-            Log::channel('typesense_errors')->info('No documents to sync to Typesense');
+        try {
+            // Query documents that need Typesense sync
+            $documents = OpenOverheidDocument::needsTypesenseSync()
+                ->limit($limit)
+                ->get();
 
-            return ['total' => 0, 'synced' => 0, 'errors' => 0];
-        }
+            if ($documents->isEmpty()) {
+                Log::channel('typesense_errors')->info('No documents to sync to Typesense');
+                
+                // Mark sync as complete
+                \Illuminate\Support\Facades\Cache::forget('typesense_sync_running');
 
-        $totalPending = $documents->count();
-        Log::channel('typesense_errors')->info("Syncing {$totalPending} documents to Typesense (batch limit: {$limit})");
-
-        $synced = 0;
-        $errors = 0;
-
-        foreach ($documents as $document) {
-            try {
-                $this->indexDocument($document);
-                $document->update(['typesense_synced_at' => now()]);
-                $synced++;
-            } catch (\Exception $e) {
-                Log::channel('typesense_errors')->error('Typesense index error', [
-                    'external_id' => $document->external_id,
-                    'error' => $e->getMessage(),
-                ]);
-                $errors++;
+                return ['total' => 0, 'synced' => 0, 'errors' => 0];
             }
+
+            $totalPending = $documents->count();
+            Log::channel('typesense_errors')->info("Syncing {$totalPending} documents to Typesense (batch limit: {$limit})");
+
+            $synced = 0;
+            $errors = 0;
+
+            foreach ($documents as $document) {
+                try {
+                    $this->indexDocument($document);
+                    $document->update(['typesense_synced_at' => now()]);
+                    $synced++;
+                } catch (\Exception $e) {
+                    Log::channel('typesense_errors')->error('Typesense index error', [
+                        'external_id' => $document->external_id,
+                        'error' => $e->getMessage(),
+                    ]);
+                    $errors++;
+                }
+            }
+
+            Log::channel('typesense_errors')->info('Typesense sync batch completed', [
+                'total' => $totalPending,
+                'synced' => $synced,
+                'errors' => $errors,
+            ]);
+
+            return [
+                'total' => $totalPending,
+                'synced' => $synced,
+                'errors' => $errors,
+            ];
+        } finally {
+            // Mark sync as complete after a short delay (in case another batch is queued)
+            \Illuminate\Support\Facades\Cache::put('typesense_sync_running', false, 60);
         }
-
-        Log::channel('typesense_errors')->info('Typesense sync batch completed', [
-            'total' => $totalPending,
-            'synced' => $synced,
-            'errors' => $errors,
-        ]);
-
-        return [
-            'total' => $totalPending,
-            'synced' => $synced,
-            'errors' => $errors,
-        ];
     }
 
     /**
@@ -99,83 +111,94 @@ class TypesenseSyncService
             return ['total' => 0, 'synced' => 0, 'errors' => 0];
         }
 
-        $totalPending = OpenOverheidDocument::needsTypesenseSync()->count();
+        // Mark sync as running
+        \Illuminate\Support\Facades\Cache::put('typesense_sync_running', true, 600);
+        \Illuminate\Support\Facades\Cache::put('typesense_sync_started_at', now(), 600);
 
-        if ($totalPending === 0) {
-            Log::channel('typesense_errors')->info('No documents to sync to Typesense');
+        try {
+            $totalPending = OpenOverheidDocument::needsTypesenseSync()->count();
+
+            if ($totalPending === 0) {
+                Log::channel('typesense_errors')->info('No documents to sync to Typesense');
+                if ($command) {
+                    $command->info('All documents are already synced.');
+                }
+                
+                \Illuminate\Support\Facades\Cache::forget('typesense_sync_running');
+
+                return ['total' => 0, 'synced' => 0, 'errors' => 0];
+            }
+
             if ($command) {
-                $command->info('All documents are already synced.');
+                $command->info("Found {$totalPending} documents to sync.");
+                $command->newLine();
             }
 
-            return ['total' => 0, 'synced' => 0, 'errors' => 0];
-        }
+            Log::channel('typesense_errors')->info("Syncing {$totalPending} documents to Typesense");
 
-        if ($command) {
-            $command->info("Found {$totalPending} documents to sync.");
-            $command->newLine();
-        }
+            $synced = 0;
+            $errors = 0;
+            $batchSize = 100;
+            $processed = 0;
 
-        Log::channel('typesense_errors')->info("Syncing {$totalPending} documents to Typesense");
+            $documents = OpenOverheidDocument::needsTypesenseSync()
+                ->lazyById($batchSize);
 
-        $synced = 0;
-        $errors = 0;
-        $batchSize = 100;
-        $processed = 0;
+            if ($command) {
+                $bar = $command->getOutput()->createProgressBar($totalPending);
+                $bar->setFormat(' %current%/%max% [%bar%] %percent:3s%% %elapsed:6s% %memory:6s%');
+                $bar->start();
+            }
 
-        $documents = OpenOverheidDocument::needsTypesenseSync()
-            ->lazyById($batchSize);
+            foreach ($documents as $document) {
+                try {
+                    $this->indexDocument($document);
+                    $document->update(['typesense_synced_at' => now()]);
+                    $synced++;
+                    $processed++;
 
-        if ($command) {
-            $bar = $command->getOutput()->createProgressBar($totalPending);
-            $bar->setFormat(' %current%/%max% [%bar%] %percent:3s%% %elapsed:6s% %memory:6s%');
-            $bar->start();
-        }
+                    if ($command) {
+                        $this->updateProgressBar($bar, $processed, $totalPending, $errors, $command);
+                        $bar->advance();
+                    }
+                } catch (\Exception $e) {
+                    Log::channel('typesense_errors')->error('Typesense index error', [
+                        'external_id' => $document->external_id,
+                        'error' => $e->getMessage(),
+                    ]);
+                    $errors++;
+                    $processed++;
 
-        foreach ($documents as $document) {
-            try {
-                $this->indexDocument($document);
-                $document->update(['typesense_synced_at' => now()]);
-                $synced++;
-                $processed++;
-
-                if ($command) {
-                    $this->updateProgressBar($bar, $processed, $totalPending, $errors, $command);
-                    $bar->advance();
-                }
-            } catch (\Exception $e) {
-                Log::channel('typesense_errors')->error('Typesense index error', [
-                    'external_id' => $document->external_id,
-                    'error' => $e->getMessage(),
-                ]);
-                $errors++;
-                $processed++;
-
-                if ($command) {
-                    $this->updateProgressBar($bar, $processed, $totalPending, $errors, $command);
-                    $bar->advance();
+                    if ($command) {
+                        $this->updateProgressBar($bar, $processed, $totalPending, $errors, $command);
+                        $bar->advance();
+                    }
                 }
             }
+
+            if ($command) {
+                $bar->finish();
+                $command->newLine();
+                // Clear the custom message line
+                $command->getOutput()->write("\r\033[K");
+                $command->newLine();
+            }
+
+            Log::channel('typesense_errors')->info('Typesense sync completed', [
+                'total' => $totalPending,
+                'synced' => $synced,
+                'errors' => $errors,
+            ]);
+
+            return [
+                'total' => $totalPending,
+                'synced' => $synced,
+                'errors' => $errors,
+            ];
+        } finally {
+            // Mark sync as complete
+            \Illuminate\Support\Facades\Cache::put('typesense_sync_running', false, 60);
         }
-
-        if ($command) {
-            $bar->finish();
-            $command->newLine();
-            // Clear the custom message line
-            $command->getOutput()->write("\r\033[K");
-            $command->newLine();
-        }
-
-        Log::channel('typesense_errors')->info('Typesense sync completed', [
-            'total' => $totalPending,
-            'synced' => $synced,
-            'errors' => $errors,
-        ]);
-
-        return [
-            'total' => $totalPending,
-            'synced' => $synced,
-            'errors' => $errors,
-        ];
     }
 
     /**
