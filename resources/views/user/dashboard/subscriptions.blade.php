@@ -92,25 +92,3 @@
     </div>
 </div>
 @endsection
-
-@section('info-panel')
-<x-user.info-box 
-    title="Over abonnementen" 
-    text="Met abonnementen ontvangt u automatisch meldingen wanneer nieuwe documenten worden gepubliceerd die aan uw criteria voldoen."
->
-    <ul class="mt-4 space-y-2 text-sm text-gray-600">
-        <li class="flex items-start gap-2">
-            <i class="fas fa-search text-[var(--color-primary)] mt-0.5"></i>
-            <span>Zoekterm: op basis van zoekwoorden</span>
-        </li>
-        <li class="flex items-start gap-2">
-            <i class="fas fa-folder text-[var(--color-primary)] mt-0.5"></i>
-            <span>Categorie: specifieke documenttypes</span>
-        </li>
-        <li class="flex items-start gap-2">
-            <i class="fas fa-building text-[var(--color-primary)] mt-0.5"></i>
-            <span>Organisatie: van een specifiek orgaan</span>
-        </li>
-    </ul>
-</x-user.info-box>
-@endsection
