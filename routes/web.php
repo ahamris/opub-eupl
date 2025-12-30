@@ -63,6 +63,13 @@ Route::prefix('account')->name('user.')->group(function () {
         Route::post('logout', [\App\Http\Controllers\User\AuthController::class, 'logout'])->name('logout');
         Route::get('dashboard', [\App\Http\Controllers\User\DashboardController::class, 'index'])->name('dashboard');
         Route::get('subscriptions', [\App\Http\Controllers\User\DashboardController::class, 'subscriptions'])->name('subscriptions');
+        Route::delete('subscriptions/{subscription}', [\App\Http\Controllers\User\DashboardController::class, 'destroySubscription'])->name('subscription.destroy');
+        
+        // Berichtenbox routes
+        Route::get('berichtenbox', [\App\Http\Controllers\User\DashboardController::class, 'berichtenbox'])->name('berichtenbox');
+        Route::get('berichtenbox/archief', [\App\Http\Controllers\User\DashboardController::class, 'berichtenboxArchief'])->name('berichtenbox.archief');
+        Route::get('berichtenbox/prullenbak', [\App\Http\Controllers\User\DashboardController::class, 'berichtenboxPrullenbak'])->name('berichtenbox.prullenbak');
+        Route::get('berichtenbox/{id}', [\App\Http\Controllers\User\DashboardController::class, 'berichtShow'])->name('bericht.show');
     });
 });
 

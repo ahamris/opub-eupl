@@ -757,6 +757,8 @@ class SearchController extends Controller
             'organisatie.*' => ['string'],
             'bestandstype' => ['nullable'],
             'bestandstype.*' => ['string'],
+            'publicatiebestemming' => ['nullable'],
+            'publicatiebestemming.*' => ['string'],
             'sort' => ['nullable', 'string', 'in:relevance,publication_date,modified_date'],
             'titles_only' => ['nullable', 'boolean'],
             // Neuro search is now premium-only, handled separately via chat interface

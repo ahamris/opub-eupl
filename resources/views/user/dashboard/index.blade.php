@@ -11,66 +11,15 @@
     <h2 class="text-xl font-semibold text-gray-900 mb-4">Recente berichten in uw Berichtenbox</h2>
     
     <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div class="divide-y divide-gray-200">
-            <!-- Message 1 -->
-            <div class="px-4 py-3 hover:bg-gray-50 transition-colors">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-4 min-w-0">
-                        <span class="text-sm font-medium text-gray-900 shrink-0">Belastingdienst</span>
-                        <span class="text-sm text-gray-600 truncate">Uw nieuwe voorschotbeschikking toeslagen 2026</span>
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0 ml-4">
-                        <i class="far fa-calendar-alt text-gray-400 text-sm"></i>
-                        <span class="text-sm text-gray-500">25/11/2025</span>
-                        <i class="fas fa-chevron-right text-gray-400 ml-2"></i>
-                    </div>
-                </div>
+        <div class="text-center py-8">
+            <div class="w-12 h-12 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-inbox text-gray-400 text-xl"></i>
             </div>
-            
-            <!-- Message 2 -->
-            <div class="px-4 py-3 hover:bg-gray-50 transition-colors">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-4 min-w-0">
-                        <span class="text-sm font-medium text-gray-900 shrink-0">Belastingdienst</span>
-                        <span class="text-sm text-gray-600 truncate">Definitieve aanslag inkomstenbelasting 2023</span>
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0 ml-4">
-                        <i class="far fa-calendar-alt text-gray-400 text-sm"></i>
-                        <span class="text-sm text-gray-500">18/10/2025</span>
-                        <i class="fas fa-chevron-right text-gray-400 ml-2"></i>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Message 3 -->
-            <div class="px-4 py-3 hover:bg-gray-50 transition-colors">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-4 min-w-0">
-                        <span class="text-sm font-medium text-gray-900 shrink-0">Centraal Justitieel Incassobureau</span>
-                        <span class="text-sm text-gray-600 truncate">Laatste herinnering</span>
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0 ml-4">
-                        <i class="far fa-calendar-alt text-gray-400 text-sm"></i>
-                        <span class="text-sm text-gray-500">04/10/2025</span>
-                        <i class="fas fa-chevron-right text-gray-400 ml-2"></i>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Message 4 -->
-            <div class="px-4 py-3 hover:bg-gray-50 transition-colors">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-4 min-w-0">
-                        <span class="text-sm font-medium text-gray-900 shrink-0">Belastingdienst</span>
-                        <span class="text-sm text-gray-600 truncate">Definitieve aanslag inkomstenbelasting 2022</span>
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0 ml-4">
-                        <i class="far fa-calendar-alt text-gray-400 text-sm"></i>
-                        <span class="text-sm text-gray-500">08/08/2025</span>
-                        <i class="fas fa-chevron-right text-gray-400 ml-2"></i>
-                    </div>
-                </div>
-            </div>
+            <p class="text-sm text-gray-500 mb-4">U heeft geen nieuwe berichten.</p>
+            <a href="{{ route('user.berichtenbox') }}" class="inline-flex items-center gap-2 text-[var(--color-primary)] font-semibold text-sm hover:underline">
+                Ga naar Berichtenbox
+                <i class="fas fa-chevron-right text-xs"></i>
+            </a>
         </div>
     </div>
 </div>

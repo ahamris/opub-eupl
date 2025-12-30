@@ -126,6 +126,38 @@
                             <input type="hidden" name="titles_only" value="1">
                         @endif
                         
+                        <!-- Publication Destination (Source) Filter - TOP PRIORITY -->
+                        <div class="space-y-3">
+                            <h3 class="text-sm font-semibold text-[var(--color-on-surface)]">Bron</h3>
+                            <div class="space-y-2">
+                                @php
+                                    $allSources = $allFilterOptions['publicatiebestemming'] ?? ['rijksoverheid.nl'];
+                                    $selectedSources = (array)request('publicatiebestemming', []);
+                                @endphp
+                                @foreach($allSources as $source)
+                                    <div class="flex items-center gap-3">
+                                        <input 
+                                            type="checkbox" 
+                                            id="bron-{{ str_replace(['.', ' '], ['-', '-'], strtolower($source)) }}" 
+                                            name="publicatiebestemming[]" 
+                                            value="{{ $source }}"
+                                            {{ in_array($source, $selectedSources) ? 'checked' : '' }}
+                                            onchange="document.getElementById('filter-form').submit()"
+                                            class="w-4 h-4 rounded border border-[var(--color-outline)] 
+                                                   focus:outline-none
+                                                   cursor-pointer text-[var(--color-primary-dark)]
+                                                   checked:bg-[var(--color-primary-dark)] checked:border-[var(--color-primary-dark)]
+                                                   transition-all duration-200"
+                                        >
+                                        <label for="bron-{{ str_replace(['.', ' '], ['-', '-'], strtolower($source)) }}" class="text-sm text-[var(--color-on-surface)] cursor-pointer flex-1">
+                                            {{ $source }}
+                                        </label>
+                                        <x-ui.badge size="sm" variant="primary-dark">{{ $filterCounts['publicatiebestemming'][$source] ?? 0 }}</x-ui.badge>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        
                         <!-- Date Filter -->
                         <div class="space-y-3">
                             <h3 class="text-sm font-semibold text-[var(--color-on-surface)]">Datum beschikbaar</h3>
@@ -714,6 +746,11 @@
                     if (request('bestandstype')) {
                         foreach ((array)request('bestandstype') as $fileType) {
                             $activeFilters[] = ['type' => 'bestandstype', 'value' => $fileType, 'label' => $fileType];
+                        }
+                    }
+                    if (request('publicatiebestemming')) {
+                        foreach ((array)request('publicatiebestemming') as $source) {
+                            $activeFilters[] = ['type' => 'publicatiebestemming', 'value' => $source, 'label' => $source];
                         }
                     }
                     if (request('titles_only')) {
@@ -1745,7 +1782,7 @@
             }
             
             // Array filters
-            ['documentsoort', 'thema', 'organisatie', 'bestandstype'].forEach(filterType => {
+            ['documentsoort', 'thema', 'organisatie', 'bestandstype', 'publicatiebestemming'].forEach(filterType => {
                 const values = currentUrl.searchParams.getAll(filterType + '[]');
                 values.forEach(value => {
                     activeFilters.push({ type: filterType, value: value, label: value });
@@ -2472,8 +2509,8 @@
                                     $allFilters['zoeken'] = request('zoeken');
                                 }
                                 
-                                // Array filters (thema[], organisatie[], documentsoort[], bestandstype[])
-                                foreach (['thema', 'organisatie', 'documentsoort', 'bestandstype'] as $filterKey) {
+                                // Array filters (thema[], organisatie[], documentsoort[], bestandstype[], publicatiebestemming[])
+                                foreach (['thema', 'organisatie', 'documentsoort', 'bestandstype', 'publicatiebestemming'] as $filterKey) {
                                     $values = request($filterKey, []);
                                     if (!empty($values)) {
                                         $allFilters[$filterKey] = is_array($values) ? $values : [$values];
@@ -2557,7 +2594,39 @@
                                 </div>
                             </div>
 
-                            <!-- E-mailadres -->
+                            @auth
+                            <!-- Logged in user - show their email as readonly -->
+                            <input type="hidden" name="email" value="{{ auth()->user()->email }}">
+                            
+                            <div class="bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700 p-4">
+                                <div class="flex items-start gap-3">
+                                    <i class="fas fa-check-circle text-green-600 mt-0.5"></i>
+                                    <div>
+                                        <h4 class="text-sm font-semibold text-green-800 dark:text-green-300 mb-1">
+                                            U bent ingelogd
+                                        </h4>
+                                        <p class="text-sm text-green-700 dark:text-green-400">
+                                            Meldingen worden verstuurd naar: <strong>{{ auth()->user()->email }}</strong>
+                                        </p>
+                                        <p class="text-xs text-green-600 dark:text-green-500 mt-2">
+                                            U kunt uw abonnementen beheren via <a href="{{ route('user.subscriptions') }}" class="underline hover:no-underline">Mijn Abonnementen</a>.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Hidden consent for logged in users (auto-accepted) -->
+                            <input type="hidden" name="consent" value="1">
+
+                            <!-- Submit Button -->
+                            <div class="pt-4">
+                                <button type="submit" 
+                                        class="w-full rounded-md bg-[var(--color-primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[var(--color-primary-dark)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] transition-colors duration-200">
+                                    Abonneren
+                                </button>
+                            </div>
+                            @else
+                            <!-- Guest user - full form with email input -->
                             <div>
                                 <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-1">
                                     E-mailadres <span class="text-red-500">(verplicht)</span>
@@ -2638,6 +2707,15 @@
                                     Aanvragen
                                 </button>
                             </div>
+
+                            <!-- Login suggestion for guests -->
+                            <div class="text-center pt-2">
+                                <p class="text-xs text-gray-500">
+                                    Heeft u al een account? 
+                                    <a href="{{ route('user.login') }}" class="text-[var(--color-primary)] hover:underline">Inloggen</a>
+                                </p>
+                            </div>
+                            @endauth
                         </form>
                         </div>
                     </div>
