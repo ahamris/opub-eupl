@@ -51,28 +51,28 @@
                                 $target = $item['target'] ?? null;
                             @endphp
                             
-                            @if($itemType === 'link' && $href)
+                            @if($itemType === 'link' && !empty($href))
                                 <a 
                                     href="{{ $href }}" 
-                                    @if($target) target="{{ $target }}" rel="noopener noreferrer" @endif
+                                    @if(!empty($target)) target="{{ $target }}" rel="noopener noreferrer" @endif
                                     role="menuitem"
                                     class="{{ $itemClasses }}"
                                 >
-                                    @if($icon)
+                                    @if(!empty($icon))
                                         <span class="flex items-center justify-center w-5 h-5 flex-shrink-0">
                                             <i class="fas fa-{{ $icon }} opacity-40 group-hover:opacity-80 transition-opacity"></i>
                                         </span>
                                     @endif
                                     <span>{{ $label }}</span>
                                 </a>
-                            @elseif($itemType === 'button' && $action)
+                            @elseif($itemType === 'button' && !empty($action))
                                 <button 
                                     type="button"
                                     x-on:click="{{ $action }}; open = false"
                                     role="menuitem"
                                     class="{{ $itemClasses }} w-full text-left"
                                 >
-                                    @if($icon)
+                                    @if(!empty($icon))
                                         <span class="flex items-center justify-center w-5 h-5 flex-shrink-0">
                                             <i class="fas fa-{{ $icon }} opacity-40 group-hover:opacity-80 transition-opacity"></i>
                                         </span>
@@ -90,14 +90,19 @@
     </div>
 @else
     @php
-        $selectedArray = is_array($selected) ? $selected : [$selected];
+        // Normalize selected - handle null
+        $normalizedSelected = $selected ?? [];
+        $selectedArray = is_array($normalizedSelected) ? $normalizedSelected : [$normalizedSelected];
         $selectedArray = array_filter($selectedArray, fn ($value) => $value !== '' && $value !== null);
         $selectedJson = json_encode(array_values($selectedArray));
+        
+        // Ensure options is always an array
+        $normalizedOptions = is_array($options) ? $options : [];
     @endphp
     <div x-data="{
     open: false,
     selectedValues: {{ $selectedJson }},
-    options: @js($options),
+    options: @js($normalizedOptions),
     multiple: {{ $multiple ? 'true' : 'false' }},
     getSelectedLabels() {
         if (this.multiple) {

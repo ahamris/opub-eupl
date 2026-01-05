@@ -21,7 +21,7 @@ class Dropdown extends Component
         public string $name = '',
         public ?string $id = null,
         public array $options = [], // ['value' => 'label'] format
-        public array|string $selected = [], // Array of selected values or single value
+        public array|string|null $selected = [], // Array of selected values or single value
         public string $placeholder = 'Placeholder',
         public string $hint = '',
         public bool $error = false,
@@ -33,6 +33,20 @@ class Dropdown extends Component
         public string $size = 'default', // sm, default, lg
         public array $menuItems = [], // Menu items for dropdown: [['label' => '...', 'icon' => '...', 'href' => '...', 'action' => '...', 'color' => '...']]
     ) {
+        // Ensure options is always an array
+        if (!is_array($this->options)) {
+            $this->options = [];
+        }
+        
+        // Ensure menuItems is always an array
+        if (!is_array($this->menuItems)) {
+            $this->menuItems = [];
+        }
+        
+        // Normalize selected - handle null
+        if ($this->selected === null) {
+            $this->selected = [];
+        }
         $this->dropdownId = $id ?? ($name ?: 'dropdown-'.uniqid());
 
         // Normalize selected to array

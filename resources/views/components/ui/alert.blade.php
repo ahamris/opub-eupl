@@ -34,7 +34,7 @@
 @endonce
 
 <div class="{{ $classes }}" {{ $attributes->except(['class']) }}>
-    @if($icon)
+    @if(!empty($icon))
         <div class="alert-icon">
             <i class="fa-solid fa-{{ $icon }} {{ $iconClasses }}"></i>
         </div>

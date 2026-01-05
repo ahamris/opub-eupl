@@ -17,13 +17,24 @@ class Checkbox extends Component
     public function __construct(
         public string $label = '',
         public string $name = '',
-        public string $value = '',
+        public string|int|null $value = '1',
         public bool $checked = false,
         public bool $disabled = false,
         public ?string $color = 'primary', // primary, secondary, success, warning, error, sky
         public ?string $id = null,
         public bool $required = false
     ) {
+        // Normalize value to string
+        if ($this->value === null) {
+            $this->value = '1';
+        } else {
+            $this->value = (string) $this->value;
+        }
+        
+        // Ensure color has a default
+        if ($this->color === null) {
+            $this->color = 'primary';
+        }
         $this->checkboxId = $id ?? ($name ?: 'checkbox-'.uniqid());
 
         $inputClasses = ['w-3.5 h-3.5 rounded border-gray-400 dark:border-gray-600 cursor-pointer transition-all duration-200 focus:outline-none focus:ring-0'];

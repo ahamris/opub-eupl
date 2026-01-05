@@ -27,7 +27,7 @@
     @endif
 
     <div class="relative {{ $label ? 'mt-2' : '' }}">
-        @if($icon && $iconPosition === 'left')
+        @if(!empty($icon) && $iconPosition === 'left')
             <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none">
                 <i class="fas fa-{{ $icon }}"></i>
             </div>
@@ -43,7 +43,7 @@
                     class="{{ $classes }}"
                     {{ $attributes->except(['class', 'value']) }}
             >
-        @elseif($icon && $iconPosition === 'right')
+        @elseif(!empty($icon) && $iconPosition === 'right')
             <input
                     type="{{ $type }}"
                     name="{{ $name }}"

@@ -1,5 +1,5 @@
 <div class="{{ $classes }}" {{ $attributes }}>
-    @if($src)
+    @if(!empty($src))
         <img 
             src="{{ $src }}" 
             alt="{{ $alt ?? $name ?? 'Avatar' }}"
@@ -9,18 +9,18 @@
     @endif
     
     <div 
-        class="w-full h-full {{ $shape === 'square' ? 'rounded-md' : 'rounded-full' }} flex items-center justify-center {{ $src ? 'hidden' : '' }} bg-[var(--color-accent)]"
+        class="w-full h-full {{ $shape === 'square' ? 'rounded-md' : 'rounded-full' }} flex items-center justify-center {{ !empty($src) ? 'hidden' : '' }} bg-[var(--color-accent)]"
     >
-        @if($icon)
+        @if(!empty($icon))
             <i class="fa-solid fa-{{ $icon }}"></i>
-        @elseif($initials)
+        @elseif(!empty($initials))
             <span>{{ $initials }}</span>
         @else
             <i class="fa-solid fa-user"></i>
         @endif
     </div>
     
-    @if($status)
+    @if(!empty($status))
         <span class="absolute bottom-0 right-0 {{ $shape === 'square' ? 'rounded-sm' : 'rounded-full' }} border-2 border-white dark:border-zinc-800 
             {{ match($size) {
                 'sm' => 'w-2.5 h-2.5',

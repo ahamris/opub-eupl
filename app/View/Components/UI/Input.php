@@ -78,9 +78,9 @@ class Input extends Component
         }
 
         // Icon paddings
-        if ($icon && $iconPosition === 'left') {
+        if (!empty($icon) && $iconPosition === 'left') {
             $classes[] = 'pl-11';
-        } elseif ($icon && $iconPosition === 'right') {
+        } elseif (!empty($icon) && $iconPosition === 'right') {
             $classes[] = 'pr-11';
         }
 

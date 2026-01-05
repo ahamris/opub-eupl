@@ -16,7 +16,7 @@ class Select extends Component
         public string $label = '',
         public string $name = '',
         public ?string $id = null,
-        public string $value = '',
+        public string|int|null $value = null,
         public string $placeholder = '',
         public string $hint = '',
         public bool $error = false,
@@ -24,8 +24,29 @@ class Select extends Component
         public bool $required = false,
         public bool $disabled = false,
         public ?string $size = null, // sm, lg
-        public array $options = [] // ['value' => 'label'] format
+        public array $options = [], // ['value' => 'label'] format
+        public bool $autoError = true, // Automatically detect errors from Laravel validation
     ) {
+        // Normalize value to string
+        if ($this->value === null) {
+            $this->value = '';
+        } else {
+            $this->value = (string) $this->value;
+        }
+        
+        // Ensure options is always an array
+        if (!is_array($this->options)) {
+            $this->options = [];
+        }
+        
+        // Auto-detect error if autoError is enabled and name is provided
+        if ($this->autoError && $this->name && !$this->error && empty($this->errorMessage)) {
+            $errors = session()->get('errors');
+            if ($errors && $errors->has($this->name)) {
+                $this->error = true;
+                $this->errorMessage = $errors->first($this->name);
+            }
+        }
         $classes = [];
 
         // Base select classes

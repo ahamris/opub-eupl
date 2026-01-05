@@ -34,7 +34,7 @@
     @endif
 
     <div class="relative {{ $label ? 'mt-2' : '' }}">
-        @if($icon && $iconPosition === 'left')
+        @if(!empty($icon) && $iconPosition === 'left')
             <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none z-10">
                 <i class="fas fa-{{ $icon }}"></i>
             </div>
@@ -54,7 +54,7 @@
                     data-options="{{ json_encode($flatpickrOptions) }}"
                     {{ $attributes->except(['class']) }}
             >
-        @elseif($icon && $iconPosition === 'right')
+        @elseif(!empty($icon) && $iconPosition === 'right')
             <input
                     type="text"
                     name="{{ $name }}"

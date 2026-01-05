@@ -18,7 +18,7 @@ class ColorPicker extends Component
         public string $label = '',
         public string $name = '',
         public ?string $id = null,
-        public string $value = '#000000',
+        public ?string $value = null,
         public string $placeholder = '#000000',
         public string $hint = '',
         public bool $error = false,
@@ -32,6 +32,15 @@ class ColorPicker extends Component
         public ?array $presets = null, // Custom preset colors
         public string $format = 'hex', // hex, rgb, hsl
     ) {
+        // Normalize value
+        if ($this->value === null) {
+            $this->value = '#000000';
+        }
+        
+        // Ensure presets is always an array
+        if ($this->presets !== null && !is_array($this->presets)) {
+            $this->presets = [];
+        }
         $classes = [];
 
         // Base input classes

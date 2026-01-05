@@ -26,6 +26,15 @@ class TagInput extends Component
         public bool $disabled = false,
         public ?string $size = null // sm, lg
     ) {
+        // Ensure tags is always an array
+        if (!is_array($this->tags)) {
+            $this->tags = [];
+        }
+        
+        // Ensure options is always an array (or null)
+        if ($this->options !== null && !is_array($this->options)) {
+            $this->options = [];
+        }
         $this->inputId = $id ?? ($name ?: 'tag-input-'.uniqid());
 
         $classes = [];

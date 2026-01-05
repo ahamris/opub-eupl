@@ -83,9 +83,9 @@ class DatePicker extends Component
             $classes[] = 'bg-zinc-50 dark:bg-zinc-800 border-zinc-300 dark:border-zinc-700';
         }
 
-        if ($icon && $iconPosition === 'left') {
+        if (!empty($icon) && $iconPosition === 'left') {
             $classes[] = 'pl-11';
-        } elseif ($icon && $iconPosition === 'right') {
+        } elseif (!empty($icon) && $iconPosition === 'right') {
             $classes[] = 'pr-11';
         }
 

@@ -78,7 +78,7 @@
         @endif
 
         <div class="flex items-start gap-4 mb-4">
-            @if($icon)
+            @if(!empty($icon))
                 @php
                     $iconSize = match($size) {
                         'sm' => 'w-10 h-10',
@@ -118,7 +118,7 @@
                 @endif
             </div>
         </div>
-        @if($actionText && $actionUrl && $actionUrl !== 'javascript:void(0)')
+        @if(!empty($actionText) && !empty($actionUrl) && $actionUrl !== 'javascript:void(0)')
             <div class="border-t border-dashed border-zinc-200 dark:border-zinc-700 my-4"></div>
             @php
                 $actionTextSize = match($size) {

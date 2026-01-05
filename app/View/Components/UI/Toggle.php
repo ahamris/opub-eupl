@@ -17,13 +17,19 @@ class Toggle extends Component
     public function __construct(
         public string $label = '',
         public string $name = '',
-        public string $value = '1',
+        public string|int|null $value = '1',
         public bool $checked = false,
         public bool $disabled = false,
         public ?string $size = null, // sm, lg
         public ?string $id = null,
         public bool $required = false
     ) {
+        // Normalize value to string
+        if ($this->value === null) {
+            $this->value = '1';
+        } else {
+            $this->value = (string) $this->value;
+        }
         $this->toggleId = $id ?? ($name ?: 'toggle-'.uniqid('', true));
 
         // Base input classes - Tailwind only

@@ -15,12 +15,12 @@ class Card extends Component
     public string $paddingClasses;
 
     public function __construct(
-        public string $icon = 'check',
+        public ?string $icon = null,
         public string $iconColor = 'primary', // primary, success, warning, error, sky, secondary
-        public string $title = '',
-        public string $value = '',
-        public string $actionText = 'View details',
-        public string $actionUrl = 'javascript:void(0)',
+        public ?string $title = null,
+        public ?string $value = null,
+        public ?string $actionText = null,
+        public ?string $actionUrl = null,
         public string $variant = 'default', // default, outlined, filled
         public ?string $size = null, // sm, md, lg
         public ?string $image = null,
@@ -29,6 +29,11 @@ class Card extends Component
         public ?string $clickUrl = null,
         public bool $loading = false,
     ) {
+        // Normalize nullable strings to empty strings for display
+        $this->title = $this->title ?? '';
+        $this->value = $this->value ?? '';
+        $this->actionText = $this->actionText ?? 'View details';
+        $this->actionUrl = $this->actionUrl ?? 'javascript:void(0)';
         // Size-based padding
         $this->paddingClasses = match ($size) {
             'sm' => 'p-3',

@@ -17,6 +17,10 @@ class Badge extends Component
         public ?string $variant = 'secondary', // primary, secondary, success, warning, error, sky
         public ?string $icon = null
     ) {
+        // Ensure variant has a default
+        if ($this->variant === null) {
+            $this->variant = 'secondary';
+        }
         $classes = [];
 
         $baseClasses = 'inline-flex items-center font-medium rounded-full self-start';

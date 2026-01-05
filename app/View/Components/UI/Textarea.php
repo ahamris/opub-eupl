@@ -16,7 +16,7 @@ class Textarea extends Component
         public string $label = '',
         public string $name = '',
         public ?string $id = null,
-        public ?string $value = '',
+        public ?string $value = null,
         public string $placeholder = '',
         public string $hint = '',
         public bool $error = false,
@@ -26,8 +26,22 @@ class Textarea extends Component
         public bool $readonly = false,
         public ?string $size = null, // sm, lg
         public ?int $rows = null,
-        public ?int $cols = null
+        public ?int $cols = null,
+        public bool $autoError = true, // Automatically detect errors from Laravel validation
     ) {
+        // Normalize value to string
+        if ($this->value === null) {
+            $this->value = '';
+        }
+        
+        // Auto-detect error if autoError is enabled and name is provided
+        if ($this->autoError && $this->name && !$this->error && empty($this->errorMessage)) {
+            $errors = session()->get('errors');
+            if ($errors && $errors->has($this->name)) {
+                $this->error = true;
+                $this->errorMessage = $errors->first($this->name);
+            }
+        }
         $classes = [];
 
         // Base textarea classes
