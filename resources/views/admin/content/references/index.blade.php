@@ -6,7 +6,15 @@
                 <h1 class="text-3xl font-bold text-zinc-900 dark:text-white mb-2">References</h1>
                 <p class="text-zinc-600 dark:text-zinc-400">Manage external links on the Verwijzingen page</p>
             </div>
-            <x-button variant="primary" icon="plus" icon-position="left" href="{{ route('admin.content.reference.create') }}">Add Reference</x-button>
+            <x-button 
+                variant="primary" 
+                icon="plus" 
+                icon-position="left" 
+                type="button"
+                x-on:click="$dispatch('open-drawer', { id: 'drawer-create-reference' })"
+            >
+                Add Reference
+            </x-button>
         </div>
 
         @if(session('success'))
@@ -14,79 +22,274 @@
         @endif
 
         <!-- References Table -->
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-md overflow-hidden">
-            <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
-                <thead class="bg-zinc-50 dark:bg-zinc-800">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider w-12">Icon</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Title</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider hidden md:table-cell">Link</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider w-20">Order</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider w-24">Status</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider w-24">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white dark:bg-zinc-900 divide-y divide-zinc-200 dark:divide-zinc-700">
-                    @forelse($references as $reference)
-                    <tr class="{{ !$reference->is_active ? 'opacity-50' : '' }}">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="inline-flex items-center justify-center w-8 h-8 rounded-md bg-[var(--color-primary)]/10">
-                                <i class="{{ $reference->icon }} text-sm text-[var(--color-primary)]"></i>
+        <livewire:admin.table
+            :resource="\App\Models\Reference::class"
+            :columns="[
+                ['key' => 'icon', 'label' => 'Icon', 'type' => 'custom', 'view' => 'livewire.admin.table-columns.reference-icon', 'sortable' => false],
+                ['key' => 'title', 'label' => 'Title', 'type' => 'custom', 'view' => 'livewire.admin.table-columns.reference-title', 'sortable' => true],
+                ['key' => 'link_url', 'label' => 'Link', 'type' => 'custom', 'view' => 'livewire.admin.table-columns.reference-link', 'sortable' => false],
+                ['key' => 'sort_order', 'label' => 'Order', 'sortable' => true],
+                ['key' => 'is_active', 'type' => 'toggle', 'label' => 'Status'],
+                ['key' => 'created_at', 'format' => 'date', 'label' => 'Created'],
+            ]"
+            route-prefix="admin.content.reference"
+            search-placeholder="Search references..."
+            :paginate="15"
+            sort-field="sort_order"
+            sort-direction="asc"
+        />
+
+        <!-- Drawers for References -->
+        @php
+            // Get all references (for drawer content)
+            // In production, you might want to optimize this to only load visible items
+            $references = \App\Models\Reference::all();
+        @endphp
+        @foreach($references as $reference)
+            <x-ui.drawer 
+                id="drawer-view-{{ $reference->id }}"
+                title="View Reference"
+                width="max-w-2xl"
+            >
+                <div class="space-y-6">
+                    <div class="grid grid-cols-1 gap-6">
+                        <div>
+                            <label class="text-sm font-medium text-zinc-600 dark:text-zinc-400">Icon</label>
+                            <p class="mt-1 text-sm text-zinc-900 dark:text-white">
+                                <i class="{{ $reference->icon }}"></i>
+                            </p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-zinc-600 dark:text-zinc-400">Title</label>
+                            <p class="mt-1 text-sm text-zinc-900 dark:text-white">{{ $reference->title }}</p>
+                        </div>
+                        @if($reference->description)
+                            <div>
+                                <label class="text-sm font-medium text-zinc-600 dark:text-zinc-400">Description</label>
+                                <p class="mt-1 text-sm text-zinc-900 dark:text-white">{{ $reference->description }}</p>
                             </div>
-                        </td>
-                        <td class="px-6 py-4">
-                            <div class="font-medium text-zinc-900 dark:text-white">{{ $reference->title }}</div>
-                            <div class="text-sm text-zinc-500 dark:text-zinc-400 truncate max-w-xs">{{ Str::limit($reference->description, 50) }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap hidden md:table-cell">
-                            @if($reference->link_url)
-                            <a href="{{ $reference->link_url }}" target="_blank" class="text-sm text-indigo-600 hover:text-indigo-900 inline-flex items-center gap-1">
-                                {{ $reference->link_text ?: Str::limit($reference->link_url, 30) }}
-                                <i class="fas fa-external-link-alt text-xs"></i>
-                            </a>
-                            @else
-                            <span class="text-zinc-400">-</span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center">
-                            <span class="text-sm text-zinc-500">{{ $reference->sort_order }}</span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <form action="{{ route('admin.content.reference.toggle-active', $reference) }}" method="POST" class="inline">
-                                @csrf
-                                <button type="submit" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $reference->is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
-                                    {{ $reference->is_active ? 'Active' : 'Inactive' }}
-                                </button>
-                            </form>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right">
-                            <div class="flex items-center justify-end gap-3">
-                                <a href="{{ route('admin.content.reference.edit', $reference) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form action="{{ route('admin.content.reference.destroy', $reference) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-900 dark:text-red-400">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
+                        @endif
+                        @if($reference->link_url)
+                            <div>
+                                <label class="text-sm font-medium text-zinc-600 dark:text-zinc-400">Link URL</label>
+                                <p class="mt-1 text-sm text-zinc-900 dark:text-white">
+                                    <a href="{{ $reference->link_url }}" target="_blank" class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400">
+                                        {{ $reference->link_url }}
+                                    </a>
+                                </p>
                             </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="6" class="px-6 py-12 text-center text-zinc-500 dark:text-zinc-400">
-                            <div class="flex flex-col items-center">
-                                <i class="fas fa-link text-4xl mb-4 text-zinc-300 dark:text-zinc-600"></i>
-                                <p>No references yet</p>
-                                <a href="{{ route('admin.content.reference.create') }}" class="mt-2 text-indigo-600 hover:underline">Create your first reference</a>
+                        @endif
+                        @if($reference->link_text)
+                            <div>
+                                <label class="text-sm font-medium text-zinc-600 dark:text-zinc-400">Link Text</label>
+                                <p class="mt-1 text-sm text-zinc-900 dark:text-white">{{ $reference->link_text }}</p>
                             </div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                        @endif
+                        <div>
+                            <label class="text-sm font-medium text-zinc-600 dark:text-zinc-400">Sort Order</label>
+                            <p class="mt-1 text-sm text-zinc-900 dark:text-white">{{ $reference->sort_order }}</p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-zinc-600 dark:text-zinc-400">Status</label>
+                            <p class="mt-1">
+                                @if($reference->is_active)
+                                    <x-badge variant="success">Active</x-badge>
+                                @else
+                                    <x-badge variant="warning">Inactive</x-badge>
+                                @endif
+                            </p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-zinc-600 dark:text-zinc-400">Created At</label>
+                            <p class="mt-1 text-sm text-zinc-900 dark:text-white">{{ $reference->created_at->format('Y-m-d H:i') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </x-ui.drawer>
+
+            <x-ui.drawer 
+                id="drawer-edit-{{ $reference->id }}"
+                title="Edit Reference"
+                width="max-w-2xl"
+            >
+                <form 
+                    action="{{ route('admin.content.reference.update', $reference) }}" 
+                    method="POST" 
+                    class="space-y-6"
+                    x-on:submit="setTimeout(() => { $dispatch('close-drawer', { id: 'drawer-edit-{{ $reference->id }}' }); }, 100)"
+                >
+                    @csrf
+                    @method('PUT')
+
+                    <div class="space-y-4">
+                        <x-input 
+                            label="Title" 
+                            name="title" 
+                            type="text" 
+                            placeholder="Reference title"
+                            value="{{ old('title', $reference->title) }}"
+                            required
+                        />
+
+                        <x-ui.textarea 
+                            label="Description" 
+                            name="description" 
+                            placeholder="Brief description"
+                            rows="3"
+                            value="{{ old('description', $reference->description) }}"
+                        />
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <x-input 
+                                label="Link URL" 
+                                name="link_url" 
+                                type="text" 
+                                placeholder="https://example.com"
+                                value="{{ old('link_url', $reference->link_url) }}"
+                            />
+                            <x-input 
+                                label="Link Text" 
+                                name="link_text" 
+                                type="text" 
+                                placeholder="e.g. example.com"
+                                value="{{ old('link_text', $reference->link_text) }}"
+                            />
+                        </div>
+
+                        <x-ui.checkbox 
+                            label="Active" 
+                            name="is_active" 
+                            value="1"
+                            :checked="old('is_active', $reference->is_active)"
+                            hint="Show this reference on the page"
+                        />
+
+                        <x-input 
+                            label="Icon Class" 
+                            name="icon" 
+                            type="text" 
+                            placeholder="fas fa-link"
+                            value="{{ old('icon', $reference->icon) }}"
+                            required
+                        />
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">Use FontAwesome classes (e.g. fas fa-gavel)</p>
+
+                        <x-input 
+                            label="Sort Order"
+                            name="sort_order" 
+                            type="number" 
+                            placeholder="0"
+                            value="{{ old('sort_order', $reference->sort_order) }}"
+                        />
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="flex items-center justify-end gap-3 pt-4">
+                        <x-button 
+                            variant="secondary" 
+                            type="button" 
+                            x-on:click="$dispatch('close-drawer', { id: 'drawer-edit-{{ $reference->id }}' })"
+                        >
+                            Cancel
+                        </x-button>
+                        <x-button variant="primary" type="submit" icon="save" icon-position="left">
+                            Update Reference
+                        </x-button>
+                    </div>
+                </form>
+            </x-ui.drawer>
+        @endforeach
+
+        <!-- Create Drawer -->
+        <x-ui.drawer 
+            id="drawer-create-reference"
+            title="Create Reference"
+            width="max-w-2xl"
+        >
+            <form 
+                action="{{ route('admin.content.reference.store') }}" 
+                method="POST" 
+                class="space-y-6"
+                x-on:submit="setTimeout(() => { $dispatch('close-drawer', { id: 'drawer-create-reference' }); }, 100)"
+            >
+                @csrf
+
+                <div class="space-y-4">
+                    <x-input 
+                        label="Title" 
+                        name="title" 
+                        type="text" 
+                        placeholder="Reference title"
+                        value="{{ old('title') }}"
+                        required
+                    />
+
+                    <x-ui.textarea 
+                        label="Description" 
+                        name="description" 
+                        placeholder="Brief description"
+                        rows="3"
+                        value="{{ old('description') }}"
+                    />
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <x-input 
+                            label="Link URL" 
+                            name="link_url" 
+                            type="text" 
+                            placeholder="https://example.com"
+                            value="{{ old('link_url') }}"
+                        />
+                        <x-input 
+                            label="Link Text" 
+                            name="link_text" 
+                            type="text" 
+                            placeholder="e.g. example.com"
+                            value="{{ old('link_text') }}"
+                        />
+                    </div>
+
+                    <x-ui.checkbox 
+                        label="Active" 
+                        name="is_active" 
+                        value="1"
+                        :checked="old('is_active', true)"
+                        hint="Show this reference on the page"
+                    />
+
+                    <x-input 
+                        label="Icon Class" 
+                        name="icon" 
+                        type="text" 
+                        placeholder="fas fa-link"
+                        value="{{ old('icon', 'fas fa-link') }}"
+                        required
+                    />
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400">Use FontAwesome classes (e.g. fas fa-gavel)</p>
+
+                    <x-input 
+                        label="Sort Order"
+                        name="sort_order" 
+                        type="number" 
+                        placeholder="0"
+                        value="{{ old('sort_order', 0) }}"
+                    />
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+                    <x-button 
+                        variant="secondary" 
+                        type="button" 
+                        x-on:click="$dispatch('close-drawer', { id: 'drawer-create-reference' })"
+                    >
+                        Cancel
+                    </x-button>
+                    <x-button variant="primary" type="submit" icon="save" icon-position="left">
+                        Create Reference
+                    </x-button>
+                </div>
+            </form>
+        </x-ui.drawer>
     </div>
 </x-layouts.admin>

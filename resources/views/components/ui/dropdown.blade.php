@@ -1,27 +1,91 @@
 {{-- Dropdown component with slot support (trigger, content) or standard select --}}
 @php
     $hasCustomSlots = isset($trigger) && isset($content);
+    $hasMenuItems = !empty($menuItems);
     $selected = is_array($selected) ? $selected : [$selected];
 @endphp
 
-@if($hasCustomSlots)
+@if($hasCustomSlots || $hasMenuItems)
     <!-- Slot mode: trigger/content ile genel amaçlı açılır menü -->
-    <div class="relative inline-block" x-data="{ open: false }" x-cloak @click.outside="open = false">
+    <div 
+        class="relative inline-block" 
+        x-data="{ open: false }" 
+        x-cloak 
+        x-on:keydown.esc.prevent.stop="open = false"
+        @click.outside="open = false"
+    >
         <div @click="open = !open" class="inline-block">
-            {{ $trigger }}
+            {{ $trigger ?? '' }}
         </div>
         <div
                 x-show="open"
                 x-transition:enter="transition ease-out duration-100"
-                x-transition:enter-start="opacity-0 scale-95"
-                x-transition:enter-end="opacity-100 scale-100"
+                x-transition:enter-start="opacity-0 -translate-y-3"
+                x-transition:enter-end="opacity-100 translate-y-0"
                 x-transition:leave="transition ease-in duration-75"
-                x-transition:leave-start="opacity-100 scale-100"
-                x-transition:leave-end="opacity-0 scale-95"
-                class="absolute right-0 top-full z-50 mt-2 w-64 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg overflow-hidden"
+                x-transition:leave-start="opacity-100 translate-y-0"
+                x-transition:leave-end="opacity-0 translate-y-3"
+                role="menu"
+                class="absolute end-0 z-50 mt-2 w-64 origin-top-right rounded-lg shadow-xl dark:shadow-zinc-950 overflow-hidden"
                 style="display: none;"
         >
-            {{ $content }}
+            <div class="bg-white dark:bg-zinc-800 ring-1 ring-black/5 dark:ring-zinc-700/75">
+                <div class="px-2.5 py-2">
+                    @if($hasMenuItems)
+                        @foreach($menuItems as $item)
+                            @php
+                                $itemType = $item['type'] ?? ($item['href'] ? 'link' : ($item['action'] ? 'button' : 'link'));
+                                $itemColor = $item['color'] ?? ($itemType === 'button' && isset($item['danger']) && $item['danger'] ? 'red' : 'zinc');
+                                $itemClasses = "group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors ";
+                                
+                                if ($itemColor === 'red') {
+                                    $itemClasses .= "text-red-600 hover:bg-zinc-100/75 hover:text-red-700 dark:text-red-400 dark:hover:bg-zinc-700/50 dark:hover:text-red-300";
+                                } else {
+                                    $itemClasses .= "text-zinc-600 hover:bg-zinc-100/75 hover:text-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-700/50 dark:hover:text-zinc-50";
+                                }
+                                
+                                $icon = $item['icon'] ?? null;
+                                $label = $item['label'] ?? '';
+                                $href = $item['href'] ?? null;
+                                $action = $item['action'] ?? null;
+                                $target = $item['target'] ?? null;
+                            @endphp
+                            
+                            @if($itemType === 'link' && $href)
+                                <a 
+                                    href="{{ $href }}" 
+                                    @if($target) target="{{ $target }}" rel="noopener noreferrer" @endif
+                                    role="menuitem"
+                                    class="{{ $itemClasses }}"
+                                >
+                                    @if($icon)
+                                        <span class="flex items-center justify-center w-5 h-5 flex-shrink-0">
+                                            <i class="fas fa-{{ $icon }} opacity-40 group-hover:opacity-80 transition-opacity"></i>
+                                        </span>
+                                    @endif
+                                    <span>{{ $label }}</span>
+                                </a>
+                            @elseif($itemType === 'button' && $action)
+                                <button 
+                                    type="button"
+                                    x-on:click="{{ $action }}; open = false"
+                                    role="menuitem"
+                                    class="{{ $itemClasses }} w-full text-left"
+                                >
+                                    @if($icon)
+                                        <span class="flex items-center justify-center w-5 h-5 flex-shrink-0">
+                                            <i class="fas fa-{{ $icon }} opacity-40 group-hover:opacity-80 transition-opacity"></i>
+                                        </span>
+                                    @endif
+                                    <span>{{ $label }}</span>
+                                </button>
+                            @endif
+                        @endforeach
+                    @else
+                        {{ $content ?? '' }}
+                    @endif
+                </div>
+            </div>
         </div>
     </div>
 @else

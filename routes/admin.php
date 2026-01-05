@@ -61,7 +61,7 @@ Route::middleware(['auth', \App\Http\Middleware\CheckIfAdmin::class])->prefix('a
     // Content Routes
     Route::prefix('content')->name('content.')->group(function () {
         // Blog Category Routes
-        Route::resource('blog-category', BlogCategoryController::class)->parameters([
+        Route::resource('blog-category', BlogCategoryController::class)->except(['show', 'create', 'edit'])->parameters([
             'blog-category' => 'blogCategory',
         ]);
 
@@ -77,7 +77,7 @@ Route::middleware(['auth', \App\Http\Middleware\CheckIfAdmin::class])->prefix('a
         Route::post('static-page/{staticPage}/toggle-active', [StaticPageController::class, 'toggleActive'])->name('static-page.toggle-active');
 
         // Reference Routes
-        Route::resource('reference', \App\Http\Controllers\Admin\Content\ReferenceController::class);
+        Route::resource('reference', \App\Http\Controllers\Admin\Content\ReferenceController::class)->except(['show', 'create', 'edit']);
         Route::post('reference/{reference}/toggle-active', [\App\Http\Controllers\Admin\Content\ReferenceController::class, 'toggleActive'])->name('reference.toggle-active');
 
         // About Page Settings (singleton)

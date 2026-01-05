@@ -31,6 +31,7 @@ class Dropdown extends Component
         public bool $multiple = false, // Multi-select (with checkboxes)
         public bool $radio = false, // Single-select with radio buttons
         public string $size = 'default', // sm, default, lg
+        public array $menuItems = [], // Menu items for dropdown: [['label' => '...', 'icon' => '...', 'href' => '...', 'action' => '...', 'color' => '...']]
     ) {
         $this->dropdownId = $id ?? ($name ?: 'dropdown-'.uniqid());
 

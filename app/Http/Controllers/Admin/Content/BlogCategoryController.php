@@ -14,19 +14,7 @@ class BlogCategoryController extends AdminBaseController
      */
     public function index(): View
     {
-        $blogCategories = BlogCategory::query()
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return view('admin.content.blog-category.index', compact('blogCategories'));
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): View
-    {
-        return view('admin.content.blog-category.create');
+        return view('admin.content.blog-category.index');
     }
 
     /**
@@ -40,22 +28,6 @@ class BlogCategoryController extends AdminBaseController
 
         return redirect()->route('admin.content.blog-category.index')
             ->with('success', 'Blog category created successfully!');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(BlogCategory $blogCategory): View
-    {
-        return view('admin.content.blog-category.show', compact('blogCategory'));
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(BlogCategory $blogCategory): View
-    {
-        return view('admin.content.blog-category.edit', compact('blogCategory'));
     }
 
     /**

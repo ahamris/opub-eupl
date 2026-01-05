@@ -27,6 +27,7 @@ use App\View\Components\UI\Textarea;
 use App\View\Components\UI\Toast;
 use App\View\Components\UI\Toggle;
 use App\View\Components\UI\Tooltip;
+use App\View\Components\UI\Drawer;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
@@ -155,6 +156,9 @@ class AppServiceProvider extends ServiceProvider
         // Navigation Components
         Blade::component(Pagination::class, 'ui.pagination');
         Blade::component(Breadcrumbs::class, 'navigation.breadcrumbs');
+
+        // Overlay Components
+        Blade::component(Drawer::class, 'ui.drawer');
     }
 
     /**

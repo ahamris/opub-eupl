@@ -14,16 +14,7 @@ class ReferenceController extends AdminBaseController
      */
     public function index(): View
     {
-        $references = Reference::ordered()->get();
-        return view('admin.content.references.index', compact('references'));
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): View
-    {
-        return view('admin.content.references.create');
+        return view('admin.content.references.index');
     }
 
     /**
@@ -49,14 +40,6 @@ class ReferenceController extends AdminBaseController
         return redirect()
             ->route('admin.content.reference.index')
             ->with('success', 'Reference created successfully.');
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Reference $reference): View
-    {
-        return view('admin.content.references.edit', compact('reference'));
     }
 
     /**

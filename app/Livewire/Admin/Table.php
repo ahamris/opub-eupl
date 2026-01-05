@@ -78,6 +78,8 @@ class Table extends Component
         bool $showCheckbox = true,
         bool $showBulkDelete = true,
         ?string $customActionsView = null,
+        ?string $sortField = null,
+        ?string $sortDirection = null,
     ): void {
         // Store original resource for re-resolution after Livewire serialization
         if ($resource instanceof Model) {
@@ -133,9 +135,15 @@ class Table extends Component
         $this->showBulkDelete = $showBulkDelete;
         $this->customActionsView = $customActionsView;
 
-        // Set default sort field if not provided
-        if (! in_array($this->sortField, $this->sortableFields)) {
+        // Set default sort field and direction if provided
+        if ($sortField !== null && in_array($sortField, $this->sortableFields)) {
+            $this->sortField = $sortField;
+        } elseif (! in_array($this->sortField, $this->sortableFields)) {
             $this->sortField = $this->sortableFields[0] ?? 'id';
+        }
+        
+        if ($sortDirection !== null && in_array($sortDirection, ['asc', 'desc'])) {
+            $this->sortDirection = $sortDirection;
         }
     }
 

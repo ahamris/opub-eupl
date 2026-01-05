@@ -255,7 +255,14 @@
                                                         <x-button variant="sky" size="sm" icon="eye" title="View"></x-button>
                                                     </a>
                                                 @else
-                                                    <x-button variant="sky" size="sm" icon="eye" title="View" disabled></x-button>
+                                                    <x-button 
+                                                        variant="sky" 
+                                                        size="sm" 
+                                                        icon="eye" 
+                                                        title="View"
+                                                        type="button"
+                                                        x-on:click="$dispatch('open-drawer', { id: 'drawer-view-{{ $item->id }}' })"
+                                                    ></x-button>
                                                 @endif
                                             @endif
 
@@ -277,7 +284,14 @@
                                                         <x-button variant="warning" size="sm" icon="edit" title="Edit"></x-button>
                                                     </a>
                                                 @else
-                                                    <x-button variant="warning" size="sm" icon="edit" title="Edit" disabled></x-button>
+                                                    <x-button 
+                                                        variant="warning" 
+                                                        size="sm" 
+                                                        icon="edit" 
+                                                        title="Edit"
+                                                        type="button"
+                                                        x-on:click="$dispatch('open-drawer', { id: 'drawer-edit-{{ $item->id }}' })"
+                                                    ></x-button>
                                                 @endif
                                             @endif
 
