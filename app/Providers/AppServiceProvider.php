@@ -28,6 +28,7 @@ use App\View\Components\UI\Toast;
 use App\View\Components\UI\Toggle;
 use App\View\Components\UI\Tooltip;
 use App\View\Components\UI\Drawer;
+use App\View\Components\Admin\PageHeader;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
@@ -159,6 +160,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Overlay Components
         Blade::component(Drawer::class, 'ui.drawer');
+
+        // Admin Components
+        Blade::component(PageHeader::class, 'admin.page-header');
     }
 
     /**

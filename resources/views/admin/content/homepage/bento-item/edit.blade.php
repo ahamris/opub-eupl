@@ -117,7 +117,7 @@
             </div>
 
             <!-- Form Actions -->
-            <div class="flex items-center justify-end gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+            <div class="flex items-center justify-end gap-3 pt-4">
                 <x-button variant="secondary" type="button" href="{{ route('admin.content.homepage.bento-item.index') }}">Cancel</x-button>
                 <x-button variant="primary" type="submit" icon="save" icon-position="left">Update Item</x-button>
             </div>

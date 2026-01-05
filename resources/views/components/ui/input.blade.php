@@ -75,7 +75,7 @@
         @endif
     </div>
 
-    @if($hint && !$error)
+    @if($hint && !$error && !$errorMessage)
         <div class="text-xs leading-4 tracking-[0.4px] text-gray-600 dark:text-gray-400 mt-1.5">{{ $hint }}</div>
     @endif
 
@@ -84,5 +84,12 @@
             <i class="fas fa-exclamation-circle"></i>
             {{ $errorMessage }}
         </div>
+    @elseif($autoError && $name)
+        @error($name)
+            <div class="text-xs leading-4 tracking-[0.4px] text-red-600 dark:text-red-400 flex items-center gap-1 mt-1.5">
+                <i class="fas fa-exclamation-circle"></i>
+                {{ $message }}
+            </div>
+        @enderror
     @endif
 </div>

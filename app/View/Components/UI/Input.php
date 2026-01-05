@@ -30,8 +30,17 @@ class Input extends Component
         public ?string $icon = null,
         public string $iconPosition = 'left', // left, right
         public ?string $size = null, // sm, lg
-        public ?string $variant = null // slug, etc.
+        public ?string $variant = null, // slug, etc.
+        public bool $autoError = true, // Automatically detect errors from Laravel validation
     ) {
+        // Auto-detect error if autoError is enabled and name is provided
+        if ($this->autoError && $this->name && !$this->error && empty($this->errorMessage)) {
+            $errors = session()->get('errors');
+            if ($errors && $errors->has($this->name)) {
+                $this->error = true;
+                $this->errorMessage = $errors->first($this->name);
+            }
+        }
         // Normalize value to string
         if ($value === null) {
             $this->value = '';

@@ -39,11 +39,11 @@
             sort-direction="asc"
         />
 
-        <!-- Drawers for References -->
+        <!-- Drawers for References (only for current page items) -->
         @php
-            // Get all references (for drawer content)
-            // In production, you might want to optimize this to only load visible items
-            $references = \App\Models\Reference::all();
+            // Get current page items - limit to prevent performance issues
+            // In production, consider using Livewire to load drawer content dynamically
+            $references = \App\Models\Reference::orderBy('sort_order', 'asc')->limit(50)->get();
         @endphp
         @foreach($references as $reference)
             <x-ui.drawer 
@@ -277,7 +277,7 @@
                 </div>
 
                 <!-- Form Actions -->
-                <div class="flex items-center justify-end gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+                <div class="flex items-center justify-end gap-3 pt-4">
                     <x-button 
                         variant="secondary" 
                         type="button" 

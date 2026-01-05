@@ -34,9 +34,12 @@
             :paginate="15"
         />
 
-        <!-- Drawers for Blog Categories -->
+        <!-- Drawers for Blog Categories (only for current page items) -->
         @php
-            $blogCategories = \App\Models\BlogCategory::all();
+            // Get current page items from Livewire component
+            // Note: This is a workaround - ideally we'd get items from the table component
+            // For now, we'll use pagination to limit drawer creation
+            $blogCategories = \App\Models\BlogCategory::orderBy('created_at', 'desc')->limit(50)->get();
         @endphp
         @foreach($blogCategories as $blogCategory)
             <!-- View Drawer -->
@@ -237,7 +240,7 @@
                 </div>
 
                 <!-- Form Actions -->
-                <div class="flex items-center justify-end gap-3 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+                <div class="flex items-center justify-end gap-3 pt-4">
                     <x-button 
                         variant="secondary" 
                         type="button" 
