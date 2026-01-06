@@ -5,6 +5,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Support\Facades\Route;
 use App\Http\Middleware\CheckIfAdmin;
+use App\Http\Middleware\CheckMaintenanceMode;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -23,6 +24,12 @@ return Application::configure(basePath: dirname(__DIR__))
      
         $middleware->alias([
         'admin' => CheckIfAdmin::class,
+        'maintenance' => CheckMaintenanceMode::class,
+        ]);
+        
+        // Apply maintenance mode check to web routes (except admin routes)
+        $middleware->web(append: [
+            CheckMaintenanceMode::class,
         ]);
 
 

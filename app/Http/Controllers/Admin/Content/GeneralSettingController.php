@@ -52,6 +52,7 @@ class GeneralSettingController extends AdminBaseController
             
             // Other Settings
             'maintenance_mode' => 'boolean',
+            'maintenance_message' => 'nullable|string|max:1000',
             'timezone' => 'nullable|string|max:100',
             'locale' => 'nullable|string|max:10',
         ]);
@@ -94,7 +95,7 @@ class GeneralSettingController extends AdminBaseController
             // Social Media
             'facebook_url', 'twitter_url', 'linkedin_url', 'instagram_url', 'youtube_url', 'github_url',
             // Other
-            'maintenance_mode', 'timezone', 'locale',
+            'maintenance_mode', 'maintenance_message', 'timezone', 'locale',
         ];
 
         foreach ($settingsToSave as $key) {

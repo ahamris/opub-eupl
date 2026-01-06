@@ -381,7 +381,16 @@
                                 value="1"
                                 :checked="old('maintenance_mode', get_setting('maintenance_mode', '0') == '1')"
                             />
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400">Enable maintenance mode to temporarily disable public access to the site</p>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-4">Enable maintenance mode to temporarily disable public access to the site</p>
+
+                            <x-ui.textarea 
+                                label="Maintenance Message" 
+                                name="maintenance_message" 
+                                placeholder="e.g. We're currently performing scheduled maintenance to improve your experience. We'll be back shortly."
+                                rows="4"
+                                value="{{ old('maintenance_message', get_setting('maintenance_message', 'We\'re currently performing scheduled maintenance to improve your experience. We\'ll be back shortly.')) }}"
+                            />
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400">This message will be displayed to users when maintenance mode is active</p>
 
                             <x-input 
                                 label="Timezone" 
