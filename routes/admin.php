@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\Content\BlogController;
 use App\Http\Controllers\Admin\Content\BlogCategoryController;
 use App\Http\Controllers\Admin\Content\StaticPageController;
 use App\Http\Controllers\Admin\Content\CookieSettingController;
+use App\Http\Controllers\Admin\Content\GeneralSettingController;
 use App\Http\Controllers\Admin\DataManagementController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\Auth\AdminLoginController;
@@ -113,6 +114,10 @@ Route::middleware(['auth', \App\Http\Middleware\CheckIfAdmin::class])->prefix('a
         // Cookie Settings (singleton)
         Route::get('cookie-settings', [\App\Http\Controllers\Admin\Content\CookieSettingController::class, 'index'])->name('cookie-settings.index');
         Route::put('cookie-settings', [\App\Http\Controllers\Admin\Content\CookieSettingController::class, 'update'])->name('cookie-settings.update');
+
+        // General Settings (singleton)
+        Route::get('general-settings', [\App\Http\Controllers\Admin\Content\GeneralSettingController::class, 'index'])->name('general-settings.index');
+        Route::put('general-settings', [\App\Http\Controllers\Admin\Content\GeneralSettingController::class, 'update'])->name('general-settings.update');
 
         // Data Management Routes
         Route::resource('data-management', DataManagementController::class);
