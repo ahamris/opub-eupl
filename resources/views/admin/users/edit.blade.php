@@ -26,9 +26,6 @@
                         value="{{ old('name', $user->name) }}"
                         required
                     />
-                    @error('name')
-                        <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                    @enderror
                 </div>
 
                 <!-- Last Name Field -->
@@ -41,9 +38,6 @@
                         icon="user"
                         value="{{ old('last_name', $user->last_name) }}"
                     />
-                    @error('last_name')
-                        <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                    @enderror
                 </div>
 
                 <!-- Email Field -->
@@ -57,9 +51,6 @@
                         value="{{ old('email', $user->email) }}"
                         required
                     />
-                    @error('email')
-                        <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                    @enderror
                 </div>
 
                 <!-- Password Field -->
@@ -72,9 +63,6 @@
                         icon="lock"
                     />
                     <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Leave blank if you don't want to change the password</p>
-                    @error('password')
-                        <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                    @enderror
                 </div>
 
                 <!-- Password Confirmation Field -->

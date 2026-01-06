@@ -26,9 +26,6 @@
                         value="{{ old('title', $dataManagement->title) }}"
                         required
                     />
-                    @error('title')
-                        <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                    @enderror
                 </div>
 
                 <!-- Description Field -->
@@ -40,9 +37,6 @@
                         rows="4"
                         value="{{ old('description', $dataManagement->description) }}"
                     />
-                    @error('description')
-                        <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                    @enderror
                 </div>
 
                 <!-- Type Field -->
@@ -64,9 +58,6 @@
                         <option value="reference">Reference</option>
                     </datalist>
                     <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Category or type for this entry</p>
-                    @error('type')
-                        <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                    @enderror
                 </div>
 
                 <!-- Status Field -->
@@ -82,9 +73,6 @@
                         value="{{ old('status', $dataManagement->status) }}"
                         required
                     />
-                    @error('status')
-                        <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                    @enderror
                 </div>
 
                 <!-- Priority Field -->
@@ -99,9 +87,6 @@
                         min="0"
                     />
                     <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Higher numbers appear first (default: 0)</p>
-                    @error('priority')
-                        <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                    @enderror
                 </div>
 
                 <!-- Form Actions -->

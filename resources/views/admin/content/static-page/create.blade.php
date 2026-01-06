@@ -30,9 +30,6 @@
                                 value="{{ old('title') }}"
                                 required
                             />
-                            @error('title')
-                                <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                            @enderror
                         </div>
 
                         <!-- Slug Field -->
@@ -46,9 +43,6 @@
                                 value="{{ old('slug') }}"
                             />
                             <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">URL path: /pagina/<span class="font-mono">your-slug</span></p>
-                            @error('slug')
-                                <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                            @enderror
                         </div>
 
                         <!-- Subtitle Field -->
@@ -60,9 +54,6 @@
                                 placeholder="Small uppercase text above title (e.g. 'Open Source Platform')"
                                 value="{{ old('subtitle') }}"
                             />
-                            @error('subtitle')
-                                <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                            @enderror
                         </div>
 
                         <!-- Short Description Field -->
@@ -74,9 +65,6 @@
                                 rows="3"
                                 value="{{ old('short_description') }}"
                             />
-                            @error('short_description')
-                                <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                            @enderror
                         </div>
 
                         <!-- CTA Buttons (Compact) -->

@@ -26,9 +26,6 @@
                         required
                     />
                     <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Unique identifier for this setting (lowercase, use underscores)</p>
-                    @error('_key')
-                        <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                    @enderror
                 </div>
 
                 <!-- Value Field -->
@@ -40,9 +37,6 @@
                         rows="4"
                         value="{{ old('_value') }}"
                     />
-                    @error('_value')
-                        <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                    @enderror
                 </div>
 
                 <!-- Group Field -->
@@ -64,9 +58,6 @@
                         <option value="social">Social Media</option>
                     </datalist>
                     <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Group settings together for better organization (you can type a custom group name)</p>
-                    @error('group')
-                        <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                    @enderror
                 </div>
 
                 <!-- Form Actions -->

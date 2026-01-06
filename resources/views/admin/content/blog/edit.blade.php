@@ -28,9 +28,6 @@
                                 value="{{ old('title', $blog->title) }}"
                                 required
                             />
-                            @error('title')
-                                <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                            @enderror
                         </div>
 
                         <!-- Slug Field -->
@@ -44,9 +41,6 @@
                                 value="{{ old('slug', $blog->slug) }}"
                             />
                             <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Leave blank to auto-generate from title</p>
-                            @error('slug')
-                                <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                            @enderror
                         </div>
 
                         <!-- Short Body Field -->
@@ -59,9 +53,6 @@
                                 value="{{ old('short_body', $blog->short_body) }}"
                                 required
                             />
-                            @error('short_body')
-                                <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                            @enderror
                         </div>
 
                         <!-- Long Body Field (Quill Editor) -->
@@ -95,9 +86,6 @@
                                 value="{{ old('blog_category_id', $blog->blog_category_id) }}"
                                 required
                             />
-                            @error('blog_category_id')
-                                <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                            @enderror
                         </div>
 
                         <!-- Author Field -->
@@ -110,9 +98,6 @@
                                 value="{{ old('author_id', $blog->author_id) }}"
                                 required
                             />
-                            @error('author_id')
-                                <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                            @enderror
                         </div>
 
                         <!-- Image Upload Field -->
@@ -122,9 +107,6 @@
                                 label="Cover Picture"
                                 :value="$blog->image"
                             />
-                            @error('image')
-                                <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                            @enderror
                         </div>
 
                         <!-- Toggle Fields -->
@@ -139,9 +121,6 @@
                                     :checked="old('is_active', $blog->is_active)"
                                     hint="Enable this blog post to be visible on the website"
                                 />
-                                @error('is_active')
-                                    <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                                @enderror
                             </div>
 
                             <div>
@@ -152,9 +131,6 @@
                                     :checked="old('is_featured', $blog->is_featured)"
                                     hint="Feature this blog post on the homepage carousel"
                                 />
-                                @error('is_featured')
-                                    <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                                @enderror
                             </div>
                         </div>
                     </div>

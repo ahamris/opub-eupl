@@ -105,9 +105,6 @@
                                 value="{{ old('name', $blogCategory->name) }}"
                                 required
                             />
-                            @error('name')
-                                <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                            @enderror
                         </div>
 
                         <div>
@@ -120,9 +117,6 @@
                                 value="{{ old('slug', $blogCategory->slug) }}"
                             />
                             <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Leave blank to auto-generate from name</p>
-                            @error('slug')
-                                <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                            @enderror
                         </div>
 
                         <div>
@@ -133,9 +127,6 @@
                                 rows="3"
                                 value="{{ old('description', $blogCategory->description) }}"
                             />
-                            @error('description')
-                                <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                            @enderror
                         </div>
 
                         <div>
@@ -145,9 +136,6 @@
                                 value="{{ old('color', $blogCategory->color ?? '#3B82F6') }}"
                                 :show-presets="true"
                             />
-                            @error('color')
-                                <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                            @enderror
                         </div>
                     </div>
 
@@ -193,9 +181,6 @@
                             value="{{ old('name') }}"
                             required
                         />
-                        @error('name')
-                            <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                        @enderror
                     </div>
 
                     <div>
@@ -208,9 +193,6 @@
                             value="{{ old('slug') }}"
                         />
                         <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Leave blank to auto-generate from name</p>
-                        @error('slug')
-                            <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                        @enderror
                     </div>
 
                     <div>
@@ -221,9 +203,6 @@
                             rows="3"
                             value="{{ old('description') }}"
                         />
-                        @error('description')
-                            <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                        @enderror
                     </div>
 
                     <div>
@@ -233,9 +212,6 @@
                             value="{{ old('color', '#3B82F6') }}"
                             :show-presets="true"
                         />
-                        @error('color')
-                            <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                        @enderror
                     </div>
                 </div>
 

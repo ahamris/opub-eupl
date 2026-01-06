@@ -31,9 +31,6 @@
                                 value="{{ old('title', $staticPage->title) }}"
                                 required
                             />
-                            @error('title')
-                                <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                            @enderror
                         </div>
 
                         <!-- Slug Field -->
@@ -47,9 +44,6 @@
                                 value="{{ old('slug', $staticPage->slug) }}"
                             />
                             <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Current URL: <a href="{{ $staticPage->link_url }}" target="_blank" class="text-indigo-600 hover:underline">{{ $staticPage->link_url }}</a></p>
-                            @error('slug')
-                                <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                            @enderror
                         </div>
 
                         <!-- Subtitle Field -->
@@ -61,9 +55,6 @@
                                 placeholder="Small uppercase text above title (e.g. 'Open Source Platform')"
                                 value="{{ old('subtitle', $staticPage->subtitle) }}"
                             />
-                            @error('subtitle')
-                                <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                            @enderror
                         </div>
 
                         <!-- Short Description Field -->
@@ -75,9 +66,6 @@
                                 rows="3"
                                 value="{{ old('short_description', $staticPage->short_description) }}"
                             />
-                            @error('short_description')
-                                <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                            @enderror
                         </div>
 
                         <!-- CTA Buttons (Compact) -->

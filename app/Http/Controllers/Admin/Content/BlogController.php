@@ -51,18 +51,36 @@ class BlogController extends AdminBaseController
      */
     public function store(BlogRequest $request)
     {
-        $validated = $request->validated();
+        try {
+            $validated = $request->validated();
 
-        // Handle image upload
-        if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('blogs', 'public');
+            // Handle image upload
+            if ($request->hasFile('image')) {
+                $validated['image'] = $this->handleFileUpload($request->file('image'), 'blogs');
+                if (!$validated['image']) {
+                    return redirect()
+                        ->back()
+                        ->withInput()
+                        ->with('error', 'Failed to upload image. Please try again.');
+                }
+            }
+
+            // Sluggable package will handle slug generation/sanitization via setSlugAttribute mutator
+            $blog = Blog::create($validated);
+
+            return redirect()->route('admin.content.blog.index')
+                ->with('success', 'Blog created successfully!');
+        } catch (\Exception $e) {
+            \Log::error('Blog creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Failed to create blog. Please try again.');
         }
-
-        // Sluggable package will handle slug generation/sanitization via setSlugAttribute mutator
-        $blog = Blog::create($validated);
-
-        return redirect()->route('admin.content.blog.index')
-            ->with('success', 'Blog created successfully!');
     }
 
     /**
@@ -103,30 +121,49 @@ class BlogController extends AdminBaseController
      */
     public function update(BlogRequest $request, Blog $blog)
     {
-        $validated = $request->validated();
+        try {
+            $validated = $request->validated();
 
-        // Handle image deletion
-        if ($request->has('remove_image') && $request->input('remove_image') == '1') {
-            // Delete old image from storage if exists
-            if ($blog->image) {
-                Storage::disk('public')->delete($blog->image);
+            // Handle image deletion
+            if ($request->has('remove_image') && $request->input('remove_image') == '1') {
+                // Delete old image from storage if exists
+                if ($blog->image) {
+                    $this->deleteImage($blog->image);
+                }
+                // Set image to null in database
+                $validated['image'] = null;
             }
-            // Set image to null in database
-            $validated['image'] = null;
-        }
-        // Handle image upload
-        elseif ($request->hasFile('image')) {
-            // Delete old image if exists
-            if ($blog->image) {
-                Storage::disk('public')->delete($blog->image);
+            // Handle image upload
+            elseif ($request->hasFile('image')) {
+                // Delete old image if exists
+                if ($blog->image) {
+                    $this->deleteImage($blog->image);
+                }
+                $validated['image'] = $this->handleFileUpload($request->file('image'), 'blogs');
+                if (!$validated['image']) {
+                    return redirect()
+                        ->back()
+                        ->withInput()
+                        ->with('error', 'Failed to upload image. Please try again.');
+                }
             }
-            $validated['image'] = $request->file('image')->store('blogs', 'public');
+
+            $blog->update($validated);
+
+            return redirect()->route('admin.content.blog.index')
+                ->with('success', 'Blog updated successfully!');
+        } catch (\Exception $e) {
+            \Log::error('Blog update failed', [
+                'blog_id' => $blog->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Failed to update blog. Please try again.');
         }
-
-        $blog->update($validated);
-
-        return redirect()->route('admin.content.blog.index')
-            ->with('success', 'Blog updated successfully!');
     }
 
     /**
@@ -134,15 +171,27 @@ class BlogController extends AdminBaseController
      */
     public function destroy(Blog $blog)
     {
-        // Delete image if exists
-        if ($blog->image) {
-            Storage::disk('public')->delete($blog->image);
+        try {
+            // Delete image if exists
+            if ($blog->image) {
+                $this->deleteImage($blog->image);
+            }
+
+            $blog->delete();
+
+            return redirect()->route('admin.content.blog.index')
+                ->with('success', 'Blog deleted successfully!');
+        } catch (\Exception $e) {
+            \Log::error('Blog deletion failed', [
+                'blog_id' => $blog->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to delete blog. Please try again.');
         }
-
-        $blog->delete();
-
-        return redirect()->route('admin.content.blog.index')
-            ->with('success', 'Blog deleted successfully!');
     }
 
     /**

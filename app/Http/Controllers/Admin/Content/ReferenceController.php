@@ -22,24 +22,41 @@ class ReferenceController extends AdminBaseController
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'icon' => 'required|string|max:100',
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
-            'link_url' => 'nullable|string|max:500',
-            'link_text' => 'nullable|string|max:255',
-            'sort_order' => 'nullable|integer|min:0',
-            'is_active' => 'boolean',
-        ]);
+        try {
+            $validated = $request->validate([
+                'icon' => 'required|string|max:100',
+                'title' => 'required|string|max:255',
+                'description' => 'nullable|string|max:1000',
+                'link_url' => 'nullable|string|max:500',
+                'link_text' => 'nullable|string|max:255',
+                'sort_order' => 'nullable|integer|min:0',
+                'is_active' => 'boolean',
+            ]);
 
-        $validated['is_active'] = $request->boolean('is_active');
-        $validated['sort_order'] = $validated['sort_order'] ?? 0;
+            $validated['is_active'] = $request->boolean('is_active');
+            $validated['sort_order'] = $validated['sort_order'] ?? 0;
 
-        Reference::create($validated);
+            Reference::create($validated);
 
-        return redirect()
-            ->route('admin.content.reference.index')
-            ->with('success', 'Reference created successfully.');
+            return redirect()
+                ->route('admin.content.reference.index')
+                ->with('success', 'Reference created successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()
+                ->back()
+                ->withErrors($e->errors())
+                ->withInput();
+        } catch (\Exception $e) {
+            \Log::error('Reference creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Failed to create reference. Please try again.');
+        }
     }
 
     /**
@@ -47,23 +64,41 @@ class ReferenceController extends AdminBaseController
      */
     public function update(Request $request, Reference $reference)
     {
-        $validated = $request->validate([
-            'icon' => 'required|string|max:100',
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
-            'link_url' => 'nullable|string|max:500',
-            'link_text' => 'nullable|string|max:255',
-            'sort_order' => 'nullable|integer|min:0',
-            'is_active' => 'boolean',
-        ]);
+        try {
+            $validated = $request->validate([
+                'icon' => 'required|string|max:100',
+                'title' => 'required|string|max:255',
+                'description' => 'nullable|string|max:1000',
+                'link_url' => 'nullable|string|max:500',
+                'link_text' => 'nullable|string|max:255',
+                'sort_order' => 'nullable|integer|min:0',
+                'is_active' => 'boolean',
+            ]);
 
-        $validated['is_active'] = $request->boolean('is_active');
+            $validated['is_active'] = $request->boolean('is_active');
 
-        $reference->update($validated);
+            $reference->update($validated);
 
-        return redirect()
-            ->route('admin.content.reference.index')
-            ->with('success', 'Reference updated successfully.');
+            return redirect()
+                ->route('admin.content.reference.index')
+                ->with('success', 'Reference updated successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()
+                ->back()
+                ->withErrors($e->errors())
+                ->withInput();
+        } catch (\Exception $e) {
+            \Log::error('Reference update failed', [
+                'reference_id' => $reference->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Failed to update reference. Please try again.');
+        }
     }
 
     /**
@@ -71,11 +106,23 @@ class ReferenceController extends AdminBaseController
      */
     public function destroy(Reference $reference)
     {
-        $reference->delete();
+        try {
+            $reference->delete();
 
-        return redirect()
-            ->route('admin.content.reference.index')
-            ->with('success', 'Reference deleted successfully.');
+            return redirect()
+                ->route('admin.content.reference.index')
+                ->with('success', 'Reference deleted successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Reference deletion failed', [
+                'reference_id' => $reference->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()
+                ->back()
+                ->with('error', 'Failed to delete reference. Please try again.');
+        }
     }
 
     /**
