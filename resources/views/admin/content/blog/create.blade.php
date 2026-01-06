@@ -54,20 +54,15 @@
                             />
                         </div>
 
-                        <!-- Long Body Field (Quill Editor) -->
+                        <!-- Long Body Field (TipTap Editor) -->
                         <div>
-                            <label class="block text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-2">
-                                Content <span class="text-red-600 dark:text-red-400">*</span>
-                            </label>
-                            <x-quill 
+                            <x-editor 
                                 name="long_body" 
-                                :value="old('long_body')" 
+                                :value="old('long_body', '')" 
+                                label="Content"
                                 placeholder="Write your blog content here..."
-                                class="h-[300px] fixed-height"
+                                required
                             />
-                            @error('long_body')
-                                <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                            @enderror
                         </div>
                     </div>
                 </div>

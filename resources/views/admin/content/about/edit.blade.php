@@ -87,11 +87,10 @@
                 />
 
                 <div>
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Content</label>
-                    <x-quill 
+                    <x-editor 
                         name="section1_content" 
                         :value="old('section1_content', $settings->section1_content)"
-                        height="200px"
+                        placeholder="Enter section content..."
                     />
                 </div>
             </div>
@@ -209,11 +208,10 @@
                 />
 
                 <div>
-                    <label class="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">Content</label>
-                    <x-quill 
+                    <x-editor 
                         name="section4_content" 
                         :value="old('section4_content', $settings->section4_content)"
-                        height="200px"
+                        placeholder="Enter section content..."
                     />
                 </div>
             </div>

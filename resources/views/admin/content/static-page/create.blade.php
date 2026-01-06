@@ -118,20 +118,13 @@
                             </div>
                         </div>
 
-                        <!-- Content Field (Quill Editor) -->
+                        <!-- Content Field -->
                         <div>
-                            <label class="block text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-2">
-                                Content
-                            </label>
-                            <x-quill 
+                            <x-editor 
                                 name="content" 
                                 :value="old('content')" 
                                 placeholder="Write your page content here..."
-                                class="h-[400px] fixed-height"
                             />
-                            @error('content')
-                                <p class="mt-1 text-sm text-error">{{ $message }}</p>
-                            @enderror
                         </div>
                     </div>
                 </div>

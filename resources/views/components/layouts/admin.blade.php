@@ -60,7 +60,7 @@
     @endphp
     
     {{-- Styles / Scripts --}}
-    @vite(['resources/css/admin.css', 'resources/js/admin.js'])
+    @vite(['resources/css/admin.css', 'resources/js/admin.js', 'resources/js/tiptap.js'])
     @livewireStyles
     @stack('styles')
     
