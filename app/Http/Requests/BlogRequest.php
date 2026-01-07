@@ -38,6 +38,9 @@ class BlogRequest extends FormRequest
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'is_active' => 'nullable|boolean',
             'is_featured' => 'nullable|boolean',
+            'og_title' => 'nullable|string|max:255',
+            'og_description' => 'nullable|string|max:500',
+            'og_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ];
     }
 
@@ -92,6 +95,9 @@ class BlogRequest extends FormRequest
             'image' => 'Image',
             'is_active' => 'Active status',
             'is_featured' => 'Featured status',
+            'og_title' => 'Open Graph title',
+            'og_description' => 'Open Graph description',
+            'og_image' => 'Open Graph image',
         ];
     }
 }

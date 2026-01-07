@@ -104,6 +104,40 @@
                             />
                         </div>
 
+                        <!-- Open Graph Card -->
+                        <div class="border-t border-zinc-200 dark:border-zinc-700 pt-6 mt-6">
+                            <div class="flex items-center gap-2 mb-4">
+                                <i class="fas fa-share-nodes text-zinc-500"></i>
+                                <h3 class="text-sm font-semibold text-zinc-900 dark:text-white">Social Sharing (Open Graph)</h3>
+                            </div>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-4">Customize how this blog post appears when shared on social media. Leave empty to use default site settings.</p>
+                            
+                            <div class="space-y-4">
+                                <x-input 
+                                    label="Open Graph Title" 
+                                    name="og_title" 
+                                    type="text" 
+                                    placeholder="Leave empty to use blog title"
+                                    value="{{ old('og_title', $blog->og_title) }}"
+                                />
+
+                                <x-ui.textarea 
+                                    label="Open Graph Description" 
+                                    name="og_description" 
+                                    placeholder="Leave empty to use short description"
+                                    rows="3"
+                                    value="{{ old('og_description', $blog->og_description) }}"
+                                />
+
+                                <x-ui.file-upload 
+                                    name="og_image"
+                                    label="Open Graph Image"
+                                    :value="$blog->og_image"
+                                    helper-text="Recommended: 1200x630px - Leave empty to use cover picture"
+                                />
+                            </div>
+                        </div>
+
                         <!-- Toggle Fields -->
                         <div class="space-y-4">
                             <label class="block text-sm font-medium text-zinc-900 dark:text-zinc-100">Visibility</label>

@@ -65,6 +65,17 @@ class BlogController extends AdminBaseController
                 }
             }
 
+            // Handle Open Graph image upload
+            if ($request->hasFile('og_image')) {
+                $validated['og_image'] = $this->handleFileUpload($request->file('og_image'), 'blogs');
+                if (!$validated['og_image']) {
+                    return redirect()
+                        ->back()
+                        ->withInput()
+                        ->with('error', 'Failed to upload Open Graph image. Please try again.');
+                }
+            }
+
             // Sluggable package will handle slug generation/sanitization via setSlugAttribute mutator
             $blog = Blog::create($validated);
 
@@ -148,6 +159,30 @@ class BlogController extends AdminBaseController
                 }
             }
 
+            // Handle Open Graph image deletion
+            if ($request->has('remove_og_image') && $request->input('remove_og_image') == '1') {
+                // Delete old OG image from storage if exists
+                if ($blog->og_image) {
+                    $this->deleteImage($blog->og_image);
+                }
+                // Set OG image to null in database
+                $validated['og_image'] = null;
+            }
+            // Handle Open Graph image upload
+            elseif ($request->hasFile('og_image')) {
+                // Delete old OG image if exists
+                if ($blog->og_image) {
+                    $this->deleteImage($blog->og_image);
+                }
+                $validated['og_image'] = $this->handleFileUpload($request->file('og_image'), 'blogs');
+                if (!$validated['og_image']) {
+                    return redirect()
+                        ->back()
+                        ->withInput()
+                        ->with('error', 'Failed to upload Open Graph image. Please try again.');
+                }
+            }
+
             $blog->update($validated);
 
             return redirect()->route('admin.content.blog.index')
@@ -175,6 +210,11 @@ class BlogController extends AdminBaseController
             // Delete image if exists
             if ($blog->image) {
                 $this->deleteImage($blog->image);
+            }
+
+            // Delete Open Graph image if exists
+            if ($blog->og_image) {
+                $this->deleteImage($blog->og_image);
             }
 
             $blog->delete();

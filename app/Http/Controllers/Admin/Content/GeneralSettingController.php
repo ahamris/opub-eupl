@@ -32,6 +32,9 @@ class GeneralSettingController extends AdminBaseController
             'meta_description' => 'nullable|string|max:500',
             'site_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
             'site_favicon' => 'nullable|image|mimes:ico,png,jpg,jpeg,gif,svg|max:1024',
+            'og_title' => 'nullable|string|max:255',
+            'og_description' => 'nullable|string|max:500',
+            'og_image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             
             // SMTP Settings
             'smtp_host' => 'nullable|string|max:255',
@@ -82,6 +85,18 @@ class GeneralSettingController extends AdminBaseController
             }
         }
 
+        if ($request->hasFile('og_image')) {
+            $ogImagePath = $this->handleFileUpload($request->file('og_image'), 'images');
+            if ($ogImagePath) {
+                // Delete old OG image if exists
+                $oldOgImage = Setting::getValue('og_image');
+                if ($oldOgImage && !filter_var($oldOgImage, FILTER_VALIDATE_URL)) {
+                    $this->deleteImage($oldOgImage);
+                }
+                Setting::forceSet('og_image', $ogImagePath, 'general');
+            }
+        }
+
         // Handle checkbox
         $validated['maintenance_mode'] = $request->boolean('maintenance_mode') ? '1' : '0';
 
@@ -94,6 +109,8 @@ class GeneralSettingController extends AdminBaseController
             'smtp_from_address', 'smtp_from_name',
             // Social Media
             'facebook_url', 'twitter_url', 'linkedin_url', 'instagram_url', 'youtube_url', 'github_url',
+            // Open Graph
+            'og_title', 'og_description',
             // Other
             'maintenance_mode', 'maintenance_message', 'timezone', 'locale',
         ];

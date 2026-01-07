@@ -31,6 +31,9 @@ class Blog extends Model
         'image',
         'is_active',
         'is_featured',
+        'og_title',
+        'og_description',
+        'og_image',
     ];
 
     protected $casts = [

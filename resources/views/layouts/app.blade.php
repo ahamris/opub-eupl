@@ -28,6 +28,33 @@
     {{-- Font Awesome 6.5.2 --}}
     <link rel="stylesheet" href="{{ asset('vendor/fontawesome/css/all.min.css') }}">
     
+    {{-- Default Open Graph Meta Tags (can be overridden by @push('styles')) --}}
+    @php
+        $defaultOgTitle = get_setting('og_title') ?: get_setting('site_title', 'Open Overheid');
+        $defaultOgDescription = get_setting('og_description') ?: get_setting('site_description', '');
+        $defaultOgImage = get_setting('og_image') ? asset('storage/' . get_setting('og_image')) : null;
+        $defaultOgUrl = url()->current();
+    @endphp
+    
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{{ $defaultOgTitle }}">
+    @if($defaultOgDescription)
+        <meta property="og:description" content="{{ $defaultOgDescription }}">
+    @endif
+    <meta property="og:url" content="{{ $defaultOgUrl }}">
+    @if($defaultOgImage)
+        <meta property="og:image" content="{{ $defaultOgImage }}">
+    @endif
+    
+    {{-- Twitter Card --}}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $defaultOgTitle }}">
+    @if($defaultOgDescription)
+        <meta name="twitter:description" content="{{ $defaultOgDescription }}">
+    @endif
+    @if($defaultOgImage)
+        <meta name="twitter:image" content="{{ $defaultOgImage }}">
+    @endif
     
     @stack('styles')
 </head>

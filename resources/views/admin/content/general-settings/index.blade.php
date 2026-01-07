@@ -198,6 +198,37 @@
                                 helper-text="ICO, PNG, JPG, GIF, SVG - Max 1MB"
                             />
                         </div>
+
+                        <div class="space-y-4">
+                            <h2 class="text-lg font-semibold text-zinc-900 dark:text-white border-b border-zinc-200 dark:border-zinc-700 pb-3">
+                                <i class="fas fa-share-nodes mr-2 text-zinc-500"></i>Open Graph (Social Sharing)
+                            </h2>
+                            <p class="text-sm text-zinc-600 dark:text-zinc-400">Default Open Graph settings for social media sharing. These will be used when specific pages don't have their own Open Graph settings.</p>
+                            
+                            <x-input 
+                                label="Open Graph Title" 
+                                name="og_title" 
+                                type="text" 
+                                placeholder="e.g. My Website - Open Government"
+                                value="{{ old('og_title', get_setting('og_title', '')) }}"
+                            />
+
+                            <x-ui.textarea 
+                                label="Open Graph Description" 
+                                name="og_description" 
+                                placeholder="Brief description for social media sharing (recommended: 150-160 characters)"
+                                rows="3"
+                                value="{{ old('og_description', get_setting('og_description', '')) }}"
+                            />
+
+                            <x-ui.file-upload 
+                                name="og_image"
+                                label="Open Graph Image"
+                                :value="get_setting('og_image', '')"
+                                accept="image/png, image/jpeg, image/jpg, image/gif, image/webp"
+                                helper-text="Recommended: 1200x630px - PNG, JPG, GIF, WebP - Max 2MB"
+                            />
+                        </div>
                     </div>
 
                     <!-- SMTP Tab -->

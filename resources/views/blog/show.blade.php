@@ -1,6 +1,32 @@
 @extends('layouts.app')
 
-@section('title', $blog->title . ' - Blog - Open Overheid')
+@section('title', $blog->og_title ?? $blog->title . ' - Blog - Open Overheid')
+
+@push('styles')
+    {{-- Open Graph Meta Tags --}}
+    @php
+        $ogTitle = $blog->og_title ?? $blog->title;
+        $ogDescription = $blog->og_description ?? strip_tags($blog->short_body ?? '');
+        $ogImage = $blog->og_image ? asset('storage/' . $blog->og_image) : ($blog->image ? asset('storage/' . $blog->image) : get_setting('og_image') ? asset('storage/' . get_setting('og_image')) : null);
+        $ogUrl = url()->current();
+    @endphp
+    
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="{{ $ogTitle }}">
+    <meta property="og:description" content="{{ $ogDescription }}">
+    <meta property="og:url" content="{{ $ogUrl }}">
+    @if($ogImage)
+        <meta property="og:image" content="{{ $ogImage }}">
+    @endif
+    
+    {{-- Twitter Card --}}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $ogTitle }}">
+    <meta name="twitter:description" content="{{ $ogDescription }}">
+    @if($ogImage)
+        <meta name="twitter:image" content="{{ $ogImage }}">
+    @endif
+@endpush
 
 @section('content')
     <!-- Blog Header Section -->
