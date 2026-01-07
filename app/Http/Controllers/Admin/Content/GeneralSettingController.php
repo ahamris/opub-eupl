@@ -65,6 +65,12 @@ class GeneralSettingController extends AdminBaseController
             'contact_notification_email' => 'nullable|email|max:255',
             'contact_auto_reply_enabled' => 'boolean',
             
+            // Footer Settings
+            'footer_copyright' => 'nullable|string|max:500',
+            'footer_description' => 'nullable|string|max:1000',
+            'footer_secondary_description' => 'nullable|string|max:1000',
+            'footer_bottom_text' => 'nullable|string|max:500',
+            
             // Other Settings
             'maintenance_mode' => 'boolean',
             'maintenance_message' => 'nullable|string|max:1000',
@@ -130,6 +136,8 @@ class GeneralSettingController extends AdminBaseController
             'og_title', 'og_description',
             // Contact Form Settings
             'contact_notification_email', 'contact_auto_reply_enabled',
+            // Footer Settings
+            'footer_copyright', 'footer_description', 'footer_secondary_description', 'footer_bottom_text',
             // Other
             'maintenance_mode', 'maintenance_message', 'timezone', 'locale',
         ];

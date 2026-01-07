@@ -27,7 +27,7 @@
             <!-- Tabs -->
             <div
                 x-data="{
-                    activeTab: 'site',
+                    activeTab: 'general',
                 }"
                 x-cloak
                 class="flex flex-col"
@@ -42,72 +42,72 @@
                     class="flex items-center text-sm dark:border-zinc-700"
                 >
                     <button
-                        x-on:click="activeTab = 'site'"
-                        x-on:focus="activeTab = 'site'"
+                        x-on:click="activeTab = 'general'"
+                        x-on:focus="activeTab = 'general'"
                         type="button"
-                        id="site-tab"
+                        id="general-tab"
                         role="tab"
-                        aria-controls="site-tab-pane"
-                        x-bind:aria-selected="activeTab === 'site' ? 'true' : 'false'"
-                        x-bind:tabindex="activeTab === 'site' ? '0' : '-1'"
+                        aria-controls="general-tab-pane"
+                        x-bind:aria-selected="activeTab === 'general' ? 'true' : 'false'"
+                        x-bind:tabindex="activeTab === 'general' ? '0' : '-1'"
                         x-bind:class="{
-                            'text-zinc-950 dark:text-zinc-50 border-zinc-200/75 dark:border-zinc-700/75 bg-white dark:bg-zinc-900': activeTab === 'site',
-                            'text-zinc-500 border-transparent hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-zinc-50': activeTab !== 'site',
+                            'text-zinc-950 dark:text-zinc-50 border-zinc-200/75 dark:border-zinc-700/75 bg-white dark:bg-zinc-900': activeTab === 'general',
+                            'text-zinc-500 border-transparent hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-zinc-50': activeTab !== 'general',
                         }"
                         class="z-10 -mb-px flex items-center gap-2 rounded-t-lg border-x border-t px-5 py-3 font-medium outline-none focus:outline-none"
                     >
-                        <i class="fas fa-globe"></i>Site Information
+                        <i class="fas fa-globe"></i>General
                     </button>
                     <button
-                        x-on:click="activeTab = 'smtp'"
-                        x-on:focus="activeTab = 'smtp'"
+                        x-on:click="activeTab = 'seo'"
+                        x-on:focus="activeTab = 'seo'"
                         type="button"
-                        id="smtp-tab"
+                        id="seo-tab"
                         role="tab"
-                        aria-controls="smtp-tab-pane"
-                        x-bind:aria-selected="activeTab === 'smtp' ? 'true' : 'false'"
-                        x-bind:tabindex="activeTab === 'smtp' ? '0' : '-1'"
+                        aria-controls="seo-tab-pane"
+                        x-bind:aria-selected="activeTab === 'seo' ? 'true' : 'false'"
+                        x-bind:tabindex="activeTab === 'seo' ? '0' : '-1'"
                         x-bind:class="{
-                            'text-zinc-950 dark:text-zinc-50 border-zinc-200/75 dark:border-zinc-700/75 bg-white dark:bg-zinc-900': activeTab === 'smtp',
-                            'text-zinc-500 border-transparent hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-zinc-50': activeTab !== 'smtp',
+                            'text-zinc-950 dark:text-zinc-50 border-zinc-200/75 dark:border-zinc-700/75 bg-white dark:bg-zinc-900': activeTab === 'seo',
+                            'text-zinc-500 border-transparent hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-zinc-50': activeTab !== 'seo',
                         }"
                         class="z-10 -mb-px flex items-center gap-2 rounded-t-lg border-x border-t px-5 py-3 font-medium outline-none focus:outline-none"
                     >
-                        <i class="fas fa-envelope"></i>SMTP Settings
+                        <i class="fas fa-search"></i>SEO & Social
                     </button>
                     <button
-                        x-on:click="activeTab = 'social'"
-                        x-on:focus="activeTab = 'social'"
+                        x-on:click="activeTab = 'email'"
+                        x-on:focus="activeTab = 'email'"
                         type="button"
-                        id="social-tab"
+                        id="email-tab"
                         role="tab"
-                        aria-controls="social-tab-pane"
-                        x-bind:aria-selected="activeTab === 'social' ? 'true' : 'false'"
-                        x-bind:tabindex="activeTab === 'social' ? '0' : '-1'"
+                        aria-controls="email-tab-pane"
+                        x-bind:aria-selected="activeTab === 'email' ? 'true' : 'false'"
+                        x-bind:tabindex="activeTab === 'email' ? '0' : '-1'"
                         x-bind:class="{
-                            'text-zinc-950 dark:text-zinc-50 border-zinc-200/75 dark:border-zinc-700/75 bg-white dark:bg-zinc-900': activeTab === 'social',
-                            'text-zinc-500 border-transparent hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-zinc-50': activeTab !== 'social',
+                            'text-zinc-950 dark:text-zinc-50 border-zinc-200/75 dark:border-zinc-700/75 bg-white dark:bg-zinc-900': activeTab === 'email',
+                            'text-zinc-500 border-transparent hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-zinc-50': activeTab !== 'email',
                         }"
                         class="z-10 -mb-px flex items-center gap-2 rounded-t-lg border-x border-t px-5 py-3 font-medium outline-none focus:outline-none"
                     >
-                        <i class="fas fa-share-alt"></i>Social Media
+                        <i class="fas fa-envelope"></i>Email
                     </button>
                     <button
-                        x-on:click="activeTab = 'other'"
-                        x-on:focus="activeTab = 'other'"
+                        x-on:click="activeTab = 'system'"
+                        x-on:focus="activeTab = 'system'"
                         type="button"
-                        id="other-tab"
+                        id="system-tab"
                         role="tab"
-                        aria-controls="other-tab-pane"
-                        x-bind:aria-selected="activeTab === 'other' ? 'true' : 'false'"
-                        x-bind:tabindex="activeTab === 'other' ? '0' : '-1'"
+                        aria-controls="system-tab-pane"
+                        x-bind:aria-selected="activeTab === 'system' ? 'true' : 'false'"
+                        x-bind:tabindex="activeTab === 'system' ? '0' : '-1'"
                         x-bind:class="{
-                            'text-zinc-950 dark:text-zinc-50 border-zinc-200/75 dark:border-zinc-700/75 bg-white dark:bg-zinc-900': activeTab === 'other',
-                            'text-zinc-500 border-transparent hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-zinc-50': activeTab !== 'other',
+                            'text-zinc-950 dark:text-zinc-50 border-zinc-200/75 dark:border-zinc-700/75 bg-white dark:bg-zinc-900': activeTab === 'system',
+                            'text-zinc-500 border-transparent hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-zinc-50': activeTab !== 'system',
                         }"
                         class="z-10 -mb-px flex items-center gap-2 rounded-t-lg border-x border-t px-5 py-3 font-medium outline-none focus:outline-none"
                     >
-                        <i class="fas fa-cog"></i>Other Settings
+                        <i class="fas fa-cog"></i>System
                     </button>
                 </div>
                 <!-- END Nav Tabs -->
@@ -116,12 +116,12 @@
                 <div
                     class="rounded-b-lg rounded-tr-lg border border-zinc-200/75 bg-white p-5 dark:border-zinc-700/75 dark:bg-zinc-900 rtl:rounded-tl-lg rtl:rounded-tr-none"
                 >
-                    <!-- Site Information Tab -->
+                    <!-- General Tab -->
                     <div
-                        x-show="activeTab === 'site'"
-                        id="site-tab-pane"
+                        x-show="activeTab === 'general'"
+                        id="general-tab-pane"
                         role="tabpanel"
-                        aria-labelledby="site-tab"
+                        aria-labelledby="general-tab"
                         tabindex="0"
                         class="space-y-6"
                     >
@@ -188,43 +188,6 @@
 
                         <div class="space-y-4">
                             <h2 class="text-lg font-semibold text-zinc-900 dark:text-white border-b border-zinc-200 dark:border-zinc-700 pb-3">
-                                <i class="fas fa-search mr-2 text-zinc-500"></i>SEO Settings
-                            </h2>
-                            
-                            <x-input 
-                                label="Meta Keywords" 
-                                name="meta_keywords" 
-                                type="text" 
-                                placeholder="keyword1, keyword2, keyword3"
-                                value="{{ old('meta_keywords', get_setting('meta_keywords', '')) }}"
-                            />
-
-                            <x-ui.textarea 
-                                label="Meta Description" 
-                                name="meta_description" 
-                                placeholder="SEO meta description (recommended: 150-160 characters)"
-                                rows="3"
-                                value="{{ old('meta_description', get_setting('meta_description', '')) }}"
-                            />
-                        </div>
-
-                        <div class="space-y-4">
-                            <h2 class="text-lg font-semibold text-zinc-900 dark:text-white border-b border-zinc-200 dark:border-zinc-700 pb-3">
-                                <i class="fas fa-chart-line mr-2 text-zinc-500"></i>Analytics & Tracking
-                            </h2>
-                            
-                            <x-input 
-                                label="Google Analytics ID" 
-                                name="google_analytics_id" 
-                                type="text" 
-                                placeholder="e.g. G-XXXXXXXXXX or UA-XXXXXXXXX-X"
-                                value="{{ old('google_analytics_id', get_setting('google_analytics_id', '')) }}"
-                            />
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400">Enter your Google Analytics Measurement ID (GA4: G-XXXXXXXXXX) or Universal Analytics ID (UA-XXXXXXXXX-X). Leave empty to disable tracking.</p>
-                        </div>
-
-                        <div class="space-y-4">
-                            <h2 class="text-lg font-semibold text-zinc-900 dark:text-white border-b border-zinc-200 dark:border-zinc-700 pb-3">
                                 <i class="fas fa-image mr-2 text-zinc-500"></i>Branding
                             </h2>
                             
@@ -242,6 +205,82 @@
                                 :value="get_setting('site_favicon', '')"
                                 accept="image/x-icon, image/png, image/jpeg, image/gif, image/svg+xml"
                                 helper-text="ICO, PNG, JPG, GIF, SVG - Max 1MB"
+                            />
+                        </div>
+
+                        <div class="space-y-4">
+                            <h2 class="text-lg font-semibold text-zinc-900 dark:text-white border-b border-zinc-200 dark:border-zinc-700 pb-3">
+                                <i class="fas fa-window-minimize mr-2 text-zinc-500"></i>Footer Settings
+                            </h2>
+                            <p class="text-sm text-zinc-600 dark:text-zinc-400">Customize the footer content displayed on all pages.</p>
+                            
+                            <x-input 
+                                label="Copyright Text" 
+                                name="footer_copyright" 
+                                type="text" 
+                                placeholder="e.g. © {{ date('Y') }} Your Company Name. All rights reserved."
+                                value="{{ old('footer_copyright', get_setting('footer_copyright', '© ' . date('Y') . ' Open Overheid. Alle rechten voorbehouden.')) }}"
+                            />
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400">Use {{ date('Y') }} for current year. Leave empty to use default.</p>
+
+                            <x-ui.textarea 
+                                label="Footer Description / Mission" 
+                                name="footer_description" 
+                                placeholder="Brief description or mission statement for the footer"
+                                rows="4"
+                                value="{{ old('footer_description', get_setting('footer_description', 'Open.overheid.nl bundelt actief openbaar gemaakte overheidsdocumenten op één centrale plek, zodat burgers en professionals deze eenvoudig kunnen vinden en raadplegen.')) }}"
+                            />
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400">This will be displayed in the footer mission section. Leave empty to use default.</p>
+
+                            <x-ui.textarea 
+                                label="Footer Secondary Description" 
+                                name="footer_secondary_description" 
+                                placeholder="Additional footer text (optional)"
+                                rows="2"
+                                value="{{ old('footer_secondary_description', get_setting('footer_secondary_description', 'Wij werken op basis van de Wet open overheid (Woo) om transparantie en toegankelijkheid te bevorderen.')) }}"
+                            />
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400">Optional secondary description text. Leave empty to use default.</p>
+
+                            <x-input 
+                                label="Footer Bottom Text" 
+                                name="footer_bottom_text" 
+                                type="text" 
+                                placeholder="e.g. Digitaliseringspartner voor slimme ICT-oplossingen"
+                                value="{{ old('footer_bottom_text', get_setting('footer_bottom_text', 'Digitaliseringspartner voor slimme ICT-oplossingen')) }}"
+                            />
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400">Text displayed in the bottom right of the footer. Leave empty to hide.</p>
+                        </div>
+                    </div>
+
+                    <!-- SEO & Social Tab -->
+                    <div
+                        x-cloak
+                        x-show="activeTab === 'seo'"
+                        id="seo-tab-pane"
+                        role="tabpanel"
+                        aria-labelledby="seo-tab"
+                        tabindex="0"
+                        class="space-y-6"
+                    >
+                        <div class="space-y-4">
+                            <h2 class="text-lg font-semibold text-zinc-900 dark:text-white border-b border-zinc-200 dark:border-zinc-700 pb-3">
+                                <i class="fas fa-search mr-2 text-zinc-500"></i>SEO Settings
+                            </h2>
+                            
+                            <x-input 
+                                label="Meta Keywords" 
+                                name="meta_keywords" 
+                                type="text" 
+                                placeholder="keyword1, keyword2, keyword3"
+                                value="{{ old('meta_keywords', get_setting('meta_keywords', '')) }}"
+                            />
+
+                            <x-ui.textarea 
+                                label="Meta Description" 
+                                name="meta_description" 
+                                placeholder="SEO meta description (recommended: 150-160 characters)"
+                                rows="3"
+                                value="{{ old('meta_description', get_setting('meta_description', '')) }}"
                             />
                         </div>
 
@@ -275,15 +314,90 @@
                                 helper-text="Recommended: 1200x630px - PNG, JPG, GIF, WebP - Max 2MB"
                             />
                         </div>
+
+                        <div class="space-y-4">
+                            <h2 class="text-lg font-semibold text-zinc-900 dark:text-white border-b border-zinc-200 dark:border-zinc-700 pb-3">
+                                <i class="fas fa-chart-line mr-2 text-zinc-500"></i>Analytics & Tracking
+                            </h2>
+                            
+                            <x-input 
+                                label="Google Analytics ID" 
+                                name="google_analytics_id" 
+                                type="text" 
+                                placeholder="e.g. G-XXXXXXXXXX or UA-XXXXXXXXX-X"
+                                value="{{ old('google_analytics_id', get_setting('google_analytics_id', '')) }}"
+                            />
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400">Enter your Google Analytics Measurement ID (GA4: G-XXXXXXXXXX) or Universal Analytics ID (UA-XXXXXXXXX-X). Leave empty to disable tracking.</p>
+                        </div>
+
+                        <div class="space-y-4">
+                            <h2 class="text-lg font-semibold text-zinc-900 dark:text-white border-b border-zinc-200 dark:border-zinc-700 pb-3">
+                                <i class="fas fa-share-alt mr-2 text-zinc-500"></i>Social Media Links
+                            </h2>
+                            
+                            <x-input 
+                                label="Facebook URL" 
+                                name="facebook_url" 
+                                type="url" 
+                                placeholder="https://facebook.com/yourpage"
+                                icon="facebook"
+                                value="{{ old('facebook_url', get_setting('facebook_url', '')) }}"
+                            />
+
+                            <x-input 
+                                label="Twitter URL" 
+                                name="twitter_url" 
+                                type="url" 
+                                placeholder="https://twitter.com/yourhandle"
+                                icon="twitter"
+                                value="{{ old('twitter_url', get_setting('twitter_url', '')) }}"
+                            />
+
+                            <x-input 
+                                label="LinkedIn URL" 
+                                name="linkedin_url" 
+                                type="url" 
+                                placeholder="https://linkedin.com/company/yourcompany"
+                                icon="linkedin"
+                                value="{{ old('linkedin_url', get_setting('linkedin_url', '')) }}"
+                            />
+
+                            <x-input 
+                                label="Instagram URL" 
+                                name="instagram_url" 
+                                type="url" 
+                                placeholder="https://instagram.com/yourhandle"
+                                icon="instagram"
+                                value="{{ old('instagram_url', get_setting('instagram_url', '')) }}"
+                            />
+
+                            <x-input 
+                                label="YouTube URL" 
+                                name="youtube_url" 
+                                type="url" 
+                                placeholder="https://youtube.com/@yourchannel"
+                                icon="youtube"
+                                value="{{ old('youtube_url', get_setting('youtube_url', '')) }}"
+                            />
+
+                            <x-input 
+                                label="GitHub URL" 
+                                name="github_url" 
+                                type="url" 
+                                placeholder="https://github.com/yourusername"
+                                icon="github"
+                                value="{{ old('github_url', get_setting('github_url', '')) }}"
+                            />
+                        </div>
                     </div>
 
-                    <!-- SMTP Tab -->
+                    <!-- Email Tab -->
                     <div
                         x-cloak
-                        x-show="activeTab === 'smtp'"
-                        id="smtp-tab-pane"
+                        x-show="activeTab === 'email'"
+                        id="email-tab-pane"
                         role="tabpanel"
-                        aria-labelledby="smtp-tab"
+                        aria-labelledby="email-tab"
                         tabindex="0"
                         class="space-y-6"
                     >
@@ -364,89 +478,7 @@
                                 value="{{ old('smtp_from_name', get_setting('smtp_from_name', '')) }}"
                             />
                         </div>
-                    </div>
 
-                    <!-- Social Media Tab -->
-                    <div
-                        x-cloak
-                        x-show="activeTab === 'social'"
-                        id="social-tab-pane"
-                        role="tabpanel"
-                        aria-labelledby="social-tab"
-                        tabindex="0"
-                        class="space-y-6"
-                    >
-                        <div class="space-y-4">
-                            <h2 class="text-lg font-semibold text-zinc-900 dark:text-white border-b border-zinc-200 dark:border-zinc-700 pb-3">
-                                <i class="fas fa-share-alt mr-2 text-zinc-500"></i>Social Media Links
-                            </h2>
-                            
-                            <x-input 
-                                label="Facebook URL" 
-                                name="facebook_url" 
-                                type="url" 
-                                placeholder="https://facebook.com/yourpage"
-                                icon="facebook"
-                                value="{{ old('facebook_url', get_setting('facebook_url', '')) }}"
-                            />
-
-                            <x-input 
-                                label="Twitter URL" 
-                                name="twitter_url" 
-                                type="url" 
-                                placeholder="https://twitter.com/yourhandle"
-                                icon="twitter"
-                                value="{{ old('twitter_url', get_setting('twitter_url', '')) }}"
-                            />
-
-                            <x-input 
-                                label="LinkedIn URL" 
-                                name="linkedin_url" 
-                                type="url" 
-                                placeholder="https://linkedin.com/company/yourcompany"
-                                icon="linkedin"
-                                value="{{ old('linkedin_url', get_setting('linkedin_url', '')) }}"
-                            />
-
-                            <x-input 
-                                label="Instagram URL" 
-                                name="instagram_url" 
-                                type="url" 
-                                placeholder="https://instagram.com/yourhandle"
-                                icon="instagram"
-                                value="{{ old('instagram_url', get_setting('instagram_url', '')) }}"
-                            />
-
-                            <x-input 
-                                label="YouTube URL" 
-                                name="youtube_url" 
-                                type="url" 
-                                placeholder="https://youtube.com/@yourchannel"
-                                icon="youtube"
-                                value="{{ old('youtube_url', get_setting('youtube_url', '')) }}"
-                            />
-
-                            <x-input 
-                                label="GitHub URL" 
-                                name="github_url" 
-                                type="url" 
-                                placeholder="https://github.com/yourusername"
-                                icon="github"
-                                value="{{ old('github_url', get_setting('github_url', '')) }}"
-                            />
-                        </div>
-                    </div>
-
-                    <!-- Other Settings Tab -->
-                    <div
-                        x-cloak
-                        x-show="activeTab === 'other'"
-                        id="other-tab-pane"
-                        role="tabpanel"
-                        aria-labelledby="other-tab"
-                        tabindex="0"
-                        class="space-y-6"
-                    >
                         <div class="space-y-4">
                             <h2 class="text-lg font-semibold text-zinc-900 dark:text-white border-b border-zinc-200 dark:border-zinc-700 pb-3">
                                 <i class="fas fa-envelope mr-2 text-zinc-500"></i>Contact Form Settings
@@ -468,16 +500,27 @@
                                 value="1"
                                 :checked="old('contact_auto_reply_enabled', get_setting('contact_auto_reply_enabled', '0') == '1')"
                             />
-                            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-4">Send an automatic confirmation email to users after they submit the contact form</p>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400">Send an automatic confirmation email to users after they submit the contact form</p>
                         </div>
+                    </div>
 
+                    <!-- System Tab -->
+                    <div
+                        x-cloak
+                        x-show="activeTab === 'system'"
+                        id="system-tab-pane"
+                        role="tabpanel"
+                        aria-labelledby="system-tab"
+                        tabindex="0"
+                        class="space-y-6"
+                    >
                         <div class="space-y-4">
                             <h2 class="text-lg font-semibold text-zinc-900 dark:text-white border-b border-zinc-200 dark:border-zinc-700 pb-3">
-                                <i class="fas fa-cog mr-2 text-zinc-500"></i>Additional Settings
+                                <i class="fas fa-tools mr-2 text-zinc-500"></i>Maintenance Mode
                             </h2>
                             
                             <x-ui.checkbox 
-                                label="Maintenance Mode" 
+                                label="Enable Maintenance Mode" 
                                 name="maintenance_mode" 
                                 value="1"
                                 :checked="old('maintenance_mode', get_setting('maintenance_mode', '0') == '1')"
@@ -492,7 +535,13 @@
                                 value="{{ old('maintenance_message', get_setting('maintenance_message', 'We\'re currently performing scheduled maintenance to improve your experience. We\'ll be back shortly.')) }}"
                             />
                             <p class="text-xs text-zinc-500 dark:text-zinc-400">This message will be displayed to users when maintenance mode is active</p>
+                        </div>
 
+                        <div class="space-y-4">
+                            <h2 class="text-lg font-semibold text-zinc-900 dark:text-white border-b border-zinc-200 dark:border-zinc-700 pb-3">
+                                <i class="fas fa-globe mr-2 text-zinc-500"></i>Localization
+                            </h2>
+                            
                             <x-input 
                                 label="Timezone" 
                                 name="timezone" 
@@ -500,6 +549,7 @@
                                 placeholder="e.g. Europe/Amsterdam"
                                 value="{{ old('timezone', get_setting('timezone', config('app.timezone', 'UTC'))) }}"
                             />
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400">Default timezone for the application</p>
 
                             <x-input 
                                 label="Locale" 
@@ -508,6 +558,7 @@
                                 placeholder="e.g. en, nl, tr"
                                 value="{{ old('locale', get_setting('locale', config('app.locale', 'en'))) }}"
                             />
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400">Default locale/language for the application</p>
                         </div>
                     </div>
                 </div>

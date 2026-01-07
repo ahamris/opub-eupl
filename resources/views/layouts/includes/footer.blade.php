@@ -89,13 +89,25 @@
             <!-- Mission Statement Column -->
             <div class="mt-10 xl:mt-0">
                 <h3 class="text-xs font-semibold uppercase tracking-wider text-white/60 mb-4">Onze missie</h3>
-                <p class="text-sm leading-relaxed text-white/70">
-                    Open.overheid.nl bundelt actief openbaar gemaakte overheidsdocumenten op één centrale plek, 
-                    zodat burgers en professionals deze eenvoudig kunnen vinden en raadplegen.
-                </p>
-                <p class="mt-4 text-sm leading-relaxed text-white/50">
-                    Wij werken op basis van de Wet open overheid (Woo) om transparantie en toegankelijkheid te bevorderen.
-                </p>
+                @if(get_setting('footer_description'))
+                    <p class="text-sm leading-relaxed text-white/70">
+                        {{ get_setting('footer_description') }}
+                    </p>
+                @else
+                    <p class="text-sm leading-relaxed text-white/70">
+                        Open.overheid.nl bundelt actief openbaar gemaakte overheidsdocumenten op één centrale plek, 
+                        zodat burgers en professionals deze eenvoudig kunnen vinden en raadplegen.
+                    </p>
+                @endif
+                @if(get_setting('footer_secondary_description'))
+                    <p class="mt-4 text-sm leading-relaxed text-white/50">
+                        {{ get_setting('footer_secondary_description') }}
+                    </p>
+                @else
+                    <p class="mt-4 text-sm leading-relaxed text-white/50">
+                        Wij werken op basis van de Wet open overheid (Woo) om transparantie en toegankelijkheid te bevorderen.
+                    </p>
+                @endif
             </div>
         </div>
         
@@ -103,11 +115,17 @@
         <div class="mt-10 pt-6 border-t border-white/10">
             <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
                 <p class="text-xs text-white/50">
-                    &copy; {{ date('Y') }} Open Overheid. Alle rechten voorbehouden.
+                    @if(get_setting('footer_copyright'))
+                        {!! str_replace('{{ date(\'Y\') }}', date('Y'), e(get_setting('footer_copyright'))) !!}
+                    @else
+                        &copy; {{ date('Y') }} Open Overheid. Alle rechten voorbehouden.
+                    @endif
                 </p>
+                @if(get_setting('footer_bottom_text'))
                 <div class="flex items-center gap-6">
-                    <span class="text-xs text-white/40">Digitaliseringspartner voor slimme ICT-oplossingen</span>
+                    <span class="text-xs text-white/40">{{ get_setting('footer_bottom_text') }}</span>
                 </div>
+                @endif
             </div>
         </div>
     </div>
