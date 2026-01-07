@@ -204,8 +204,12 @@ class AppServiceProvider extends ServiceProvider
                 config(['mail.mailers.smtp.password' => $smtpPassword]);
             }
 
-            if (!empty($smtpEncryption)) {
+            // Handle encryption - if empty or "None", set to null for Mailpit
+            if (!empty($smtpEncryption) && strtolower($smtpEncryption) !== 'none') {
                 config(['mail.mailers.smtp.encryption' => $smtpEncryption]);
+            } else {
+                // Mailpit doesn't need encryption
+                config(['mail.mailers.smtp.encryption' => null]);
             }
 
             if (!empty($fromAddress)) {
@@ -214,6 +218,11 @@ class AppServiceProvider extends ServiceProvider
 
             if (!empty($fromName)) {
                 config(['mail.from.name' => $fromName]);
+            }
+
+            // If SMTP settings are configured, use SMTP as default mailer
+            if (!empty($smtpHost)) {
+                config(['mail.default' => 'smtp']);
             }
         } catch (\Exception $e) {
             // Silently fail if settings can't be loaded (e.g., during migrations)

@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ContactAutoReplyMail;
+use App\Mail\ContactNotificationMail;
 use App\Models\ContactSubmission;
 use App\Models\SearchSubscription;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class ContactController extends Controller
 {
@@ -23,7 +27,7 @@ class ContactController extends Controller
             'message' => 'required|string|max:10000',
         ]);
 
-        ContactSubmission::create([
+        $submission = ContactSubmission::create([
             'organisation' => $validated['organisation'] ?? null,
             'full_name' => $validated['full-name'],
             'email' => $validated['email'],
@@ -31,6 +35,31 @@ class ContactController extends Controller
             'subject' => $validated['subject'],
             'message' => $validated['message'],
         ]);
+
+        // Send notification email to admin if configured
+        $notificationEmail = get_setting('contact_notification_email');
+        if ($notificationEmail) {
+            try {
+                Mail::to($notificationEmail)->send(new ContactNotificationMail($submission));
+            } catch (\Exception $e) {
+                Log::error('Failed to send contact notification email', [
+                    'submission_id' => $submission->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Send auto-reply email to user if enabled
+        if (get_setting('contact_auto_reply_enabled', '0') == '1') {
+            try {
+                Mail::to($submission->email)->send(new ContactAutoReplyMail($submission));
+            } catch (\Exception $e) {
+                Log::error('Failed to send contact auto-reply email', [
+                    'submission_id' => $submission->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
         return redirect()
             ->route('contact')

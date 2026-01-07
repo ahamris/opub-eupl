@@ -157,6 +157,37 @@
 
                         <div class="space-y-4">
                             <h2 class="text-lg font-semibold text-zinc-900 dark:text-white border-b border-zinc-200 dark:border-zinc-700 pb-3">
+                                <i class="fas fa-address-card mr-2 text-zinc-500"></i>Contact Information
+                            </h2>
+                            <p class="text-sm text-zinc-600 dark:text-zinc-400">These contact details will be displayed on the contact page and in the footer.</p>
+                            
+                            <x-input 
+                                label="Contact Email" 
+                                name="contact_email" 
+                                type="email" 
+                                placeholder="e.g. contact@example.com"
+                                value="{{ old('contact_email', get_setting('contact_email', '')) }}"
+                            />
+
+                            <x-input 
+                                label="Contact Phone" 
+                                name="contact_phone" 
+                                type="tel" 
+                                placeholder="e.g. +31 (0) 123 456 789"
+                                value="{{ old('contact_phone', get_setting('contact_phone', '')) }}"
+                            />
+
+                            <x-ui.textarea 
+                                label="Contact Address" 
+                                name="contact_address" 
+                                placeholder="e.g. Open Overheid Platform&#10;Den Haag, Nederland"
+                                rows="3"
+                                value="{{ old('contact_address', get_setting('contact_address', '')) }}"
+                            />
+                        </div>
+
+                        <div class="space-y-4">
+                            <h2 class="text-lg font-semibold text-zinc-900 dark:text-white border-b border-zinc-200 dark:border-zinc-700 pb-3">
                                 <i class="fas fa-search mr-2 text-zinc-500"></i>SEO Settings
                             </h2>
                             
@@ -175,6 +206,21 @@
                                 rows="3"
                                 value="{{ old('meta_description', get_setting('meta_description', '')) }}"
                             />
+                        </div>
+
+                        <div class="space-y-4">
+                            <h2 class="text-lg font-semibold text-zinc-900 dark:text-white border-b border-zinc-200 dark:border-zinc-700 pb-3">
+                                <i class="fas fa-chart-line mr-2 text-zinc-500"></i>Analytics & Tracking
+                            </h2>
+                            
+                            <x-input 
+                                label="Google Analytics ID" 
+                                name="google_analytics_id" 
+                                type="text" 
+                                placeholder="e.g. G-XXXXXXXXXX or UA-XXXXXXXXX-X"
+                                value="{{ old('google_analytics_id', get_setting('google_analytics_id', '')) }}"
+                            />
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400">Enter your Google Analytics Measurement ID (GA4: G-XXXXXXXXXX) or Universal Analytics ID (UA-XXXXXXXXX-X). Leave empty to disable tracking.</p>
                         </div>
 
                         <div class="space-y-4">
@@ -401,6 +447,30 @@
                         tabindex="0"
                         class="space-y-6"
                     >
+                        <div class="space-y-4">
+                            <h2 class="text-lg font-semibold text-zinc-900 dark:text-white border-b border-zinc-200 dark:border-zinc-700 pb-3">
+                                <i class="fas fa-envelope mr-2 text-zinc-500"></i>Contact Form Settings
+                            </h2>
+                            <p class="text-sm text-zinc-600 dark:text-zinc-400">Configure email notifications for contact form submissions. Form submissions are already saved in the admin panel under Contact Messages.</p>
+                            
+                            <x-input 
+                                label="Notification Email" 
+                                name="contact_notification_email" 
+                                type="email" 
+                                placeholder="e.g. admin@example.com"
+                                value="{{ old('contact_notification_email', get_setting('contact_notification_email', '')) }}"
+                            />
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400">Email address to receive notifications when a contact form is submitted. Leave empty to disable notifications.</p>
+
+                            <x-ui.checkbox 
+                                label="Enable Auto-Reply" 
+                                name="contact_auto_reply_enabled" 
+                                value="1"
+                                :checked="old('contact_auto_reply_enabled', get_setting('contact_auto_reply_enabled', '0') == '1')"
+                            />
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400 mb-4">Send an automatic confirmation email to users after they submit the contact form</p>
+                        </div>
+
                         <div class="space-y-4">
                             <h2 class="text-lg font-semibold text-zinc-900 dark:text-white border-b border-zinc-200 dark:border-zinc-700 pb-3">
                                 <i class="fas fa-cog mr-2 text-zinc-500"></i>Additional Settings

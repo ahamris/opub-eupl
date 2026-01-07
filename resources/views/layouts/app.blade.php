@@ -56,6 +56,32 @@
         <meta name="twitter:image" content="{{ $defaultOgImage }}">
     @endif
     
+    {{-- Google Analytics --}}
+    @php
+        $gaId = get_setting('google_analytics_id');
+    @endphp
+    @if($gaId)
+        @if(str_starts_with($gaId, 'G-'))
+            {{-- Google Analytics 4 (GA4) --}}
+            <script async src="https://www.googletagmanager.com/gtag/js?id={{ $gaId }}"></script>
+            <script>
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '{{ $gaId }}');
+            </script>
+        @elseif(str_starts_with($gaId, 'UA-'))
+            {{-- Universal Analytics (Legacy) --}}
+            <script async src="https://www.googletagmanager.com/gtag/js?id={{ $gaId }}"></script>
+            <script>
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '{{ $gaId }}');
+            </script>
+        @endif
+    @endif
+    
     @stack('styles')
 </head>
 <body class="bg-[var(--color-surface)] text-[var(--color-on-surface)] min-h-screen flex flex-col font-sans">

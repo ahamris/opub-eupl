@@ -30,6 +30,14 @@ class GeneralSettingController extends AdminBaseController
             'site_url' => 'nullable|url|max:500',
             'meta_keywords' => 'nullable|string|max:500',
             'meta_description' => 'nullable|string|max:500',
+            
+            // Analytics
+            'google_analytics_id' => 'nullable|string|max:50',
+            
+            // Contact Information
+            'contact_email' => 'nullable|email|max:255',
+            'contact_phone' => 'nullable|string|max:50',
+            'contact_address' => 'nullable|string|max:500',
             'site_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
             'site_favicon' => 'nullable|image|mimes:ico,png,jpg,jpeg,gif,svg|max:1024',
             'og_title' => 'nullable|string|max:255',
@@ -52,6 +60,10 @@ class GeneralSettingController extends AdminBaseController
             'instagram_url' => 'nullable|url|max:500',
             'youtube_url' => 'nullable|url|max:500',
             'github_url' => 'nullable|url|max:500',
+            
+            // Contact Form Settings
+            'contact_notification_email' => 'nullable|email|max:255',
+            'contact_auto_reply_enabled' => 'boolean',
             
             // Other Settings
             'maintenance_mode' => 'boolean',
@@ -97,13 +109,18 @@ class GeneralSettingController extends AdminBaseController
             }
         }
 
-        // Handle checkbox
+        // Handle checkboxes
         $validated['maintenance_mode'] = $request->boolean('maintenance_mode') ? '1' : '0';
+        $validated['contact_auto_reply_enabled'] = $request->boolean('contact_auto_reply_enabled') ? '1' : '0';
 
         // Save all settings (except files which are handled above)
         $settingsToSave = [
             // Site Information
             'site_title', 'site_description', 'site_url', 'meta_keywords', 'meta_description',
+            // Contact Information
+            'contact_email', 'contact_phone', 'contact_address',
+            // Analytics
+            'google_analytics_id',
             // SMTP
             'smtp_host', 'smtp_port', 'smtp_username', 'smtp_password', 'smtp_encryption', 
             'smtp_from_address', 'smtp_from_name',
@@ -111,6 +128,8 @@ class GeneralSettingController extends AdminBaseController
             'facebook_url', 'twitter_url', 'linkedin_url', 'instagram_url', 'youtube_url', 'github_url',
             // Open Graph
             'og_title', 'og_description',
+            // Contact Form Settings
+            'contact_notification_email', 'contact_auto_reply_enabled',
             // Other
             'maintenance_mode', 'maintenance_message', 'timezone', 'locale',
         ];
