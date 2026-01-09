@@ -7,227 +7,246 @@
                 <p class="text-zinc-600 dark:text-zinc-400">Welcome! You can track your system's overall status here.</p>
             </div>
         </div>
-            <!-- Users Column -->
-            <div class="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-sm">
+
+        <!-- Statistics Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Total Users Card -->
+            <x-ui.card 
+                icon="users" 
+                icon-color="primary"
+                title="Total Users"
+                :value="number_format($totalUsers)"
+                action-text="Manage users"
+                :action-url="route('admin.users.index')"
+            />
+
+            <!-- Active Blogs Card -->
+            <x-ui.card 
+                icon="newspaper" 
+                icon-color="success"
+                title="Active Blog Posts"
+                :value="number_format($activeBlogs)"
+                action-text="Manage blogs"
+                :action-url="route('admin.content.blog.index')"
+            />
+
+            <!-- Unread Messages Card -->
+            <x-ui.card 
+                icon="envelope" 
+                icon-color="{{ $unreadMessages > 0 ? 'warning' : 'secondary' }}"
+                title="Unread Messages"
+                :value="number_format($unreadMessages)"
+                action-text="View messages"
+                :action-url="route('admin.contact-submissions.index')"
+            />
+
+            <!-- Active Subscriptions Card -->
+            <x-ui.card 
+                icon="bell" 
+                icon-color="sky"
+                title="Active Subscriptions"
+                :value="number_format($activeSubscriptions)"
+                action-text="Manage subscriptions"
+                :action-url="route('admin.search-subscriptions.index')"
+            />
+        </div>
+
+        <!-- Secondary Stats Row -->
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <!-- Total Documents -->
+            <div class="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center">
+                        <i class="fas fa-file-alt text-indigo-600 dark:text-indigo-400"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">Total Documents</p>
+                        <p class="text-lg font-semibold text-zinc-900 dark:text-white">{{ number_format($totalDocuments, 0, ',', '.') }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Users -->
+            <div class="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-green-50 dark:bg-green-950/30 flex items-center justify-center">
+                        <i class="fas fa-user-check text-green-600 dark:text-green-400"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">Active Users</p>
+                        <p class="text-lg font-semibold text-zinc-900 dark:text-white">{{ $activeUsers }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users This Month -->
+            <div class="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-sky-50 dark:bg-sky-950/30 flex items-center justify-center">
+                        <i class="fas fa-user-plus text-sky-600 dark:text-sky-400"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">Registered This Month</p>
+                        <p class="text-lg font-semibold text-zinc-900 dark:text-white">{{ $usersThisMonth }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Featured Blogs -->
+            <div class="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-yellow-50 dark:bg-yellow-950/30 flex items-center justify-center">
+                        <i class="fas fa-star text-yellow-600 dark:text-yellow-400"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">Featured Blogs</p>
+                        <p class="text-lg font-semibold text-zinc-900 dark:text-white">{{ $featuredBlogs }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Verified Subscriptions -->
+            <div class="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center">
+                        <i class="fas fa-check-circle text-emerald-600 dark:text-emerald-400"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">Verified Subscriptions</p>
+                        <p class="text-lg font-semibold text-zinc-900 dark:text-white">{{ $verifiedSubscriptions }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Two Column Layout: Recent Messages + Quick Actions -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Recent Unread Messages -->
+            <div class="lg:col-span-2 bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-sm">
                 <div class="p-4 border-b border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">Users</h2>
-                    <a href="{{ route('admin.users.create') }}">
-                        <x-button variant="primary" size="sm" icon="plus">Add</x-button>
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-envelope text-zinc-500 dark:text-zinc-400"></i>
+                        <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">Recent Unread Messages</h2>
+                        @if($unreadMessages > 0)
+                            <span class="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 text-xs font-medium px-2 py-0.5 rounded-full">
+                                {{ $unreadMessages }} new
+                            </span>
+                        @endif
+                    </div>
+                    <a href="{{ route('admin.contact-submissions.index') }}">
+                        <x-button variant="outline-primary" size="sm" icon="arrow-right">View All</x-button>
                     </a>
                 </div>
                 <div class="p-4">
-                    <livewire:admin.table 
-                        resource="users"
-                        :columns="[
-                            ['key' => 'id', 'label' => 'ID', 'sortable' => true],
-                            ['key' => 'name', 'label' => 'Name', 'sortable' => true],
-                            ['key' => 'email', 'label' => 'Email', 'sortable' => true],
-                        ['key' => 'is_active', 'label' => 'Is Active', 'sortable' => true, 'type' => 'toggle'],
-                            ['key' => 'created_at', 'label' => 'Created At', 'sortable' => true, 'format' => 'date'],
-                        ]"
-                        :search-fields="['name', 'email']"
+                    @if($recentUnreadMessages->count() > 0)
+                        <div class="space-y-3">
+                            @foreach($recentUnreadMessages as $message)
+                                <a href="{{ route('admin.contact-submissions.show', $message) }}" 
+                                   class="block p-3 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors">
+                                    <div class="flex items-start justify-between gap-4">
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2 mb-1">
+                                                <span class="font-medium text-zinc-900 dark:text-white truncate">{{ $message->full_name }}</span>
+                                                <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ $message->organisation ?? '' }}</span>
+                                            </div>
+                                            <p class="text-sm text-zinc-600 dark:text-zinc-400 truncate">{{ $message->subject_label }}</p>
+                                            <p class="text-xs text-zinc-500 dark:text-zinc-500 mt-1">{{ $message->email }}</p>
+                                        </div>
+                                        <div class="text-right shrink-0">
+                                            <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ $message->created_at->diffForHumans() }}</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center py-8">
+                            <i class="fas fa-inbox text-4xl text-zinc-300 dark:text-zinc-600 mb-3"></i>
+                            <p class="text-zinc-500 dark:text-zinc-400">No unread messages</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-sm">
+                <div class="p-4 border-b border-zinc-200 dark:border-zinc-700">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-bolt text-zinc-500 dark:text-zinc-400"></i>
+                        <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">Quick Actions</h2>
+                    </div>
+                </div>
+                <div class="p-4 space-y-2">
+                    <a href="{{ route('admin.users.create') }}" 
+                       class="flex items-center gap-3 p-3 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors group">
+                        <div class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center">
+                            <i class="fas fa-user-plus text-indigo-600 dark:text-indigo-400 text-sm"></i>
+                        </div>
+                        <span class="text-sm text-zinc-700 dark:text-zinc-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">Add New User</span>
+                    </a>
+                    <a href="{{ route('admin.content.blog.create') }}" 
+                       class="flex items-center gap-3 p-3 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors group">
+                        <div class="w-8 h-8 rounded-lg bg-green-50 dark:bg-green-950/30 flex items-center justify-center">
+                            <i class="fas fa-pen text-green-600 dark:text-green-400 text-sm"></i>
+                        </div>
+                        <span class="text-sm text-zinc-700 dark:text-zinc-300 group-hover:text-green-600 dark:group-hover:text-green-400">New Blog Post</span>
+                    </a>
+                    <a href="{{ route('admin.content.static-page.index') }}" 
+                       class="flex items-center gap-3 p-3 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors group">
+                        <div class="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-950/30 flex items-center justify-center">
+                            <i class="fas fa-file text-sky-600 dark:text-sky-400 text-sm"></i>
+                        </div>
+                        <span class="text-sm text-zinc-700 dark:text-zinc-300 group-hover:text-sky-600 dark:group-hover:text-sky-400">Static Pages</span>
+                    </a>
+                    <a href="{{ route('admin.content.general-settings.index') }}" 
+                       class="flex items-center gap-3 p-3 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors group">
+                        <div class="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center">
+                            <i class="fas fa-cog text-zinc-600 dark:text-zinc-400 text-sm"></i>
+                        </div>
+                        <span class="text-sm text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-white">General Settings</span>
+                    </a>
+                    <a href="{{ route('admin.settings.theme') }}" 
+                       class="flex items-center gap-3 p-3 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors group">
+                        <div class="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/30 flex items-center justify-center">
+                            <i class="fas fa-palette text-purple-600 dark:text-purple-400 text-sm"></i>
+                        </div>
+                        <span class="text-sm text-zinc-700 dark:text-zinc-300 group-hover:text-purple-600 dark:group-hover:text-purple-400">Theme Settings</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-sm">
+            <div class="p-4 border-b border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-users text-zinc-500 dark:text-zinc-400"></i>
+                    <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">Users</h2>
+                </div>
+                <a href="{{ route('admin.users.create') }}">
+                    <x-button variant="primary" size="sm" icon="plus">Add</x-button>
+                </a>
+            </div>
+            <div class="p-4">
+                <livewire:admin.table 
+                    resource="users"
+                    :columns="[
+                        ['key' => 'id', 'label' => 'ID', 'sortable' => true],
+                        ['key' => 'name', 'label' => 'Name', 'sortable' => true],
+                        ['key' => 'email', 'label' => 'Email', 'sortable' => true],
+                        ['key' => 'is_active', 'label' => 'Active', 'sortable' => true, 'type' => 'toggle'],
+                        ['key' => 'created_at', 'label' => 'Created At', 'sortable' => true, 'format' => 'date'],
+                    ]"
+                    :search-fields="['name', 'email']"
                     :sortable-fields="['id', 'name', 'email', 'is_active', 'created_at']"
-                        :show-actions="true"
-                        :actions="['view', 'edit', 'delete']"
-                        route-prefix="admin.users"
-                        search-placeholder="Search users..."
-                        :paginate="5"
-                        :show-checkbox="false"
-                        :show-bulk-delete="false"
-                    />
-            </div>
-        </div>
-
-        <!-- Component Examples: 4 Columns -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <!-- Column 1: Exclusive Mode Accordion -->
-            <div class="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-sm p-4">
-                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">Exclusive Mode Accordion</h3>
-                <x-ui.accordion :exclusive="true">
-                    <x-ui.accordion-item heading="First Item" :expanded="false">
-                        <p class="text-sm text-zinc-600 dark:text-zinc-400">This is the content of the first accordion item. Only one item can be open at a time in exclusive mode.</p>
-                    </x-ui.accordion-item>
-                    <x-ui.accordion-item heading="Second Item" :expanded="false">
-                        <p class="text-sm text-zinc-600 dark:text-zinc-400">This is the content of the second accordion item. When you open this, the first item will close automatically.</p>
-                    </x-ui.accordion-item>
-                    <x-ui.accordion-item heading="Third Item" :expanded="false">
-                        <p class="text-sm text-zinc-600 dark:text-zinc-400">This is the content of the third accordion item. Exclusive mode ensures only one item is open at once.</p>
-                    </x-ui.accordion-item>
-                </x-ui.accordion>
-            </div>
-
-            <!-- Column 2: Colored & Custom Icon Accordion -->
-            <div class="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-sm p-4">
-                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">Colored & Custom Icons</h3>
-                <x-ui.accordion>
-                    <x-ui.accordion-item heading="Primary Item" icon="star" color="indigo" :expanded="false">
-                        <p class="text-sm text-zinc-600 dark:text-zinc-400">This item has a star icon with indigo color styling.</p>
-                    </x-ui.accordion-item>
-                    <x-ui.accordion-item heading="Success Item" icon="check-circle" color="green" :expanded="false">
-                        <p class="text-sm text-zinc-600 dark:text-zinc-400">This item has a check-circle icon with green color styling.</p>
-                    </x-ui.accordion-item>
-                    <x-ui.accordion-item heading="Warning Item" icon="exclamation-triangle" color="yellow" :expanded="false">
-                        <p class="text-sm text-zinc-600 dark:text-zinc-400">This item has an exclamation-triangle icon with yellow color styling.</p>
-                    </x-ui.accordion-item>
-                    <x-ui.accordion-item heading="Error Item" icon="xmark-circle" color="red" :expanded="false">
-                        <p class="text-sm text-zinc-600 dark:text-zinc-400">This item has an xmark-circle icon with red color styling.</p>
-                    </x-ui.accordion-item>
-                </x-ui.accordion>
-            </div>
-
-            <!-- Column 3: Tooltip Examples -->
-            <div class="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-sm p-4">
-                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">Tooltip Examples</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <!-- Left Column -->
-                    <div class="space-y-4">
-                        <!-- Position Examples -->
-                        <div class="flex flex-col gap-3">
-                            <x-ui.tooltip text="Tooltip on top" position="top">
-                                <x-button variant="primary" size="sm" class="w-full">Top Tooltip</x-button>
-                            </x-ui.tooltip>
-                            <x-ui.tooltip text="Tooltip on bottom" position="bottom">
-                                <x-button variant="success" size="sm" class="w-full">Bottom Tooltip</x-button>
-                            </x-ui.tooltip>
-                        </div>
-
-                        <!-- Click Trigger Example -->
-                        <div>
-                            <p class="text-xs text-zinc-600 dark:text-zinc-400 mb-2">Click to show:</p>
-                            <x-ui.tooltip text="This tooltip appears on click" position="top" trigger="click">
-                                <x-button variant="outline-primary" size="sm" class="w-full">Click Trigger</x-button>
-                            </x-ui.tooltip>
-                        </div>
-
-                        <!-- With Icon -->
-                        <div>
-                            <p class="text-xs text-zinc-600 dark:text-zinc-400 mb-2">Icon tooltip:</p>
-                            <x-ui.tooltip text="Settings icon tooltip" position="top">
-                                <i class="fas fa-cog text-xl text-zinc-600 dark:text-zinc-400 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"></i>
-                            </x-ui.tooltip>
-                        </div>
-                    </div>
-
-                    <!-- Right Column -->
-                    <div class="space-y-4">
-                        <!-- Position Examples -->
-                        <div class="flex flex-col gap-3">
-                            <x-ui.tooltip text="Tooltip on left" position="left">
-                                <x-button variant="warning" size="sm" class="w-full">Left Tooltip</x-button>
-                            </x-ui.tooltip>
-                            <x-ui.tooltip text="Tooltip on right" position="right">
-                                <x-button variant="error" size="sm" class="w-full">Right Tooltip</x-button>
-                            </x-ui.tooltip>
-                        </div>
-
-                        <!-- Long Text Example -->
-                        <div>
-                            <p class="text-xs text-zinc-600 dark:text-zinc-400 mb-2">Long text:</p>
-                            <x-ui.tooltip text="This is a longer tooltip text that wraps to multiple lines when needed." position="top" max-width="200px">
-                                <x-button variant="outline-primary" size="sm" class="w-full">Long Tooltip</x-button>
-                            </x-ui.tooltip>
-                        </div>
-
-                        <!-- Custom Delay -->
-                        <div>
-                            <p class="text-xs text-zinc-600 dark:text-zinc-400 mb-2">Delay (500ms):</p>
-                            <x-ui.tooltip text="Tooltip with custom delay" position="top" delay="500">
-                                <x-button variant="outline-primary" size="sm" class="w-full">Delayed Tooltip</x-button>
-                            </x-ui.tooltip>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mt-4">
-                    <p class="text-xs text-zinc-600 dark:text-zinc-400">Hover or click buttons to see different tooltip behaviors.</p>
-                </div>
-            </div>
-
-            <!-- Column 4: Toast Examples -->
-            <div class="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-sm p-4">
-                <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">Toast Messages</h3>
-                <div class="space-y-3">
-                    <x-button 
-                        variant="success" 
-                        size="sm" 
-                        class="w-full" 
-                        x-data 
-                        x-on:click="toastManager.show('success', 'Operation completed successfully!')"
-                    >
-                        Success Toast
-                    </x-button>
-                    <x-button 
-                        variant="error" 
-                        size="sm" 
-                        class="w-full" 
-                        x-data 
-                        x-on:click="toastManager.show('error', 'An error occurred. Please try again.')"
-                    >
-                        Error Toast
-                    </x-button>
-                    <x-button 
-                        variant="warning" 
-                        size="sm" 
-                        class="w-full" 
-                        x-data 
-                        x-on:click="toastManager.show('warning', 'Please check your input.')"
-                    >
-                        Warning Toast
-                    </x-button>
-                    <x-button 
-                        variant="primary" 
-                        size="sm" 
-                        class="w-full" 
-                        x-data 
-                        x-on:click="toastManager.show('info', 'Here is some information for you.')"
-                    >
-                        Info Toast
-                    </x-button>
-                </div>
-                <div class="mt-4">
-                    <p class="text-xs text-zinc-600 dark:text-zinc-400">Click buttons to show different toast messages.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Primary Button Colors -->
-        <div class="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 shadow-sm p-4">
-            <h3 class="text-lg font-semibold text-zinc-900 dark:text-white mb-4">Primary Button Colors</h3>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <!-- Buttons (span 3 columns) -->
-                <div class="md:col-span-3">
-                    <div class="flex flex-wrap gap-3">
-                        <x-button variant="primary" color="red">Red</x-button>
-                        <x-button variant="primary" color="orange">Orange</x-button>
-                        <x-button variant="primary" color="amber">Amber</x-button>
-                        <x-button variant="primary" color="yellow">Yellow</x-button>
-                        <x-button variant="primary" color="lime">Lime</x-button>
-                        <x-button variant="primary" color="green">Green</x-button>
-                        <x-button variant="primary" color="emerald">Emerald</x-button>
-                        <x-button variant="primary" color="teal">Teal</x-button>
-                        <x-button variant="primary" color="cyan">Cyan</x-button>
-                        <x-button variant="primary" color="sky">Sky</x-button>
-                        <x-button variant="primary" color="blue">Blue</x-button>
-                        <x-button variant="primary" color="indigo">Indigo</x-button>
-                        <x-button variant="primary" color="violet">Violet</x-button>
-                        <x-button variant="primary" color="purple">Purple</x-button>
-                        <x-button variant="primary" color="fuchsia">Fuchsia</x-button>
-                        <x-button variant="primary" color="pink">Pink</x-button>
-                        <x-button variant="primary" color="rose">Rose</x-button>
-                        <x-button variant="primary" color="zinc">Zinc</x-button>
-                    </div>
-                </div>
-
-                <!-- Column 4: Badge Examples -->
-                <div class="flex flex-wrap items-center gap-2">
-                    <span class="text-xs text-zinc-600 dark:text-zinc-400 mb-1">Badge variants:</span>
-                    <x-badge variant="primary" icon="star">Primary</x-badge>
-                    <x-badge variant="secondary" icon="tag">Secondary</x-badge>
-                    <x-badge variant="success" icon="check">Success</x-badge>
-                    <x-badge variant="warning" icon="triangle-exclamation">Warning</x-badge>
-                    <x-badge variant="error" icon="circle-xmark">Error</x-badge>
-                    <x-badge variant="sky" icon="info-circle">Info</x-badge>
-                </div>
+                    :show-actions="true"
+                    :actions="['view', 'edit', 'delete']"
+                    route-prefix="admin.users"
+                    search-placeholder="Search users..."
+                    :paginate="5"
+                    :show-checkbox="false"
+                    :show-bulk-delete="false"
+                />
             </div>
         </div>
     </div>

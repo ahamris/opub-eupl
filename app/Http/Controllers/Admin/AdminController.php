@@ -12,7 +12,54 @@ class AdminController extends AdminBaseController
 {
     public function home()
     {
-        return view('admin.home.index');
+        // User statistics
+        $totalUsers = \App\Models\User::count();
+        $activeUsers = \App\Models\User::where('is_active', true)->count();
+        $usersThisMonth = \App\Models\User::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
+
+        // Blog statistics
+        $totalBlogs = \App\Models\Blog::count();
+        $activeBlogs = \App\Models\Blog::where('is_active', true)->count();
+        $featuredBlogs = \App\Models\Blog::where('is_featured', true)->count();
+
+        // Contact submission statistics
+        $totalMessages = \App\Models\ContactSubmission::count();
+        $unreadMessages = \App\Models\ContactSubmission::where('is_read', false)->count();
+        $activeMessages = \App\Models\ContactSubmission::where('is_archived', false)->count();
+
+        // Search subscription statistics
+        $totalSubscriptions = \App\Models\SearchSubscription::count();
+        $activeSubscriptions = \App\Models\SearchSubscription::where('is_active', true)->count();
+        $verifiedSubscriptions = \App\Models\SearchSubscription::whereNotNull('verified_at')->count();
+
+        // Document statistics
+        $totalDocuments = \App\Models\OpenOverheidDocument::count();
+
+        // Recent unread contact submissions
+        $recentUnreadMessages = \App\Models\ContactSubmission::where('is_read', false)
+            ->where('is_archived', false)
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        return view('admin.home.index', compact(
+            'totalUsers',
+            'activeUsers',
+            'usersThisMonth',
+            'totalBlogs',
+            'activeBlogs',
+            'featuredBlogs',
+            'totalMessages',
+            'unreadMessages',
+            'activeMessages',
+            'totalSubscriptions',
+            'activeSubscriptions',
+            'verifiedSubscriptions',
+            'totalDocuments',
+            'recentUnreadMessages'
+        ));
     }
 
     /**
