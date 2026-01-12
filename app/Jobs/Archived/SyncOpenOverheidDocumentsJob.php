@@ -1,12 +1,22 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Jobs\Archived;
 
 use App\Services\OpenOverheid\OpenOverheidSyncService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * ARCHIVED JOB - DISABLED
+ * 
+ * This job has been moved to the Archived folder and its scheduled execution
+ * has been disabled due to high load on the main application.
+ * 
+ * This job will be moved to a separate service/project in the future.
+ * 
+ * To re-enable this job, see README.md in app/Console/Archived/ folder.
+ */
 class SyncOpenOverheidDocumentsJob implements ShouldQueue
 {
     use Queueable;

@@ -172,14 +172,18 @@ class TypesenseSyncStatus extends Component
 
     public function triggerSync(): void
     {
-        // Dispatch the sync job
-        \App\Jobs\SyncDocumentToTypesense::dispatch();
+        // DISABLED: Sync job has been archived due to high load
+        // The SyncDocumentToTypesense job has been moved to app/Jobs/Archived/
+        // See: app/Console/Archived/README.md for re-enabling instructions
         
-        // Mark sync as running
-        Cache::put('typesense_sync_running', true, 300);
-        Cache::put('typesense_sync_started_at', now(), 300);
+        // Uncomment below to re-enable (after moving job back):
+        // \App\Jobs\SyncDocumentToTypesense::dispatch();
+        // Cache::put('typesense_sync_running', true, 300);
+        // Cache::put('typesense_sync_started_at', now(), 300);
         
-        $this->dispatch('sync-started');
+        // For now, just show a message
+        session()->flash('sync_disabled', 'Typesense sync has been disabled. See app/Console/Archived/README.md for re-enabling instructions.');
+        $this->dispatch('sync-disabled');
     }
 
     public function render()

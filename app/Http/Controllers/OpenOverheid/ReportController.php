@@ -12,8 +12,20 @@ class ReportController
      */
     public function index(Request $request): \Illuminate\View\View
     {
-        // Get period filters (default to current year)
-        $year = (int) $request->get('jaar', now()->year);
+        // Get available years from database (years that have documents)
+        $availableYears = OpenOverheidDocument::whereNotNull('publication_date')
+            ->selectRaw('EXTRACT(YEAR FROM publication_date) as year')
+            ->distinct()
+            ->orderBy('year', 'desc')
+            ->pluck('year')
+            ->map(fn($y) => (int) $y)
+            ->toArray();
+
+        // Default to the most recent year with data, or current year if no data
+        $defaultYear = !empty($availableYears) ? max($availableYears) : now()->year;
+
+        // Get period filters (default to year with most data)
+        $year = (int) $request->get('jaar', $defaultYear);
         $quarter = $request->get('kwartaal') ? (int) $request->get('kwartaal') : null;
 
         // Calculate date range based on filters
@@ -25,25 +37,31 @@ class ReportController
             ? $startDate->copy()->endOfQuarter()
             : now()->setYear($year)->endOfYear();
 
-        // Total documents in period
-        $totalDocuments = OpenOverheidDocument::whereBetween('publication_date', [$startDate, $endDate])
-            ->count();
+        // Ensure endDate doesn't exceed today for accurate reporting
+        if ($endDate->isFuture()) {
+            $endDate = now();
+        }
 
-        // Documents with decision (completed)
-        $documentsWithDecision = OpenOverheidDocument::whereBetween('publication_date', [$startDate, $endDate])
-            ->whereNotNull('publication_date')
-            ->count();
+        // Build base query for documents with publication dates in the selected period
+        // Use Carbon instances directly - Laravel will handle date casting automatically
+        $baseQuery = OpenOverheidDocument::whereNotNull('publication_date')
+            ->whereBetween('publication_date', [$startDate, $endDate]);
+
+        // Total documents in period
+        $totalDocuments = $baseQuery->count();
+
+        // Documents with decision (completed) - same as total since we're filtering by publication_date
+        $documentsWithDecision = $totalDocuments;
 
         // Documents in progress (published in period but might be ongoing)
-        $documentsInProgress = OpenOverheidDocument::where('publication_date', '>=', $startDate)
-            ->where('publication_date', '<=', now())
-            ->count();
+        // For now, this is the same as total documents in the period
+        $documentsInProgress = $totalDocuments;
 
         // Average processing time (simulated - would need actual processing dates)
         $avgProcessingDays = 45; // Placeholder
 
         // Documents per organisation
-        $documentsPerOrganisation = OpenOverheidDocument::whereBetween('publication_date', [$startDate, $endDate])
+        $documentsPerOrganisation = (clone $baseQuery)
             ->whereNotNull('organisation')
             ->selectRaw('organisation, COUNT(*) as count')
             ->groupBy('organisation')
@@ -53,13 +71,13 @@ class ReportController
             ->map(function ($item) {
                 return [
                     'organisation' => $item->organisation,
-                    'count' => $item->count,
+                    'count' => (int) $item->count,
                 ];
             })
             ->toArray();
 
         // Documents per category
-        $documentsPerCategory = OpenOverheidDocument::whereBetween('publication_date', [$startDate, $endDate])
+        $documentsPerCategory = (clone $baseQuery)
             ->whereNotNull('category')
             ->selectRaw('category, COUNT(*) as count')
             ->groupBy('category')
@@ -68,13 +86,13 @@ class ReportController
             ->map(function ($item) {
                 return [
                     'category' => $item->category,
-                    'count' => $item->count,
+                    'count' => (int) $item->count,
                 ];
             })
             ->toArray();
 
         // Documents per theme
-        $documentsPerTheme = OpenOverheidDocument::whereBetween('publication_date', [$startDate, $endDate])
+        $documentsPerTheme = (clone $baseQuery)
             ->whereNotNull('theme')
             ->selectRaw('theme, COUNT(*) as count')
             ->groupBy('theme')
@@ -84,14 +102,14 @@ class ReportController
             ->map(function ($item) {
                 return [
                     'theme' => $item->theme,
-                    'count' => $item->count,
+                    'count' => (int) $item->count,
                 ];
             })
             ->toArray();
 
         // Monthly trend
         if (config('database.default') === 'pgsql') {
-            $monthlyTrend = OpenOverheidDocument::whereBetween('publication_date', [$startDate, $endDate])
+            $monthlyTrend = (clone $baseQuery)
                 ->selectRaw('DATE_TRUNC(\'month\', publication_date) as month, COUNT(*) as count')
                 ->groupBy('month')
                 ->orderBy('month', 'asc')
@@ -103,13 +121,13 @@ class ReportController
                     return [
                         'month' => $date->format('Y-m'),
                         'monthName' => $date->format('M Y'),
-                        'count' => $item->count,
+                        'count' => (int) $item->count,
                     ];
                 })
                 ->toArray();
         } else {
             // Fallback for non-PostgreSQL databases
-            $monthlyTrend = OpenOverheidDocument::whereBetween('publication_date', [$startDate, $endDate])
+            $monthlyTrend = (clone $baseQuery)
                 ->selectRaw('DATE_FORMAT(publication_date, \'%Y-%m\') as month, COUNT(*) as count')
                 ->groupBy('month')
                 ->orderBy('month', 'asc')
@@ -120,7 +138,7 @@ class ReportController
                     return [
                         'month' => $item->month,
                         'monthName' => $date->format('M Y'),
-                        'count' => $item->count,
+                        'count' => (int) $item->count,
                     ];
                 })
                 ->toArray();
@@ -139,6 +157,7 @@ class ReportController
             'documentsPerCategory' => $documentsPerCategory,
             'documentsPerTheme' => $documentsPerTheme,
             'monthlyTrend' => $monthlyTrend,
+            'availableYears' => $availableYears,
         ]);
     }
 }
