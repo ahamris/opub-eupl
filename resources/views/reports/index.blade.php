@@ -193,7 +193,10 @@
                         @forelse(array_slice($documentsPerOrganisation, 0, 10) as $item)
                         <div class="flex items-center gap-4">
                             <div class="flex-1 min-w-0">
-                                <a href="{{ route('zoeken') }}?organisatie[]={{ urlencode($item['organisation']) }}" class="text-sm font-medium text-[var(--color-on-surface)] mb-1.5 truncate hover:text-[var(--color-primary)] transition-colors duration-200 block">
+                                @php
+                                    $orgUrl = route('zoeken') . '?organisatie[]=' . urlencode($item['organisation']);
+                                @endphp
+                                <a href="{{ $orgUrl }}" class="text-sm font-medium text-[var(--color-on-surface)] mb-1.5 truncate hover:text-[var(--color-primary)] transition-colors duration-200 block">
                                     {{ $item['organisation'] }}
                                 </a>
                                 <div class="w-full bg-[var(--color-outline-variant)]/30 rounded-full h-2">
