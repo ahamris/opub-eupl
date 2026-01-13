@@ -49,17 +49,21 @@ class ReportController
         $baseQuery = OpenOverheidDocument::whereNotNull('publication_date')
             ->whereBetween('publication_date', [$startDate, $endDate]);
 
-        // Apply organisation filter if provided
+        // Build unfiltered query for breakdowns (so users can see all options and click to filter)
+        $unfilteredQuery = OpenOverheidDocument::whereNotNull('publication_date')
+            ->whereBetween('publication_date', [$startDate, $endDate]);
+
+        // Apply organisation filter if provided (only to filtered query for totals)
         if ($selectedOrganisation) {
             $baseQuery->where('organisation', $selectedOrganisation);
         }
 
-        // Apply category filter if provided
+        // Apply category filter if provided (only to filtered query for totals)
         if ($selectedCategory) {
             $baseQuery->where('category', $selectedCategory);
         }
 
-        // Total documents in period
+        // Total documents in period (with filters applied)
         $totalDocuments = $baseQuery->count();
 
         // Documents with decision (completed) - same as total since we're filtering by publication_date
@@ -72,8 +76,9 @@ class ReportController
         // Average processing time (simulated - would need actual processing dates)
         $avgProcessingDays = 45; // Placeholder
 
-        // Documents per organisation
-        $documentsPerOrganisation = (clone $baseQuery)
+        // Documents per organisation (use unfiltered query so breakdown shows all organizations)
+        // This allows users to see all organizations and click to filter further
+        $documentsPerOrganisation = (clone $unfilteredQuery)
             ->whereNotNull('organisation')
             ->selectRaw('organisation, COUNT(*) as count')
             ->groupBy('organisation')
@@ -88,8 +93,9 @@ class ReportController
             })
             ->toArray();
 
-        // Documents per category
-        $documentsPerCategory = (clone $baseQuery)
+        // Documents per category (use unfiltered query so breakdown shows all categories)
+        // This allows users to see all categories and click to filter further
+        $documentsPerCategory = (clone $unfilteredQuery)
             ->whereNotNull('category')
             ->selectRaw('category, COUNT(*) as count')
             ->groupBy('category')
@@ -103,8 +109,8 @@ class ReportController
             })
             ->toArray();
 
-        // Documents per theme
-        $documentsPerTheme = (clone $baseQuery)
+        // Documents per theme (use unfiltered query for consistency)
+        $documentsPerTheme = (clone $unfilteredQuery)
             ->whereNotNull('theme')
             ->selectRaw('theme, COUNT(*) as count')
             ->groupBy('theme')
