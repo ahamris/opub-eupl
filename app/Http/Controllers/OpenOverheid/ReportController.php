@@ -27,6 +27,8 @@ class ReportController
         // Get period filters (default to year with most data)
         $year = (int) $request->get('jaar', $defaultYear);
         $quarter = $request->get('kwartaal') ? (int) $request->get('kwartaal') : null;
+        $selectedOrganisation = $request->get('organisatie');
+        $selectedCategory = $request->get('informatiecategorie');
 
         // Calculate date range based on filters
         $startDate = $quarter
@@ -46,6 +48,16 @@ class ReportController
         // Use Carbon instances directly - Laravel will handle date casting automatically
         $baseQuery = OpenOverheidDocument::whereNotNull('publication_date')
             ->whereBetween('publication_date', [$startDate, $endDate]);
+
+        // Apply organisation filter if provided
+        if ($selectedOrganisation) {
+            $baseQuery->where('organisation', $selectedOrganisation);
+        }
+
+        // Apply category filter if provided
+        if ($selectedCategory) {
+            $baseQuery->where('category', $selectedCategory);
+        }
 
         // Total documents in period
         $totalDocuments = $baseQuery->count();
@@ -144,9 +156,42 @@ class ReportController
                 ->toArray();
         }
 
+        // Get all unique organizations from documents in the selected period for dropdown
+        $allOrganisations = OpenOverheidDocument::whereNotNull('publication_date')
+            ->whereBetween('publication_date', [$startDate, $endDate])
+            ->whereNotNull('organisation')
+            ->distinct()
+            ->orderBy('organisation')
+            ->pluck('organisation')
+            ->filter()
+            ->values()
+            ->toArray();
+
+        // Get all unique categories from documents in the selected period for dropdown
+        $wooCategoryService = app(\App\Services\OpenOverheid\WooCategoryService::class);
+        $allCategories = OpenOverheidDocument::whereNotNull('publication_date')
+            ->whereBetween('publication_date', [$startDate, $endDate])
+            ->whereNotNull('category')
+            ->where('category', '!=', 'Onbekend')
+            ->where('category', '!=', 'onbekend')
+            ->distinct()
+            ->pluck('category')
+            ->filter()
+            ->map(function ($category) use ($wooCategoryService) {
+                return [
+                    'value' => $category,
+                    'label' => $wooCategoryService->formatCategoryForDisplay($category) ?? $category,
+                ];
+            })
+            ->sortBy('label')
+            ->values()
+            ->toArray();
+
         return view('reports.index', [
             'year' => $year,
             'quarter' => $quarter,
+            'selectedOrganisation' => $selectedOrganisation,
+            'selectedCategory' => $selectedCategory,
             'startDate' => $startDate,
             'endDate' => $endDate,
             'totalDocuments' => $totalDocuments,
@@ -158,6 +203,8 @@ class ReportController
             'documentsPerTheme' => $documentsPerTheme,
             'monthlyTrend' => $monthlyTrend,
             'availableYears' => $availableYears,
+            'allOrganisations' => $allOrganisations,
+            'allCategories' => $allCategories,
         ]);
     }
 }
