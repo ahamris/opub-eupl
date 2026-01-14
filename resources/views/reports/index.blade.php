@@ -52,9 +52,9 @@
             </div>
             
             <!-- Filter Form -->
-            <div class="mx-auto mt-8 max-w-2xl lg:mx-0">
+            <div class="mx-auto mt-8 w-full">
                 <form method="GET" action="{{ route('reports.index') }}" class="flex flex-col lg:flex-row items-end gap-4 w-full">
-                    <div class="grid grid-cols-2 gap-4 w-full lg:w-auto lg:flex-1">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full">
                         <div class="w-full">
                             <label for="jaar-select" class="block text-sm font-medium text-[var(--color-on-surface-variant)] mb-2">Jaar</label>
                             <select id="jaar-select" name="jaar" class="w-full px-3 py-2 rounded-md border border-slate-200 bg-white text-sm text-[var(--color-on-surface)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]">
@@ -71,6 +71,24 @@
                                 <option value="2" {{ $quarter == 2 ? 'selected' : '' }}>Q2</option>
                                 <option value="3" {{ $quarter == 3 ? 'selected' : '' }}>Q3</option>
                                 <option value="4" {{ $quarter == 4 ? 'selected' : '' }}>Q4</option>
+                            </select>
+                        </div>
+                        <div class="w-full">
+                            <label for="organisatie-select" class="block text-sm font-medium text-[var(--color-on-surface-variant)] mb-2">Organisatie</label>
+                            <select id="organisatie-select" name="organisatie" class="w-full px-3 py-2 rounded-md border border-slate-200 bg-white text-sm text-[var(--color-on-surface)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]">
+                                <option value="">Alle organisaties</option>
+                                @foreach($allOrganisations ?? [] as $org)
+                                    <option value="{{ $org }}" {{ $selectedOrganisation == $org ? 'selected' : '' }}>{{ $org }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="w-full">
+                            <label for="informatiecategorie-select" class="block text-sm font-medium text-[var(--color-on-surface-variant)] mb-2">Categorie</label>
+                            <select id="informatiecategorie-select" name="informatiecategorie" class="w-full px-3 py-2 rounded-md border border-slate-200 bg-white text-sm text-[var(--color-on-surface)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]">
+                                <option value="">Alle categorieën</option>
+                                @foreach($allCategories ?? [] as $cat)
+                                    <option value="{{ $cat['value'] }}" {{ $selectedCategory == $cat['value'] ? 'selected' : '' }}>{{ $cat['label'] }}</option>
+                                @endforeach
                             </select>
                         </div>
                     </div>
@@ -175,7 +193,12 @@
                         @forelse(array_slice($documentsPerOrganisation, 0, 10) as $item)
                         <div class="flex items-center gap-4">
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-[var(--color-on-surface)] mb-1.5 truncate">{{ $item['organisation'] }}</p>
+                                @php
+                                    $orgUrl = route('zoeken') . '?organisatie[]=' . urlencode($item['organisation']);
+                                @endphp
+                                <a href="{{ $orgUrl }}" class="text-sm font-medium text-[var(--color-on-surface)] mb-1.5 truncate hover:text-[var(--color-primary)] transition-colors duration-200 block">
+                                    {{ $item['organisation'] }}
+                                </a>
                                 <div class="w-full bg-[var(--color-outline-variant)]/30 rounded-full h-2">
                                     <div class="bg-[var(--color-primary)] h-2 rounded-full transition-all duration-700" style="width: {{ $maxOrgCount > 0 ? min(($item['count'] / $maxOrgCount) * 100, 100) : 0 }}%"></div>
                                 </div>
@@ -209,7 +232,9 @@
                             @endphp
                         <div class="flex items-center gap-4">
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-[var(--color-on-surface)] mb-1.5 truncate">{{ $formattedCategory }}</p>
+                                <a href="{{ route('zoeken') }}?informatiecategorie={{ urlencode($item['category']) }}" class="text-sm font-medium text-[var(--color-on-surface)] mb-1.5 truncate hover:text-[var(--color-primary-dark)] transition-colors duration-200 block">
+                                    {{ $formattedCategory }}
+                                </a>
                                 <div class="w-full bg-[var(--color-outline-variant)]/30 rounded-full h-2">
                                     <div class="bg-[var(--color-primary-dark)] h-2 rounded-full transition-all duration-700" style="width: {{ $maxCategoryCount > 0 ? min(($item['count'] / $maxCategoryCount) * 100, 100) : 0 }}%"></div>
                                 </div>

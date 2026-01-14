@@ -1,11 +1,21 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Archived;
 
-use App\Jobs\SyncDocumentToTypesense;
+use App\Jobs\Archived\SyncDocumentToTypesense;
 use App\Services\OpenOverheid\OpenOverheidSyncService;
 use Illuminate\Console\Command;
 
+/**
+ * ARCHIVED COMMAND - DISABLED
+ * 
+ * This command has been moved to the Archived folder and its scheduled execution
+ * has been disabled due to high load on the main application.
+ * 
+ * This command will be moved to a separate service/project in the future.
+ * 
+ * To re-enable this command, see README.md in this folder.
+ */
 class SyncOpenOverheidDocuments extends Command
 {
     /**
