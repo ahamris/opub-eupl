@@ -128,7 +128,7 @@ class ReportController
         $documentsWithDecision = $totalDocuments;
 
         // Get quarterly data for top organizations for the chart
-        $quarterlyOrgData = $this->getQuarterlyOrganisationData($searchService, $year, array_slice($documentsPerOrganisation, 0, 5));
+        $quarterlyOrgData = $this->getQuarterlyOrganisationData($searchService, $year, array_slice($documentsPerOrganisation, 0, 5), $selectedCategory);
 
         // Monthly trend using database (simpler for date grouping)
         $baseQueryForTrend = OpenOverheidDocument::whereNotNull('publication_date')
@@ -231,7 +231,7 @@ class ReportController
     /**
      * Get quarterly document counts for top organizations
      */
-    private function getQuarterlyOrganisationData(TypesenseSearchService $searchService, int $year, array $topOrgs): array
+    private function getQuarterlyOrganisationData(TypesenseSearchService $searchService, int $year, array $topOrgs, ?string $category = null): array
     {
         $quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
         $series = [];
@@ -256,6 +256,10 @@ class ReportController
                         'publication_date:<=' . $endDate->timestamp,
                         'organisation:=' . $orgName,
                     ];
+
+                    if ($category) {
+                        $filters[] = 'category:=' . $category;
+                    }
                     
                     $results = $searchService->search('*', [
                         'filter_by' => implode(' && ', $filters),
