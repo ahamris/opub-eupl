@@ -395,6 +395,17 @@
                 </div>
             </div>
 
+            <!-- Quarterly Organisation Chart with ApexCharts -->
+            @if(!empty($quarterlyOrgData['series']))
+            <div class="bg-[var(--color-surface)] border border-[var(--color-outline-variant)] rounded-md p-6 mb-12">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-semibold text-[var(--color-on-surface)]">Documenten per organisatie per kwartaal</h2>
+                    <span class="text-sm text-[var(--color-on-surface-variant)]">{{ $year }}</span>
+                </div>
+                <div id="quarterly-org-chart" class="w-full" style="min-height: 350px;"></div>
+            </div>
+            @endif
+
             <!-- Monthly Trend -->
             @if(!empty($monthlyTrend))
             <div class="bg-[var(--color-surface)] border border-[var(--color-outline-variant)] rounded-md p-6">
@@ -418,4 +429,136 @@
             @endif
         </div>
     </div>
+
+    @if(!empty($quarterlyOrgData['series']))
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get CSS variable colors
+            const computedStyle = getComputedStyle(document.documentElement);
+            const primaryColor = computedStyle.getPropertyValue('--color-primary').trim() || '#2563eb';
+            const primaryDarkColor = computedStyle.getPropertyValue('--color-primary-dark').trim() || '#1e40af';
+            
+            // Color palette for organizations
+            const colors = [
+                primaryColor,
+                primaryDarkColor,
+                '#10b981', // emerald
+                '#f59e0b', // amber
+                '#8b5cf6', // violet
+            ];
+
+            var options = {
+                series: @json($quarterlyOrgData['series']),
+                chart: {
+                    type: 'bar',
+                    height: 350,
+                    toolbar: {
+                        show: true,
+                        tools: {
+                            download: true,
+                            selection: false,
+                            zoom: false,
+                            zoomin: false,
+                            zoomout: false,
+                            pan: false,
+                            reset: false
+                        }
+                    },
+                    fontFamily: 'Inter, system-ui, sans-serif',
+                },
+                plotOptions: {
+                    bar: {
+                        horizontal: false,
+                        columnWidth: '55%',
+                        borderRadius: 4,
+                        borderRadiusApplication: 'end',
+                    },
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                colors: colors,
+                stroke: {
+                    show: true,
+                    width: 2,
+                    colors: ['transparent']
+                },
+                xaxis: {
+                    categories: @json($quarterlyOrgData['categories']),
+                    labels: {
+                        style: {
+                            colors: '#64748b',
+                            fontSize: '12px',
+                        }
+                    }
+                },
+                yaxis: {
+                    title: {
+                        text: 'Aantal documenten',
+                        style: {
+                            color: '#64748b',
+                            fontSize: '12px',
+                            fontWeight: 500,
+                        }
+                    },
+                    labels: {
+                        style: {
+                            colors: '#64748b',
+                            fontSize: '12px',
+                        },
+                        formatter: function(val) {
+                            return val.toLocaleString('nl-NL');
+                        }
+                    }
+                },
+                fill: {
+                    opacity: 1
+                },
+                tooltip: {
+                    y: {
+                        formatter: function(val) {
+                            return val.toLocaleString('nl-NL') + ' documenten';
+                        }
+                    }
+                },
+                legend: {
+                    position: 'bottom',
+                    horizontalAlign: 'center',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    markers: {
+                        width: 12,
+                        height: 12,
+                        radius: 3,
+                    },
+                    itemMargin: {
+                        horizontal: 12,
+                        vertical: 8
+                    }
+                },
+                grid: {
+                    borderColor: '#e2e8f0',
+                    strokeDashArray: 4,
+                },
+                responsive: [{
+                    breakpoint: 640,
+                    options: {
+                        chart: {
+                            height: 300
+                        },
+                        legend: {
+                            position: 'bottom',
+                            fontSize: '10px',
+                        }
+                    }
+                }]
+            };
+
+            var chart = new ApexCharts(document.querySelector("#quarterly-org-chart"), options);
+            chart.render();
+        });
+    </script>
+    @endpush
+    @endif
 @endsection

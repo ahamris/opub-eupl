@@ -3,15 +3,19 @@
 namespace App\Http\Controllers\OpenOverheid;
 
 use App\Models\OpenOverheidDocument;
+use App\Services\Typesense\TypesenseSearchService;
 use Illuminate\Http\Request;
 
 class ReportController
 {
     /**
      * Display the reports dashboard (Woo-style statistics)
+     * Uses Typesense for fast faceted search results
      */
     public function index(Request $request): \Illuminate\View\View
     {
+        $searchService = app(TypesenseSearchService::class);
+
         // Get available years from database (years that have documents)
         $availableYears = OpenOverheidDocument::whereNotNull('publication_date')
             ->selectRaw('EXTRACT(YEAR FROM publication_date) as year')
@@ -44,98 +48,107 @@ class ReportController
             $endDate = now();
         }
 
-        // Build base query for documents with publication dates in the selected period
-        // Use Carbon instances directly - Laravel will handle date casting automatically
-        $baseQuery = OpenOverheidDocument::whereNotNull('publication_date')
-            ->whereBetween('publication_date', [$startDate, $endDate]);
-
-        // Build unfiltered query for breakdowns (so users can see all options and click to filter)
-        $unfilteredQuery = OpenOverheidDocument::whereNotNull('publication_date')
-            ->whereBetween('publication_date', [$startDate, $endDate]);
-
-        // Apply organisation filter if provided (only to filtered query for totals)
+        // Build Typesense filter
+        $filters = [];
+        $filters[] = 'publication_date:>=' . $startDate->timestamp;
+        $filters[] = 'publication_date:<=' . $endDate->timestamp;
+        
         if ($selectedOrganisation) {
-            $baseQuery->where('organisation', $selectedOrganisation);
+            $filters[] = 'organisation:=' . $selectedOrganisation;
         }
-
-        // Apply category filter if provided (only to filtered query for totals)
         if ($selectedCategory) {
-            $baseQuery->where('category', $selectedCategory);
+            $filters[] = 'category:=' . $selectedCategory;
         }
 
-        // Total documents in period (with filters applied)
-        $totalDocuments = $baseQuery->count();
+        $filterBy = implode(' && ', $filters);
 
-        // Documents with decision (completed) - same as total since we're filtering by publication_date
+        // Search with facets using Typesense
+        try {
+            $results = $searchService->search('*', [
+                'filter_by' => $filterBy,
+                'facet_by' => 'organisation,category,theme',
+                'max_facet_values' => 50,
+                'per_page' => 0, // We only need facet counts
+            ]);
+
+            $totalDocuments = $results['found'] ?? 0;
+            $facetCounts = collect($results['facet_counts'] ?? []);
+
+            // Extract organization facets
+            $orgFacet = $facetCounts->firstWhere('field_name', 'organisation');
+            $documentsPerOrganisation = collect($orgFacet['counts'] ?? [])
+                ->take(20)
+                ->map(fn($item) => [
+                    'organisation' => $item['value'],
+                    'count' => (int) $item['count'],
+                ])
+                ->toArray();
+
+            // Extract category facets
+            $catFacet = $facetCounts->firstWhere('field_name', 'category');
+            $wooCategoryService = app(\App\Services\OpenOverheid\WooCategoryService::class);
+            $documentsPerCategory = collect($catFacet['counts'] ?? [])
+                ->map(fn($item) => [
+                    'category' => $item['value'],
+                    'label' => $wooCategoryService->formatCategoryForDisplay($item['value']) ?? $item['value'],
+                    'count' => (int) $item['count'],
+                ])
+                ->toArray();
+
+            // Extract theme facets
+            $themeFacet = $facetCounts->firstWhere('field_name', 'theme');
+            $documentsPerTheme = collect($themeFacet['counts'] ?? [])
+                ->take(15)
+                ->map(fn($item) => [
+                    'theme' => $item['value'],
+                    'count' => (int) $item['count'],
+                ])
+                ->toArray();
+
+        } catch (\Exception $e) {
+            // Fallback to database if Typesense fails
+            \Log::warning('Typesense failed for reports, using database fallback', ['error' => $e->getMessage()]);
+            
+            $baseQuery = OpenOverheidDocument::whereNotNull('publication_date')
+                ->whereBetween('publication_date', [$startDate, $endDate]);
+            
+            if ($selectedOrganisation) {
+                $baseQuery->where('organisation', $selectedOrganisation);
+            }
+            if ($selectedCategory) {
+                $baseQuery->where('category', $selectedCategory);
+            }
+            
+            $totalDocuments = $baseQuery->count();
+            $documentsPerOrganisation = [];
+            $documentsPerCategory = [];
+            $documentsPerTheme = [];
+        }
+
         $documentsWithDecision = $totalDocuments;
 
-        // Documents in progress (published in period but might be ongoing)
-        // For now, this is the same as total documents in the period
-        $documentsInProgress = $totalDocuments;
+        // Get quarterly data for top organizations for the chart
+        $quarterlyOrgData = $this->getQuarterlyOrganisationData($searchService, $year, array_slice($documentsPerOrganisation, 0, 5));
 
-        // Average processing time (simulated - would need actual processing dates)
-        $avgProcessingDays = 45; // Placeholder
+        // Monthly trend using database (simpler for date grouping)
+        $baseQueryForTrend = OpenOverheidDocument::whereNotNull('publication_date')
+            ->whereBetween('publication_date', [$startDate, $endDate]);
+        
+        if ($selectedOrganisation) {
+            $baseQueryForTrend->where('organisation', $selectedOrganisation);
+        }
+        if ($selectedCategory) {
+            $baseQueryForTrend->where('category', $selectedCategory);
+        }
 
-        // Documents per organisation (use unfiltered query so breakdown shows all organizations)
-        // This allows users to see all organizations and click to filter further
-        $documentsPerOrganisation = (clone $unfilteredQuery)
-            ->whereNotNull('organisation')
-            ->selectRaw('organisation, COUNT(*) as count')
-            ->groupBy('organisation')
-            ->orderBy('count', 'desc')
-            ->limit(20)
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'organisation' => $item->organisation,
-                    'count' => (int) $item->count,
-                ];
-            })
-            ->toArray();
-
-        // Documents per category (use unfiltered query so breakdown shows all categories)
-        // This allows users to see all categories and click to filter further
-        $documentsPerCategory = (clone $unfilteredQuery)
-            ->whereNotNull('category')
-            ->selectRaw('category, COUNT(*) as count')
-            ->groupBy('category')
-            ->orderBy('count', 'desc')
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'category' => $item->category,
-                    'count' => (int) $item->count,
-                ];
-            })
-            ->toArray();
-
-        // Documents per theme (use unfiltered query for consistency)
-        $documentsPerTheme = (clone $unfilteredQuery)
-            ->whereNotNull('theme')
-            ->selectRaw('theme, COUNT(*) as count')
-            ->groupBy('theme')
-            ->orderBy('count', 'desc')
-            ->limit(15)
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'theme' => $item->theme,
-                    'count' => (int) $item->count,
-                ];
-            })
-            ->toArray();
-
-        // Monthly trend
         if (config('database.default') === 'pgsql') {
-            $monthlyTrend = (clone $baseQuery)
+            $monthlyTrend = (clone $baseQueryForTrend)
                 ->selectRaw('DATE_TRUNC(\'month\', publication_date) as month, COUNT(*) as count')
                 ->groupBy('month')
                 ->orderBy('month', 'asc')
                 ->get()
                 ->map(function ($item) {
-                    // DATE_TRUNC returns a string, convert to Carbon
                     $date = \Carbon\Carbon::parse($item->month);
-
                     return [
                         'month' => $date->format('Y-m'),
                         'monthName' => $date->format('M Y'),
@@ -144,15 +157,13 @@ class ReportController
                 })
                 ->toArray();
         } else {
-            // Fallback for non-PostgreSQL databases
-            $monthlyTrend = (clone $baseQuery)
+            $monthlyTrend = (clone $baseQueryForTrend)
                 ->selectRaw('DATE_FORMAT(publication_date, \'%Y-%m\') as month, COUNT(*) as count')
                 ->groupBy('month')
                 ->orderBy('month', 'asc')
                 ->get()
                 ->map(function ($item) {
                     $date = \Carbon\Carbon::createFromFormat('Y-m', $item->month);
-
                     return [
                         'month' => $item->month,
                         'monthName' => $date->format('M Y'),
@@ -162,36 +173,40 @@ class ReportController
                 ->toArray();
         }
 
-        // Get all unique organizations from documents in the selected period for dropdown
-        $allOrganisations = OpenOverheidDocument::whereNotNull('publication_date')
-            ->whereBetween('publication_date', [$startDate, $endDate])
-            ->whereNotNull('organisation')
-            ->distinct()
-            ->orderBy('organisation')
-            ->pluck('organisation')
-            ->filter()
-            ->values()
-            ->toArray();
-
-        // Get all unique categories from documents in the selected period for dropdown
-        $wooCategoryService = app(\App\Services\OpenOverheid\WooCategoryService::class);
-        $allCategories = OpenOverheidDocument::whereNotNull('publication_date')
-            ->whereBetween('publication_date', [$startDate, $endDate])
-            ->whereNotNull('category')
-            ->where('category', '!=', 'Onbekend')
-            ->where('category', '!=', 'onbekend')
-            ->distinct()
-            ->pluck('category')
-            ->filter()
-            ->map(function ($category) use ($wooCategoryService) {
-                return [
-                    'value' => $category,
-                    'label' => $wooCategoryService->formatCategoryForDisplay($category) ?? $category,
-                ];
-            })
-            ->sortBy('label')
-            ->values()
-            ->toArray();
+        // Get all unique organizations for dropdown (from Typesense unfiltered)
+        try {
+            $unfilteredFilters = [
+                'publication_date:>=' . $startDate->timestamp,
+                'publication_date:<=' . $endDate->timestamp,
+            ];
+            $unfilteredResults = $searchService->search('*', [
+                'filter_by' => implode(' && ', $unfilteredFilters),
+                'facet_by' => 'organisation,category',
+                'max_facet_values' => 200,
+                'per_page' => 0,
+            ]);
+            
+            $orgFacetUnfiltered = collect($unfilteredResults['facet_counts'] ?? [])->firstWhere('field_name', 'organisation');
+            $allOrganisations = collect($orgFacetUnfiltered['counts'] ?? [])
+                ->pluck('value')
+                ->sort()
+                ->values()
+                ->toArray();
+            
+            $catFacetUnfiltered = collect($unfilteredResults['facet_counts'] ?? [])->firstWhere('field_name', 'category');
+            $allCategories = collect($catFacetUnfiltered['counts'] ?? [])
+                ->filter(fn($item) => !in_array(strtolower($item['value']), ['onbekend']))
+                ->map(fn($item) => [
+                    'value' => $item['value'],
+                    'label' => $wooCategoryService->formatCategoryForDisplay($item['value']) ?? $item['value'],
+                ])
+                ->sortBy('label')
+                ->values()
+                ->toArray();
+        } catch (\Exception $e) {
+            $allOrganisations = [];
+            $allCategories = [];
+        }
 
         return view('reports.index', [
             'year' => $year,
@@ -202,8 +217,6 @@ class ReportController
             'endDate' => $endDate,
             'totalDocuments' => $totalDocuments,
             'documentsWithDecision' => $documentsWithDecision,
-            'documentsInProgress' => $documentsInProgress,
-            'avgProcessingDays' => $avgProcessingDays,
             'documentsPerOrganisation' => $documentsPerOrganisation,
             'documentsPerCategory' => $documentsPerCategory,
             'documentsPerTheme' => $documentsPerTheme,
@@ -211,6 +224,59 @@ class ReportController
             'availableYears' => $availableYears,
             'allOrganisations' => $allOrganisations,
             'allCategories' => $allCategories,
+            'quarterlyOrgData' => $quarterlyOrgData,
         ]);
+    }
+
+    /**
+     * Get quarterly document counts for top organizations
+     */
+    private function getQuarterlyOrganisationData(TypesenseSearchService $searchService, int $year, array $topOrgs): array
+    {
+        $quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
+        $series = [];
+        
+        foreach ($topOrgs as $org) {
+            $orgName = $org['organisation'];
+            $data = [];
+            
+            foreach ([1, 2, 3, 4] as $q) {
+                $startDate = now()->setYear($year)->startOfYear()->addMonths(($q - 1) * 3);
+                $endDate = $startDate->copy()->endOfQuarter();
+                
+                // Don't query future quarters
+                if ($startDate->isFuture()) {
+                    $data[] = 0;
+                    continue;
+                }
+                
+                try {
+                    $filters = [
+                        'publication_date:>=' . $startDate->timestamp,
+                        'publication_date:<=' . $endDate->timestamp,
+                        'organisation:=' . $orgName,
+                    ];
+                    
+                    $results = $searchService->search('*', [
+                        'filter_by' => implode(' && ', $filters),
+                        'per_page' => 0,
+                    ]);
+                    
+                    $data[] = $results['found'] ?? 0;
+                } catch (\Exception $e) {
+                    $data[] = 0;
+                }
+            }
+            
+            $series[] = [
+                'name' => $orgName,
+                'data' => $data,
+            ];
+        }
+
+        return [
+            'categories' => $quarters,
+            'series' => $series,
+        ];
     }
 }
