@@ -2,6 +2,10 @@
 
 @section('title', 'Open Overheid in cijfers - Rapportage')
 
+@push('styles')
+<link rel="stylesheet" type="text/css" href="{{ asset('vendor/daterangepicker/daterangepicker.css') }}" />
+@endpush
+
 @php
     $breadcrumbs = [
         ['label' => 'Home', 'href' => route('home')],
@@ -53,25 +57,20 @@
             
             <!-- Filter Form -->
             <div class="mx-auto mt-8 w-full">
-                <form method="GET" action="{{ route('reports.index') }}" class="flex flex-col lg:flex-row items-end gap-4 w-full">
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-                        <div class="w-full">
-                            <label for="jaar-select" class="block text-sm font-medium text-[var(--color-on-surface-variant)] mb-2">Jaar</label>
-                            <select id="jaar-select" name="jaar" class="w-full px-3 py-2 rounded-md border border-slate-200 bg-white text-sm text-[var(--color-on-surface)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]">
-                                @for($y = now()->year; $y >= now()->year - 5; $y--)
-                                    <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
-                                @endfor
-                            </select>
-                        </div>
-                        <div class="w-full">
-                            <label for="kwartaal-select" class="block text-sm font-medium text-[var(--color-on-surface-variant)] mb-2">Kwartaal</label>
-                            <select id="kwartaal-select" name="kwartaal" class="w-full px-3 py-2 rounded-md border border-slate-200 bg-white text-sm text-[var(--color-on-surface)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]">
-                                <option value="">Hele jaar</option>
-                                <option value="1" {{ $quarter == 1 ? 'selected' : '' }}>Q1</option>
-                                <option value="2" {{ $quarter == 2 ? 'selected' : '' }}>Q2</option>
-                                <option value="3" {{ $quarter == 3 ? 'selected' : '' }}>Q3</option>
-                                <option value="4" {{ $quarter == 4 ? 'selected' : '' }}>Q4</option>
-                            </select>
+                <form method="GET" action="{{ route('reports.index') }}" class="w-full">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 items-end w-full">
+                        <div class="w-full col-span-1 md:col-span-2">
+                            <label for="daterange" class="block text-sm font-medium text-[var(--color-on-surface-variant)] mb-2">Periode</label>
+                            <div class="relative">
+                                <input type="text" id="daterange" name="daterange" class="w-full px-3 py-2 rounded-md border border-slate-200 bg-white text-sm text-[var(--color-on-surface)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] pl-10 cursor-pointer" autocomplete="off">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <input type="hidden" name="start_date" id="start_date" value="{{ $startDate->format('Y-m-d') }}">
+                            <input type="hidden" name="end_date" id="end_date" value="{{ $endDate->format('Y-m-d') }}">
                         </div>
                         {{-- Organisatie Searchable Combobox --}}
                         <div class="w-full" x-data="{
@@ -236,11 +235,94 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="w-full lg:w-auto">
-                        <button type="submit" class="w-full lg:w-auto px-6 py-2 bg-[var(--color-primary-dark)] text-white font-medium rounded-md hover:bg-[var(--color-primary)] transition-colors duration-200 focus:outline-none text-sm whitespace-nowrap shadow-sm">
-                            Toepassen
-                        </button>
+
+                        {{-- Thema Searchable Combobox --}}
+                        <div class="w-full" x-data="{
+                            allOptions: [
+                                { label: 'Alle thema\'s', value: '' },
+                                @foreach($allThemes ?? [] as $theme)
+                                { label: '{{ addslashes($theme) }}', value: '{{ addslashes($theme) }}' },
+                                @endforeach
+                            ],
+                            options: [],
+                            isOpen: false,
+                            openedWithKeyboard: false,
+                            selectedOption: null,
+                            setSelectedOption(option) {
+                                this.selectedOption = option;
+                                this.isOpen = false;
+                                this.openedWithKeyboard = false;
+                                this.$refs.hiddenTextField.value = option.value;
+                            },
+                            getFilteredOptions(query) {
+                                this.options = this.allOptions.filter((option) =>
+                                    option.label.toLowerCase().includes(query.toLowerCase()),
+                                );
+                                if (this.options.length === 0) {
+                                    this.$refs.noResultsMessage.classList.remove('hidden');
+                                } else {
+                                    this.$refs.noResultsMessage.classList.add('hidden');
+                                }
+                            },
+                            handleKeydownOnOptions(event) {
+                                if ((event.keyCode >= 65 && event.keyCode <= 90) || (event.keyCode >= 48 && event.keyCode <= 57) || event.keyCode === 8) {
+                                    this.$refs.searchField.focus();
+                                }
+                            },
+                            init() {
+                                this.options = this.allOptions;
+                                const preselected = '{{ $selectedTheme ?? '' }}';
+                                if (preselected) {
+                                    this.selectedOption = this.allOptions.find(o => o.value === preselected) || null;
+                                }
+                            }
+                        }" x-on:keydown="handleKeydownOnOptions($event)" x-on:keydown.esc.window="isOpen = false, openedWithKeyboard = false" x-init="init()">
+                            <label for="thema" class="block text-sm font-medium text-[var(--color-on-surface-variant)] mb-2">Thema</label>
+                            <div class="relative">
+                                {{-- Trigger button --}}
+                                <button type="button" class="inline-flex w-full items-center justify-between gap-2 border border-slate-200 rounded-md bg-white px-3 py-2 text-sm font-medium tracking-wide text-[var(--color-on-surface)] transition hover:opacity-75 focus:outline-none" role="combobox" aria-controls="themaList" aria-haspopup="listbox" x-on:click="isOpen = ! isOpen" x-on:keydown.down.prevent="openedWithKeyboard = true" x-on:keydown.enter.prevent="openedWithKeyboard = true" x-on:keydown.space.prevent="openedWithKeyboard = true" x-bind:aria-expanded="isOpen || openedWithKeyboard" x-bind:aria-label="selectedOption ? selectedOption.label : 'Alle thema\'s'">
+                                    <span class="text-sm font-normal truncate" x-text="selectedOption ? selectedOption.label : 'Alle thema\'s'"></span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-5 shrink-0" aria-hidden="true">
+                                        <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/>
+                                    </svg>
+                                </button>
+
+                                {{-- Hidden Input --}}
+                                <input id="thema" name="thema" x-ref="hiddenTextField" hidden="" :value="selectedOption ? selectedOption.value : ''"/>
+                                
+                                <div x-show="isOpen || openedWithKeyboard" id="themaList" class="absolute left-0 top-11 z-20 w-full overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg" role="listbox" aria-label="thema list" x-on:click.outside="isOpen = false, openedWithKeyboard = false" x-on:keydown.down.prevent="$focus.wrap().next()" x-on:keydown.up.prevent="$focus.wrap().previous()" x-transition x-trap="openedWithKeyboard">
+                                    {{-- Search --}}
+                                    <div class="relative">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--color-on-surface-variant)]/50" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+                                        </svg>
+                                        <input type="text" class="w-full border-b border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm text-[var(--color-on-surface)] focus:outline-none focus:border-slate-200 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-75" name="searchFieldThema" aria-label="Zoeken" x-on:input="getFilteredOptions($el.value)" x-ref="searchField" placeholder="Zoeken..." />
+                                    </div>
+
+                                    {{-- Options --}}
+                                    <ul class="flex max-h-44 flex-col overflow-y-auto">
+                                        <li class="hidden px-3 py-2 text-sm text-[var(--color-on-surface-variant)]" x-ref="noResultsMessage">
+                                            <span>Geen resultaten gevonden</span>
+                                        </li>
+                                        <template x-for="(item, index) in options" x-bind:key="item.value">
+                                            <li class="combobox-option inline-flex justify-between gap-4 bg-white px-3 py-2 text-sm text-[var(--color-on-surface)] hover:bg-slate-50 hover:text-[var(--color-primary)] focus-visible:bg-slate-50 focus-visible:text-[var(--color-primary)] focus-visible:outline-none cursor-pointer" role="option" x-on:click="setSelectedOption(item)" x-on:keydown.enter="setSelectedOption(item)" x-bind:id="'thema-option-' + index" tabindex="0">
+                                                <span x-bind:class="selectedOption && selectedOption.value == item.value ? 'font-semibold' : null" x-text="item.label" class="truncate"></span>
+                                                <span class="sr-only" x-text="selectedOption && selectedOption.value == item.value ? 'selected' : null"></span>
+                                                <svg x-cloak x-show="selectedOption && selectedOption.value == item.value" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" class="size-4 text-[var(--color-primary)] shrink-0" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+                                                </svg>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="w-full">
+                            <button type="submit" class="w-full rounded-md bg-[var(--color-primary-dark)] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[var(--color-primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-primary)] transition-colors duration-200">
+                                Toepassen
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -557,6 +639,52 @@
 
             var chart = new ApexCharts(document.querySelector("#quarterly-org-chart"), options);
             chart.render();
+        });
+    </script>
+    <script type="text/javascript" src="{{ asset('vendor/jquery/jquery.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('vendor/moment/moment.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('vendor/daterangepicker/daterangepicker.min.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const startDate = "{{ $startDate->format('d-m-Y') }}";
+            const endDate = "{{ $endDate->format('d-m-Y') }}";
+
+            $('#daterange').daterangepicker({
+                "showDropdowns": true,
+                ranges: {
+                    'Vandaag': [moment(), moment()],
+                    'Gisteren': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                    'Laatste 7 dagen': [moment().subtract(6, 'days'), moment()],
+                    'Laatste 30 dagen': [moment().subtract(29, 'days'), moment()],
+                    'Deze maand': [moment().startOf('month'), moment().endOf('month')],
+                    'Vorige maand': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+                    'Dit jaar': [moment().startOf('year'), moment().endOf('year')],
+                    'Vorig jaar': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year')]
+                },
+                "locale": {
+                    "format": "DD-MM-YYYY",
+                    "separator": " - ",
+                    "applyLabel": "Toepassen",
+                    "cancelLabel": "Annuleren",
+                    "fromLabel": "Van",
+                    "toLabel": "Tot",
+                    "customRangeLabel": "Aangepast",
+                    "weekLabel": "W",
+                    "daysOfWeek": ["Zo", "Ma", "Di", "Wo", "Do", "Vr", "Za"],
+                    "monthNames": ["Januari", "Februari", "Maart", "April", "Mei", "Juni", "Juli", "Augustus", "September", "Oktober", "November", "December"],
+                    "firstDay": 1
+                },
+                "alwaysShowCalendars": true,
+                "startDate": startDate,
+                "endDate": endDate,
+                "opens": "right",
+                "drops": "auto",
+                "applyButtonClasses": "bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)]",
+                "cancelButtonClasses": "bg-slate-100 text-slate-700 hover:bg-slate-200"
+            }, function(start, end, label) {
+                $('#start_date').val(start.format('YYYY-MM-DD'));
+                $('#end_date').val(end.format('YYYY-MM-DD'));
+            });
         });
     </script>
     @endpush
