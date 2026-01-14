@@ -403,6 +403,17 @@
                 </div>
             </div>
 
+            <!-- Quarterly Organisation Chart with ApexCharts -->
+            @if(!empty($quarterlyOrgData['series']))
+            <div class="bg-[var(--color-surface)] border border-[var(--color-outline-variant)] rounded-md p-6 mb-12">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-semibold text-[var(--color-on-surface)]">Documenten per organisatie per kwartaal</h2>
+                    <span class="text-sm text-[var(--color-on-surface-variant)]">{{ $year }}</span>
+                </div>
+                <div id="quarterly-org-chart" class="w-full" style="min-height: 350px;"></div>
+            </div>
+            @endif
+
             <!-- Charts Section -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
                 <!-- Documents per Organisation -->
@@ -440,53 +451,14 @@
                     </div>
                 </div>
 
-                <!-- Documents per Category -->
+                <!-- Documents per Category (Donut Chart) -->
                 <div class="bg-[var(--color-surface)] border border-[var(--color-outline-variant)] rounded-md p-6">
                     <div class="flex items-center justify-between mb-6">
                         <h2 class="text-xl font-semibold text-[var(--color-on-surface)]">Documenten per categorie</h2>
-                        <button class="text-sm text-[var(--color-primary-dark)] hover:text-[var(--color-primary)] font-medium focus:outline-none transition-colors duration-200">
-                            Toon datatabel
-                        </button>
                     </div>
-                    <div class="space-y-4 max-h-96 overflow-y-auto">
-                        @php
-                            $wooCategoryService = app(\App\Services\OpenOverheid\WooCategoryService::class);
-                            $maxCategoryCount = !empty($documentsPerCategory) ? max(array_column($documentsPerCategory, 'count')) : 0;
-                        @endphp
-                        @forelse($documentsPerCategory as $item)
-                            @php
-                                $formattedCategory = $wooCategoryService->formatCategoryForDisplay($item['category']) ?? $item['category'];
-                            @endphp
-                        <div class="flex items-center gap-4">
-                            <div class="flex-1 min-w-0">
-                                <a href="{{ route('zoeken') }}?informatiecategorie={{ urlencode($item['category']) }}" class="text-sm font-medium text-[var(--color-on-surface)] mb-1.5 truncate hover:text-[var(--color-primary-dark)] transition-colors duration-200 block">
-                                    {{ $formattedCategory }}
-                                </a>
-                                <div class="w-full bg-[var(--color-outline-variant)]/30 rounded-full h-2">
-                                    <div class="bg-[var(--color-primary-dark)] h-2 rounded-full transition-all duration-700" style="width: {{ $maxCategoryCount > 0 ? min(($item['count'] / $maxCategoryCount) * 100, 100) : 0 }}%"></div>
-                                </div>
-                            </div>
-                            <div class="text-right shrink-0">
-                                <p class="text-lg font-bold text-[var(--color-primary-dark)]">{{ number_format($item['count'], 0, ',', '.') }}</p>
-                            </div>
-                        </div>
-                        @empty
-                        <p class="text-sm text-[var(--color-on-surface-variant)]/70">Geen gegevens beschikbaar voor deze periode.</p>
-                        @endforelse
-                    </div>
+                    <div id="category-donut-chart" class="w-full flex justify-center" style="min-height: 350px;"></div>
                 </div>
             </div>
-
-            <!-- Quarterly Organisation Chart with ApexCharts -->
-            @if(!empty($quarterlyOrgData['series']))
-            <div class="bg-[var(--color-surface)] border border-[var(--color-outline-variant)] rounded-md p-6 mb-12">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-xl font-semibold text-[var(--color-on-surface)]">Documenten per organisatie per kwartaal</h2>
-                    <span class="text-sm text-[var(--color-on-surface-variant)]">{{ $year }}</span>
-                </div>
-                <div id="quarterly-org-chart" class="w-full" style="min-height: 350px;"></div>
-            </div>
-            @endif
 
             <!-- Monthly Trend -->
             @if(!empty($monthlyTrend))
@@ -512,7 +484,6 @@
         </div>
     </div>
 
-    @if(!empty($quarterlyOrgData['series']))
     @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -521,32 +492,26 @@
             const primaryColor = computedStyle.getPropertyValue('--color-primary').trim() || '#2563eb';
             const primaryDarkColor = computedStyle.getPropertyValue('--color-primary-dark').trim() || '#1e40af';
             
-            // Color palette for organizations
+            // Color palette
             const colors = [
                 primaryColor,
                 primaryDarkColor,
                 '#10b981', // emerald
                 '#f59e0b', // amber
                 '#8b5cf6', // violet
+                '#ec4899', // pink
+                '#06b6d4', // cyan
+                '#f97316', // orange
             ];
 
-            var options = {
+            // Quarterly Chart
+            @if(!empty($quarterlyOrgData['series']))
+            var quarterlyOptions = {
                 series: @json($quarterlyOrgData['series']),
                 chart: {
                     type: 'bar',
                     height: 350,
-                    toolbar: {
-                        show: true,
-                        tools: {
-                            download: true,
-                            selection: false,
-                            zoom: false,
-                            zoomin: false,
-                            zoomout: false,
-                            pan: false,
-                            reset: false
-                        }
-                    },
+                    toolbar: { show: false },
                     fontFamily: 'Inter, system-ui, sans-serif',
                 },
                 plotOptions: {
@@ -557,88 +522,119 @@
                         borderRadiusApplication: 'end',
                     },
                 },
-                dataLabels: {
-                    enabled: false
-                },
+                dataLabels: { enabled: false },
                 colors: colors,
-                stroke: {
-                    show: true,
-                    width: 2,
-                    colors: ['transparent']
-                },
+                stroke: { show: true, width: 2, colors: ['transparent'] },
                 xaxis: {
                     categories: @json($quarterlyOrgData['categories']),
-                    labels: {
-                        style: {
-                            colors: '#64748b',
-                            fontSize: '12px',
-                        }
-                    }
+                    labels: { style: { colors: '#64748b', fontSize: '12px' } }
                 },
                 yaxis: {
-                    title: {
-                        text: 'Aantal documenten',
-                        style: {
-                            color: '#64748b',
-                            fontSize: '12px',
-                            fontWeight: 500,
-                        }
-                    },
+                    title: { text: 'Aantal documenten', style: { color: '#64748b', fontSize: '12px', fontWeight: 500 } },
                     labels: {
-                        style: {
-                            colors: '#64748b',
-                            fontSize: '12px',
-                        },
-                        formatter: function(val) {
-                            return val.toLocaleString('nl-NL');
-                        }
+                        style: { colors: '#64748b', fontSize: '12px' },
+                        formatter: function(val) { return val.toLocaleString('nl-NL'); }
                     }
                 },
-                fill: {
-                    opacity: 1
-                },
+                fill: { opacity: 1 },
                 tooltip: {
-                    y: {
-                        formatter: function(val) {
-                            return val.toLocaleString('nl-NL') + ' documenten';
-                        }
-                    }
+                    y: { formatter: function(val) { return val.toLocaleString('nl-NL') + ' documenten'; } }
                 },
                 legend: {
                     position: 'bottom',
                     horizontalAlign: 'center',
                     fontSize: '12px',
                     fontWeight: 500,
-                    markers: {
-                        width: 12,
-                        height: 12,
-                        radius: 3,
-                    },
-                    itemMargin: {
-                        horizontal: 12,
-                        vertical: 8
-                    }
+                    markers: { width: 12, height: 12, radius: 3 },
+                    itemMargin: { horizontal: 12, vertical: 8 }
                 },
-                grid: {
-                    borderColor: '#e2e8f0',
-                    strokeDashArray: 4,
-                },
+                grid: { borderColor: '#e2e8f0', strokeDashArray: 4 },
                 responsive: [{
                     breakpoint: 640,
                     options: {
-                        chart: {
-                            height: 300
-                        },
-                        legend: {
-                            position: 'bottom',
-                            fontSize: '10px',
-                        }
+                        chart: { height: 300 },
+                        legend: { position: 'bottom', fontSize: '10px' }
                     }
                 }]
             };
 
-            var chart = new ApexCharts(document.querySelector("#quarterly-org-chart"), options);
-            chart.render();
+            var quarterlyChart = new ApexCharts(document.querySelector("#quarterly-org-chart"), quarterlyOptions);
+            quarterlyChart.render();
+            @endif
+
+            // Category Donut Chart
+            @if(!empty($documentsPerCategory))
+                @php
+                    $catLabels = array_column($documentsPerCategory, 'label');
+                    $catCounts = array_column($documentsPerCategory, 'count');
+                @endphp
+                
+                var donutOptions = {
+                    series: @json($catCounts),
+                    labels: @json($catLabels),
+                    chart: {
+                        type: 'donut',
+                        width: '100%',
+                        height: 350,
+                        fontFamily: 'Inter, system-ui, sans-serif',
+                    },
+                    dataLabels: { enabled: false },
+                    colors: colors,
+                    plotOptions: {
+                        pie: {
+                            donut: {
+                                size: '65%',
+                                labels: {
+                                    show: true,
+                                    name: {
+                                        show: true,
+                                        fontSize: '14px',
+                                        fontFamily: 'Inter, system-ui, sans-serif',
+                                        color: '#64748b',
+                                        offsetY: -10
+                                    },
+                                    value: {
+                                        show: true,
+                                        fontSize: '16px',
+                                        fontFamily: 'Inter, system-ui, sans-serif',
+                                        fontWeight: 600,
+                                        color: '#0f172a',
+                                        offsetY: 16,
+                                        formatter: function (val) {
+                                            return val.toLocaleString('nl-NL')
+                                        }
+                                    },
+                                    total: {
+                                        show: true,
+                                        showAlways: true,
+                                        label: 'Totaal',
+                                        fontSize: '14px',
+                                        fontFamily: 'Inter, system-ui, sans-serif',
+                                        fontWeight: 600,
+                                        color: '#64748b',
+                                        formatter: function (w) {
+                                            return w.globals.seriesTotals.reduce((a, b) => {
+                                                return a + b
+                                            }, 0).toLocaleString('nl-NL')
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    legend: { show: false },
+                    stroke: { show: true, width: 2, colors: ['transparent'] },
+                    responsive: [{
+                        breakpoint: 480,
+                        options: {
+                            chart: { height: 300 },
+                        }
+                    }]
+                };
+
+                var donutChart = new ApexCharts(document.querySelector("#category-donut-chart"), donutOptions);
+                donutChart.render();
+            @endif
         });
     </script>
     <script type="text/javascript" src="{{ asset('vendor/jquery/jquery.min.js') }}"></script>
@@ -688,5 +684,4 @@
         });
     </script>
     @endpush
-    @endif
-@endsection
+    @endsection
