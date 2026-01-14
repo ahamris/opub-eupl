@@ -172,6 +172,55 @@
                     </a>
                 @endauth
             </div>
+
+            <!-- AI Agent Button -->
+            <div class="ml-3 -mr-4 flex items-center">
+                <a href="{{ route('chat') }}" class="group relative inline-flex items-center justify-center" title="AI Agent">
+                    <span class="sr-only">AI Agent</span>
+                    <svg class="w-9 h-9 transition-transform duration-300 group-hover:scale-110" viewBox="0 0 838 837" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                        <path class="animate-[ai-float_3s_ease-in-out_infinite]" d="M515.718 110.605C621.291 149.011 714.28 313.637 646.577 499.743C578.874 685.848 438.407 805.582 332.834 767.176C227.261 728.77 172.327 427.631 240.03 241.525C264.94 173.052 302.98 129.691 346.376 104.145C420.926 60.2597 448.989 86.3295 515.718 110.605Z" fill="url(#aiGradient1)" fill-opacity="0.6" />
+                        <path class="animate-[ai-float_4s_ease-in-out_infinite_-1s]" d="M156.136 453.009C156.169 480.494 140.036 537.977 222.056 604.127C338.957 655.053 526.064 778.991 591.853 627.973C657.641 476.956 715.723 241.089 598.822 190.163C481.921 139.237 221.924 301.992 156.136 453.009Z" fill="url(#aiGradient2)" fill-opacity="0.6" />
+                        <path class="animate-[ai-float_3.5s_ease-in-out_infinite_-0.5s]" opacity="0.8" d="M766.324 448.634C743.549 558.643 594.059 674.407 400.133 634.258C206.208 594.109 67.4634 472.382 90.2388 362.373C113.014 252.364 403.08 154.565 597.005 194.714C668.356 209.486 716.75 240.874 748.289 280.13C802.469 347.57 780.72 379.1 766.324 448.634Z" fill="url(#aiGradient3)" fill-opacity="0.5" />
+                        <ellipse cx="419" cy="409" rx="419" ry="409" fill="url(#aiRadial1)" />
+                        <ellipse class="group-hover:animate-pulse" cx="419" cy="409" rx="419" ry="409" fill="url(#aiRadial2)" />
+                        <ellipse cx="419" cy="409" rx="419" ry="409" fill="url(#aiRadial3)" />
+
+                        <defs>
+                            <linearGradient id="aiGradient1" x1="420.705" y1="249.747" x2="423.671" y2="663.385" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#00D1FF" />
+                                <stop offset="1" stop-color="#C626FF" stop-opacity="0" />
+                            </linearGradient>
+
+                            <linearGradient id="aiGradient2" x1="487.879" y1="-248.502" y2="140.966" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#00A3FF" stop-opacity="0.14" />
+                                <stop offset="1" stop-color="#FF00B8" />
+                            </linearGradient>
+
+                            <linearGradient id="aiGradient3" x1="161.766" y1="376.102" x2="594.449" y2="567.328" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#00FFE0"/>
+                                <stop offset="1" stop-color="#C626FF" stop-opacity="0" />
+                            </linearGradient>
+
+                            <radialGradient id="aiRadial1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(419 409) rotate(90) scale(358.5 367.131)">
+                                <stop stop-color="white" />
+                                <stop offset="0.193741" stop-color="#E4E4E4" />
+                                <stop offset="1" stop-color="#737373" stop-opacity="0" />
+                            </radialGradient>
+
+                            <radialGradient id="aiRadial2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(419 409) rotate(90) scale(293.5 300.566)">
+                                <stop stop-color="white" />
+                                <stop offset="0.314072" stop-color="white" />
+                                <stop offset="1" stop-color="#737373" stop-opacity="0" />
+                            </radialGradient>
+
+                            <radialGradient id="aiRadial3" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(419 409) rotate(90) scale(534 546.857)">
+                                <stop stop-color="#545454" stop-opacity="0" />
+                                <stop offset="1" stop-color="#5D64FF" stop-opacity="0.35" />
+                            </radialGradient>
+                        </defs>
+                    </svg>
+                </a>
+            </div>
         </div>
     </nav>
 
@@ -277,5 +326,11 @@
     .nav-link-active::after {
         width: 100%;
         left: 0;
+    }
+
+    /* AI Agent floating animation */
+    @keyframes ai-float {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-2px) rotate(2deg); }
     }
 </style>

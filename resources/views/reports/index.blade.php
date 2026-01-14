@@ -11,7 +11,7 @@
 
 @section('content')
     <!-- Premium Page Header Section with Filter -->
-    <div class="relative bg-gradient-to-b from-slate-50 to-white overflow-hidden">
+    <div class="relative bg-gradient-to-b from-slate-50 to-white">
         <!-- Subtle grid pattern -->
         <div class="absolute inset-0 -z-10">
             <svg class="absolute inset-0 h-full w-full stroke-slate-200/50" fill="none">
@@ -73,23 +73,168 @@
                                 <option value="4" {{ $quarter == 4 ? 'selected' : '' }}>Q4</option>
                             </select>
                         </div>
-                        <div class="w-full">
-                            <label for="organisatie-select" class="block text-sm font-medium text-[var(--color-on-surface-variant)] mb-2">Organisatie</label>
-                            <select id="organisatie-select" name="organisatie" class="w-full px-3 py-2 rounded-md border border-slate-200 bg-white text-sm text-[var(--color-on-surface)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]">
-                                <option value="">Alle organisaties</option>
+                        {{-- Organisatie Searchable Combobox --}}
+                        <div class="w-full" x-data="{
+                            allOptions: [
+                                { label: 'Alle organisaties', value: '' },
                                 @foreach($allOrganisations ?? [] as $org)
-                                    <option value="{{ $org }}" {{ $selectedOrganisation == $org ? 'selected' : '' }}>{{ $org }}</option>
+                                { label: '{{ addslashes($org) }}', value: '{{ addslashes($org) }}' },
                                 @endforeach
-                            </select>
+                            ],
+                            options: [],
+                            isOpen: false,
+                            openedWithKeyboard: false,
+                            selectedOption: null,
+                            setSelectedOption(option) {
+                                this.selectedOption = option;
+                                this.isOpen = false;
+                                this.openedWithKeyboard = false;
+                                this.$refs.hiddenTextField.value = option.value;
+                            },
+                            getFilteredOptions(query) {
+                                this.options = this.allOptions.filter((option) =>
+                                    option.label.toLowerCase().includes(query.toLowerCase()),
+                                );
+                                if (this.options.length === 0) {
+                                    this.$refs.noResultsMessage.classList.remove('hidden');
+                                } else {
+                                    this.$refs.noResultsMessage.classList.add('hidden');
+                                }
+                            },
+                            handleKeydownOnOptions(event) {
+                                if ((event.keyCode >= 65 && event.keyCode <= 90) || (event.keyCode >= 48 && event.keyCode <= 57) || event.keyCode === 8) {
+                                    this.$refs.searchField.focus();
+                                }
+                            },
+                            init() {
+                                this.options = this.allOptions;
+                                const preselected = '{{ $selectedOrganisation ?? '' }}';
+                                if (preselected) {
+                                    this.selectedOption = this.allOptions.find(o => o.value === preselected) || null;
+                                }
+                            }
+                        }" x-on:keydown="handleKeydownOnOptions($event)" x-on:keydown.esc.window="isOpen = false, openedWithKeyboard = false" x-init="init()">
+                            <label for="organisatie" class="block text-sm font-medium text-[var(--color-on-surface-variant)] mb-2">Organisatie</label>
+                            <div class="relative">
+                                {{-- Trigger button --}}
+                                <button type="button" class="inline-flex w-full items-center justify-between gap-2 border border-slate-200 rounded-md bg-white px-3 py-2 text-sm font-medium tracking-wide text-[var(--color-on-surface)] transition hover:opacity-75 focus:outline-none" role="combobox" aria-controls="organisatieList" aria-haspopup="listbox" x-on:click="isOpen = ! isOpen" x-on:keydown.down.prevent="openedWithKeyboard = true" x-on:keydown.enter.prevent="openedWithKeyboard = true" x-on:keydown.space.prevent="openedWithKeyboard = true" x-bind:aria-expanded="isOpen || openedWithKeyboard" x-bind:aria-label="selectedOption ? selectedOption.label : 'Alle organisaties'">
+                                    <span class="text-sm font-normal truncate" x-text="selectedOption ? selectedOption.label : 'Alle organisaties'"></span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-5 shrink-0" aria-hidden="true">
+                                        <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/>
+                                    </svg>
+                                </button>
+
+                                {{-- Hidden Input --}}
+                                <input id="organisatie" name="organisatie" x-ref="hiddenTextField" hidden="" :value="selectedOption ? selectedOption.value : ''"/>
+                                
+                                <div x-show="isOpen || openedWithKeyboard" id="organisatieList" class="absolute left-0 top-11 z-20 w-full overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg" role="listbox" aria-label="organisatie list" x-on:click.outside="isOpen = false, openedWithKeyboard = false" x-on:keydown.down.prevent="$focus.wrap().next()" x-on:keydown.up.prevent="$focus.wrap().previous()" x-transition x-trap="openedWithKeyboard">
+                                    {{-- Search --}}
+                                    <div class="relative">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--color-on-surface-variant)]/50" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+                                        </svg>
+                                        <input type="text" class="w-full border-b border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm text-[var(--color-on-surface)] focus:outline-none focus:border-slate-200 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-75" name="searchFieldOrg" aria-label="Zoeken" x-on:input="getFilteredOptions($el.value)" x-ref="searchField" placeholder="Zoeken..." />
+                                    </div>
+
+                                    {{-- Options --}}
+                                    <ul class="flex max-h-44 flex-col overflow-y-auto">
+                                        <li class="hidden px-3 py-2 text-sm text-[var(--color-on-surface-variant)]" x-ref="noResultsMessage">
+                                            <span>Geen resultaten gevonden</span>
+                                        </li>
+                                        <template x-for="(item, index) in options" x-bind:key="item.value">
+                                            <li class="combobox-option inline-flex justify-between gap-4 bg-white px-3 py-2 text-sm text-[var(--color-on-surface)] hover:bg-slate-50 hover:text-[var(--color-primary)] focus-visible:bg-slate-50 focus-visible:text-[var(--color-primary)] focus-visible:outline-none cursor-pointer" role="option" x-on:click="setSelectedOption(item)" x-on:keydown.enter="setSelectedOption(item)" x-bind:id="'org-option-' + index" tabindex="0">
+                                                <span x-bind:class="selectedOption && selectedOption.value == item.value ? 'font-semibold' : null" x-text="item.label" class="truncate"></span>
+                                                <span class="sr-only" x-text="selectedOption && selectedOption.value == item.value ? 'selected' : null"></span>
+                                                <svg x-cloak x-show="selectedOption && selectedOption.value == item.value" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" class="size-4 text-[var(--color-primary)] shrink-0" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+                                                </svg>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
-                        <div class="w-full">
-                            <label for="informatiecategorie-select" class="block text-sm font-medium text-[var(--color-on-surface-variant)] mb-2">Categorie</label>
-                            <select id="informatiecategorie-select" name="informatiecategorie" class="w-full px-3 py-2 rounded-md border border-slate-200 bg-white text-sm text-[var(--color-on-surface)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]">
-                                <option value="">Alle categorieën</option>
+
+                        {{-- Categorie Searchable Combobox --}}
+                        <div class="w-full" x-data="{
+                            allOptions: [
+                                { label: 'Alle categorieën', value: '' },
                                 @foreach($allCategories ?? [] as $cat)
-                                    <option value="{{ $cat['value'] }}" {{ $selectedCategory == $cat['value'] ? 'selected' : '' }}>{{ $cat['label'] }}</option>
+                                { label: '{{ addslashes($cat['label']) }}', value: '{{ addslashes($cat['value']) }}' },
                                 @endforeach
-                            </select>
+                            ],
+                            options: [],
+                            isOpen: false,
+                            openedWithKeyboard: false,
+                            selectedOption: null,
+                            setSelectedOption(option) {
+                                this.selectedOption = option;
+                                this.isOpen = false;
+                                this.openedWithKeyboard = false;
+                                this.$refs.hiddenTextField.value = option.value;
+                            },
+                            getFilteredOptions(query) {
+                                this.options = this.allOptions.filter((option) =>
+                                    option.label.toLowerCase().includes(query.toLowerCase()),
+                                );
+                                if (this.options.length === 0) {
+                                    this.$refs.noResultsMessage.classList.remove('hidden');
+                                } else {
+                                    this.$refs.noResultsMessage.classList.add('hidden');
+                                }
+                            },
+                            handleKeydownOnOptions(event) {
+                                if ((event.keyCode >= 65 && event.keyCode <= 90) || (event.keyCode >= 48 && event.keyCode <= 57) || event.keyCode === 8) {
+                                    this.$refs.searchField.focus();
+                                }
+                            },
+                            init() {
+                                this.options = this.allOptions;
+                                const preselected = '{{ $selectedCategory ?? '' }}';
+                                if (preselected) {
+                                    this.selectedOption = this.allOptions.find(o => o.value === preselected) || null;
+                                }
+                            }
+                        }" x-on:keydown="handleKeydownOnOptions($event)" x-on:keydown.esc.window="isOpen = false, openedWithKeyboard = false" x-init="init()">
+                            <label for="informatiecategorie" class="block text-sm font-medium text-[var(--color-on-surface-variant)] mb-2">Categorie</label>
+                            <div class="relative">
+                                {{-- Trigger button --}}
+                                <button type="button" class="inline-flex w-full items-center justify-between gap-2 border border-slate-200 rounded-md bg-white px-3 py-2 text-sm font-medium tracking-wide text-[var(--color-on-surface)] transition hover:opacity-75 focus:outline-none" role="combobox" aria-controls="categorieList" aria-haspopup="listbox" x-on:click="isOpen = ! isOpen" x-on:keydown.down.prevent="openedWithKeyboard = true" x-on:keydown.enter.prevent="openedWithKeyboard = true" x-on:keydown.space.prevent="openedWithKeyboard = true" x-bind:aria-expanded="isOpen || openedWithKeyboard" x-bind:aria-label="selectedOption ? selectedOption.label : 'Alle categorieën'">
+                                    <span class="text-sm font-normal truncate" x-text="selectedOption ? selectedOption.label : 'Alle categorieën'"></span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-5 shrink-0" aria-hidden="true">
+                                        <path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/>
+                                    </svg>
+                                </button>
+
+                                {{-- Hidden Input --}}
+                                <input id="informatiecategorie" name="informatiecategorie" x-ref="hiddenTextField" hidden="" :value="selectedOption ? selectedOption.value : ''"/>
+                                
+                                <div x-show="isOpen || openedWithKeyboard" id="categorieList" class="absolute left-0 top-11 z-20 w-full overflow-hidden rounded-md border border-slate-200 bg-white shadow-lg" role="listbox" aria-label="categorie list" x-on:click.outside="isOpen = false, openedWithKeyboard = false" x-on:keydown.down.prevent="$focus.wrap().next()" x-on:keydown.up.prevent="$focus.wrap().previous()" x-transition x-trap="openedWithKeyboard">
+                                    {{-- Search --}}
+                                    <div class="relative">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5" class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--color-on-surface-variant)]/50" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+                                        </svg>
+                                        <input type="text" class="w-full border-b border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm text-[var(--color-on-surface)] focus:outline-none focus:border-slate-200 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-75" name="searchFieldCat" aria-label="Zoeken" x-on:input="getFilteredOptions($el.value)" x-ref="searchField" placeholder="Zoeken..." />
+                                    </div>
+
+                                    {{-- Options --}}
+                                    <ul class="flex max-h-44 flex-col overflow-y-auto">
+                                        <li class="hidden px-3 py-2 text-sm text-[var(--color-on-surface-variant)]" x-ref="noResultsMessage">
+                                            <span>Geen resultaten gevonden</span>
+                                        </li>
+                                        <template x-for="(item, index) in options" x-bind:key="item.value">
+                                            <li class="combobox-option inline-flex justify-between gap-4 bg-white px-3 py-2 text-sm text-[var(--color-on-surface)] hover:bg-slate-50 hover:text-[var(--color-primary)] focus-visible:bg-slate-50 focus-visible:text-[var(--color-primary)] focus-visible:outline-none cursor-pointer" role="option" x-on:click="setSelectedOption(item)" x-on:keydown.enter="setSelectedOption(item)" x-bind:id="'cat-option-' + index" tabindex="0">
+                                                <span x-bind:class="selectedOption && selectedOption.value == item.value ? 'font-semibold' : null" x-text="item.label" class="truncate"></span>
+                                                <span class="sr-only" x-text="selectedOption && selectedOption.value == item.value ? 'selected' : null"></span>
+                                                <svg x-cloak x-show="selectedOption && selectedOption.value == item.value" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" class="size-4 text-[var(--color-primary)] shrink-0" aria-hidden="true">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+                                                </svg>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="w-full lg:w-auto">
