@@ -17,7 +17,7 @@ Route::get('/', [SearchController::class, 'searchPage'])->name('home');
 Route::get('/zoek', [SearchController::class, 'searchPage'])->name('zoek');
 Route::get('/zoeken', [SearchController::class, 'searchResults'])->name('zoeken');
 Route::get('/open-overheid/search', [SearchController::class, 'index']);
-Route::get('/open-overheid/documents/{id}', [DocumentController::class, 'show']);
+Route::get('/open-overheid/documents/{id}', [DocumentController::class, 'show'])->name('document.view');
 Route::get('/v2026', [SearchController::class, 'v2026LandingPage'])->name('v2026');
 Route::get('/new', [SearchController::class, 'newLandingPage'])->name('new');
 Route::get('/over', [SearchController::class, 'aboutPage'])->name('over');
@@ -34,6 +34,8 @@ Route::get('/verwijzingen', [SearchController::class, 'referencesPage'])->name('
 // Report routes
 Route::get('/rapporten', [ReportController::class, 'index'])->name('reports.index');
 Route::get('/in-cijfers', [ReportController::class, 'index'])->name('reports.index'); // Alias
+Route::get('/rapporten/search', [ReportController::class, 'searchOrganisation'])->name('reports.search');
+Route::get('/rapporten/{organisation}', [ReportController::class, 'show'])->name('reports.show');
 
 // Thema routes
 Route::get('/themas', [ThemaController::class, 'index'])->name('themas.index');

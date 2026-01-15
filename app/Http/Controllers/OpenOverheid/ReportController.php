@@ -12,15 +12,28 @@ class ReportController
      * Display the reports dashboard (Woo-style statistics)
      * Uses Typesense for fast faceted search results
      */
+    /**
+     * Display the reports dashboard (Woo-style statistics)
+     * Uses Typesense for fast faceted search results
+     */
     public function index(Request $request): \Illuminate\View\View
     {
         $searchService = app(TypesenseSearchService::class);
         $wooCategoryService = app(\App\Services\OpenOverheid\WooCategoryService::class);
 
         // Get available years from database (years that have documents)
-        $availableYears = OpenOverheidDocument::whereNotNull('publication_date')
-            ->selectRaw('EXTRACT(YEAR FROM publication_date) as year')
-            ->distinct()
+        $query = OpenOverheidDocument::whereNotNull('publication_date');
+        
+        if (config('database.default') === 'sqlite') {
+            $availableYears = $query->selectRaw('strftime(\'%Y\', publication_date) as year');
+        } elseif (config('database.default') === 'pgsql') {
+            $availableYears = $query->selectRaw('EXTRACT(YEAR FROM publication_date) as year');
+        } else {
+            // MySQL
+            $availableYears = $query->selectRaw('EXTRACT(YEAR FROM publication_date) as year');
+        }
+
+        $availableYears = $availableYears->distinct()
             ->orderBy('year', 'desc')
             ->pluck('year')
             ->map(fn($y) => (int) $y)
@@ -98,6 +111,8 @@ class ReportController
                     'count' => (int) $item['count'],
                 ])
                 ->toArray();
+            
+            $activeOrganisationsCount = count($orgFacet['counts'] ?? []);
 
             // Extract category facets
             $catFacet = $facetCounts->firstWhere('field_name', 'category');
@@ -118,6 +133,8 @@ class ReportController
                     'count' => (int) $item['count'],
                 ])
                 ->toArray();
+            
+            $totalThemesCount = count($themeFacet['counts'] ?? []);
 
         } catch (\Exception $e) {
             // Fallback to database if Typesense fails
@@ -152,6 +169,8 @@ class ReportController
                     ];
                 })
                 ->toArray();
+            
+            $activeOrganisationsCount = (clone $baseQuery)->distinct('organisation')->count('organisation');
 
             $documentsPerCategory = (clone $baseQuery)
                 ->whereNotNull('category')
@@ -182,6 +201,8 @@ class ReportController
                     ];
                 })
                 ->toArray();
+            
+            $totalThemesCount = (clone $baseQuery)->distinct('theme')->count('theme');
         }
 
         $documentsWithDecision = $totalDocuments;
@@ -189,50 +210,65 @@ class ReportController
         // Get quarterly data for top organizations for the chart
         $quarterlyOrgData = $this->getQuarterlyOrganisationData($searchService, $year, array_slice($documentsPerOrganisation, 0, 5), $selectedCategory, $selectedTheme);
 
-        // Monthly trend using database (simpler for date grouping)
-        $baseQueryForTrend = OpenOverheidDocument::whereNotNull('publication_date')
-            ->whereBetween('publication_date', [$startDate, $endDate]);
+        // Monthly trend using Typesense Multi-Search
+        $monthlyTrend = [];
+        $searches = [];
         
-        if ($selectedOrganisation) {
-            $baseQueryForTrend->where('organisation', $selectedOrganisation);
-        }
-        if ($selectedCategory) {
-            $baseQueryForTrend->where('category', $selectedCategory);
-        }
-        if ($selectedTheme) {
-            $baseQueryForTrend->where('theme', $selectedTheme);
+        // Generate months for the selected period
+        $periodStart = $startDate->copy()->startOfMonth();
+        $periodEnd = $endDate->copy()->endOfMonth();
+        
+        $current = $periodStart->copy();
+        while ($current->lte($periodEnd)) {
+            $monthStart = $current->copy()->startOfMonth();
+            $monthEnd = $current->copy()->endOfMonth();
+            
+            $monthFilters = [
+                'publication_date:>=' . $monthStart->timestamp,
+                'publication_date:<=' . $monthEnd->timestamp,
+            ];
+            
+            if ($selectedOrganisation) {
+                $monthFilters[] = 'organisation:=' . $selectedOrganisation;
+            }
+            if ($selectedCategory) {
+                $monthFilters[] = 'category:=' . $selectedCategory;
+            }
+            if ($selectedTheme) {
+                $monthFilters[] = 'theme:=' . $selectedTheme;
+            }
+
+            $searches[] = [
+                'collection' => 'open_overheid_documents',
+                'q' => '*',
+                'filter_by' => implode(' && ', $monthFilters),
+                'per_page' => 0, // We only need the count
+            ];
+            
+            // Initialize with 0 count
+            $monthlyTrend[] = [
+                $current->timestamp * 1000, // Timestamp in milliseconds
+                0
+            ];
+            
+            $current->addMonth();
         }
 
-        if (config('database.default') === 'pgsql') {
-            $monthlyTrend = (clone $baseQueryForTrend)
-                ->selectRaw('DATE_TRUNC(\'month\', publication_date) as month, COUNT(*) as count')
-                ->groupBy('month')
-                ->orderBy('month', 'asc')
-                ->get()
-                ->map(function ($item) {
-                    $date = \Carbon\Carbon::parse($item->month);
-                    return [
-                        'month' => $date->format('Y-m'),
-                        'monthName' => $date->format('M Y'),
-                        'count' => (int) $item->count,
-                    ];
-                })
-                ->toArray();
-        } else {
-            $monthlyTrend = (clone $baseQueryForTrend)
-                ->selectRaw('DATE_FORMAT(publication_date, \'%Y-%m\') as month, COUNT(*) as count')
-                ->groupBy('month')
-                ->orderBy('month', 'asc')
-                ->get()
-                ->map(function ($item) {
-                    $date = \Carbon\Carbon::createFromFormat('Y-m', $item->month);
-                    return [
-                        'month' => $item->month,
-                        'monthName' => $date->format('M Y'),
-                        'count' => (int) $item->count,
-                    ];
-                })
-                ->toArray();
+        try {
+            if (!empty($searches)) {
+                $multiSearchResults = $searchService->multiSearch($searches);
+                
+                if (isset($multiSearchResults['results'])) {
+                    foreach ($multiSearchResults['results'] as $index => $result) {
+                        if (isset($monthlyTrend[$index])) {
+                            $monthlyTrend[$index][1] = (int) ($result['found'] ?? 0);
+                        }
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Typesense multi-search failed for trend', ['error' => $e->getMessage()]);
+            // Keep the initialized 0 values so chart still renders
         }
 
         // Get all unique organizations and themes for dropdowns (from Typesense unfiltered)
@@ -324,6 +360,8 @@ class ReportController
             'startDate' => $startDate,
             'endDate' => $endDate,
             'totalDocuments' => $totalDocuments,
+            'activeOrganisationsCount' => $activeOrganisationsCount,
+            'totalThemesCount' => $totalThemesCount,
             'documentsWithDecision' => $documentsWithDecision,
             'documentsPerOrganisation' => $documentsPerOrganisation,
             'documentsPerCategory' => $documentsPerCategory,
@@ -335,6 +373,179 @@ class ReportController
             'allThemes' => $allThemes,
             'quarterlyOrgData' => $quarterlyOrgData,
         ]);
+    }
+
+    /**
+     * Display the organization dashboard
+     */
+    /**
+     * Display the organization dashboard
+     */
+    public function show(string $organisation): \Illuminate\View\View
+    {
+        $organisation = urldecode($organisation);
+        $wooCategoryService = app(\App\Services\OpenOverheid\WooCategoryService::class);
+        $searchService = app(TypesenseSearchService::class);
+
+        // 1. Basic Stats & Metadata (Single Multi-Search or parallel requests? Let's do sequential for simplicity first, or optimize with multi-search if needed. 
+        // Actually, we can get total docs, last 12 months, themes, and categories in one go or a few efficient queries.)
+
+        // Query 1: Total Documents + Facets for Themes & Categories + Last Publication (via Sort)
+        // We can't get "Last 12 months" count easily in the same query as "Total" without a separate filter.
+        // So let's do a few targeted queries.
+
+        try {
+            // A. Total Documents, Themes, Categories, Last Publication
+            $mainStats = $searchService->search('*', [
+                'filter_by' => 'organisation:=' . $organisation,
+                'facet_by' => 'theme,category',
+                'max_facet_values' => 100,
+                'sort_by' => 'publication_date:desc',
+                'per_page' => 1, // We need the first one for "Last Publication"
+            ]);
+
+            $totalDocuments = $mainStats['found'] ?? 0;
+            
+            // Last Publication
+            $lastPublication = null;
+            if (!empty($mainStats['hits'][0]['document']['publication_date'])) {
+                $lastPublication = date('Y-m-d H:i:s', $mainStats['hits'][0]['document']['publication_date']);
+            }
+
+            // Total Themes (Unique count from facet)
+            $themeFacet = collect($mainStats['facet_counts'] ?? [])->firstWhere('field_name', 'theme');
+            $totalThemes = count($themeFacet['counts'] ?? []);
+
+            // Categories Distribution
+            $catFacet = collect($mainStats['facet_counts'] ?? [])->firstWhere('field_name', 'category');
+            $categories = collect($catFacet['counts'] ?? [])
+                ->map(fn($item) => [
+                    'category' => $wooCategoryService->formatCategoryForDisplay($item['value']) ?? $item['value'],
+                    'count' => (int) $item['count'],
+                ])
+                ->sortByDesc('count')
+                ->take(10)
+                ->values();
+
+            // B. Last 12 Months Count
+            $last12MonthsDate = now()->subMonths(12)->timestamp;
+            $last12MonthsStats = $searchService->search('*', [
+                'filter_by' => 'organisation:=' . $organisation . ' && publication_date:>=' . $last12MonthsDate,
+                'per_page' => 0,
+            ]);
+            $last12Months = $last12MonthsStats['found'] ?? 0;
+
+            // C. Recent Documents
+            $recentDocsResult = $searchService->search('*', [
+                'filter_by' => 'organisation:=' . $organisation,
+                'sort_by' => 'publication_date:desc',
+                'per_page' => 10,
+            ]);
+            
+            // Map Typesense hits to object-like structure for Blade
+            $recentDocuments = collect($recentDocsResult['hits'] ?? [])->map(function ($hit) {
+                $doc = $hit['document'];
+                return (object) [
+                    'id' => $doc['id'] ?? null,
+                    'title' => $doc['title'] ?? 'Naamloos document',
+                    'category' => $doc['category'] ?? 'Onbekend',
+                    'publication_date' => isset($doc['publication_date']) ? date('Y-m-d H:i:s', $doc['publication_date']) : null,
+                ];
+            });
+
+            // D. History (Last 24 months) - MultiSearch
+            $history = [];
+            $searches = [];
+            $months = [];
+            
+            $startHistory = now()->subYears(2)->startOfMonth();
+            $endHistory = now()->endOfMonth();
+            
+            $current = $startHistory->copy();
+            while ($current->lte($endHistory)) {
+                $monthStart = $current->copy()->startOfMonth();
+                $monthEnd = $current->copy()->endOfMonth();
+                
+                $searches[] = [
+                    'collection' => 'open_overheid_documents',
+                    'q' => '*',
+                    'filter_by' => 'organisation:=' . $organisation . ' && publication_date:>=' . $monthStart->timestamp . ' && publication_date:<=' . $monthEnd->timestamp,
+                    'per_page' => 0,
+                ];
+                
+                $months[] = $current->format('Y-m');
+                $current->addMonth();
+            }
+
+            if (!empty($searches)) {
+                $multiSearchResults = $searchService->multiSearch($searches);
+                foreach ($multiSearchResults['results'] as $index => $result) {
+                    $history[] = [
+                        'month' => $months[$index],
+                        'count' => (int) ($result['found'] ?? 0),
+                    ];
+                }
+            }
+            $history = collect($history);
+
+        } catch (\Exception $e) {
+            \Log::error('Typesense failed for organization dashboard', ['error' => $e->getMessage()]);
+            // Fallback or empty state could be implemented here, but for now we return empty/zeros to avoid crash
+            $totalDocuments = 0;
+            $last12Months = 0;
+            $totalThemes = 0;
+            $lastPublication = null;
+            $categories = collect([]);
+            $history = collect([]);
+            $recentDocuments = collect([]);
+        }
+
+        return view('reports.show', [
+            'organisation' => $organisation,
+            'totalDocuments' => $totalDocuments,
+            'last12Months' => $last12Months,
+            'totalThemes' => $totalThemes,
+            'lastPublication' => $lastPublication,
+            'categories' => $categories,
+            'history' => $history,
+            'recentDocuments' => $recentDocuments,
+        ]);
+    }
+
+    /**
+     * Search for organizations with rank
+     */
+    public function searchOrganisation(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $query = $request->get('query');
+        
+        if (empty($query) || strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        // Cache the ranked list of organizations for 1 hour to avoid heavy queries
+        $rankedOrganisations = \Cache::remember('organisations_ranked_by_count', 3600, function () {
+            return OpenOverheidDocument::whereNotNull('organisation')
+                ->selectRaw('organisation, COUNT(*) as count')
+                ->groupBy('organisation')
+                ->orderBy('count', 'desc')
+                ->get()
+                ->values() // Ensure array is indexed 0, 1, 2...
+                ->map(function ($item, $index) {
+                    return [
+                        'organisation' => $item->organisation,
+                        'count' => (int) $item->count,
+                        'rank' => $index + 1,
+                    ];
+                });
+        });
+
+        // Filter the cached list
+        $results = $rankedOrganisations->filter(function ($item) use ($query) {
+            return stripos($item['organisation'], $query) !== false;
+        })->take(10)->values();
+
+        return response()->json($results);
     }
 
     /**

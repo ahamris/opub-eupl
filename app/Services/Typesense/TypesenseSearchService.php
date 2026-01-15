@@ -193,6 +193,28 @@ class TypesenseSearchService
     }
 
     /**
+     * Perform multiple searches in a single request
+     *
+     * @param  array  $searches  Array of search parameters
+     * @param  array  $commonParams  Common parameters for all searches
+     */
+    public function multiSearch(array $searches, array $commonParams = []): array
+    {
+        try {
+            $searchRequests = [
+                'searches' => $searches,
+            ];
+
+            return $this->client->multiSearch->perform($searchRequests, $commonParams);
+        } catch (\Exception $e) {
+            Log::channel('typesense_errors')->error('Typesense multi-search error', [
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
      * Get document by ID
      */
     public function getDocument(string $id): ?array
