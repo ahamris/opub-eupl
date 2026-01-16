@@ -210,38 +210,69 @@ class ReportController
         // Get quarterly data for top organizations for the chart
         $quarterlyOrgData = $this->getQuarterlyOrganisationData($searchService, $year, array_slice($documentsPerOrganisation, 0, 5), $selectedCategory, $selectedTheme);
 
-        // Monthly trend using Typesense Multi-Search
+        // Granularity Handling
+        $granularity = $request->get('granularity', 'month');
+        if (!in_array($granularity, ['month', 'quarter', 'year'])) {
+            $granularity = 'month';
+        }
+
+        // Monthly/Quarterly/Yearly trend using Typesense Multi-Search
         $monthlyTrend = [];
         $searches = [];
         
-        // Generate months for the selected period
-        $periodStart = $startDate->copy()->startOfMonth();
-        $periodEnd = $endDate->copy()->endOfMonth();
+        // Generate periods based on granularity
+        $periodStart = $startDate->copy();
+        $periodEnd = $endDate->copy();
+        
+        // Adjust start/end based on granularity
+        if ($granularity === 'year') {
+            $periodStart->startOfYear();
+            $periodEnd->endOfYear();
+        } elseif ($granularity === 'quarter') {
+            $periodStart->startOfQuarter();
+            $periodEnd->endOfQuarter();
+        } else {
+            $periodStart->startOfMonth();
+            $periodEnd->endOfMonth();
+        }
         
         $current = $periodStart->copy();
+        
         while ($current->lte($periodEnd)) {
-            $monthStart = $current->copy()->startOfMonth();
-            $monthEnd = $current->copy()->endOfMonth();
+            // Determine range for current point
+            if ($granularity === 'year') {
+                $pointStart = $current->copy()->startOfYear();
+                $pointEnd = $current->copy()->endOfYear();
+                $nextStep = fn($c) => $c->addYear();
+            } elseif ($granularity === 'quarter') {
+                $pointStart = $current->copy()->startOfQuarter();
+                $pointEnd = $current->copy()->endOfQuarter();
+                $nextStep = fn($c) => $c->addMonths(3);
+            } else {
+                $pointStart = $current->copy()->startOfMonth();
+                $pointEnd = $current->copy()->endOfMonth();
+                $nextStep = fn($c) => $c->addMonth();
+            }
             
-            $monthFilters = [
-                'publication_date:>=' . $monthStart->timestamp,
-                'publication_date:<=' . $monthEnd->timestamp,
+            $pointFilters = [
+                'publication_date:>=' . $pointStart->timestamp,
+                'publication_date:<=' . $pointEnd->timestamp,
             ];
             
             if ($selectedOrganisation) {
-                $monthFilters[] = 'organisation:=' . $selectedOrganisation;
+                $pointFilters[] = 'organisation:=' . $selectedOrganisation;
             }
             if ($selectedCategory) {
-                $monthFilters[] = 'category:=' . $selectedCategory;
+                $pointFilters[] = 'category:=' . $selectedCategory;
             }
             if ($selectedTheme) {
-                $monthFilters[] = 'theme:=' . $selectedTheme;
+                $pointFilters[] = 'theme:=' . $selectedTheme;
             }
 
             $searches[] = [
                 'collection' => 'open_overheid_documents',
                 'q' => '*',
-                'filter_by' => implode(' && ', $monthFilters),
+                'filter_by' => implode(' && ', $pointFilters),
                 'per_page' => 0, // We only need the count
             ];
             
@@ -251,7 +282,7 @@ class ReportController
                 0
             ];
             
-            $current->addMonth();
+            $nextStep($current);
         }
 
         try {
@@ -372,6 +403,7 @@ class ReportController
             'allCategories' => $allCategories,
             'allThemes' => $allThemes,
             'quarterlyOrgData' => $quarterlyOrgData,
+            'granularity' => $granularity,
         ]);
     }
 

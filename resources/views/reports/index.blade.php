@@ -22,6 +22,7 @@
             <form id="filter-form" action="{{ route('reports.index') }}" method="GET" class="hidden">
                 <input type="hidden" name="start_date" id="start_date" value="{{ $startDate->format('Y-m-d') }}">
                 <input type="hidden" name="end_date" id="end_date" value="{{ $endDate->format('Y-m-d') }}">
+                <input type="hidden" name="granularity" id="granularity" value="{{ $granularity }}">
             </form>
         </div>
     </div>
@@ -206,16 +207,24 @@
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-xl font-bold text-[var(--color-on-surface)]">Publicaties over tijd</h2>
             
-            <!-- Year Selector -->
-            <div class="w-32">
-                <select onchange="window.location.href=this.value" class="block w-full rounded-md border-[var(--color-outline-variant)] shadow-sm focus:border-[var(--color-primary)] focus:ring focus:ring-[var(--color-primary)] focus:ring-opacity-50 text-sm bg-[var(--color-surface)] text-[var(--color-on-surface)]">
-                    <option value="">Kies jaar</option>
-                    @foreach($availableYears as $y)
-                    <option value="{{ route('reports.index', ['start_date' => $y.'-01-01', 'end_date' => $y.'-12-31']) }}" {{ $startDate->year == $y && $endDate->year == $y ? 'selected' : '' }}>
-                        {{ $y }}
-                    </option>
-                    @endforeach
-                </select>
+            <!-- Year Selector & Granularity -->
+            <div class="flex items-center gap-4">
+                <div class="flex bg-[var(--color-surface-variant)] rounded-lg p-1">
+                    <button onclick="setGranularity('month')" class="px-3 py-1 text-xs font-medium rounded-md transition-colors {{ $granularity === 'month' ? 'bg-[var(--color-surface)] text-[var(--color-primary)] shadow-sm' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">Maand</button>
+                    <button onclick="setGranularity('quarter')" class="px-3 py-1 text-xs font-medium rounded-md transition-colors {{ $granularity === 'quarter' ? 'bg-[var(--color-surface)] text-[var(--color-primary)] shadow-sm' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">Kwartaal</button>
+                    <button onclick="setGranularity('year')" class="px-3 py-1 text-xs font-medium rounded-md transition-colors {{ $granularity === 'year' ? 'bg-[var(--color-surface)] text-[var(--color-primary)] shadow-sm' : 'text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)]' }}">Jaar</button>
+                </div>
+                
+                <div class="w-32">
+                    <select onchange="window.location.href=this.value" class="block w-full rounded-md border-[var(--color-outline-variant)] shadow-sm focus:border-[var(--color-primary)] focus:ring focus:ring-[var(--color-primary)] focus:ring-opacity-50 text-sm bg-[var(--color-surface)] text-[var(--color-on-surface)]">
+                        <option value="">Kies jaar</option>
+                        @foreach($availableYears as $y)
+                        <option value="{{ route('reports.index', ['start_date' => $y.'-01-01', 'end_date' => $y.'-12-31', 'granularity' => $granularity]) }}" {{ $startDate->year == $y && $endDate->year == $y ? 'selected' : '' }}>
+                            {{ $y }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
         </div>
         <div id="timeline-chart" class="w-full h-[350px]"></div>
@@ -273,6 +282,11 @@
             $('#end_date').val(end.format('YYYY-MM-DD'));
             $('#filter-form').submit();
         });
+
+        window.setGranularity = function(value) {
+            document.getElementById('granularity').value = value;
+            document.getElementById('filter-form').submit();
+        }
 
         // Themes Polar Area Chart
         @if(!empty($documentsPerTheme))
