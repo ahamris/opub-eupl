@@ -30,8 +30,9 @@
     <dl class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-8">
         <div class="relative overflow-hidden rounded-lg bg-[var(--color-surface)] px-4 pt-5 pb-12 sm:px-6 sm:pt-6 border border-[var(--color-outline-variant)]">
             <dt>
-                <div class="absolute rounded-md bg-blue-500 p-3">
-                    <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <dt>
+                <div class="absolute rounded-md bg-[var(--color-primary)] p-3">
+                    <svg class="h-6 w-6 text-[var(--color-on-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                 </div>
@@ -40,7 +41,7 @@
             <dd class="ml-16 flex items-baseline pb-1 sm:pb-2">
                 <p class="text-2xl font-semibold text-[var(--color-on-surface)]">{{ number_format($totalDocuments, 0, ',', '.') }}</p>
             </dd>
-            <div class="absolute inset-x-0 bottom-0 bg-gray-50 px-4 py-4 sm:px-6">
+            <div class="absolute inset-x-0 bottom-0 bg-[var(--color-surface-variant)] px-4 py-4 sm:px-6">
                 <div class="text-sm">
                     <span class="font-medium text-[var(--color-primary)]">Geselecteerde periode</span>
                 </div>
@@ -49,8 +50,9 @@
 
         <div class="relative overflow-hidden rounded-lg bg-[var(--color-surface)] px-4 pt-5 pb-12 sm:px-6 sm:pt-6 border border-[var(--color-outline-variant)]">
             <dt>
-                <div class="absolute rounded-md bg-indigo-500 p-3">
-                    <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <dt>
+                <div class="absolute rounded-md bg-[var(--color-purple)] p-3">
+                    <svg class="h-6 w-6 text-[var(--color-on-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                 </div>
@@ -59,7 +61,7 @@
             <dd class="ml-16 flex items-baseline pb-1 sm:pb-2">
                 <p class="text-2xl font-semibold text-[var(--color-on-surface)]">{{ number_format($activeOrganisationsCount ?? 0, 0, ',', '.') }}</p>
             </dd>
-            <div class="absolute inset-x-0 bottom-0 bg-gray-50 px-4 py-4 sm:px-6">
+            <div class="absolute inset-x-0 bottom-0 bg-[var(--color-surface-variant)] px-4 py-4 sm:px-6">
                 <div class="text-sm">
                     <span class="font-medium text-[var(--color-primary)]">Met publicaties</span>
                 </div>
@@ -68,8 +70,9 @@
 
         <div class="relative overflow-hidden rounded-lg bg-[var(--color-surface)] px-4 pt-5 pb-12 sm:px-6 sm:pt-6 border border-[var(--color-outline-variant)]">
             <dt>
-                <div class="absolute rounded-md bg-emerald-500 p-3">
-                    <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <dt>
+                <div class="absolute rounded-md bg-[var(--color-primary-light)] p-3">
+                    <svg class="h-6 w-6 text-[var(--color-on-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                     </svg>
                 </div>
@@ -78,7 +81,7 @@
             <dd class="ml-16 flex items-baseline pb-1 sm:pb-2">
                 <p class="text-2xl font-semibold text-[var(--color-on-surface)]">{{ number_format($totalThemesCount ?? 0, 0, ',', '.') }}</p>
             </dd>
-            <div class="absolute inset-x-0 bottom-0 bg-gray-50 px-4 py-4 sm:px-6">
+            <div class="absolute inset-x-0 bottom-0 bg-[var(--color-surface-variant)] px-4 py-4 sm:px-6">
                 <div class="text-sm">
                     <span class="font-medium text-[var(--color-primary)]">Unieke thema's</span>
                 </div>
@@ -88,7 +91,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <!-- Hall of Fame -->
-        <div class="bg-[var(--color-surface)] border border-[var(--color-outline-variant)] rounded-lg p-6 shadow-sm flex flex-col h-full">
+        <div class="bg-[var(--color-surface)] border border-[var(--color-outline-variant)] rounded-lg p-6 flex flex-col h-full">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                 <h2 class="text-xl font-bold text-[var(--color-on-surface)]">Hall of Fame</h2>
                 
@@ -120,10 +123,10 @@
                             x-model="query" 
                             @input.debounce.300ms="search()" 
                             placeholder="Zoek organisatie..." 
-                            class="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-md focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]"
+                            class="w-full pl-9 pr-4 py-2 text-sm border border-[var(--color-outline-variant)] rounded-md focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] bg-[var(--color-surface)] text-[var(--color-on-surface)]"
                         >
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg class="h-4 w-4 text-[var(--color-on-surface-variant)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </div>
@@ -142,10 +145,10 @@
                                 <li>
                                     <a :href="'/rapporten/' + encodeURIComponent(result.organisation)" class="block px-4 py-2 hover:bg-gray-50 transition-colors">
                                         <div class="flex justify-between items-center">
-                                            <span class="text-sm font-medium text-gray-900" x-text="result.organisation"></span>
-                                            <span class="text-xs font-semibold text-[var(--color-primary)] bg-blue-50 px-2 py-0.5 rounded-full" x-text="'#' + result.rank"></span>
+                                            <span class="text-sm font-medium text-[var(--color-on-surface)]" x-text="result.organisation"></span>
+                                            <span class="text-xs font-semibold text-[var(--color-primary)] bg-[var(--color-surface-variant)] px-2 py-0.5 rounded-full" x-text="'#' + result.rank"></span>
                                         </div>
-                                        <div class="text-xs text-gray-500 mt-0.5" x-text="result.count + ' documenten'"></div>
+                                        <div class="text-xs text-[var(--color-on-surface-variant)] mt-0.5" x-text="result.count + ' documenten'"></div>
                                     </a>
                                 </li>
                             </template>
@@ -160,7 +163,7 @@
             <div class="overflow-x-auto flex-grow">
                 <table class="w-full">
                     <thead>
-                        <tr class="text-left text-xs font-medium text-[var(--color-on-surface-variant)] uppercase tracking-wider border-b border-gray-100">
+                        <tr class="text-left text-xs font-medium text-[var(--color-on-surface-variant)] uppercase tracking-wider border-b border-[var(--color-outline-variant)]">
                             <th class="pb-3 pl-2">#</th>
                             <th class="pb-3">Organisatie</th>
                             <th class="pb-3 text-right">Aantal</th>
@@ -169,8 +172,8 @@
                     </thead>
                     <tbody class="divide-y divide-gray-50">
                         @foreach(array_slice($documentsPerOrganisation, 0, 10) as $index => $item)
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="py-3 pl-2 text-sm text-gray-500">{{ $index + 1 }}</td>
+                        <tr class="hover:bg-[var(--color-surface-variant)] transition-colors">
+                            <td class="py-3 pl-2 text-sm text-[var(--color-on-surface-variant)]">{{ $index + 1 }}</td>
                             <td class="py-3">
                                 <a href="{{ route('reports.show', ['organisation' => urlencode($item['organisation'])]) }}" class="text-sm font-medium text-[var(--color-on-surface)] hover:text-[var(--color-primary)]">
                                     {{ $item['organisation'] }}
@@ -192,20 +195,20 @@
         </div>
 
         <!-- Themes Treemap -->
-        <div class="bg-[var(--color-surface)] border border-[var(--color-outline-variant)] rounded-lg p-6 shadow-sm">
+        <div class="bg-[var(--color-surface)] border border-[var(--color-outline-variant)] rounded-lg p-6">
             <h2 class="text-xl font-bold text-[var(--color-on-surface)] mb-6">Thema verdeling</h2>
             <div id="themes-chart" class="w-full h-[400px]"></div>
         </div>
     </div>
 
     <!-- Timeline -->
-    <div class="bg-[var(--color-surface)] border border-[var(--color-outline-variant)] rounded-lg p-6 shadow-sm mb-8">
+    <div class="bg-[var(--color-surface)] border border-[var(--color-outline-variant)] rounded-lg p-6 mb-8">
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-xl font-bold text-[var(--color-on-surface)]">Publicaties over tijd</h2>
             
             <!-- Year Selector -->
             <div class="w-32">
-                <select onchange="window.location.href=this.value" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-[var(--color-primary)] focus:ring focus:ring-[var(--color-primary)] focus:ring-opacity-50 text-sm">
+                <select onchange="window.location.href=this.value" class="block w-full rounded-md border-[var(--color-outline-variant)] shadow-sm focus:border-[var(--color-primary)] focus:ring focus:ring-[var(--color-primary)] focus:ring-opacity-50 text-sm bg-[var(--color-surface)] text-[var(--color-on-surface)]">
                     <option value="">Kies jaar</option>
                     @foreach($availableYears as $y)
                     <option value="{{ route('reports.index', ['start_date' => $y.'-01-01', 'end_date' => $y.'-12-31']) }}" {{ $startDate->year == $y && $endDate->year == $y ? 'selected' : '' }}>
@@ -297,7 +300,7 @@
             fill: {
                 opacity: 0.8
             },
-            colors: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316'],
+            colors: ['#4573d5', '#b500c7', '#64dcff', '#072974', '#ff32ff', '#333333', '#666666', '#e5e5e5'],
             responsive: [{
                 breakpoint: 480,
                 options: {
@@ -369,7 +372,7 @@
                 type: 'datetime',
                 tickAmount: 6,
                 labels: {
-                    style: { colors: '#64748b', fontSize: '12px' },
+                    style: { colors: '#666666', fontSize: '12px' },
                     datetimeFormatter: {
                         year: 'yyyy',
                         month: 'MMM \'yy',
@@ -383,7 +386,7 @@
             },
             yaxis: {
                 labels: {
-                    style: { colors: '#64748b', fontSize: '12px' },
+                    style: { colors: '#666666', fontSize: '12px' },
                     formatter: function(val) { return val.toLocaleString('nl-NL'); }
                 }
             },
@@ -401,9 +404,9 @@
                     stops: [0, 100]
                 }
             },
-            colors: ['#2563eb'],
+            colors: ['#4573d5'],
             grid: {
-                borderColor: '#f1f5f9',
+                borderColor: '#e5e5e5',
                 strokeDashArray: 4,
             }
         };

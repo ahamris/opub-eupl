@@ -13,7 +13,7 @@
             </li>
             <li aria-current="page">
                 <div class="flex items-center">
-                    <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
+                    <svg class="w-6 h-6 text-[var(--color-on-surface-variant)]" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
                     <span class="ml-1 text-sm font-medium text-[var(--color-on-surface)] md:ml-2">{{ $organisation }}</span>
                 </div>
             </li>
@@ -61,10 +61,10 @@
                         x-model="query" 
                         @input.debounce.300ms="search()" 
                         placeholder="Zoek andere organisatie..." 
-                        class="w-full pl-9 pr-4 py-2 text-sm border border-gray-300 rounded-md focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)]"
+                        class="w-full pl-9 pr-4 py-2 text-sm border border-[var(--color-outline-variant)] rounded-md focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] bg-[var(--color-surface)] text-[var(--color-on-surface)]"
                     >
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg class="h-4 w-4 text-[var(--color-on-surface-variant)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </div>
@@ -81,12 +81,12 @@
                     <ul class="py-1 divide-y divide-gray-100">
                         <template x-for="result in results" :key="result.organisation">
                             <li>
-                                <a :href="'/rapporten/' + encodeURIComponent(result.organisation)" class="block px-4 py-2 hover:bg-gray-50 transition-colors">
+                                <a :href="'/rapporten/' + encodeURIComponent(result.organisation)" class="block px-4 py-2 hover:bg-[var(--color-surface-variant)] transition-colors">
                                     <div class="flex justify-between items-center">
-                                        <span class="text-sm font-medium text-gray-900" x-text="result.organisation"></span>
-                                        <span class="text-xs font-semibold text-[var(--color-primary)] bg-blue-50 px-2 py-0.5 rounded-full" x-text="'#' + result.rank"></span>
+                                        <span class="text-sm font-medium text-[var(--color-on-surface)]" x-text="result.organisation"></span>
+                                        <span class="text-xs font-semibold text-[var(--color-primary)] bg-[var(--color-surface-variant)] px-2 py-0.5 rounded-full" x-text="'#' + result.rank"></span>
                                     </div>
-                                    <div class="text-xs text-gray-500 mt-0.5" x-text="result.count + ' documenten'"></div>
+                                    <div class="text-xs text-[var(--color-on-surface-variant)] mt-0.5" x-text="result.count + ' documenten'"></div>
                                 </a>
                             </li>
                         </template>
@@ -157,14 +157,14 @@
                 </thead>
                 <tbody class="divide-y divide-[var(--color-outline-variant)]">
                     @forelse($recentDocuments as $doc)
-                    <tr class="hover:bg-gray-50 transition-colors">
+                    <tr class="hover:bg-[var(--color-surface-variant)] transition-colors">
                         <td class="py-3 pr-4">
                             <a href="{{ route('document.view', $doc->id) }}" class="text-sm font-medium text-[var(--color-on-surface)] hover:text-[var(--color-primary)] block truncate max-w-md">
                                 {{ $doc->title }}
                             </a>
                         </td>
                         <td class="py-3 pr-4">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[var(--color-primary-light)] text-[var(--color-primary-dark)]">
                                 {{ $doc->category }}
                             </span>
                         </td>
@@ -225,12 +225,12 @@
                     formatter: function (val) {
                         return val.toLocaleString('nl-NL');
                     },
-                    style: { colors: '#64748b', fontSize: '12px' }
+                    style: { colors: '#666666', fontSize: '12px' }
                 }
             },
             yaxis: {
                 labels: {
-                    style: { colors: '#64748b', fontSize: '12px' },
+                    style: { colors: '#666666', fontSize: '12px' },
                     maxWidth: 200
                 }
             },
@@ -244,14 +244,14 @@
             fill: {
                 opacity: 1
             },
-            colors: ['#3B82F6'],
+            colors: ['#4573d5'],
             legend: {
                 position: 'top',
                 horizontalAlign: 'left',
                 offsetX: 40
             },
             grid: {
-                borderColor: '#f1f5f9',
+                borderColor: '#e5e5e5',
                 strokeDashArray: 4,
             }
         };
@@ -279,22 +279,22 @@
                     columnWidth: '60%',
                 }
             },
-            colors: ['#3B82F6'],
+            colors: ['#4573d5'],
             dataLabels: { enabled: false },
             xaxis: {
                 categories: @json($history->pluck('month')),
                 labels: {
-                    style: { colors: '#64748b', fontSize: '12px' },
+                    style: { colors: '#666666', fontSize: '12px' },
                     rotate: -45
                 }
             },
             yaxis: {
                 labels: {
-                    style: { colors: '#64748b', fontSize: '12px' }
+                    style: { colors: '#666666', fontSize: '12px' }
                 }
             },
             grid: {
-                borderColor: '#f1f5f9',
+                borderColor: '#e5e5e5',
                 strokeDashArray: 4,
             }
         };
