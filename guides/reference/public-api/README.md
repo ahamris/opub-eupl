@@ -10,6 +10,20 @@ This guide explains how to integrate a **separate application** with the OPub da
 
 ## Server-side setup (in OPub)
 
+### 0) Apply the database changes (one-time)
+
+On the OPub server (after deploying the code), run:
+
+```bash
+php artisan migrate
+```
+
+If you also want the admin sidebar to show the menu item automatically on fresh installs:
+
+```bash
+php artisan db:seed --class=AdminMenuSeeder
+```
+
 ### 1) Create an API client (recommended)
 
 In OPub admin:
@@ -17,6 +31,11 @@ In OPub admin:
 - Go to `Admin → API Clients` (URL: `/admin/api-clients`)
 - Create a client, copy the generated key once
 - Optionally set **Allowed Domains** (to restrict browser origins via `Origin` / `Referer`)
+
+Allowed domains rules:
+- **Exact**: `app.example.com`
+- **Wildcard subdomains**: `*.example.com` (matches `a.example.com`, not `example.com`)
+- **Any**: `*` (allows any browser origin)
 
 ### 2) Configure allowed API keys (legacy)
 
@@ -45,6 +64,39 @@ Send the API key in either form:
 - Or: `Authorization: Bearer <key>`
 
 If the key is missing/invalid you’ll get **401**.
+
+## Add it to your new app (recommended pattern)
+
+### 1) Store configuration in `.env`
+
+In your new app:
+
+```env
+OPUB_BASE_URL="https://<opub-host>"
+OPUB_API_KEY="<paste-the-key-you-copied-from-admin>"
+```
+
+### 2) Call the API from your backend
+
+This avoids CORS and keeps the API key private (recommended).
+
+Example (Laravel app):
+
+```php
+$response = Http::withHeaders([
+    'X-OPUB-API-KEY' => env('OPUB_API_KEY'),
+])->get(rtrim(env('OPUB_BASE_URL'), '/').'/api/typesense/search', [
+    'q' => request('q', ''),
+    'page' => 1,
+    'per_page' => 20,
+]);
+```
+
+### 3) (Optional) Call OPub directly from a browser app
+
+If you call OPub directly from the browser:
+- Add your app domain to **Allowed Domains** for that API client (so `Origin` is accepted)
+- The request must include the API key header
 
 ## Base URL
 
@@ -172,10 +224,11 @@ data = res.json()
 
 ## Operational notes
 
-- **Browser apps (CORS)**: If your new app runs in a browser and calls OPub directly, you may need to configure CORS on OPub to allow your origin. Otherwise, call OPub from your backend (recommended).
+- **Browser apps (CORS)**: OPub returns CORS headers only when the request has an `Origin` header that matches the API client’s allowed domains.
 - **Errors**:
   - `401` Unauthorized (missing/invalid key)
   - `403` Public API not configured (`OPUB_API_KEYS` empty)
+  - `403` Origin not allowed (domain mismatch)
   - `422` Validation error (bad query params)
   - `500` Typesense or server error
 
