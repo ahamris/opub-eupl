@@ -92,12 +92,34 @@ class NewDataTypesenseSyncService
     {
         $this->ensureCollectionExists($this->documentsCollection, $this->getDocumentsSchema());
 
-        $query = OverheidDocument::needsTypesenseSync();
-        if ($limit) {
-            $query->limit($limit);
-        }
+        try {
+            $query = OverheidDocument::needsTypesenseSync();
+            if ($limit) {
+                $query->limit($limit);
+            }
 
-        $documents = $query->with(['category', 'theme', 'organisation'])->get();
+            // Try to eager load relationships, but continue if it fails
+            try {
+                $documents = $query->with(['category', 'theme', 'organisation'])->get();
+            } catch (\Exception $e) {
+                // If eager loading fails (e.g., relationship tables don't exist), load without relationships
+                Log::channel('typesense_errors')->warning('Failed to eager load relationships, loading documents without relationships', [
+                    'error' => $e->getMessage(),
+                ]);
+                $documents = $query->get();
+            }
+        } catch (\Exception $e) {
+            Log::channel('typesense_errors')->error('Failed to query OverheidDocument models', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            if ($command) {
+                $command->error('Failed to query documents: '.$e->getMessage());
+            }
+            
+            return ['total' => 0, 'synced' => 0, 'errors' => 1];
+        }
 
         if ($documents->isEmpty()) {
             return ['total' => 0, 'synced' => 0, 'errors' => 0];
@@ -134,12 +156,25 @@ class NewDataTypesenseSyncService
     {
         $this->ensureCollectionExists($this->oriDocumentsCollection, $this->getOriDocumentsSchema());
 
-        $query = OriDocument::needsTypesenseSync();
-        if ($limit) {
-            $query->limit($limit);
-        }
+        try {
+            $query = OriDocument::needsTypesenseSync();
+            if ($limit) {
+                $query->limit($limit);
+            }
 
-        $documents = $query->get();
+            $documents = $query->get();
+        } catch (\Exception $e) {
+            Log::channel('typesense_errors')->error('Failed to query OriDocument models', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            if ($command) {
+                $command->error('Failed to query ORI documents: '.$e->getMessage());
+            }
+            
+            return ['total' => 0, 'synced' => 0, 'errors' => 1];
+        }
 
         if ($documents->isEmpty()) {
             return ['total' => 0, 'synced' => 0, 'errors' => 0];
@@ -176,7 +211,19 @@ class NewDataTypesenseSyncService
     {
         $this->ensureCollectionExists($this->themesCollection, $this->getThemesSchema());
 
-        $themes = OverheidTheme::all();
+        try {
+            $themes = OverheidTheme::all();
+        } catch (\Exception $e) {
+            Log::channel('typesense_errors')->error('Failed to query OverheidTheme models', [
+                'error' => $e->getMessage(),
+            ]);
+            
+            if ($command) {
+                $command->error('Failed to query themes: '.$e->getMessage());
+            }
+            
+            return ['total' => 0, 'synced' => 0, 'errors' => 1];
+        }
 
         if ($themes->isEmpty()) {
             return ['total' => 0, 'synced' => 0, 'errors' => 0];
@@ -212,7 +259,19 @@ class NewDataTypesenseSyncService
     {
         $this->ensureCollectionExists($this->categoriesCollection, $this->getCategoriesSchema());
 
-        $categories = OverheidCategory::all();
+        try {
+            $categories = OverheidCategory::all();
+        } catch (\Exception $e) {
+            Log::channel('typesense_errors')->error('Failed to query OverheidCategory models', [
+                'error' => $e->getMessage(),
+            ]);
+            
+            if ($command) {
+                $command->error('Failed to query categories: '.$e->getMessage());
+            }
+            
+            return ['total' => 0, 'synced' => 0, 'errors' => 1];
+        }
 
         if ($categories->isEmpty()) {
             return ['total' => 0, 'synced' => 0, 'errors' => 0];
@@ -248,7 +307,19 @@ class NewDataTypesenseSyncService
     {
         $this->ensureCollectionExists($this->organisationsCollection, $this->getOrganisationsSchema());
 
-        $organisations = OverheidOrganisation::all();
+        try {
+            $organisations = OverheidOrganisation::all();
+        } catch (\Exception $e) {
+            Log::channel('typesense_errors')->error('Failed to query OverheidOrganisation models', [
+                'error' => $e->getMessage(),
+            ]);
+            
+            if ($command) {
+                $command->error('Failed to query organisations: '.$e->getMessage());
+            }
+            
+            return ['total' => 0, 'synced' => 0, 'errors' => 1];
+        }
 
         if ($organisations->isEmpty()) {
             return ['total' => 0, 'synced' => 0, 'errors' => 0];
@@ -285,6 +356,45 @@ class NewDataTypesenseSyncService
         $url = $this->extractUrlFromMetadata($document->metadata ?? []);
         $publicationDestination = $this->extractPublicationDestination($url);
 
+        // Safely get related data (works whether relationships are loaded or not)
+        $categoryName = '';
+        $themeName = '';
+        $organisationName = '';
+        
+        try {
+            if ($document->relationLoaded('category') && $document->category) {
+                $categoryName = $document->category->visible_name ?? $document->category->name ?? '';
+            } elseif ($document->overheid_category_id) {
+                // Fallback: load category if not already loaded
+                $category = $document->category;
+                $categoryName = $category?->visible_name ?? $category?->name ?? '';
+            }
+        } catch (\Exception $e) {
+            // Ignore relationship errors
+        }
+
+        try {
+            if ($document->relationLoaded('theme') && $document->theme) {
+                $themeName = $document->theme->visible_name ?? $document->theme->name ?? '';
+            } elseif ($document->overheid_theme_id) {
+                $theme = $document->theme;
+                $themeName = $theme?->visible_name ?? $theme?->name ?? '';
+            }
+        } catch (\Exception $e) {
+            // Ignore relationship errors
+        }
+
+        try {
+            if ($document->relationLoaded('organisation') && $document->organisation) {
+                $organisationName = $document->organisation->visible_name ?? $document->organisation->name ?? '';
+            } elseif ($document->overheid_organisation_id) {
+                $organisation = $document->organisation;
+                $organisationName = $organisation?->visible_name ?? $organisation?->name ?? '';
+            }
+        } catch (\Exception $e) {
+            // Ignore relationship errors
+        }
+
         $data = [
             'id' => (string) $document->id,
             'external_id' => $document->external_id ?? '',
@@ -295,11 +405,11 @@ class NewDataTypesenseSyncService
                 ? strtotime($document->publication_date->format('Y-m-d'))
                 : 0,
             'document_type' => $document->document_type ?? '',
-            'category' => $document->category?->visible_name ?? $document->category?->name ?? '',
+            'category' => $categoryName,
             'category_id' => (string) ($document->overheid_category_id ?? ''),
-            'theme' => $document->theme?->visible_name ?? $document->theme?->name ?? '',
+            'theme' => $themeName,
             'theme_id' => (string) ($document->overheid_theme_id ?? ''),
-            'organisation' => $document->organisation?->visible_name ?? $document->organisation?->name ?? '',
+            'organisation' => $organisationName,
             'organisation_id' => (string) ($document->overheid_organisation_id ?? ''),
             'url' => $url,
             'publication_destination' => $publicationDestination,
