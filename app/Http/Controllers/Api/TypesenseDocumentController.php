@@ -23,7 +23,7 @@ class TypesenseDocumentController extends Controller
                 'per_page' => 1,
                 'page' => 1,
                 'filter_by' => 'external_id:='.$safe,
-                'facet_by' => 'document_type,theme,organisation,category,publication_destination',
+                'facet_by' => 'document_type,theme,organisation,category',
                 'max_facet_values' => 0,
             ]);
 
