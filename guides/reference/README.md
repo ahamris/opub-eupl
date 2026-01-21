@@ -20,6 +20,10 @@ These documents contain specifications, requirements, and implementation details
 
 - **`CTER_DOCUMENTEN_OVERZICHT.md`** - CTER documents overview and specifications
 
+### Public API
+
+- **`public-api/README.md`** - Integration guide for external apps (Typesense search API)
+
 ## 🔍 Usage
 
 These documents serve as:

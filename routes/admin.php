@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ContactSubmissionController;
 use App\Http\Controllers\Admin\SearchSubscriptionController;
+use App\Http\Controllers\Admin\ApiClientController;
 use App\Http\Controllers\Admin\Content\BlogController;
 use App\Http\Controllers\Admin\Content\BlogCategoryController;
 use App\Http\Controllers\Admin\Content\StaticPageController;
@@ -49,6 +50,13 @@ Route::middleware(['auth', \App\Http\Middleware\CheckIfAdmin::class])->prefix('a
 
     // Users Resource Routes
     Route::resource('users', UserController::class);
+
+    // Public API Clients (API keys + allowed domains)
+    Route::resource('api-clients', ApiClientController::class)->parameters([
+        'api-clients' => 'apiClient',
+    ]);
+    Route::post('api-clients/{apiClient}/regenerate', [ApiClientController::class, 'regenerate'])
+        ->name('api-clients.regenerate');
 
     // Contact Submissions Routes
     Route::resource('contact-submissions', ContactSubmissionController::class)->only(['index', 'show', 'update', 'destroy']);

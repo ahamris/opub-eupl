@@ -1,0 +1,272 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use App\Models\ApiClient;
+use Closure;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
+use Symfony\Component\HttpFoundation\Response;
+
+class RequireOpubApiKey
+{
+    public function handle(Request $request, Closure $next): Response
+    {
+        $originHeader = (string) $request->headers->get('Origin', '');
+        $originHostFromOrigin = null;
+        if ($originHeader !== '') {
+            $p = parse_url($originHeader);
+            $originHostFromOrigin = isset($p['host']) && is_string($p['host']) && $p['host'] !== ''
+                ? strtolower($p['host'])
+                : null;
+        }
+
+        // Handle CORS preflight (OPTIONS) based on allowed domains (no API key required).
+        if ($request->isMethod('OPTIONS') && $originHostFromOrigin !== null && Schema::hasTable('api_clients')) {
+            $allowedDomains = $this->getAllAllowedDomainsForPreflight();
+            if ($this->isOriginAllowed($originHostFromOrigin, $allowedDomains)) {
+                $resp = response('', 204);
+                return $this->applyCorsHeaders($resp, $originHeader);
+            }
+
+            return response()->json([
+                'message' => 'Origin not allowed.',
+            ], 403);
+        }
+
+        $headerName = (string) config('opub_api.header', 'X-OPUB-API-KEY');
+        $apiKey = (string) $request->header($headerName, '');
+
+        // Also support Authorization: Bearer <key>
+        if ($apiKey === '') {
+            $auth = (string) $request->header('Authorization', '');
+            if (preg_match('/^\s*Bearer\s+(.+)\s*$/i', $auth, $m)) {
+                $apiKey = trim($m[1]);
+            }
+        }
+
+        if ($apiKey === '') {
+            return response()->json([
+                'message' => 'Unauthorized.',
+            ], 401);
+        }
+
+        // Prefer DB-managed API clients when table exists.
+        if (Schema::hasTable('api_clients')) {
+            // If there are no DB clients yet, fall back to legacy keys (if any),
+            // otherwise treat the public API as not configured.
+            $hasDbClients = Cache::remember('opub_api:has_db_clients', 60, function () {
+                return ApiClient::query()->where('is_active', true)->exists();
+            });
+
+            if (! $hasDbClients) {
+                // Fallback: env/config list (legacy)
+                $allowedKeys = config('opub_api.keys', []);
+
+                if (empty($allowedKeys)) {
+                    return response()->json([
+                        'message' => 'Public API is not configured.',
+                    ], 403);
+                }
+
+                foreach ($allowedKeys as $allowed) {
+                    if (is_string($allowed) && $allowed !== '' && hash_equals($allowed, $apiKey)) {
+                        return $next($request);
+                    }
+                }
+
+                return response()->json([
+                    'message' => 'Unauthorized.',
+                ], 401);
+            }
+
+            $hash = hash('sha256', $apiKey);
+
+            /** @var ApiClient|null $client */
+            $client = ApiClient::query()
+                ->where('api_key_hash', $hash)
+                ->where('is_active', true)
+                ->first();
+
+            if (! $client) {
+                return response()->json([
+                    'message' => 'Unauthorized.',
+                ], 401);
+            }
+
+            // Enforce allowed domains for browser-style requests when Origin/Referer is present.
+            $originHost = $this->extractOriginHost($request);
+            if ($originHost !== null && ! $this->isOriginAllowed($originHost, $client->allowed_domains ? $client->allowed_domains->toArray() : [])) {
+                return response()->json([
+                    'message' => 'Origin not allowed.',
+                ], 403);
+            }
+
+            // Update last used info at most once per minute per client (avoid hot updates).
+            $cacheKey = 'api_client:last_used:'.$client->id;
+            if (Cache::add($cacheKey, true, 60)) {
+                $client->forceFill([
+                    'last_used_at' => now(),
+                    'last_used_ip' => $request->ip(),
+                    'last_used_user_agent' => substr((string) $request->userAgent(), 0, 2000),
+                ])->save();
+            }
+
+            // Optionally expose the client on request for logging/auditing downstream.
+            $request->attributes->set('opub_api_client', $client);
+
+            $response = $next($request);
+
+            // If the browser sent an Origin header and it’s allowed, attach CORS headers.
+            if ($originHeader !== '' && $originHostFromOrigin !== null) {
+                $allowedDomainsForClient = $client->allowed_domains ? $client->allowed_domains->toArray() : [];
+                if ($this->isOriginAllowed($originHostFromOrigin, $allowedDomainsForClient)) {
+                    return $this->applyCorsHeaders($response, $originHeader);
+                }
+            }
+
+            return $response;
+        }
+
+        // Fallback: env/config list (legacy)
+        $allowedKeys = config('opub_api.keys', []);
+
+        // If no keys configured, block by default (secure-by-default).
+        if (empty($allowedKeys)) {
+            return response()->json([
+                'message' => 'Public API is not configured.',
+            ], 403);
+        }
+
+        foreach ($allowedKeys as $allowed) {
+            if (is_string($allowed) && $allowed !== '' && hash_equals($allowed, $apiKey)) {
+                return $next($request);
+            }
+        }
+
+        return response()->json([
+            'message' => 'Unauthorized.',
+        ], 401);
+    }
+
+    private function extractOriginHost(Request $request): ?string
+    {
+        $origin = (string) $request->headers->get('Origin', '');
+        $referer = (string) $request->headers->get('Referer', '');
+
+        $candidate = $origin !== '' ? $origin : $referer;
+        if ($candidate === '') {
+            // No browser origin context; assume server-to-server call.
+            return null;
+        }
+
+        $parts = parse_url($candidate);
+        $host = $parts['host'] ?? null;
+
+        if (! is_string($host) || $host === '') {
+            return null;
+        }
+
+        return strtolower($host);
+    }
+
+    /**
+     * Domain rules:
+     * - Empty allowed domains: deny browser-origin calls; allow server-to-server (handled above).
+     * - "*" allows any origin.
+     * - "example.com" matches exact host.
+     * - "*.example.com" matches any subdomain of example.com (not the apex).
+     */
+    private function isOriginAllowed(string $originHost, array $allowedDomains): bool
+    {
+        $originHost = strtolower($originHost);
+
+        if (empty($allowedDomains)) {
+            return false;
+        }
+
+        foreach ($allowedDomains as $raw) {
+            if (! is_string($raw)) {
+                continue;
+            }
+            $rule = strtolower(trim($raw));
+            if ($rule === '') {
+                continue;
+            }
+
+            if ($rule === '*') {
+                return true;
+            }
+
+            // Normalize: strip scheme if someone stored it
+            if (str_contains($rule, '://')) {
+                $p = parse_url($rule);
+                if (! empty($p['host'])) {
+                    $rule = strtolower((string) $p['host']);
+                }
+            }
+
+            // Strip port if present
+            $rule = preg_replace('/:\d+$/', '', $rule) ?? $rule;
+
+            if ($originHost === $rule) {
+                return true;
+            }
+
+            if (str_starts_with($rule, '*.')) {
+                $base = substr($rule, 2);
+                if ($base !== '' && str_ends_with($originHost, '.'.$base)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Collect all allowed domain rules from active API clients, for handling OPTIONS preflight.
+     * If any client allows "*", return ["*"] immediately.
+     */
+    private function getAllAllowedDomainsForPreflight(): array
+    {
+        try {
+            $rules = Cache::remember('opub_api:allowed_domains_rules', 60, function () {
+                return ApiClient::query()
+                    ->where('is_active', true)
+                    ->get(['allowed_domains'])
+                    ->map(function (ApiClient $c) {
+                        return $c->allowed_domains ? $c->allowed_domains->toArray() : [];
+                    })
+                    ->flatten()
+                    ->filter(fn ($v) => is_string($v) && trim($v) !== '')
+                    ->map(fn ($v) => strtolower(trim((string) $v)))
+                    ->unique()
+                    ->values()
+                    ->toArray();
+            });
+
+            if (in_array('*', $rules, true)) {
+                return ['*'];
+            }
+
+            return $rules;
+        } catch (\Throwable) {
+            return [];
+        }
+    }
+
+    private function applyCorsHeaders(Response $response, string $originHeader): Response
+    {
+        // Echo back the requesting origin (recommended when you have a whitelist)
+        $response->headers->set('Access-Control-Allow-Origin', $originHeader);
+        $response->headers->set('Vary', 'Origin');
+        $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        $response->headers->set('Access-Control-Allow-Headers', 'X-OPUB-API-KEY, Authorization, Content-Type, Accept');
+        $response->headers->set('Access-Control-Max-Age', '86400');
+
+        return $response;
+    }
+}
+

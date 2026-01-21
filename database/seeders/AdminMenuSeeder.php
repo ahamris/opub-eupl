@@ -279,6 +279,19 @@ class AdminMenuSeeder extends Seeder
                 'is_active' => true,
             ]);
 
+            // Public API Clients
+            AdminMenuItem::create([
+                'admin_menu_id' => $menu->id,
+                'parent_id' => $systemSection->id,
+                'item_type' => 'link',
+                'label' => 'API Clients',
+                'slug' => 'api-clients',
+                'route_name' => 'admin.api-clients.index',
+                'icon' => 'key',
+                'position' => 2,
+                'is_active' => true,
+            ]);
+
             // Settings Section
             $settingsSection = AdminMenuItem::create([
                 'admin_menu_id' => $menu->id,
