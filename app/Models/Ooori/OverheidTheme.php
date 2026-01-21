@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OverheidTheme extends Model
 {
+    protected $connection = 'pgsql2';
     protected $table = 'overheid_themes';
 
     protected $fillable = [

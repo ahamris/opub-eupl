@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OverheidOrganisation extends Model
 {
+    protected $connection = 'pgsql2';
     protected $table = 'overheid_organisations';
 
     protected $fillable = [

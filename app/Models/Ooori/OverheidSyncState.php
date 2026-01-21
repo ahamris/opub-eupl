@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class OverheidSyncState extends Model
 {
+    protected $connection = 'pgsql2';
     protected $table = 'overheid_sync_states';
 
     protected $fillable = [

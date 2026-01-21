@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 class OriDocument extends Model
 {
+    protected $connection = 'pgsql2';
     protected $table = 'ori_documents';
 
     protected $fillable = [

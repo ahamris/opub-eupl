@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class OverheidStat extends Model
 {
+    protected $connection = 'pgsql2';
     protected $table = 'overheid_stats';
 
     protected $fillable = [

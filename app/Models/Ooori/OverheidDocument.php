@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 
 class OverheidDocument extends Model
 {
+    protected $connection = 'pgsql2';
     protected $table = 'overheid_documents';
 
     protected $fillable = [
@@ -184,7 +185,7 @@ class OverheidDocument extends Model
      */
     public function hasPrecomputedMembers(): bool
     {
-        return DB::table('dossier_members')
+        return DB::connection('pgsql2')->table('dossier_members')
             ->where('dossier_external_id', $this->external_id)
             ->exists();
     }
@@ -194,7 +195,7 @@ class OverheidDocument extends Model
      */
     protected function getDossierMembersFromTable()
     {
-        $memberExternalIds = DB::table('dossier_members')
+        $memberExternalIds = DB::connection('pgsql2')->table('dossier_members')
             ->where('dossier_external_id', $this->external_id)
             ->pluck('member_external_id')
             ->toArray();
