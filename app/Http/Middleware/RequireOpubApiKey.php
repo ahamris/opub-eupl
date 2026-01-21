@@ -24,8 +24,7 @@ class RequireOpubApiKey
 
         // Handle CORS preflight (OPTIONS) based on allowed domains (no API key required).
         if ($request->isMethod('OPTIONS') && $originHostFromOrigin !== null && Schema::hasTable('api_clients')) {
-            $allowedDomains = $this->getAllAllowedDomainsForPreflight();
-            if ($this->isOriginAllowed($originHostFromOrigin, $allowedDomains)) {
+            if ($this->isOriginAllowedForAnyActiveClient($originHostFromOrigin)) {
                 $resp = response('', 204);
                 return $this->applyCorsHeaders($resp, $originHeader);
             }
@@ -226,35 +225,31 @@ class RequireOpubApiKey
     }
 
     /**
-     * Collect all allowed domain rules from active API clients, for handling OPTIONS preflight.
-     * If any client allows "*", return ["*"] immediately.
+     * Check if origin is allowed for any active API client (streaming).
+     * This avoids loading all clients/domains into memory.
      */
-    private function getAllAllowedDomainsForPreflight(): array
+    private function isOriginAllowedForAnyActiveClient(string $originHost): bool
     {
+        $originHost = strtolower($originHost);
+
         try {
-            $rules = Cache::remember('opub_api:allowed_domains_rules', 60, function () {
-                return ApiClient::query()
+            foreach (
+                ApiClient::query()
                     ->where('is_active', true)
-                    ->get(['allowed_domains'])
-                    ->map(function (ApiClient $c) {
-                        return $c->allowed_domains ? $c->allowed_domains->toArray() : [];
-                    })
-                    ->flatten()
-                    ->filter(fn ($v) => is_string($v) && trim($v) !== '')
-                    ->map(fn ($v) => strtolower(trim((string) $v)))
-                    ->unique()
-                    ->values()
-                    ->toArray();
-            });
-
-            if (in_array('*', $rules, true)) {
-                return ['*'];
+                    ->whereNotNull('allowed_domains')
+                    ->select(['allowed_domains'])
+                    ->cursor() as $client
+            ) {
+                $domains = $client->allowed_domains ? $client->allowed_domains->toArray() : [];
+                if ($this->isOriginAllowed($originHost, $domains)) {
+                    return true;
+                }
             }
-
-            return $rules;
         } catch (\Throwable) {
-            return [];
+            // ignore
         }
+
+        return false;
     }
 
     private function applyCorsHeaders(Response $response, string $originHeader): Response

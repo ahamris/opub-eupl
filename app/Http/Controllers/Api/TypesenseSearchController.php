@@ -80,17 +80,8 @@ class TypesenseSearchController extends Controller
             }
         }
 
-        $publicatiebestemming = $validated['publicatiebestemming'] ?? [];
-        if (! is_array($publicatiebestemming)) {
-            $publicatiebestemming = $publicatiebestemming ? [$publicatiebestemming] : [];
-        }
-        if (! empty($publicatiebestemming)) {
-            $destinations = array_filter(array_map('trim', $publicatiebestemming));
-            if (! empty($destinations)) {
-                $escaped = array_map(fn ($d) => '='.str_replace(['"', "'"], '', $d), $destinations);
-                $filters[] = 'publication_destination:['.implode(',', $escaped).']';
-            }
-        }
+        // NOTE: "publication_destination" is not present in all existing Typesense schemas.
+        // We intentionally do not filter/facet on this field here to stay compatible with older collections.
 
         // Date filters (publication_date is stored as unix timestamp)
         $publicatiedatumVan = $validated['publicatiedatum_van'] ?? null;
@@ -124,7 +115,7 @@ class TypesenseSearchController extends Controller
             'per_page' => $perPage,
             'page' => $page,
             'sort_by' => $sortBy,
-            'facet_by' => 'document_type,theme,organisation,category,publication_destination',
+            'facet_by' => 'document_type,theme,organisation,category',
             'max_facet_values' => 100,
         ];
 
@@ -154,7 +145,6 @@ class TypesenseSearchController extends Controller
                 'category' => $doc['category'] ?? null,
                 'theme' => $doc['theme'] ?? null,
                 'organisation' => $doc['organisation'] ?? null,
-                'publication_destination' => $doc['publication_destination'] ?? null,
                 'url' => $doc['url'] ?? null,
             ];
 
