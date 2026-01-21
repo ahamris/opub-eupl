@@ -248,3 +248,45 @@ if (!function_exists('format_turkish_date_long')) {
         return format_localized_date_long($date, 'tr');
     }
 }
+
+if (! function_exists('get_client_ip')) {
+    /**
+     * Resolve the real client IP behind reverse proxies (e.g. Cloudflare).
+     *
+     * Notes:
+     * - Prefers Cloudflare headers when present.
+     * - Falls back to X-Forwarded-For first hop, then Laravel's Request::ip().
+     */
+    function get_client_ip(?\Illuminate\Http\Request $request = null): ?string
+    {
+        $request = $request ?? request();
+
+        if (! $request instanceof \Illuminate\Http\Request) {
+            return null;
+        }
+
+        $xff = (string) $request->header('X-Forwarded-For', '');
+        $xffFirst = '';
+        if ($xff !== '') {
+            // XFF may contain multiple IPs; first one is original client.
+            $parts = array_map('trim', explode(',', $xff));
+            $xffFirst = $parts[0] ?? '';
+        }
+
+        $candidates = [
+            (string) $request->header('CF-Connecting-IP', ''),
+            (string) $request->header('True-Client-IP', ''),
+            $xffFirst,
+            (string) $request->ip(),
+        ];
+
+        foreach ($candidates as $candidate) {
+            $ip = trim((string) $candidate);
+            if ($ip !== '' && filter_var($ip, FILTER_VALIDATE_IP)) {
+                return $ip;
+            }
+        }
+
+        return null;
+    }
+}

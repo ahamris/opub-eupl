@@ -107,7 +107,7 @@ class RequireOpubApiKey
             if (Cache::add($cacheKey, true, 60)) {
                 $client->forceFill([
                     'last_used_at' => now(),
-                    'last_used_ip' => $request->ip(),
+                    'last_used_ip' => get_client_ip($request),
                     'last_used_user_agent' => substr((string) $request->userAgent(), 0, 2000),
                 ])->save();
             }
