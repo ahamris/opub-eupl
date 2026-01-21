@@ -788,6 +788,7 @@ class SearchController extends Controller
         $documentsoort = $validated['documentsoort'] ?? null;
         $thema = $validated['thema'] ?? null;
         $organisatie = $validated['organisatie'] ?? null;
+        $publicatiebestemming = $validated['publicatiebestemming'] ?? null;
 
         $query = new OpenOverheidSearchQuery(
             zoektekst: $validated['zoeken'] ?? '',
@@ -801,6 +802,7 @@ class SearchController extends Controller
                 : ($validated['informatiecategorie'] ?? null),
             thema: $thema,
             organisatie: $organisatie,
+            publicatiebestemming: $publicatiebestemming,
             sort: $validated['sort'] ?? 'relevance',
             titlesOnly: ! empty($validated['titles_only']),
         );
@@ -1023,6 +1025,7 @@ class SearchController extends Controller
             informatiecategorie: $validated['informatiecategorie'] ?? null,
             thema: $validated['thema'] ?? null,
             organisatie: $validated['organisatie'] ?? null,
+            publicatiebestemming: $validated['publicatiebestemming'] ?? null,
             sort: $validated['sort'] ?? 'relevance',
         );
 
@@ -1078,12 +1081,14 @@ class SearchController extends Controller
         $documentsoort = $request->input('documentsoort', []);
         $thema = $request->input('thema', []);
         $organisatie = $request->input('organisatie', []);
+        $publicatiebestemming = $request->input('publicatiebestemming', []);
         $informatiecategorie = $request->input('informatiecategorie');
         
         // Ensure arrays
         if (! is_array($documentsoort)) $documentsoort = $documentsoort ? [$documentsoort] : [];
         if (! is_array($thema)) $thema = $thema ? [$thema] : [];
         if (! is_array($organisatie)) $organisatie = $organisatie ? [$organisatie] : [];
+        if (! is_array($publicatiebestemming)) $publicatiebestemming = $publicatiebestemming ? [$publicatiebestemming] : [];
         
         $validated = [
             'q' => $q,
@@ -1092,6 +1097,7 @@ class SearchController extends Controller
             'documentsoort' => $documentsoort,
             'thema' => $thema,
             'organisatie' => $organisatie,
+            'publicatiebestemming' => $publicatiebestemming,
             'informatiecategorie' => $informatiecategorie,
             'publicatiedatum_van' => $publicatiedatumVan,
             'publicatiedatum_tot' => $publicatiedatumTot,
@@ -1158,6 +1164,16 @@ class SearchController extends Controller
                 if (! empty($orgs)) {
                     $escapedOrgs = array_map(fn($o) => '=' . str_replace(['"', "'"], '', $o), $orgs);
                     $filters[] = 'organisation:[' . implode(',', $escapedOrgs) . ']';
+                }
+            }
+            
+            if (! empty($validated['publicatiebestemming'])) {
+                $destinations = is_array($validated['publicatiebestemming']) ? $validated['publicatiebestemming'] : [$validated['publicatiebestemming']];
+                $destinations = array_filter(array_map('trim', $destinations));
+                if (! empty($destinations)) {
+                    // Filter by publication_destination field (exact match)
+                    $escapedDests = array_map(fn($d) => '=' . str_replace(['"', "'"], '', $d), $destinations);
+                    $filters[] = 'publication_destination:[' . implode(',', $escapedDests) . ']';
                 }
             }
             
@@ -1340,6 +1356,18 @@ class SearchController extends Controller
                     return '='.$o;
                 }, $orgs);
                 $filters[] = 'organisation:['.implode(',', $escapedOrgs).']';
+            }
+        }
+        if ($query->publicatiebestemming) {
+            $destinations = is_array($query->publicatiebestemming) ? $query->publicatiebestemming : [$query->publicatiebestemming];
+            $destinations = array_filter(array_map('trim', $destinations)); // Remove empty values
+            if (! empty($destinations)) {
+                // Filter by publication_destination field (exact match)
+                $escapedDests = array_map(function ($dest) {
+                    $dest = str_replace(['"', "'"], '', $dest); // Remove quotes
+                    return '='.$dest;
+                }, $destinations);
+                $filters[] = 'publication_destination:['.implode(',', $escapedDests).']';
             }
         }
         if ($query->publicatiedatumVan || $query->publicatiedatumTot) {

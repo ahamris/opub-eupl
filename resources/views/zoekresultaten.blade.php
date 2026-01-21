@@ -131,8 +131,19 @@
                             <h3 class="text-sm font-semibold text-[var(--color-on-surface)]">Bron</h3>
                             <div class="space-y-2">
                                 @php
-                                    $allSources = $allFilterOptions['publicatiebestemming'] ?? ['rijksoverheid.nl'];
+                                    $allSources = $allFilterOptions['publicatiebestemming'] ?? [];
                                     $selectedSources = (array)request('publicatiebestemming', []);
+                                    
+                                    // Ensure rijksoverheid.nl is always first and visible
+                                    $rijksoverheidKey = array_search('rijksoverheid.nl', $allSources);
+                                    if ($rijksoverheidKey !== false) {
+                                        // Remove it from current position
+                                        unset($allSources[$rijksoverheidKey]);
+                                    }
+                                    // Always add rijksoverheid.nl as first item
+                                    $allSources = array_merge(['rijksoverheid.nl'], array_values($allSources));
+                                    // Remove duplicates while preserving order
+                                    $allSources = array_unique($allSources);
                                 @endphp
                                 @foreach($allSources as $source)
                                     <div class="flex items-center gap-3">

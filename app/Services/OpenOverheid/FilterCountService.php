@@ -335,11 +335,46 @@ class FilterCountService
                 ->values()
                 ->toArray();
 
+            // Get unique publication destinations from metadata URLs
+            // Extract domains from weblocatie/pid in metadata
+            $allDestinations = (clone $baseQuery)
+                ->whereNotNull('metadata')
+                ->select('metadata')
+                ->get()
+                ->map(function ($doc) {
+                    $metadata = $doc->metadata ?? [];
+                    $weblocatie = $metadata['document']['weblocatie'] ?? null;
+                    if ($weblocatie) {
+                        // Extract domain from URL
+                        $parsed = parse_url($weblocatie);
+                        return $parsed['host'] ?? null;
+                    }
+                    return null;
+                })
+                ->filter()
+                ->unique()
+                ->sort()
+                ->values()
+                ->toArray();
+
+            // Ensure rijksoverheid.nl is always included and first
+            if (!in_array('rijksoverheid.nl', $allDestinations)) {
+                array_unshift($allDestinations, 'rijksoverheid.nl');
+            } else {
+                // Move rijksoverheid.nl to first position
+                $key = array_search('rijksoverheid.nl', $allDestinations);
+                if ($key !== false && $key !== 0) {
+                    unset($allDestinations[$key]);
+                    array_unshift($allDestinations, 'rijksoverheid.nl');
+                }
+            }
+
             return [
                 'documentsoort' => $allDocumentTypes,
                 'thema' => $allThemes,
                 'organisatie' => $allOrganisations,
                 'informatiecategorie' => $allCategories,
+                'publicatiebestemming' => array_values($allDestinations),
             ];
         });
     }

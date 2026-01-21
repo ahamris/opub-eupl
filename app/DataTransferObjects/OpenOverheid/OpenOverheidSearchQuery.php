@@ -14,6 +14,7 @@ class OpenOverheidSearchQuery
         public readonly ?string $informatiecategorie = null,
         public readonly string|array|null $thema = null,
         public readonly string|array|null $organisatie = null,
+        public readonly string|array|null $publicatiebestemming = null,
         public readonly ?string $sort = 'relevance', // relevance, publication_date, modified_date
         public readonly bool $titlesOnly = false,
     ) {}

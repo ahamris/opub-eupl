@@ -209,6 +209,9 @@ class TypesenseSyncService
         // Ensure collection exists
         $this->ensureCollectionExists();
 
+        $url = $this->extractUrl($document);
+        $publicationDestination = $this->extractPublicationDestination($url);
+
         $data = [
             'id' => (string) $document->id,
             'external_id' => $document->external_id,
@@ -222,7 +225,8 @@ class TypesenseSyncService
             'category' => $document->category ?? '',
             'theme' => $document->theme ?? '',
             'organisation' => $document->organisation ?? '',
-            'url' => $this->extractUrl($document),
+            'url' => $url,
+            'publication_destination' => $publicationDestination,
             'synced_at' => $document->synced_at
                 ? $document->synced_at->timestamp
                 : 0,
@@ -254,6 +258,28 @@ class TypesenseSyncService
         $pid = $metadata['document']['pid'] ?? null;
         if ($pid) {
             return $pid;
+        }
+
+        return '';
+    }
+
+    /**
+     * Extract publication destination (domain) from URL
+     */
+    protected function extractPublicationDestination(string $url): string
+    {
+        if (empty($url)) {
+            return '';
+        }
+
+        $parsed = parse_url($url);
+        if (isset($parsed['host'])) {
+            return $parsed['host'];
+        }
+
+        // If URL doesn't have a scheme, try to extract domain from the string
+        if (preg_match('/^(?:https?:\/\/)?([^\/]+)/', $url, $matches)) {
+            return $matches[1];
         }
 
         return '';
@@ -295,6 +321,7 @@ class TypesenseSyncService
                 ['name' => 'theme', 'type' => 'string', 'facet' => true],
                 ['name' => 'organisation', 'type' => 'string', 'facet' => true],
                 ['name' => 'url', 'type' => 'string'],
+                ['name' => 'publication_destination', 'type' => 'string', 'facet' => true],
                 ['name' => 'synced_at', 'type' => 'int64', 'sort' => true],
             ],
             'default_sorting_field' => 'publication_date',
