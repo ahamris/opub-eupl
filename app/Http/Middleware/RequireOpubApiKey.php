@@ -23,10 +23,15 @@ class RequireOpubApiKey
         }
 
         // Handle CORS preflight (OPTIONS) based on allowed domains (no API key required).
-        if ($request->isMethod('OPTIONS') && $originHostFromOrigin !== null && Schema::hasTable('api_clients')) {
-            if ($this->isOriginAllowedForAnyActiveClient($originHostFromOrigin)) {
-                $resp = response('', 204);
-                return $this->applyCorsHeaders($resp, $originHeader);
+        if ($request->isMethod('OPTIONS') && $originHostFromOrigin !== null) {
+            try {
+                if (Schema::hasTable('api_clients') && $this->isOriginAllowedForAnyActiveClient($originHostFromOrigin)) {
+                    $resp = response('', 204);
+                    return $this->applyCorsHeaders($resp, $originHeader);
+                }
+            } catch (\Throwable $e) {
+                // If database is unavailable or query fails, deny preflight (secure default)
+                \Log::warning('CORS preflight check failed', ['error' => $e->getMessage()]);
             }
 
             return response()->json([
@@ -52,12 +57,18 @@ class RequireOpubApiKey
         }
 
         // Prefer DB-managed API clients when table exists.
-        if (Schema::hasTable('api_clients')) {
-            // If there are no DB clients yet, fall back to legacy keys (if any),
-            // otherwise treat the public API as not configured.
-            $hasDbClients = Cache::remember('opub_api:has_db_clients', 60, function () {
-                return ApiClient::query()->where('is_active', true)->exists();
-            });
+        try {
+            if (Schema::hasTable('api_clients')) {
+                // If there are no DB clients yet, fall back to legacy keys (if any),
+                // otherwise treat the public API as not configured.
+                $hasDbClients = Cache::remember('opub_api:has_db_clients', 60, function () {
+                    try {
+                        return ApiClient::query()->where('is_active', true)->exists();
+                    } catch (\Throwable $e) {
+                        \Log::warning('Failed to check for DB API clients', ['error' => $e->getMessage()]);
+                        return false;
+                    }
+                });
 
             if (! $hasDbClients) {
                 // Fallback: env/config list (legacy)
@@ -80,37 +91,49 @@ class RequireOpubApiKey
                 ], 401);
             }
 
-            $hash = hash('sha256', $apiKey);
+                $hash = hash('sha256', $apiKey);
 
-            /** @var ApiClient|null $client */
-            $client = ApiClient::query()
-                ->where('api_key_hash', $hash)
-                ->where('is_active', true)
-                ->first();
+                /** @var ApiClient|null $client */
+                try {
+                    $client = ApiClient::query()
+                        ->where('api_key_hash', $hash)
+                        ->where('is_active', true)
+                        ->first();
+                } catch (\Throwable $e) {
+                    \Log::error('Failed to query API client', ['error' => $e->getMessage()]);
+                    return response()->json([
+                        'message' => 'Service temporarily unavailable.',
+                    ], 503);
+                }
 
-            if (! $client) {
-                return response()->json([
-                    'message' => 'Unauthorized.',
-                ], 401);
-            }
+                if (! $client) {
+                    return response()->json([
+                        'message' => 'Unauthorized.',
+                    ], 401);
+                }
 
-            // Enforce allowed domains for browser-style requests when Origin/Referer is present.
-            $originHost = $this->extractOriginHost($request);
-            if ($originHost !== null && ! $this->isOriginAllowed($originHost, $client->allowed_domains ? $client->allowed_domains->toArray() : [])) {
-                return response()->json([
-                    'message' => 'Origin not allowed.',
-                ], 403);
-            }
+                // Enforce allowed domains for browser-style requests when Origin/Referer is present.
+                $originHost = $this->extractOriginHost($request);
+                if ($originHost !== null && ! $this->isOriginAllowed($originHost, $client->allowed_domains ? $client->allowed_domains->toArray() : [])) {
+                    return response()->json([
+                        'message' => 'Origin not allowed.',
+                    ], 403);
+                }
 
-            // Update last used info at most once per minute per client (avoid hot updates).
-            $cacheKey = 'api_client:last_used:'.$client->id;
-            if (Cache::add($cacheKey, true, 60)) {
-                $client->forceFill([
-                    'last_used_at' => now(),
-                    'last_used_ip' => get_client_ip($request),
-                    'last_used_user_agent' => substr((string) $request->userAgent(), 0, 2000),
-                ])->save();
-            }
+                // Update last used info at most once per minute per client (avoid hot updates).
+                $cacheKey = 'api_client:last_used:'.$client->id;
+                if (Cache::add($cacheKey, true, 60)) {
+                    try {
+                        $client->forceFill([
+                            'last_used_at' => now(),
+                            'last_used_ip' => get_client_ip($request),
+                            'last_used_user_agent' => substr((string) $request->userAgent(), 0, 2000),
+                        ])->save();
+                    } catch (\Throwable $e) {
+                        // Don't fail the request if last_used update fails
+                        \Log::warning('Failed to update API client last_used', ['error' => $e->getMessage()]);
+                    }
+                }
 
             // Optionally expose the client on request for logging/auditing downstream.
             $request->attributes->set('opub_api_client', $client);
@@ -227,29 +250,42 @@ class RequireOpubApiKey
     /**
      * Check if origin is allowed for any active API client (streaming).
      * This avoids loading all clients/domains into memory.
+     * Uses caching to prevent repeated database queries.
      */
     private function isOriginAllowedForAnyActiveClient(string $originHost): bool
     {
         $originHost = strtolower($originHost);
+        $cacheKey = 'opub_api:origin_allowed:'.md5($originHost);
 
-        try {
-            foreach (
-                ApiClient::query()
-                    ->where('is_active', true)
-                    ->whereNotNull('allowed_domains')
-                    ->select(['allowed_domains'])
-                    ->cursor() as $client
-            ) {
-                $domains = $client->allowed_domains ? $client->allowed_domains->toArray() : [];
-                if ($this->isOriginAllowed($originHost, $domains)) {
-                    return true;
+        // Cache result for 5 minutes to reduce database load
+        return Cache::remember($cacheKey, 300, function () use ($originHost) {
+            try {
+                // Limit to first 100 active clients to prevent infinite loops
+                $count = 0;
+                foreach (
+                    ApiClient::query()
+                        ->where('is_active', true)
+                        ->whereNotNull('allowed_domains')
+                        ->select(['allowed_domains'])
+                        ->cursor() as $client
+                ) {
+                    $count++;
+                    if ($count > 100) {
+                        // Safety limit to prevent memory issues
+                        break;
+                    }
+
+                    $domains = $client->allowed_domains ? $client->allowed_domains->toArray() : [];
+                    if ($this->isOriginAllowed($originHost, $domains)) {
+                        return true;
+                    }
                 }
+            } catch (\Throwable $e) {
+                \Log::warning('Failed to check origin for API clients', ['error' => $e->getMessage()]);
             }
-        } catch (\Throwable) {
-            // ignore
-        }
 
-        return false;
+            return false;
+        });
     }
 
     private function applyCorsHeaders(Response $response, string $originHeader): Response

@@ -41,7 +41,7 @@
                         type="checkbox"
                         name="is_active"
                         value="1"
-                        {{ old('is_active', $client->is_active ? '1' : '') ? 'checked' : '' }}
+                        {{ (old('is_active', $client->is_active ? '1' : '')) ? 'checked' : '' }}
                         class="w-4 h-4 rounded border-zinc-300 text-indigo-600"
                     >
                     <label for="is_active" class="text-sm text-zinc-700 dark:text-zinc-300">Active</label>
