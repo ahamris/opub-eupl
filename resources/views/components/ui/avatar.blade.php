@@ -9,7 +9,7 @@
     @endif
     
     <div 
-        class="w-full h-full {{ $shape === 'square' ? 'rounded-md' : 'rounded-full' }} flex items-center justify-center {{ !empty($src) ? 'hidden' : '' }} bg-[var(--color-accent)]"
+        class="w-full h-full {{ ($shape === 'square') ? 'rounded-md' : 'rounded-full' }} flex items-center justify-center {{ (!empty($src)) ? 'hidden' : '' }} bg-[var(--color-accent)]"
     >
         @if(!empty($icon))
             <i class="fa-solid fa-{{ $icon }}"></i>

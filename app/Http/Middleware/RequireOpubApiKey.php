@@ -25,7 +25,16 @@ class RequireOpubApiKey
         // Handle CORS preflight (OPTIONS) based on allowed domains (no API key required).
         if ($request->isMethod('OPTIONS') && $originHostFromOrigin !== null) {
             try {
-                if (Schema::hasTable('api_clients') && $this->isOriginAllowedForAnyActiveClient($originHostFromOrigin)) {
+                // Cache table existence check to avoid repeated schema queries
+                $hasTable = Cache::remember('opub_api:table_exists', 3600, function () {
+                    try {
+                        return Schema::hasTable('api_clients');
+                    } catch (\Throwable $e) {
+                        return false;
+                    }
+                });
+
+                if ($hasTable && $this->isOriginAllowedForAnyActiveClient($originHostFromOrigin)) {
                     $resp = response('', 204);
                     return $this->applyCorsHeaders($resp, $originHeader);
                 }
@@ -58,7 +67,16 @@ class RequireOpubApiKey
 
         // Prefer DB-managed API clients when table exists.
         try {
-            if (Schema::hasTable('api_clients')) {
+            // Cache table existence check to avoid repeated schema queries
+            $hasTable = Cache::remember('opub_api:table_exists', 3600, function () {
+                try {
+                    return Schema::hasTable('api_clients');
+                } catch (\Throwable $e) {
+                    return false;
+                }
+            });
+
+            if ($hasTable) {
                 // If there are no DB clients yet, fall back to legacy keys (if any),
                 // otherwise treat the public API as not configured.
                 $hasDbClients = Cache::remember('opub_api:has_db_clients', 60, function () {
