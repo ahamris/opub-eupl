@@ -7,7 +7,7 @@
     @php
         $ogTitle = $blog->og_title ?? $blog->title;
         $ogDescription = $blog->og_description ?? strip_tags($blog->short_body ?? '');
-        $ogImage = $blog->og_image ? asset('storage/' . $blog->og_image) : ($blog->image ? asset('storage/' . $blog->image) : get_setting('og_image') ? asset('storage/' . get_setting('og_image')) : null);
+        $ogImage = $blog->og_image ? asset('storage/' . $blog->og_image) : ($blog->image ? asset('storage/' . $blog->image) : (get_setting('og_image') ? asset('storage/' . get_setting('og_image')) : null));
         $ogUrl = url()->current();
     @endphp
     

@@ -70,7 +70,7 @@ class RequireOpubApiKey
                     }
                 });
 
-            if (! $hasDbClients) {
+                if (! $hasDbClients) {
                 // Fallback: env/config list (legacy)
                 $allowedKeys = config('opub_api.keys', []);
 
@@ -260,6 +260,23 @@ class RequireOpubApiKey
         // Cache result for 5 minutes to reduce database load
         return Cache::remember($cacheKey, 300, function () use ($originHost) {
             try {
+                // Early return if no active clients exist (cached check)
+                $hasActiveClients = Cache::remember('opub_api:has_active_clients_with_domains', 300, function () {
+                    try {
+                        return ApiClient::query()
+                            ->where('is_active', true)
+                            ->whereNotNull('allowed_domains')
+                            ->exists();
+                    } catch (\Throwable $e) {
+                        \Log::warning('Failed to check for active clients with domains', ['error' => $e->getMessage()]);
+                        return false;
+                    }
+                });
+
+                if (! $hasActiveClients) {
+                    return false;
+                }
+
                 // Limit to first 100 active clients to prevent infinite loops
                 $count = 0;
                 foreach (
@@ -267,6 +284,7 @@ class RequireOpubApiKey
                         ->where('is_active', true)
                         ->whereNotNull('allowed_domains')
                         ->select(['allowed_domains'])
+                        ->limit(100) // Add explicit limit to query
                         ->cursor() as $client
                 ) {
                     $count++;
