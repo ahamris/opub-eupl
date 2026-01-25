@@ -7,9 +7,9 @@ use App\Mail\ContactNotificationMail;
 use App\Models\Contact;
 use App\Models\ContactSubmission;
 use App\Models\SearchSubscription;
+use App\Services\EmailQueueService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 
 class ContactController extends Controller
@@ -49,29 +49,22 @@ class ContactController extends Controller
             'message' => $validated['message'],
         ]);
 
-        // Send notification email to admin if configured
+        // Queue notification email to admin if configured
+        $emailQueueService = app(EmailQueueService::class);
         $notificationEmail = get_setting('contact_notification_email');
         if ($notificationEmail) {
-            try {
-                Mail::to($notificationEmail)->send(new ContactNotificationMail($submission));
-            } catch (\Exception $e) {
-                Log::error('Failed to send contact notification email', [
-                    'submission_id' => $submission->id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
+            $emailQueueService->queueEmail(
+                new ContactNotificationMail($submission),
+                $notificationEmail
+            );
         }
 
-        // Send auto-reply email to user if enabled
+        // Queue auto-reply email to user if enabled
         if (get_setting('contact_auto_reply_enabled', '0') == '1') {
-            try {
-                Mail::to($submission->email)->send(new ContactAutoReplyMail($submission));
-            } catch (\Exception $e) {
-                Log::error('Failed to send contact auto-reply email', [
-                    'submission_id' => $submission->id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
+            $emailQueueService->queueEmail(
+                new ContactAutoReplyMail($submission),
+                $submission->email
+            );
         }
 
         return redirect()
