@@ -43,7 +43,7 @@ class NewDataTypesenseSyncService
      * @param  \Illuminate\Console\Command|null  $command
      * @return array{total: int, synced: int, errors: int}
      */
-    public function syncAll(?array $models = null, $command = null): array
+    public function syncAll(?array $models = null, $command = null, int $chunkSize = 100): array
     {
         if (! config('open_overheid.typesense.enabled', true)) {
             Log::channel('typesense_errors')->info('Typesense sync is disabled');
@@ -71,7 +71,15 @@ class NewDataTypesenseSyncService
             }
 
             $method = $availableModels[$model];
-            $result = $this->$method($command);
+            
+            // Pass chunk size to all methods (they all support it now)
+            if (in_array($model, ['documents', 'ori_documents'])) {
+                // Document models: (command, limit, chunkSize)
+                $result = $this->$method($command, null, $chunkSize);
+            } else {
+                // Other models: (command, chunkSize)
+                $result = $this->$method($command, $chunkSize);
+            }
 
             $totalSynced += $result['synced'];
             $totalErrors += $result['errors'];
@@ -88,26 +96,54 @@ class NewDataTypesenseSyncService
     /**
      * Sync OverheidDocument models to Typesense
      */
-    public function syncDocuments($command = null, int $limit = null): array
+    public function syncDocuments($command = null, int $limit = null, int $chunkSize = 100): array
     {
         $this->ensureCollectionExists($this->documentsCollection, $this->getDocumentsSchema());
 
+        $synced = 0;
+        $errors = 0;
+        $total = 0;
+
         try {
             $query = OverheidDocument::needsTypesenseSync();
-            if ($limit) {
-                $query->limit($limit);
-            }
+            
+            // Process in chunks to avoid memory exhaustion
+            $query->chunk($chunkSize, function ($documents) use (&$synced, &$errors, &$total, $command, $limit) {
+                // Try to eager load relationships for this chunk
+                try {
+                    $documents->load(['category', 'theme', 'organisation']);
+                } catch (\Exception $e) {
+                    // If eager loading fails, continue without relationships
+                    Log::channel('typesense_errors')->warning('Failed to eager load relationships for chunk', [
+                        'error' => $e->getMessage(),
+                    ]);
+                }
 
-            // Try to eager load relationships, but continue if it fails
-            try {
-                $documents = $query->with(['category', 'theme', 'organisation'])->get();
-            } catch (\Exception $e) {
-                // If eager loading fails (e.g., relationship tables don't exist), load without relationships
-                Log::channel('typesense_errors')->warning('Failed to eager load relationships, loading documents without relationships', [
-                    'error' => $e->getMessage(),
-                ]);
-                $documents = $query->get();
-            }
+                foreach ($documents as $document) {
+                    // Check limit if specified
+                    if ($limit !== null && $total >= $limit) {
+                        return false; // Stop chunking
+                    }
+
+                    try {
+                        $this->indexDocument($document);
+                        $document->update(['typesense_synced_at' => now()]);
+                        $synced++;
+                        $total++;
+                        
+                        if ($command && $total % 100 === 0) {
+                            $command->info("Processed {$total} documents...");
+                        }
+                    } catch (\Exception $e) {
+                        Log::channel('typesense_errors')->error('Typesense index error (OverheidDocument)', [
+                            'external_id' => $document->external_id,
+                            'error' => $e->getMessage(),
+                        ]);
+                        $errors++;
+                        $total++;
+                    }
+                }
+            });
         } catch (\Exception $e) {
             Log::channel('typesense_errors')->error('Failed to query OverheidDocument models', [
                 'error' => $e->getMessage(),
@@ -118,32 +154,11 @@ class NewDataTypesenseSyncService
                 $command->error('Failed to query documents: '.$e->getMessage());
             }
             
-            return ['total' => 0, 'synced' => 0, 'errors' => 1];
-        }
-
-        if ($documents->isEmpty()) {
-            return ['total' => 0, 'synced' => 0, 'errors' => 0];
-        }
-
-        $synced = 0;
-        $errors = 0;
-
-        foreach ($documents as $document) {
-            try {
-                $this->indexDocument($document);
-                $document->update(['typesense_synced_at' => now()]);
-                $synced++;
-            } catch (\Exception $e) {
-                Log::channel('typesense_errors')->error('Typesense index error (OverheidDocument)', [
-                    'external_id' => $document->external_id,
-                    'error' => $e->getMessage(),
-                ]);
-                $errors++;
-            }
+            return ['total' => $total, 'synced' => $synced, 'errors' => $errors + 1];
         }
 
         return [
-            'total' => $documents->count(),
+            'total' => $total,
             'synced' => $synced,
             'errors' => $errors,
         ];
@@ -152,17 +167,44 @@ class NewDataTypesenseSyncService
     /**
      * Sync OriDocument models to Typesense
      */
-    public function syncOriDocuments($command = null, int $limit = null): array
+    public function syncOriDocuments($command = null, int $limit = null, int $chunkSize = 100): array
     {
         $this->ensureCollectionExists($this->oriDocumentsCollection, $this->getOriDocumentsSchema());
 
+        $synced = 0;
+        $errors = 0;
+        $total = 0;
+
         try {
             $query = OriDocument::needsTypesenseSync();
-            if ($limit) {
-                $query->limit($limit);
-            }
+            
+            // Process in chunks to avoid memory exhaustion
+            $query->chunk($chunkSize, function ($documents) use (&$synced, &$errors, &$total, $command, $limit) {
+                foreach ($documents as $document) {
+                    // Check limit if specified
+                    if ($limit !== null && $total >= $limit) {
+                        return false; // Stop chunking
+                    }
 
-            $documents = $query->get();
+                    try {
+                        $this->indexOriDocument($document);
+                        $document->update(['typesense_synced_at' => now()]);
+                        $synced++;
+                        $total++;
+                        
+                        if ($command && $total % 100 === 0) {
+                            $command->info("Processed {$total} ORI documents...");
+                        }
+                    } catch (\Exception $e) {
+                        Log::channel('typesense_errors')->error('Typesense index error (OriDocument)', [
+                            'external_id' => $document->external_id,
+                            'error' => $e->getMessage(),
+                        ]);
+                        $errors++;
+                        $total++;
+                    }
+                }
+            });
         } catch (\Exception $e) {
             Log::channel('typesense_errors')->error('Failed to query OriDocument models', [
                 'error' => $e->getMessage(),
@@ -173,32 +215,11 @@ class NewDataTypesenseSyncService
                 $command->error('Failed to query ORI documents: '.$e->getMessage());
             }
             
-            return ['total' => 0, 'synced' => 0, 'errors' => 1];
-        }
-
-        if ($documents->isEmpty()) {
-            return ['total' => 0, 'synced' => 0, 'errors' => 0];
-        }
-
-        $synced = 0;
-        $errors = 0;
-
-        foreach ($documents as $document) {
-            try {
-                $this->indexOriDocument($document);
-                $document->update(['typesense_synced_at' => now()]);
-                $synced++;
-            } catch (\Exception $e) {
-                Log::channel('typesense_errors')->error('Typesense index error (OriDocument)', [
-                    'external_id' => $document->external_id,
-                    'error' => $e->getMessage(),
-                ]);
-                $errors++;
-            }
+            return ['total' => $total, 'synced' => $synced, 'errors' => $errors + 1];
         }
 
         return [
-            'total' => $documents->count(),
+            'total' => $total,
             'synced' => $synced,
             'errors' => $errors,
         ];
@@ -207,12 +228,32 @@ class NewDataTypesenseSyncService
     /**
      * Sync OverheidTheme models to Typesense
      */
-    public function syncThemes($command = null): array
+    public function syncThemes($command = null, int $chunkSize = 500): array
     {
         $this->ensureCollectionExists($this->themesCollection, $this->getThemesSchema());
 
+        $synced = 0;
+        $errors = 0;
+        $total = 0;
+
         try {
-            $themes = OverheidTheme::all();
+            // Process in chunks to avoid memory exhaustion
+            OverheidTheme::chunk($chunkSize, function ($themes) use (&$synced, &$errors, &$total) {
+                foreach ($themes as $theme) {
+                    try {
+                        $this->indexTheme($theme);
+                        $synced++;
+                        $total++;
+                    } catch (\Exception $e) {
+                        Log::channel('typesense_errors')->error('Typesense index error (OverheidTheme)', [
+                            'id' => $theme->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                        $errors++;
+                        $total++;
+                    }
+                }
+            });
         } catch (\Exception $e) {
             Log::channel('typesense_errors')->error('Failed to query OverheidTheme models', [
                 'error' => $e->getMessage(),
@@ -222,31 +263,11 @@ class NewDataTypesenseSyncService
                 $command->error('Failed to query themes: '.$e->getMessage());
             }
             
-            return ['total' => 0, 'synced' => 0, 'errors' => 1];
-        }
-
-        if ($themes->isEmpty()) {
-            return ['total' => 0, 'synced' => 0, 'errors' => 0];
-        }
-
-        $synced = 0;
-        $errors = 0;
-
-        foreach ($themes as $theme) {
-            try {
-                $this->indexTheme($theme);
-                $synced++;
-            } catch (\Exception $e) {
-                Log::channel('typesense_errors')->error('Typesense index error (OverheidTheme)', [
-                    'id' => $theme->id,
-                    'error' => $e->getMessage(),
-                ]);
-                $errors++;
-            }
+            return ['total' => $total, 'synced' => $synced, 'errors' => $errors + 1];
         }
 
         return [
-            'total' => $themes->count(),
+            'total' => $total,
             'synced' => $synced,
             'errors' => $errors,
         ];
@@ -255,12 +276,32 @@ class NewDataTypesenseSyncService
     /**
      * Sync OverheidCategory models to Typesense
      */
-    public function syncCategories($command = null): array
+    public function syncCategories($command = null, int $chunkSize = 500): array
     {
         $this->ensureCollectionExists($this->categoriesCollection, $this->getCategoriesSchema());
 
+        $synced = 0;
+        $errors = 0;
+        $total = 0;
+
         try {
-            $categories = OverheidCategory::all();
+            // Process in chunks to avoid memory exhaustion
+            OverheidCategory::chunk($chunkSize, function ($categories) use (&$synced, &$errors, &$total) {
+                foreach ($categories as $category) {
+                    try {
+                        $this->indexCategory($category);
+                        $synced++;
+                        $total++;
+                    } catch (\Exception $e) {
+                        Log::channel('typesense_errors')->error('Typesense index error (OverheidCategory)', [
+                            'id' => $category->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                        $errors++;
+                        $total++;
+                    }
+                }
+            });
         } catch (\Exception $e) {
             Log::channel('typesense_errors')->error('Failed to query OverheidCategory models', [
                 'error' => $e->getMessage(),
@@ -270,31 +311,11 @@ class NewDataTypesenseSyncService
                 $command->error('Failed to query categories: '.$e->getMessage());
             }
             
-            return ['total' => 0, 'synced' => 0, 'errors' => 1];
-        }
-
-        if ($categories->isEmpty()) {
-            return ['total' => 0, 'synced' => 0, 'errors' => 0];
-        }
-
-        $synced = 0;
-        $errors = 0;
-
-        foreach ($categories as $category) {
-            try {
-                $this->indexCategory($category);
-                $synced++;
-            } catch (\Exception $e) {
-                Log::channel('typesense_errors')->error('Typesense index error (OverheidCategory)', [
-                    'id' => $category->id,
-                    'error' => $e->getMessage(),
-                ]);
-                $errors++;
-            }
+            return ['total' => $total, 'synced' => $synced, 'errors' => $errors + 1];
         }
 
         return [
-            'total' => $categories->count(),
+            'total' => $total,
             'synced' => $synced,
             'errors' => $errors,
         ];
@@ -303,12 +324,32 @@ class NewDataTypesenseSyncService
     /**
      * Sync OverheidOrganisation models to Typesense
      */
-    public function syncOrganisations($command = null): array
+    public function syncOrganisations($command = null, int $chunkSize = 500): array
     {
         $this->ensureCollectionExists($this->organisationsCollection, $this->getOrganisationsSchema());
 
+        $synced = 0;
+        $errors = 0;
+        $total = 0;
+
         try {
-            $organisations = OverheidOrganisation::all();
+            // Process in chunks to avoid memory exhaustion
+            OverheidOrganisation::chunk($chunkSize, function ($organisations) use (&$synced, &$errors, &$total) {
+                foreach ($organisations as $organisation) {
+                    try {
+                        $this->indexOrganisation($organisation);
+                        $synced++;
+                        $total++;
+                    } catch (\Exception $e) {
+                        Log::channel('typesense_errors')->error('Typesense index error (OverheidOrganisation)', [
+                            'id' => $organisation->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                        $errors++;
+                        $total++;
+                    }
+                }
+            });
         } catch (\Exception $e) {
             Log::channel('typesense_errors')->error('Failed to query OverheidOrganisation models', [
                 'error' => $e->getMessage(),
@@ -318,31 +359,11 @@ class NewDataTypesenseSyncService
                 $command->error('Failed to query organisations: '.$e->getMessage());
             }
             
-            return ['total' => 0, 'synced' => 0, 'errors' => 1];
-        }
-
-        if ($organisations->isEmpty()) {
-            return ['total' => 0, 'synced' => 0, 'errors' => 0];
-        }
-
-        $synced = 0;
-        $errors = 0;
-
-        foreach ($organisations as $organisation) {
-            try {
-                $this->indexOrganisation($organisation);
-                $synced++;
-            } catch (\Exception $e) {
-                Log::channel('typesense_errors')->error('Typesense index error (OverheidOrganisation)', [
-                    'id' => $organisation->id,
-                    'error' => $e->getMessage(),
-                ]);
-                $errors++;
-            }
+            return ['total' => $total, 'synced' => $synced, 'errors' => $errors + 1];
         }
 
         return [
-            'total' => $organisations->count(),
+            'total' => $total,
             'synced' => $synced,
             'errors' => $errors,
         ];

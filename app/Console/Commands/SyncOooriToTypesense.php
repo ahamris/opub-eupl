@@ -15,6 +15,7 @@ class SyncOooriToTypesense extends Command
     protected $signature = 'ooori:sync-typesense
                             {--model=* : Specific model(s) to sync (documents, ori_documents, themes, categories, organisations)}
                             {--limit= : Limit number of documents to sync (only for documents/ori_documents)}
+                            {--chunk= : Chunk size for processing (default: 100)}
                             {--all : Sync all models}';
 
     /**
@@ -36,21 +37,22 @@ class SyncOooriToTypesense extends Command
 
         $models = $this->option('model');
         $limit = $this->option('limit') ? (int) $this->option('limit') : null;
+        $chunkSize = $this->option('chunk') ? (int) $this->option('chunk') : 100;
         $syncAll = $this->option('all') || empty($models);
 
         if ($syncAll) {
-            $this->info('Syncing all models...');
-            $result = $service->syncAll(null, $this);
+            $this->info("Syncing all models (chunk size: {$chunkSize})...");
+            $result = $service->syncAll(null, $this, $chunkSize);
         } else {
-            $this->info('Syncing models: '.implode(', ', $models));
+            $this->info("Syncing models: ".implode(', ', $models)." (chunk size: {$chunkSize})");
             
             // Handle limit for document models
             if ($limit && in_array('documents', $models)) {
-                $docResult = $service->syncDocuments($this, $limit);
+                $docResult = $service->syncDocuments($this, $limit, $chunkSize);
                 $otherModels = array_diff($models, ['documents']);
                 
                 if (!empty($otherModels)) {
-                    $otherResult = $service->syncAll($otherModels, $this);
+                    $otherResult = $service->syncAll($otherModels, $this, $chunkSize);
                     $result = [
                         'total' => $docResult['total'] + $otherResult['total'],
                         'synced' => $docResult['synced'] + $otherResult['synced'],
@@ -60,11 +62,11 @@ class SyncOooriToTypesense extends Command
                     $result = $docResult;
                 }
             } elseif ($limit && in_array('ori_documents', $models)) {
-                $oriResult = $service->syncOriDocuments($this, $limit);
+                $oriResult = $service->syncOriDocuments($this, $limit, $chunkSize);
                 $otherModels = array_diff($models, ['ori_documents']);
                 
                 if (!empty($otherModels)) {
-                    $otherResult = $service->syncAll($otherModels, $this);
+                    $otherResult = $service->syncAll($otherModels, $this, $chunkSize);
                     $result = [
                         'total' => $oriResult['total'] + $otherResult['total'],
                         'synced' => $oriResult['synced'] + $otherResult['synced'],
@@ -74,7 +76,7 @@ class SyncOooriToTypesense extends Command
                     $result = $oriResult;
                 }
             } else {
-                $result = $service->syncAll($models, $this);
+                $result = $service->syncAll($models, $this, $chunkSize);
             }
         }
 
