@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\Admin\ContactSubmissionController;
 use App\Http\Controllers\Admin\SearchSubscriptionController;
 use App\Http\Controllers\Admin\ApiClientController;
@@ -57,6 +58,9 @@ Route::middleware(['auth', \App\Http\Middleware\CheckIfAdmin::class])->prefix('a
     ]);
     Route::post('api-clients/{apiClient}/regenerate', [ApiClientController::class, 'regenerate'])
         ->name('api-clients.regenerate');
+
+    // Contacts Routes (Ticketing System)
+    Route::resource('contacts', ContactController::class);
 
     // Contact Submissions Routes
     Route::resource('contact-submissions', ContactSubmissionController::class)->only(['index', 'show', 'update', 'destroy']);
