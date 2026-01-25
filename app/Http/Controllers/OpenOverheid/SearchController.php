@@ -1167,15 +1167,18 @@ class SearchController extends Controller
                 }
             }
             
-            if (! empty($validated['publicatiebestemming'])) {
-                $destinations = is_array($validated['publicatiebestemming']) ? $validated['publicatiebestemming'] : [$validated['publicatiebestemming']];
-                $destinations = array_filter(array_map('trim', $destinations));
-                if (! empty($destinations)) {
-                    // Filter by publication_destination field (exact match)
-                    $escapedDests = array_map(fn($d) => '=' . str_replace(['"', "'"], '', $d), $destinations);
-                    $filters[] = 'publication_destination:[' . implode(',', $escapedDests) . ']';
-                }
-            }
+            // NOTE: "publication_destination" is not facetable in the current Typesense schema.
+            // We intentionally do not filter on this field to stay compatible with the schema.
+            // The field exists but is not filterable (no 'facet' => true in NewDataTypesenseSyncService).
+            // if (! empty($validated['publicatiebestemming'])) {
+            //     $destinations = is_array($validated['publicatiebestemming']) ? $validated['publicatiebestemming'] : [$validated['publicatiebestemming']];
+            //     $destinations = array_filter(array_map('trim', $destinations));
+            //     if (! empty($destinations)) {
+            //         // Filter by publication_destination field (exact match)
+            //         $escapedDests = array_map(fn($d) => '=' . str_replace(['"', "'"], '', $d), $destinations);
+            //         $filters[] = 'publication_destination:[' . implode(',', $escapedDests) . ']';
+            //     }
+            // }
             
             // Date filters
             if ($publicatiedatumVan || $publicatiedatumTot) {
@@ -1358,18 +1361,21 @@ class SearchController extends Controller
                 $filters[] = 'organisation:['.implode(',', $escapedOrgs).']';
             }
         }
-        if ($query->publicatiebestemming) {
-            $destinations = is_array($query->publicatiebestemming) ? $query->publicatiebestemming : [$query->publicatiebestemming];
-            $destinations = array_filter(array_map('trim', $destinations)); // Remove empty values
-            if (! empty($destinations)) {
-                // Filter by publication_destination field (exact match)
-                $escapedDests = array_map(function ($dest) {
-                    $dest = str_replace(['"', "'"], '', $dest); // Remove quotes
-                    return '='.$dest;
-                }, $destinations);
-                $filters[] = 'publication_destination:['.implode(',', $escapedDests).']';
-            }
-        }
+        // NOTE: "publication_destination" is not facetable in the current Typesense schema.
+        // We intentionally do not filter on this field to stay compatible with the schema.
+        // The field exists but is not filterable (no 'facet' => true in NewDataTypesenseSyncService).
+        // if ($query->publicatiebestemming) {
+        //     $destinations = is_array($query->publicatiebestemming) ? $query->publicatiebestemming : [$query->publicatiebestemming];
+        //     $destinations = array_filter(array_map('trim', $destinations)); // Remove empty values
+        //     if (! empty($destinations)) {
+        //         // Filter by publication_destination field (exact match)
+        //         $escapedDests = array_map(function ($dest) {
+        //             $dest = str_replace(['"', "'"], '', $dest); // Remove quotes
+        //             return '='.$dest;
+        //         }, $destinations);
+        //         $filters[] = 'publication_destination:['.implode(',', $escapedDests).']';
+        //     }
+        // }
         if ($query->publicatiedatumVan || $query->publicatiedatumTot) {
             $dateFilters = [];
             if ($query->publicatiedatumVan) {
