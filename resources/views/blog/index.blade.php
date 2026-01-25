@@ -26,7 +26,7 @@
                                     <div class="md:w-1/2 relative">
                                         <div class="aspect-square md:aspect-auto md:h-full">
                                             @if($featured->image)
-                                            <img src="{{ asset('storage/' . $featured->image) }}" 
+                                            <img src="{{ $featured->get_image }}" 
                                                  alt="{{ $featured->title }}" 
                                                  class="w-full h-full object-cover">
                                             @else
@@ -69,7 +69,7 @@
                             <a href="{{ route('blog.show', $blog->slug) }}" class="block bg-[var(--color-surface)] rounded-lg overflow-hidden border border-[var(--color-outline-variant)] hover:border-[var(--color-primary)]/50 transition-all duration-300 group">
                                 <div class="aspect-[16/10] overflow-hidden">
                                     @if($blog->image)
-                                    <img src="{{ asset('storage/' . $blog->image) }}" 
+                                    <img src="{{ $blog->get_image }}" 
                                          alt="{{ $blog->title }}" 
                                          class="w-full h-full object-cover">
                                     @else
@@ -167,7 +167,7 @@
                                 <a href="{{ route('blog.show', $recent->slug) }}" class="flex gap-3 group">
                                     <div class="shrink-0 w-14 h-14 rounded-md overflow-hidden bg-[var(--color-surface-variant)]">
                                         @if($recent->image)
-                                        <img src="{{ asset('storage/' . $recent->image) }}" 
+                                        <img src="{{ $recent->getImageUrl() }}" 
                                              alt="{{ $recent->title }}" 
                                              class="w-full h-full object-cover">
                                         @else

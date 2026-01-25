@@ -12,7 +12,7 @@
             'description' => $blog->short_body,
             'category' => $blog->blog_category?->name ?? 'Algemeen',
             'date' => $blog->created_at,
-            'image' => $blog->image ?? 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=2070&auto=format&fit=crop',
+            'image' => $blog->getImageUrl() ?? 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=2070&auto=format&fit=crop',
             'url' => $blog->link_url,
             'author' => $blog->author?->name ?? 'Open Overheid Team',
             'author_avatar' => $blog->author?->profile_photo_url ?? 'https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',

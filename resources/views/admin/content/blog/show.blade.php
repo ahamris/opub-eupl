@@ -112,7 +112,7 @@
                         </h3>
                         @if($blog->image)
                             <div class="w-full rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700">
-                                <img src="{{ asset('storage/' . $blog->image) }}" alt="{{ $blog->title }}" class="w-full h-auto object-cover">
+                                <img src="{{ $blog->get_image }}" alt="{{ $blog->title }}" class="w-full h-auto object-cover">
                             </div>
                         @else
                             <div class="w-full aspect-video rounded-lg bg-zinc-100 dark:bg-zinc-700 flex items-center justify-center border border-zinc-200 dark:border-zinc-700">

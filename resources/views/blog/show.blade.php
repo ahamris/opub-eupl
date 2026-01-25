@@ -7,7 +7,7 @@
     @php
         $ogTitle = $blog->og_title ?? $blog->title;
         $ogDescription = $blog->og_description ?? strip_tags($blog->short_body ?? '');
-        $ogImage = $blog->og_image ? asset('storage/' . $blog->og_image) : ($blog->image ? asset('storage/' . $blog->image) : (get_setting('og_image') ? asset('storage/' . get_setting('og_image')) : null));
+        $ogImage = $blog->og_image ? (str_starts_with($blog->og_image, 'http') ? $blog->og_image : asset('storage/' . $blog->og_image)) : ($blog->image ? $blog->getImageUrl() : (get_setting('og_image') ? (str_starts_with(get_setting('og_image'), 'http') ? get_setting('og_image') : asset('storage/' . get_setting('og_image'))) : null));
         $ogUrl = url()->current();
     @endphp
     
@@ -117,7 +117,7 @@
                 <!-- Featured Image -->
                 @if($blog->image)
                 <div class="mb-8 rounded-lg overflow-hidden border border-[var(--color-outline-variant)]">
-                    <img src="{{ asset('storage/' . $blog->image) }}" 
+                    <img src="{{ $blog->get_image }}" 
                          alt="{{ $blog->title }}" 
                          class="w-full h-auto object-cover">
                 </div>
@@ -219,7 +219,7 @@
                         <a href="{{ route('blog.show', $related->slug) }}" class="flex gap-3 group">
                             <div class="shrink-0 w-14 h-14 rounded-md overflow-hidden bg-[var(--color-surface-variant)]">
                                 @if($related->image)
-                                <img src="{{ asset('storage/' . $related->image) }}" 
+                                <img src="{{ $related->get_image }}" 
                                      alt="{{ $related->title }}" 
                                      class="w-full h-full object-cover">
                                 @else
