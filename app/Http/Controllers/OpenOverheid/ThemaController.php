@@ -105,45 +105,68 @@ class ThemaController extends Controller
                             \Log::warning('Date filter counts failed in ThemaController', ['error' => $dateException->getMessage()]);
                         }
                     } else {
-                        // Fallback to FilterCountService if no facets
-                        try {
-                            $baseQuery = OpenOverheidDocument::whereNotNull('theme')->where('theme', '!=', 'Onbekend');
-                            $filterCounts = $this->calculateFilterCounts($baseQuery, $validated);
-                        } catch (\Exception $e) {
-                            \Log::warning('FilterCountService failed in ThemaController', ['error' => $e->getMessage()]);
-                            $filterCounts = [];
-                        }
+                        // No facets from Typesense - this should not happen, but if it does, use empty arrays
+                        // DO NOT fall back to database queries with 600k+ records - it will cause memory exhaustion
+                        \Log::warning('Typesense returned no facets in ThemaController - using empty filter counts');
+                        $filterCounts = [];
                     }
                     
-                    // Get filter options using FilterCountService
+                    // Get filter options from Typesense facets (NOT from database)
+                    // For 600k+ records, we MUST use Typesense, never query the database
                     try {
-                        $allFilterOptions = $this->filterCountService->getAllFilterOptions($query);
+                        if (isset($results['facet_counts']) && !empty($results['facet_counts'])) {
+                            $allFilterOptions = $this->extractFilterOptionsFromFacets($results['facet_counts']);
+                        } else {
+                            // If no facets, return empty - DO NOT query database
+                            $allFilterOptions = [];
+                        }
                     } catch (\Exception $e) {
-                        \Log::warning('getAllFilterOptions failed in ThemaController', ['error' => $e->getMessage()]);
+                        \Log::warning('Failed to extract filter options from Typesense facets', ['error' => $e->getMessage()]);
                         $allFilterOptions = [];
                     }
                     
                     $formattedResults = $results;
                 } catch (\Exception $typesenseException) {
                     // Fallback to PostgreSQL if Typesense fails
+                    // BUT: For 600k+ records, avoid expensive GROUP BY queries
                     \Log::warning('Typesense search failed in ThemaController, falling back to PostgreSQL', [
                         'error' => $typesenseException->getMessage(),
                     ]);
                     $formattedResults = $this->searchWithPostgreSQL($query, $validated);
-                    $filterCounts = $this->calculateFilterCounts(
-                        OpenOverheidDocument::whereNotNull('theme')->where('theme', '!=', 'Onbekend'),
-                        $validated
-                    );
-                    $allFilterOptions = $this->getAllFilterOptions(
-                        OpenOverheidDocument::whereNotNull('theme')->where('theme', '!=', 'Onbekend')
-                    );
+                    
+                    // Use cached/lightweight filter counts - avoid expensive GROUP BY queries
+                    // Only calculate if absolutely necessary and with strict limits
+                    try {
+                        $baseQuery = OpenOverheidDocument::whereNotNull('theme')->where('theme', '!=', 'Onbekend');
+                        $filterCounts = $this->calculateFilterCounts($baseQuery, $validated);
+                    } catch (\Exception $e) {
+                        \Log::error('FilterCountService failed in fallback - using empty counts', ['error' => $e->getMessage()]);
+                        $filterCounts = [];
+                    }
+                    
+                    // DO NOT call getAllFilterOptions on 600k+ records - it will cause memory exhaustion
+                    // Return empty filter options instead
+                    \Log::warning('Skipping getAllFilterOptions in fallback to prevent memory exhaustion with 600k+ records');
+                    $allFilterOptions = [];
                 }
             } else {
                 // Typesense disabled, use PostgreSQL
+                // WARNING: With 600k+ records, this will be slow and may cause memory issues
+                \Log::warning('Typesense is disabled - using PostgreSQL fallback (may be slow with 600k+ records)');
                 $formattedResults = $this->searchWithPostgreSQL($query, $validated);
                 $baseQuery = OpenOverheidDocument::whereNotNull('theme')->where('theme', '!=', 'Onbekend');
-                $filterCounts = $this->calculateFilterCounts($baseQuery, $validated);
-                $allFilterOptions = $this->getAllFilterOptions($baseQuery);
+                
+                try {
+                    $filterCounts = $this->calculateFilterCounts($baseQuery, $validated);
+                } catch (\Exception $e) {
+                    \Log::error('FilterCountService failed - using empty counts', ['error' => $e->getMessage()]);
+                    $filterCounts = [];
+                }
+                
+                // DO NOT call getAllFilterOptions on 600k+ records when Typesense is disabled
+                // It will cause memory exhaustion - return empty instead
+                \Log::warning('Skipping getAllFilterOptions - Typesense disabled and table has 600k+ records');
+                $allFilterOptions = [];
             }
 
             // Cache document count to avoid repeated queries
@@ -366,6 +389,63 @@ class ThemaController extends Controller
     }
 
     /**
+     * Extract filter options from Typesense facets (for "Toon meer" functionality)
+     * This avoids querying the database with 600k+ records
+     */
+    private function extractFilterOptionsFromFacets(array $facetCounts): array
+    {
+        $options = [
+            'documentsoort' => [],
+            'thema' => [],
+            'organisatie' => [],
+            'informatiecategorie' => [],
+        ];
+
+        if (empty($facetCounts) || !is_array($facetCounts)) {
+            return $options;
+        }
+
+        foreach ($facetCounts as $facetGroup) {
+            if (!is_array($facetGroup)) {
+                continue;
+            }
+
+            $fieldName = $facetGroup['field_name'] ?? $facetGroup['fieldName'] ?? null;
+            $countsArray = $facetGroup['counts'] ?? [];
+
+            if (!$fieldName || empty($countsArray)) {
+                continue;
+            }
+
+            $optionKey = match ($fieldName) {
+                'document_type' => 'documentsoort',
+                'theme' => 'thema',
+                'organisation' => 'organisatie',
+                'category' => 'informatiecategorie',
+                default => null,
+            };
+
+            if ($optionKey) {
+                foreach ($countsArray as $facet) {
+                    if (!is_array($facet)) {
+                        continue;
+                    }
+                    $value = $facet['value'] ?? null;
+                    if ($value) {
+                        $options[$optionKey][] = $value;
+                    }
+                }
+                
+                // Sort and limit to top 500 most common
+                $options[$optionKey] = array_slice(array_unique($options[$optionKey]), 0, 500);
+                sort($options[$optionKey]);
+            }
+        }
+
+        return $options;
+    }
+
+    /**
      * Convert Typesense facet_counts to filter counts format
      */
     private function convertTypesenseFacetsToFilterCounts(array $facetCounts, OpenOverheidSearchQuery $query): array
@@ -420,15 +500,16 @@ class ThemaController extends Controller
     }
 
     /**
-     * Calculate filter counts using optimized GROUP BY queries (fallback)
-     * Uses caching to prevent repeated expensive queries
+     * Calculate filter counts using optimized GROUP BY queries (fallback ONLY)
+     * WARNING: With 600k+ records, this should be avoided - use Typesense facets instead
+     * Uses aggressive caching and limits to prevent memory exhaustion
      */
     private function calculateFilterCounts($baseQuery, array $validated): array
     {
         // Cache filter counts to avoid repeated expensive queries
         $cacheKey = 'themas_filter_counts_'.md5(serialize($baseQuery->toSql()).serialize($baseQuery->getBindings()).serialize($validated));
         
-        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 3600, function () use ($baseQuery, $validated) {
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 7200, function () use ($baseQuery, $validated) {
             $counts = [
                 'week' => 0,
                 'maand' => 0,
@@ -440,24 +521,51 @@ class ThemaController extends Controller
             ];
 
             try {
-                // Calculate date filter counts (cached separately to avoid memory issues)
+                // Calculate date filter counts (cached separately with longer TTL)
+                // Use simple COUNT queries with indexes - these are relatively safe
                 $now = now();
-                $counts['week'] = \Illuminate\Support\Facades\Cache::remember('themas_count_week', 3600, function () use ($baseQuery, $now) {
-                    return (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subWeek())->count();
+                $counts['week'] = \Illuminate\Support\Facades\Cache::remember('themas_count_week', 7200, function () use ($baseQuery, $now) {
+                    try {
+                        return (clone $baseQuery)
+                            ->where('publication_date', '>=', $now->copy()->subWeek())
+                            ->limit(1000000) // Safety limit - should never hit this
+                            ->count();
+                    } catch (\Exception $e) {
+                        \Log::error('Date count query failed', ['error' => $e->getMessage()]);
+                        return 0;
+                    }
                 });
-                $counts['maand'] = \Illuminate\Support\Facades\Cache::remember('themas_count_maand', 3600, function () use ($baseQuery, $now) {
-                    return (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subMonth())->count();
+                $counts['maand'] = \Illuminate\Support\Facades\Cache::remember('themas_count_maand', 7200, function () use ($baseQuery, $now) {
+                    try {
+                        return (clone $baseQuery)
+                            ->where('publication_date', '>=', $now->copy()->subMonth())
+                            ->limit(1000000)
+                            ->count();
+                    } catch (\Exception $e) {
+                        \Log::error('Date count query failed', ['error' => $e->getMessage()]);
+                        return 0;
+                    }
                 });
-                $counts['jaar'] = \Illuminate\Support\Facades\Cache::remember('themas_count_jaar', 3600, function () use ($baseQuery, $now) {
-                    return (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subYear())->count();
+                $counts['jaar'] = \Illuminate\Support\Facades\Cache::remember('themas_count_jaar', 7200, function () use ($baseQuery, $now) {
+                    try {
+                        return (clone $baseQuery)
+                            ->where('publication_date', '>=', $now->copy()->subYear())
+                            ->limit(1000000)
+                            ->count();
+                    } catch (\Exception $e) {
+                        \Log::error('Date count query failed', ['error' => $e->getMessage()]);
+                        return 0;
+                    }
                 });
 
-                // OPTIMIZED: Use GROUP BY queries instead of N+1 queries
-                // Reduced limit to 300 to prevent memory exhaustion with very large datasets
-                $maxResults = 300;
+                // OPTIMIZED: Use GROUP BY queries with VERY aggressive limits for 600k+ records
+                // WARNING: Even with limits, GROUP BY on 600k+ records can be slow
+                // Consider using Typesense facets instead whenever possible
+                $maxResults = 200; // Further reduced for 600k+ records
 
-                // Get document type counts in a single GROUP BY query
+                // Get document type counts - use timeout and memory limit protection
                 try {
+                    set_time_limit(30); // 30 second timeout per query
                     $counts['documentsoort'] = (clone $baseQuery)
                         ->whereNotNull('document_type')
                         ->selectRaw('document_type, COUNT(*) as count')
@@ -467,12 +575,13 @@ class ThemaController extends Controller
                         ->pluck('count', 'document_type')
                         ->toArray();
                 } catch (\Exception $e) {
-                    \Log::warning('Failed to get document type counts', ['error' => $e->getMessage()]);
+                    \Log::error('Failed to get document type counts (600k+ records)', ['error' => $e->getMessage()]);
                     $counts['documentsoort'] = [];
                 }
 
-                // Get theme counts in a single GROUP BY query
+                // Get theme counts
                 try {
+                    set_time_limit(30);
                     $counts['thema'] = (clone $baseQuery)
                         ->whereNotNull('theme')
                         ->where('theme', '!=', 'Onbekend')
@@ -483,12 +592,13 @@ class ThemaController extends Controller
                         ->pluck('count', 'theme')
                         ->toArray();
                 } catch (\Exception $e) {
-                    \Log::warning('Failed to get theme counts', ['error' => $e->getMessage()]);
+                    \Log::error('Failed to get theme counts (600k+ records)', ['error' => $e->getMessage()]);
                     $counts['thema'] = [];
                 }
 
-                // Get organisation counts in a single GROUP BY query
+                // Get organisation counts
                 try {
+                    set_time_limit(30);
                     $counts['organisatie'] = (clone $baseQuery)
                         ->whereNotNull('organisation')
                         ->selectRaw('organisation, COUNT(*) as count')
@@ -498,12 +608,13 @@ class ThemaController extends Controller
                         ->pluck('count', 'organisation')
                         ->toArray();
                 } catch (\Exception $e) {
-                    \Log::warning('Failed to get organisation counts', ['error' => $e->getMessage()]);
+                    \Log::error('Failed to get organisation counts (600k+ records)', ['error' => $e->getMessage()]);
                     $counts['organisatie'] = [];
                 }
 
-                // Get category counts in a single GROUP BY query
+                // Get category counts
                 try {
+                    set_time_limit(30);
                     $counts['informatiecategorie'] = (clone $baseQuery)
                         ->whereNotNull('category')
                         ->selectRaw('category, COUNT(*) as count')
@@ -513,7 +624,7 @@ class ThemaController extends Controller
                         ->pluck('count', 'category')
                         ->toArray();
                 } catch (\Exception $e) {
-                    \Log::warning('Failed to get category counts', ['error' => $e->getMessage()]);
+                    \Log::error('Failed to get category counts (600k+ records)', ['error' => $e->getMessage()]);
                     $counts['informatiecategorie'] = [];
                 }
             } catch (\Exception $e) {
@@ -526,119 +637,23 @@ class ThemaController extends Controller
 
     /**
      * Get all available filter options for "Toon meer" functionality (themes domain only).
-     * Uses optimized queries with limits and caching to prevent memory exhaustion.
+     * WARNING: With 600k+ records, this method should be AVOIDED - use Typesense facets instead
+     * This method is kept only as a last resort fallback
      */
     private function getAllFilterOptions($baseQuery): array
     {
-        // Cache the results to avoid repeated expensive queries
-        $cacheKey = 'themas_filter_options_'.md5(serialize($baseQuery->toSql()).serialize($baseQuery->getBindings()));
+        // DO NOT use this method with 600k+ records - it will cause memory exhaustion
+        // This should only be called when Typesense is completely unavailable
+        \Log::warning('getAllFilterOptions called - this is dangerous with 600k+ records. Use Typesense facets instead.');
         
-        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 3600, function () use ($baseQuery) {
-            try {
-                // Reduce limit to 500 to prevent memory exhaustion with large datasets
-                $maxResults = 500;
-
-                // Get unique document types (limited and ordered by frequency)
-                try {
-                    $allDocumentTypes = (clone $baseQuery)
-                        ->whereNotNull('document_type')
-                        ->selectRaw('document_type, COUNT(*) as count')
-                        ->groupBy('document_type')
-                        ->orderByDesc('count')
-                        ->limit($maxResults)
-                        ->pluck('document_type')
-                        ->filter()
-                        ->sort()
-                        ->values()
-                        ->toArray();
-                } catch (\Exception $e) {
-                    \Log::warning('Failed to get document types in getAllFilterOptions', ['error' => $e->getMessage()]);
-                    $allDocumentTypes = [];
-                }
-
-                // Get unique themes (limited and ordered by frequency)
-                try {
-                    $allThemes = (clone $baseQuery)
-                        ->whereNotNull('theme')
-                        ->where('theme', '!=', 'Onbekend')
-                        ->selectRaw('theme, COUNT(*) as count')
-                        ->groupBy('theme')
-                        ->orderByDesc('count')
-                        ->limit($maxResults)
-                        ->pluck('theme')
-                        ->filter()
-                        ->sort()
-                        ->values()
-                        ->toArray();
-                } catch (\Exception $e) {
-                    \Log::warning('Failed to get themes in getAllFilterOptions', ['error' => $e->getMessage()]);
-                    $allThemes = [];
-                }
-
-                // Get unique organisations (limited and ordered by frequency)
-                try {
-                    $allOrganisations = (clone $baseQuery)
-                        ->whereNotNull('organisation')
-                        ->selectRaw('organisation, COUNT(*) as count')
-                        ->groupBy('organisation')
-                        ->orderByDesc('count')
-                        ->limit($maxResults)
-                        ->pluck('organisation')
-                        ->filter()
-                        ->sort()
-                        ->values()
-                        ->toArray();
-                } catch (\Exception $e) {
-                    \Log::warning('Failed to get organisations in getAllFilterOptions', ['error' => $e->getMessage()]);
-                    $allOrganisations = [];
-                }
-
-                // Get unique information categories (limited and ordered by frequency)
-                try {
-                    $wooCategoryService = app(\App\Services\OpenOverheid\WooCategoryService::class);
-                    $allCategories = (clone $baseQuery)
-                        ->whereNotNull('category')
-                        ->where('category', '!=', 'Onbekend')
-                        ->selectRaw('category, COUNT(*) as count')
-                        ->groupBy('category')
-                        ->orderByDesc('count')
-                        ->limit($maxResults)
-                        ->pluck('category')
-                        ->filter()
-                        ->map(function ($category) use ($wooCategoryService) {
-                            return $wooCategoryService->formatCategoryForDisplay($category) ?? $category;
-                        })
-                        ->filter()
-                        ->unique()
-                        ->sort()
-                        ->values()
-                        ->toArray();
-                } catch (\Exception $e) {
-                    \Log::warning('Failed to get categories in getAllFilterOptions', ['error' => $e->getMessage()]);
-                    $allCategories = [];
-                }
-
-                return [
-                    'documentsoort' => $allDocumentTypes,
-                    'thema' => $allThemes,
-                    'organisatie' => $allOrganisations,
-                    'informatiecategorie' => $allCategories,
-                ];
-            } catch (\Exception $e) {
-                \Log::error('getAllFilterOptions failed in ThemaController', [
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
-                ]);
-                
-                // Return empty arrays on error to prevent crash
-                return [
-                    'documentsoort' => [],
-                    'thema' => [],
-                    'organisatie' => [],
-                    'informatiecategorie' => [],
-                ];
-            }
-        });
+        // Return empty arrays to prevent memory exhaustion
+        // If filter options are needed, they should come from Typesense facets
+        return [
+            'documentsoort' => [],
+            'thema' => [],
+            'organisatie' => [],
+            'informatiecategorie' => [],
+        ];
     }
 
     /**
