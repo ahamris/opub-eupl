@@ -421,166 +421,224 @@ class ThemaController extends Controller
 
     /**
      * Calculate filter counts using optimized GROUP BY queries (fallback)
+     * Uses caching to prevent repeated expensive queries
      */
     private function calculateFilterCounts($baseQuery, array $validated): array
     {
-        $counts = [
-            'week' => 0,
-            'maand' => 0,
-            'jaar' => 0,
-            'documentsoort' => [],
-            'thema' => [],
-            'organisatie' => [],
-            'informatiecategorie' => [],
-        ];
-
-        try {
-            // Calculate date filter counts
-            $now = now();
-            $counts['week'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subWeek())->count();
-            $counts['maand'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subMonth())->count();
-            $counts['jaar'] = (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subYear())->count();
-
-            // OPTIMIZED: Use GROUP BY queries instead of N+1 queries
-            $maxResults = 500;
-
-            // Get document type counts in a single GROUP BY query
-            $counts['documentsoort'] = (clone $baseQuery)
-                ->whereNotNull('document_type')
-                ->selectRaw('document_type, COUNT(*) as count')
-                ->groupBy('document_type')
-                ->orderByDesc('count')
-                ->limit($maxResults)
-                ->pluck('count', 'document_type')
-                ->toArray();
-
-            // Get theme counts in a single GROUP BY query
-            $counts['thema'] = (clone $baseQuery)
-                ->whereNotNull('theme')
-                ->where('theme', '!=', 'Onbekend')
-                ->selectRaw('theme, COUNT(*) as count')
-                ->groupBy('theme')
-                ->orderByDesc('count')
-                ->limit($maxResults)
-                ->pluck('count', 'theme')
-                ->toArray();
-
-            // Get organisation counts in a single GROUP BY query
-            $counts['organisatie'] = (clone $baseQuery)
-                ->whereNotNull('organisation')
-                ->selectRaw('organisation, COUNT(*) as count')
-                ->groupBy('organisation')
-                ->orderByDesc('count')
-                ->limit($maxResults)
-                ->pluck('count', 'organisation')
-                ->toArray();
-
-            // Get category counts in a single GROUP BY query
-            $counts['informatiecategorie'] = (clone $baseQuery)
-                ->whereNotNull('category')
-                ->selectRaw('category, COUNT(*) as count')
-                ->groupBy('category')
-                ->orderByDesc('count')
-                ->limit($maxResults)
-                ->pluck('count', 'category')
-                ->toArray();
-        } catch (\Exception $e) {
-            \Log::warning('calculateFilterCounts failed in ThemaController', ['error' => $e->getMessage()]);
-        }
-
-        return $counts;
-    }
-
-    /**
-     * Get all available filter options for "Toon meer" functionality (themes domain only).
-     * Uses optimized queries with limits to prevent memory exhaustion.
-     */
-    private function getAllFilterOptions($baseQuery): array
-    {
-        try {
-            // Limit to top 1000 most common values per filter to prevent memory exhaustion
-            $maxResults = 1000;
-
-            // Get unique document types (limited and ordered by frequency)
-            $allDocumentTypes = (clone $baseQuery)
-                ->whereNotNull('document_type')
-                ->selectRaw('document_type, COUNT(*) as count')
-                ->groupBy('document_type')
-                ->orderByDesc('count')
-                ->limit($maxResults)
-                ->pluck('document_type')
-                ->filter()
-                ->sort()
-                ->values()
-                ->toArray();
-
-            // Get unique themes (limited and ordered by frequency)
-            $allThemes = (clone $baseQuery)
-                ->whereNotNull('theme')
-                ->where('theme', '!=', 'Onbekend')
-                ->selectRaw('theme, COUNT(*) as count')
-                ->groupBy('theme')
-                ->orderByDesc('count')
-                ->limit($maxResults)
-                ->pluck('theme')
-                ->filter()
-                ->sort()
-                ->values()
-                ->toArray();
-
-            // Get unique organisations (limited and ordered by frequency)
-            $allOrganisations = (clone $baseQuery)
-                ->whereNotNull('organisation')
-                ->selectRaw('organisation, COUNT(*) as count')
-                ->groupBy('organisation')
-                ->orderByDesc('count')
-                ->limit($maxResults)
-                ->pluck('organisation')
-                ->filter()
-                ->sort()
-                ->values()
-                ->toArray();
-
-            // Get unique information categories (limited and ordered by frequency)
-            $wooCategoryService = app(\App\Services\OpenOverheid\WooCategoryService::class);
-            $allCategories = (clone $baseQuery)
-                ->whereNotNull('category')
-                ->where('category', '!=', 'Onbekend')
-                ->selectRaw('category, COUNT(*) as count')
-                ->groupBy('category')
-                ->orderByDesc('count')
-                ->limit($maxResults)
-                ->pluck('category')
-                ->filter()
-                ->map(function ($category) use ($wooCategoryService) {
-                    return $wooCategoryService->formatCategoryForDisplay($category) ?? $category;
-                })
-                ->filter()
-                ->unique()
-                ->sort()
-                ->values()
-                ->toArray();
-
-            return [
-                'documentsoort' => $allDocumentTypes,
-                'thema' => $allThemes,
-                'organisatie' => $allOrganisations,
-                'informatiecategorie' => $allCategories,
-            ];
-        } catch (\Exception $e) {
-            \Log::error('getAllFilterOptions failed in ThemaController', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-            
-            // Return empty arrays on error to prevent crash
-            return [
+        // Cache filter counts to avoid repeated expensive queries
+        $cacheKey = 'themas_filter_counts_'.md5(serialize($baseQuery->toSql()).serialize($baseQuery->getBindings()).serialize($validated));
+        
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 3600, function () use ($baseQuery, $validated) {
+            $counts = [
+                'week' => 0,
+                'maand' => 0,
+                'jaar' => 0,
                 'documentsoort' => [],
                 'thema' => [],
                 'organisatie' => [],
                 'informatiecategorie' => [],
             ];
-        }
+
+            try {
+                // Calculate date filter counts (cached separately to avoid memory issues)
+                $now = now();
+                $counts['week'] = \Illuminate\Support\Facades\Cache::remember('themas_count_week', 3600, function () use ($baseQuery, $now) {
+                    return (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subWeek())->count();
+                });
+                $counts['maand'] = \Illuminate\Support\Facades\Cache::remember('themas_count_maand', 3600, function () use ($baseQuery, $now) {
+                    return (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subMonth())->count();
+                });
+                $counts['jaar'] = \Illuminate\Support\Facades\Cache::remember('themas_count_jaar', 3600, function () use ($baseQuery, $now) {
+                    return (clone $baseQuery)->where('publication_date', '>=', $now->copy()->subYear())->count();
+                });
+
+                // OPTIMIZED: Use GROUP BY queries instead of N+1 queries
+                // Reduced limit to 300 to prevent memory exhaustion with very large datasets
+                $maxResults = 300;
+
+                // Get document type counts in a single GROUP BY query
+                try {
+                    $counts['documentsoort'] = (clone $baseQuery)
+                        ->whereNotNull('document_type')
+                        ->selectRaw('document_type, COUNT(*) as count')
+                        ->groupBy('document_type')
+                        ->orderByDesc('count')
+                        ->limit($maxResults)
+                        ->pluck('count', 'document_type')
+                        ->toArray();
+                } catch (\Exception $e) {
+                    \Log::warning('Failed to get document type counts', ['error' => $e->getMessage()]);
+                    $counts['documentsoort'] = [];
+                }
+
+                // Get theme counts in a single GROUP BY query
+                try {
+                    $counts['thema'] = (clone $baseQuery)
+                        ->whereNotNull('theme')
+                        ->where('theme', '!=', 'Onbekend')
+                        ->selectRaw('theme, COUNT(*) as count')
+                        ->groupBy('theme')
+                        ->orderByDesc('count')
+                        ->limit($maxResults)
+                        ->pluck('count', 'theme')
+                        ->toArray();
+                } catch (\Exception $e) {
+                    \Log::warning('Failed to get theme counts', ['error' => $e->getMessage()]);
+                    $counts['thema'] = [];
+                }
+
+                // Get organisation counts in a single GROUP BY query
+                try {
+                    $counts['organisatie'] = (clone $baseQuery)
+                        ->whereNotNull('organisation')
+                        ->selectRaw('organisation, COUNT(*) as count')
+                        ->groupBy('organisation')
+                        ->orderByDesc('count')
+                        ->limit($maxResults)
+                        ->pluck('count', 'organisation')
+                        ->toArray();
+                } catch (\Exception $e) {
+                    \Log::warning('Failed to get organisation counts', ['error' => $e->getMessage()]);
+                    $counts['organisatie'] = [];
+                }
+
+                // Get category counts in a single GROUP BY query
+                try {
+                    $counts['informatiecategorie'] = (clone $baseQuery)
+                        ->whereNotNull('category')
+                        ->selectRaw('category, COUNT(*) as count')
+                        ->groupBy('category')
+                        ->orderByDesc('count')
+                        ->limit($maxResults)
+                        ->pluck('count', 'category')
+                        ->toArray();
+                } catch (\Exception $e) {
+                    \Log::warning('Failed to get category counts', ['error' => $e->getMessage()]);
+                    $counts['informatiecategorie'] = [];
+                }
+            } catch (\Exception $e) {
+                \Log::warning('calculateFilterCounts failed in ThemaController', ['error' => $e->getMessage()]);
+            }
+
+            return $counts;
+        });
+    }
+
+    /**
+     * Get all available filter options for "Toon meer" functionality (themes domain only).
+     * Uses optimized queries with limits and caching to prevent memory exhaustion.
+     */
+    private function getAllFilterOptions($baseQuery): array
+    {
+        // Cache the results to avoid repeated expensive queries
+        $cacheKey = 'themas_filter_options_'.md5(serialize($baseQuery->toSql()).serialize($baseQuery->getBindings()));
+        
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 3600, function () use ($baseQuery) {
+            try {
+                // Reduce limit to 500 to prevent memory exhaustion with large datasets
+                $maxResults = 500;
+
+                // Get unique document types (limited and ordered by frequency)
+                try {
+                    $allDocumentTypes = (clone $baseQuery)
+                        ->whereNotNull('document_type')
+                        ->selectRaw('document_type, COUNT(*) as count')
+                        ->groupBy('document_type')
+                        ->orderByDesc('count')
+                        ->limit($maxResults)
+                        ->pluck('document_type')
+                        ->filter()
+                        ->sort()
+                        ->values()
+                        ->toArray();
+                } catch (\Exception $e) {
+                    \Log::warning('Failed to get document types in getAllFilterOptions', ['error' => $e->getMessage()]);
+                    $allDocumentTypes = [];
+                }
+
+                // Get unique themes (limited and ordered by frequency)
+                try {
+                    $allThemes = (clone $baseQuery)
+                        ->whereNotNull('theme')
+                        ->where('theme', '!=', 'Onbekend')
+                        ->selectRaw('theme, COUNT(*) as count')
+                        ->groupBy('theme')
+                        ->orderByDesc('count')
+                        ->limit($maxResults)
+                        ->pluck('theme')
+                        ->filter()
+                        ->sort()
+                        ->values()
+                        ->toArray();
+                } catch (\Exception $e) {
+                    \Log::warning('Failed to get themes in getAllFilterOptions', ['error' => $e->getMessage()]);
+                    $allThemes = [];
+                }
+
+                // Get unique organisations (limited and ordered by frequency)
+                try {
+                    $allOrganisations = (clone $baseQuery)
+                        ->whereNotNull('organisation')
+                        ->selectRaw('organisation, COUNT(*) as count')
+                        ->groupBy('organisation')
+                        ->orderByDesc('count')
+                        ->limit($maxResults)
+                        ->pluck('organisation')
+                        ->filter()
+                        ->sort()
+                        ->values()
+                        ->toArray();
+                } catch (\Exception $e) {
+                    \Log::warning('Failed to get organisations in getAllFilterOptions', ['error' => $e->getMessage()]);
+                    $allOrganisations = [];
+                }
+
+                // Get unique information categories (limited and ordered by frequency)
+                try {
+                    $wooCategoryService = app(\App\Services\OpenOverheid\WooCategoryService::class);
+                    $allCategories = (clone $baseQuery)
+                        ->whereNotNull('category')
+                        ->where('category', '!=', 'Onbekend')
+                        ->selectRaw('category, COUNT(*) as count')
+                        ->groupBy('category')
+                        ->orderByDesc('count')
+                        ->limit($maxResults)
+                        ->pluck('category')
+                        ->filter()
+                        ->map(function ($category) use ($wooCategoryService) {
+                            return $wooCategoryService->formatCategoryForDisplay($category) ?? $category;
+                        })
+                        ->filter()
+                        ->unique()
+                        ->sort()
+                        ->values()
+                        ->toArray();
+                } catch (\Exception $e) {
+                    \Log::warning('Failed to get categories in getAllFilterOptions', ['error' => $e->getMessage()]);
+                    $allCategories = [];
+                }
+
+                return [
+                    'documentsoort' => $allDocumentTypes,
+                    'thema' => $allThemes,
+                    'organisatie' => $allOrganisations,
+                    'informatiecategorie' => $allCategories,
+                ];
+            } catch (\Exception $e) {
+                \Log::error('getAllFilterOptions failed in ThemaController', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+                
+                // Return empty arrays on error to prevent crash
+                return [
+                    'documentsoort' => [],
+                    'thema' => [],
+                    'organisatie' => [],
+                    'informatiecategorie' => [],
+                ];
+            }
+        });
     }
 
     /**
