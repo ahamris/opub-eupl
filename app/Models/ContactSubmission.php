@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @mixin IdeHelperContactSubmission
@@ -13,6 +14,7 @@ class ContactSubmission extends Model
     use HasFactory;
 
     protected $fillable = [
+        'contact_id',
         'organisation',
         'full_name',
         'email',
@@ -103,5 +105,21 @@ class ContactSubmission extends Model
     public function scopeArchived($query)
     {
         return $query->where('is_archived', true);
+    }
+
+    /**
+     * Get the contact that owns this submission
+     */
+    public function contact(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class);
+    }
+
+    /**
+     * Check if submission has an associated contact
+     */
+    public function hasContact(): bool
+    {
+        return $this->contact_id !== null;
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\ContactAutoReplyMail;
 use App\Mail\ContactNotificationMail;
+use App\Models\Contact;
 use App\Models\ContactSubmission;
 use App\Models\SearchSubscription;
 use Illuminate\Http\Request;
@@ -27,7 +28,19 @@ class ContactController extends Controller
             'message' => 'required|string|max:10000',
         ]);
 
+        // Find or create contact for ticketing system
+        $contact = Contact::findOrCreateByEmail($validated['email'], [
+            'full_name' => $validated['full-name'],
+            'organisation' => $validated['organisation'] ?? null,
+            'phone' => $validated['phone'] ?? null,
+        ]);
+
+        // Update last contacted timestamp
+        $contact->updateLastContacted();
+
+        // Create submission linked to contact
         $submission = ContactSubmission::create([
+            'contact_id' => $contact->id,
             'organisation' => $validated['organisation'] ?? null,
             'full_name' => $validated['full-name'],
             'email' => $validated['email'],
