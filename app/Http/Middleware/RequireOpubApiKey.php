@@ -295,25 +295,28 @@ class RequireOpubApiKey
                     return false;
                 }
 
-                // Limit to first 100 active clients to prevent infinite loops
-                $count = 0;
-                foreach (
-                    ApiClient::query()
-                        ->where('is_active', true)
-                        ->whereNotNull('allowed_domains')
-                        ->select(['allowed_domains'])
-                        ->limit(100) // Add explicit limit to query
-                        ->cursor() as $client
-                ) {
-                    $count++;
-                    if ($count > 100) {
-                        // Safety limit to prevent memory issues
-                        break;
-                    }
+                // Use get() with limit instead of cursor() to avoid memory issues with JSON casting
+                // Limit to first 50 active clients to prevent memory exhaustion
+                $clients = ApiClient::query()
+                    ->where('is_active', true)
+                    ->whereNotNull('allowed_domains')
+                    ->select(['id', 'allowed_domains'])
+                    ->limit(50) // Reduced limit to prevent memory issues
+                    ->get();
 
-                    $domains = $client->allowed_domains ? $client->allowed_domains->toArray() : [];
-                    if ($this->isOriginAllowed($originHost, $domains)) {
-                        return true;
+                foreach ($clients as $client) {
+                    try {
+                        $domains = $client->allowed_domains ? $client->allowed_domains->toArray() : [];
+                        if ($this->isOriginAllowed($originHost, $domains)) {
+                            return true;
+                        }
+                    } catch (\Throwable $e) {
+                        // Skip clients with invalid JSON data
+                        \Log::warning('Failed to parse allowed_domains for API client', [
+                            'client_id' => $client->id,
+                            'error' => $e->getMessage(),
+                        ]);
+                        continue;
                     }
                 }
             } catch (\Throwable $e) {
