@@ -146,9 +146,12 @@ class ThemaController extends Controller
                 $allFilterOptions = $this->getAllFilterOptions($baseQuery);
             }
 
-            $documentCount = OpenOverheidDocument::whereNotNull('theme')
-                ->where('theme', '!=', 'Onbekend')
-                ->count();
+            // Cache document count to avoid repeated queries
+            $documentCount = \Illuminate\Support\Facades\Cache::remember('themas_document_count', 3600, function () {
+                return OpenOverheidDocument::whereNotNull('theme')
+                    ->where('theme', '!=', 'Onbekend')
+                    ->count();
+            });
 
             return view('themas.index', [
                 'results' => $formattedResults,
@@ -161,10 +164,17 @@ class ThemaController extends Controller
         } catch (\Exception $e) {
             \Log::error('Thema search error', ['error' => $e->getMessage()]);
 
+            // Use cached count in error case too
+            $documentCount = \Illuminate\Support\Facades\Cache::remember('themas_document_count', 3600, function () {
+                return OpenOverheidDocument::whereNotNull('theme')
+                    ->where('theme', '!=', 'Onbekend')
+                    ->count();
+            });
+            
             return view('themas.index', [
                 'results' => ['items' => [], 'total' => 0],
                 'query' => $query,
-                'documentCount' => OpenOverheidDocument::whereNotNull('theme')->where('theme', '!=', 'Onbekend')->count(),
+                'documentCount' => $documentCount,
                 'filters' => $validated,
                 'filterCounts' => [],
                 'allFilterOptions' => [],
@@ -250,17 +260,36 @@ class ThemaController extends Controller
         $typesenseResults = $searchService->search($query->zoektekst ?? '', $options);
 
         // Transform Typesense results
-        $items = collect($typesenseResults['hits'] ?? [])->map(function ($hit) {
+        // Optimize: Load all models in one query instead of N+1 queries
+        $externalIds = collect($typesenseResults['hits'] ?? [])
+            ->map(fn ($hit) => $hit['document']['external_id'] ?? $hit['external_id'] ?? null)
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+
+        // Load all models in one query
+        $models = !empty($externalIds)
+            ? \App\Models\OpenOverheidDocument::whereIn('external_id', $externalIds)
+                ->get()
+                ->keyBy('external_id')
+            : collect();
+
+        $items = collect($typesenseResults['hits'] ?? [])->map(function ($hit) use ($models) {
             $doc = $hit['document'] ?? $hit;
-            $model = \App\Models\OpenOverheidDocument::where('external_id', $doc['external_id'] ?? null)->first();
+            $externalId = $doc['external_id'] ?? null;
+            
+            // Use pre-loaded model if available
+            $model = $externalId ? ($models[$externalId] ?? null) : null;
 
             if ($model) {
                 return $model;
             }
 
+            // Fallback to object if model not found
             return (object) [
                 'id' => $doc['id'] ?? null,
-                'external_id' => $doc['external_id'] ?? null,
+                'external_id' => $externalId,
                 'title' => $doc['title'] ?? 'Geen titel',
                 'description' => $doc['description'] ?? '',
                 'content' => $doc['content'] ?? '',
@@ -464,63 +493,94 @@ class ThemaController extends Controller
 
     /**
      * Get all available filter options for "Toon meer" functionality (themes domain only).
+     * Uses optimized queries with limits to prevent memory exhaustion.
      */
     private function getAllFilterOptions($baseQuery): array
     {
-        // Get all unique document types
-        $allDocumentTypes = (clone $baseQuery)
-            ->whereNotNull('document_type')
-            ->distinct()
-            ->orderBy('document_type')
-            ->pluck('document_type')
-            ->filter()
-            ->values()
-            ->toArray();
+        try {
+            // Limit to top 1000 most common values per filter to prevent memory exhaustion
+            $maxResults = 1000;
 
-        // Get all unique themes (only from themes domain)
-        $allThemes = (clone $baseQuery)
-            ->whereNotNull('theme')
-            ->where('theme', '!=', 'Onbekend')
-            ->distinct()
-            ->orderBy('theme')
-            ->pluck('theme')
-            ->filter()
-            ->values()
-            ->toArray();
+            // Get unique document types (limited and ordered by frequency)
+            $allDocumentTypes = (clone $baseQuery)
+                ->whereNotNull('document_type')
+                ->selectRaw('document_type, COUNT(*) as count')
+                ->groupBy('document_type')
+                ->orderByDesc('count')
+                ->limit($maxResults)
+                ->pluck('document_type')
+                ->filter()
+                ->sort()
+                ->values()
+                ->toArray();
 
-        // Get all unique organisations
-        $allOrganisations = (clone $baseQuery)
-            ->whereNotNull('organisation')
-            ->distinct()
-            ->orderBy('organisation')
-            ->pluck('organisation')
-            ->filter()
-            ->values()
-            ->toArray();
+            // Get unique themes (limited and ordered by frequency)
+            $allThemes = (clone $baseQuery)
+                ->whereNotNull('theme')
+                ->where('theme', '!=', 'Onbekend')
+                ->selectRaw('theme, COUNT(*) as count')
+                ->groupBy('theme')
+                ->orderByDesc('count')
+                ->limit($maxResults)
+                ->pluck('theme')
+                ->filter()
+                ->sort()
+                ->values()
+                ->toArray();
 
-        // Get all unique information categories
-        $wooCategoryService = app(\App\Services\OpenOverheid\WooCategoryService::class);
-        $allCategories = (clone $baseQuery)
-            ->whereNotNull('category')
-            ->where('category', '!=', 'Onbekend')
-            ->distinct()
-            ->pluck('category')
-            ->filter()
-            ->map(function ($category) use ($wooCategoryService) {
-                return $wooCategoryService->formatCategoryForDisplay($category) ?? $category;
-            })
-            ->filter()
-            ->unique()
-            ->sort()
-            ->values()
-            ->toArray();
+            // Get unique organisations (limited and ordered by frequency)
+            $allOrganisations = (clone $baseQuery)
+                ->whereNotNull('organisation')
+                ->selectRaw('organisation, COUNT(*) as count')
+                ->groupBy('organisation')
+                ->orderByDesc('count')
+                ->limit($maxResults)
+                ->pluck('organisation')
+                ->filter()
+                ->sort()
+                ->values()
+                ->toArray();
 
-        return [
-            'documentsoort' => $allDocumentTypes,
-            'thema' => $allThemes,
-            'organisatie' => $allOrganisations,
-            'informatiecategorie' => $allCategories,
-        ];
+            // Get unique information categories (limited and ordered by frequency)
+            $wooCategoryService = app(\App\Services\OpenOverheid\WooCategoryService::class);
+            $allCategories = (clone $baseQuery)
+                ->whereNotNull('category')
+                ->where('category', '!=', 'Onbekend')
+                ->selectRaw('category, COUNT(*) as count')
+                ->groupBy('category')
+                ->orderByDesc('count')
+                ->limit($maxResults)
+                ->pluck('category')
+                ->filter()
+                ->map(function ($category) use ($wooCategoryService) {
+                    return $wooCategoryService->formatCategoryForDisplay($category) ?? $category;
+                })
+                ->filter()
+                ->unique()
+                ->sort()
+                ->values()
+                ->toArray();
+
+            return [
+                'documentsoort' => $allDocumentTypes,
+                'thema' => $allThemes,
+                'organisatie' => $allOrganisations,
+                'informatiecategorie' => $allCategories,
+            ];
+        } catch (\Exception $e) {
+            \Log::error('getAllFilterOptions failed in ThemaController', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            // Return empty arrays on error to prevent crash
+            return [
+                'documentsoort' => [],
+                'thema' => [],
+                'organisatie' => [],
+                'informatiecategorie' => [],
+            ];
+        }
     }
 
     /**
