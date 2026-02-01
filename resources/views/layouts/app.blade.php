@@ -111,6 +111,9 @@
     <x-front.gdpr-banner />
     
     @stack('scripts')
+
+    <script data-host="https://analytics.code-labs.nl" data-dnt="false" src="https://analytics.code-labs.nl/js/script.js" id="ZwSg9rf6GA" async defer></script>
+    
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/focus@3/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
 </body>
