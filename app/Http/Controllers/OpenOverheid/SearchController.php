@@ -1136,16 +1136,16 @@ class SearchController extends Controller
                 $types = is_array($validated['documentsoort']) ? $validated['documentsoort'] : [$validated['documentsoort']];
                 $types = array_filter(array_map('trim', $types));
                 if (! empty($types)) {
-                    $escapedTypes = array_map(fn($t) => '=' . str_replace(['"', "'"], '', $t), $types);
+                    $escapedTypes = array_map(fn ($t) => '=' . typesense_escape_filter_value($t), $types);
                     $filters[] = 'document_type:[' . implode(',', $escapedTypes) . ']';
                 }
             }
             
             if (! empty($validated['informatiecategorie'])) {
                 $category = is_array($validated['informatiecategorie']) ? $validated['informatiecategorie'][0] : $validated['informatiecategorie'];
-                $category = str_replace(['"', "'"], '', trim($category));
-                if (! empty($category)) {
-                    $filters[] = 'category:=' . $category;
+                $category = trim($category);
+                if ($category !== '') {
+                    $filters[] = 'category:=' . typesense_escape_filter_value($category);
                 }
             }
             
@@ -1153,7 +1153,7 @@ class SearchController extends Controller
                 $themes = is_array($validated['thema']) ? $validated['thema'] : [$validated['thema']];
                 $themes = array_filter(array_map('trim', $themes));
                 if (! empty($themes)) {
-                    $escapedThemes = array_map(fn($t) => '=' . str_replace(['"', "'"], '', $t), $themes);
+                    $escapedThemes = array_map(fn ($t) => '=' . typesense_escape_filter_value($t), $themes);
                     $filters[] = 'theme:[' . implode(',', $escapedThemes) . ']';
                 }
             }
@@ -1162,7 +1162,7 @@ class SearchController extends Controller
                 $orgs = is_array($validated['organisatie']) ? $validated['organisatie'] : [$validated['organisatie']];
                 $orgs = array_filter(array_map('trim', $orgs));
                 if (! empty($orgs)) {
-                    $escapedOrgs = array_map(fn($o) => '=' . str_replace(['"', "'"], '', $o), $orgs);
+                    $escapedOrgs = array_map(fn ($o) => '=' . typesense_escape_filter_value($o), $orgs);
                     $filters[] = 'organisation:[' . implode(',', $escapedOrgs) . ']';
                 }
             }
@@ -1321,43 +1321,31 @@ class SearchController extends Controller
         $filters = [];
         if ($query->documentsoort) {
             $types = is_array($query->documentsoort) ? $query->documentsoort : [$query->documentsoort];
-            $types = array_filter(array_map('trim', $types)); // Remove empty values
+            $types = array_filter(array_map('trim', $types));
             if (! empty($types)) {
-                // Escape special characters in Typesense filter syntax
-                $escapedTypes = array_map(function ($t) {
-                    // Escape quotes and special characters
-                    $t = str_replace(['"', "'"], '', $t); // Remove quotes
-                    return '='.$t;
-                }, $types);
+                $escapedTypes = array_map(fn ($t) => '='.typesense_escape_filter_value($t), $types);
                 $filters[] = 'document_type:['.implode(',', $escapedTypes).']';
             }
         }
         if ($query->informatiecategorie) {
             $category = trim($query->informatiecategorie);
-            if (! empty($category)) {
-                $category = str_replace(['"', "'"], '', $category); // Remove quotes
-                $filters[] = 'category:='.$category;
+            if ($category !== '') {
+                $filters[] = 'category:='.typesense_escape_filter_value($category);
             }
         }
         if ($query->thema) {
             $themes = is_array($query->thema) ? $query->thema : [$query->thema];
-            $themes = array_filter(array_map('trim', $themes)); // Remove empty values
+            $themes = array_filter(array_map('trim', $themes));
             if (! empty($themes)) {
-                $escapedThemes = array_map(function ($t) {
-                    $t = str_replace(['"', "'"], '', $t); // Remove quotes
-                    return '='.$t;
-                }, $themes);
+                $escapedThemes = array_map(fn ($t) => '='.typesense_escape_filter_value($t), $themes);
                 $filters[] = 'theme:['.implode(',', $escapedThemes).']';
             }
         }
         if ($query->organisatie) {
             $orgs = is_array($query->organisatie) ? $query->organisatie : [$query->organisatie];
-            $orgs = array_filter(array_map('trim', $orgs)); // Remove empty values
+            $orgs = array_filter(array_map('trim', $orgs));
             if (! empty($orgs)) {
-                $escapedOrgs = array_map(function ($o) {
-                    $o = str_replace(['"', "'"], '', $o); // Remove quotes
-                    return '='.$o;
-                }, $orgs);
+                $escapedOrgs = array_map(fn ($o) => '='.typesense_escape_filter_value($o), $orgs);
                 $filters[] = 'organisation:['.implode(',', $escapedOrgs).']';
             }
         }
@@ -1590,28 +1578,21 @@ class SearchController extends Controller
                 $types = is_array($query->documentsoort) ? $query->documentsoort : [$query->documentsoort];
                 $types = array_filter(array_map('trim', $types));
                 if (! empty($types)) {
-                    $escapedTypes = array_map(function ($t) {
-                        $t = str_replace(['"', "'"], '', $t);
-                        return '='.$t;
-                    }, $types);
+                    $escapedTypes = array_map(fn ($t) => '='.typesense_escape_filter_value($t), $types);
                     $filters[] = 'document_type:['.implode(',', $escapedTypes).']';
                 }
             }
             if ($query->informatiecategorie) {
                 $category = trim($query->informatiecategorie);
-                if (! empty($category)) {
-                    $category = str_replace(['"', "'"], '', $category);
-                    $filters[] = 'category:='.$category;
+                if ($category !== '') {
+                    $filters[] = 'category:='.typesense_escape_filter_value($category);
                 }
             }
             if ($query->thema) {
                 $themes = is_array($query->thema) ? $query->thema : [$query->thema];
                 $themes = array_filter(array_map('trim', $themes));
                 if (! empty($themes)) {
-                    $escapedThemes = array_map(function ($t) {
-                        $t = str_replace(['"', "'"], '', $t);
-                        return '='.$t;
-                    }, $themes);
+                    $escapedThemes = array_map(fn ($t) => '='.typesense_escape_filter_value($t), $themes);
                     $filters[] = 'theme:['.implode(',', $escapedThemes).']';
                 }
             }
@@ -1619,10 +1600,7 @@ class SearchController extends Controller
                 $orgs = is_array($query->organisatie) ? $query->organisatie : [$query->organisatie];
                 $orgs = array_filter(array_map('trim', $orgs));
                 if (! empty($orgs)) {
-                    $escapedOrgs = array_map(function ($o) {
-                        $o = str_replace(['"', "'"], '', $o);
-                        return '='.$o;
-                    }, $orgs);
+                    $escapedOrgs = array_map(fn ($o) => '='.typesense_escape_filter_value($o), $orgs);
                     $filters[] = 'organisation:['.implode(',', $escapedOrgs).']';
                 }
             }

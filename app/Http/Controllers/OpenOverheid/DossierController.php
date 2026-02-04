@@ -255,15 +255,15 @@ class DossierController extends Controller
         $filters = [];
 
         if ($query->informatiecategorie) {
-            $filters[] = 'category:='.$query->informatiecategorie;
+            $filters[] = 'category:='.typesense_escape_filter_value($query->informatiecategorie);
         }
         if ($query->thema) {
             $themes = is_array($query->thema) ? $query->thema : [$query->thema];
-            $filters[] = 'theme:['.implode(',', array_map(fn ($t) => '='.$t, $themes)).']';
+            $filters[] = 'theme:['.implode(',', array_map(fn ($t) => '='.typesense_escape_filter_value($t), $themes)).']';
         }
         if ($query->organisatie) {
             $orgs = is_array($query->organisatie) ? $query->organisatie : [$query->organisatie];
-            $filters[] = 'organisation:['.implode(',', array_map(fn ($o) => '='.$o, $orgs)).']';
+            $filters[] = 'organisation:['.implode(',', array_map(fn ($o) => '='.typesense_escape_filter_value($o), $orgs)).']';
         }
         if ($query->publicatiedatumVan || $query->publicatiedatumTot) {
             $dateFilters = [];

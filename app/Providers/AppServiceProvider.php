@@ -55,8 +55,12 @@ class AppServiceProvider extends ServiceProvider
     {
         require_once app_path('Helpers/functions.php');
 
-        // Configure mail settings from database
-        $this->configureMailFromDatabase();
+        // Configure mail settings from database (skip if DB unreachable to avoid boot failure)
+        try {
+            $this->configureMailFromDatabase();
+        } catch (\Throwable $e) {
+            // DB may be down or migrations not run; use config defaults
+        }
 
         // Register Blade components only for admin routes
         if ($this->isAdminRoute()) {
@@ -171,7 +175,7 @@ class AppServiceProvider extends ServiceProvider
     protected function configureMailFromDatabase(): void
     {
         // Check if settings table exists (might not exist during migrations)
-        if (!Schema::hasTable('settings')) {
+        if (! Schema::hasTable('settings')) {
             return;
         }
 

@@ -221,18 +221,18 @@ class ThemaController extends Controller
 
         if ($query->documentsoort) {
             $types = is_array($query->documentsoort) ? $query->documentsoort : [$query->documentsoort];
-            $filters[] = 'document_type:['.implode(',', array_map(fn ($t) => '='.$t, $types)).']';
+            $filters[] = 'document_type:['.implode(',', array_map(fn ($t) => '='.typesense_escape_filter_value($t), $types)).']';
         }
         if ($query->informatiecategorie) {
-            $filters[] = 'category:='.$query->informatiecategorie;
+            $filters[] = 'category:='.typesense_escape_filter_value($query->informatiecategorie);
         }
         if ($query->thema) {
             $themes = is_array($query->thema) ? $query->thema : [$query->thema];
-            $filters[] = 'theme:['.implode(',', array_map(fn ($t) => '='.$t, $themes)).']';
+            $filters[] = 'theme:['.implode(',', array_map(fn ($t) => '='.typesense_escape_filter_value($t), $themes)).']';
         }
         if ($query->organisatie) {
             $orgs = is_array($query->organisatie) ? $query->organisatie : [$query->organisatie];
-            $filters[] = 'organisation:['.implode(',', array_map(fn ($o) => '='.$o, $orgs)).']';
+            $filters[] = 'organisation:['.implode(',', array_map(fn ($o) => '='.typesense_escape_filter_value($o), $orgs)).']';
         }
         if ($query->publicatiedatumVan || $query->publicatiedatumTot) {
             $dateFilters = [];
@@ -694,19 +694,15 @@ class ThemaController extends Controller
             }
             if ($query->informatiecategorie) {
                 $category = trim($query->informatiecategorie);
-                if (! empty($category)) {
-                    $category = str_replace(['"', "'"], '', $category);
-                    $filters[] = 'category:='.$category;
+                if ($category !== '') {
+                    $filters[] = 'category:='.typesense_escape_filter_value($category);
                 }
             }
             if ($query->thema) {
                 $themes = is_array($query->thema) ? $query->thema : [$query->thema];
                 $themes = array_filter(array_map('trim', $themes));
                 if (! empty($themes)) {
-                    $escapedThemes = array_map(function ($t) {
-                        $t = str_replace(['"', "'"], '', $t);
-                        return '='.$t;
-                    }, $themes);
+                    $escapedThemes = array_map(fn ($t) => '='.typesense_escape_filter_value($t), $themes);
                     $filters[] = 'theme:['.implode(',', $escapedThemes).']';
                 }
             }
@@ -714,10 +710,7 @@ class ThemaController extends Controller
                 $orgs = is_array($query->organisatie) ? $query->organisatie : [$query->organisatie];
                 $orgs = array_filter(array_map('trim', $orgs));
                 if (! empty($orgs)) {
-                    $escapedOrgs = array_map(function ($o) {
-                        $o = str_replace(['"', "'"], '', $o);
-                        return '='.$o;
-                    }, $orgs);
+                    $escapedOrgs = array_map(fn ($o) => '='.typesense_escape_filter_value($o), $orgs);
                     $filters[] = 'organisation:['.implode(',', $escapedOrgs).']';
                 }
             }

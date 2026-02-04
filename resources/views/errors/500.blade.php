@@ -15,14 +15,16 @@
     <link href="https://site-assets.fontawesome.com/releases/v6.7.2/css/all.css" rel="stylesheet"/>
     <link href="https://site-assets.fontawesome.com/releases/v6.7.2/css/brands.css" rel="stylesheet"/>
     
-    {{-- Dynamic Theme Variables --}}
+    {{-- Dynamic Theme Variables (guarded so 500 page works when DB is down) --}}
     @php
-        use App\Helpers\ThemeHelper;
-        use App\Models\Admin\AdminThemeSetting;
-        echo ThemeHelper::getThemeCss();
-        $themeSettings = AdminThemeSetting::getSettings();
-        $accentColor = $themeSettings->accent_color;
-        $themeAccentClass = 'theme-accent-' . $accentColor;
+        $themeAccentClass = 'theme-accent-blue';
+        try {
+            $themeSettings = \App\Models\Admin\AdminThemeSetting::getSettings();
+            $themeAccentClass = 'theme-accent-' . ($themeSettings->accent_color ?? 'blue');
+            echo \App\Helpers\ThemeHelper::getThemeCss();
+        } catch (\Throwable $e) {
+            // Use defaults when DB/config unavailable
+        }
     @endphp
     
     {{-- Styles / Scripts --}}
@@ -56,7 +58,7 @@
                     <i class="fa-solid fa-arrow-left mr-2"></i>
                     Go Back
                 </a>
-                <a href="{{ route('admin.home') }}" class="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-[var(--color-accent)] text-[var(--color-accent-foreground)] hover:opacity-90 transition-opacity">
+                <a href="{{ url('/admin') }}" class="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-[var(--color-accent)] text-[var(--color-accent-foreground)] hover:opacity-90 transition-opacity">
                     <i class="fa-solid fa-home mr-2"></i>
                     Go Home
                 </a>

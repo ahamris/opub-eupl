@@ -43,16 +43,16 @@ class TypesenseSearchController extends Controller
         if (! empty($documentsoort)) {
             $types = array_filter(array_map('trim', $documentsoort));
             if (! empty($types)) {
-                $escaped = array_map(fn ($t) => '='.str_replace(['"', "'"], '', $t), $types);
+                $escaped = array_map(fn ($t) => '='.typesense_escape_filter_value($t), $types);
                 $filters[] = 'document_type:['.implode(',', $escaped).']';
             }
         }
 
         $informatiecategorie = $validated['informatiecategorie'] ?? null;
         if (! empty($informatiecategorie)) {
-            $category = str_replace(['"', "'"], '', trim((string) $informatiecategorie));
+            $category = trim((string) $informatiecategorie);
             if ($category !== '') {
-                $filters[] = 'category:='.$category;
+                $filters[] = 'category:='.typesense_escape_filter_value($category);
             }
         }
 
@@ -63,7 +63,7 @@ class TypesenseSearchController extends Controller
         if (! empty($thema)) {
             $themes = array_filter(array_map('trim', $thema));
             if (! empty($themes)) {
-                $escaped = array_map(fn ($t) => '='.str_replace(['"', "'"], '', $t), $themes);
+                $escaped = array_map(fn ($t) => '='.typesense_escape_filter_value($t), $themes);
                 $filters[] = 'theme:['.implode(',', $escaped).']';
             }
         }
@@ -75,7 +75,7 @@ class TypesenseSearchController extends Controller
         if (! empty($organisatie)) {
             $orgs = array_filter(array_map('trim', $organisatie));
             if (! empty($orgs)) {
-                $escaped = array_map(fn ($o) => '='.str_replace(['"', "'"], '', $o), $orgs);
+                $escaped = array_map(fn ($o) => '='.typesense_escape_filter_value($o), $orgs);
                 $filters[] = 'organisation:['.implode(',', $escaped).']';
             }
         }

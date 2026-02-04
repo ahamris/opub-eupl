@@ -249,6 +249,30 @@ if (!function_exists('format_turkish_date_long')) {
     }
 }
 
+if (! function_exists('typesense_escape_filter_value')) {
+    /**
+     * Escape a string value for Typesense filter_by. Values containing spaces, commas,
+     * parentheses or brackets must be wrapped in backticks per Typesense docs.
+     *
+     * @see https://typesense.org/docs/guide/tips-for-filtering.html#escaping-special-characters
+     */
+    function typesense_escape_filter_value(string $value): string
+    {
+        $value = trim(str_replace(['"', "'"], '', $value));
+        if ($value === '') {
+            return $value;
+        }
+        if (preg_match('/[\s,()\[\]&|]/', $value)) {
+            $value = str_replace('\\', '\\\\', $value);
+            $value = str_replace('`', '\\`', $value);
+
+            return '`'.$value.'`';
+        }
+
+        return $value;
+    }
+}
+
 if (! function_exists('get_client_ip')) {
     /**
      * Resolve the real client IP behind reverse proxies (e.g. Cloudflare).

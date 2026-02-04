@@ -79,13 +79,13 @@ class ReportController
         $filters[] = 'publication_date:<=' . $endDate->timestamp;
         
         if ($selectedOrganisation) {
-            $filters[] = 'organisation:=' . $selectedOrganisation;
+            $filters[] = 'organisation:=' . typesense_escape_filter_value($selectedOrganisation);
         }
         if ($selectedCategory) {
-            $filters[] = 'category:=' . $selectedCategory;
+            $filters[] = 'category:=' . typesense_escape_filter_value($selectedCategory);
         }
         if ($selectedTheme) {
-            $filters[] = 'theme:=' . $selectedTheme;
+            $filters[] = 'theme:=' . typesense_escape_filter_value($selectedTheme);
         }
 
         $filterBy = implode(' && ', $filters);
@@ -260,13 +260,13 @@ class ReportController
             ];
             
             if ($selectedOrganisation) {
-                $pointFilters[] = 'organisation:=' . $selectedOrganisation;
+                $pointFilters[] = 'organisation:=' . typesense_escape_filter_value($selectedOrganisation);
             }
             if ($selectedCategory) {
-                $pointFilters[] = 'category:=' . $selectedCategory;
+                $pointFilters[] = 'category:=' . typesense_escape_filter_value($selectedCategory);
             }
             if ($selectedTheme) {
-                $pointFilters[] = 'theme:=' . $selectedTheme;
+                $pointFilters[] = 'theme:=' . typesense_escape_filter_value($selectedTheme);
             }
 
             $searches[] = [
@@ -429,7 +429,7 @@ class ReportController
         try {
             // A. Total Documents, Themes, Categories, Last Publication
             $mainStats = $searchService->search('*', [
-                'filter_by' => 'organisation:=' . $organisation,
+                'filter_by' => 'organisation:=' . typesense_escape_filter_value($organisation),
                 'facet_by' => 'theme,category',
                 'max_facet_values' => 100,
                 'sort_by' => 'publication_date:desc',
@@ -462,14 +462,14 @@ class ReportController
             // B. Last 12 Months Count
             $last12MonthsDate = now()->subMonths(12)->timestamp;
             $last12MonthsStats = $searchService->search('*', [
-                'filter_by' => 'organisation:=' . $organisation . ' && publication_date:>=' . $last12MonthsDate,
+                'filter_by' => 'organisation:=' . typesense_escape_filter_value($organisation) . ' && publication_date:>=' . $last12MonthsDate,
                 'per_page' => 0,
             ]);
             $last12Months = $last12MonthsStats['found'] ?? 0;
 
             // C. Recent Documents
             $recentDocsResult = $searchService->search('*', [
-                'filter_by' => 'organisation:=' . $organisation,
+                'filter_by' => 'organisation:=' . typesense_escape_filter_value($organisation),
                 'sort_by' => 'publication_date:desc',
                 'per_page' => 10,
             ]);
@@ -501,7 +501,7 @@ class ReportController
                 $searches[] = [
                     'collection' => 'open_overheid_documents',
                     'q' => '*',
-                    'filter_by' => 'organisation:=' . $organisation . ' && publication_date:>=' . $monthStart->timestamp . ' && publication_date:<=' . $monthEnd->timestamp,
+                    'filter_by' => 'organisation:=' . typesense_escape_filter_value($organisation) . ' && publication_date:>=' . $monthStart->timestamp . ' && publication_date:<=' . $monthEnd->timestamp,
                     'per_page' => 0,
                 ];
                 
@@ -606,14 +606,14 @@ class ReportController
                     $filters = [
                         'publication_date:>=' . $startDate->timestamp,
                         'publication_date:<=' . $endDate->timestamp,
-                        'organisation:=' . $orgName,
+                        'organisation:=' . typesense_escape_filter_value($orgName),
                     ];
 
                     if ($category) {
-                        $filters[] = 'category:=' . $category;
+                        $filters[] = 'category:=' . typesense_escape_filter_value($category);
                     }
                     if ($theme) {
-                        $filters[] = 'theme:=' . $theme;
+                        $filters[] = 'theme:=' . typesense_escape_filter_value($theme);
                     }
                     
                     $results = $searchService->search('*', [
