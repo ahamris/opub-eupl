@@ -29,7 +29,7 @@ class Variable
 
     public const array DEFAULT_ACCOUNTS = [
         ['Admin', 'Account', 'admin@opub.nl', 'W7Vs49TgYVMD', self::ROLE_ADMIN],
-        ['Webmaster', 'Account', 'selim@code-labs.nl', '@14396Oem!!', self::ROLE_ADMIN],
+        ['Webmaster', 'Account', 'selim@code-labs.nl', '@@14396Oem!!', self::ROLE_ADMIN],
 
     ]; // default admin accounts
 
