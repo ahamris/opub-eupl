@@ -76,6 +76,28 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Open Raadsinformatie (ORI) API Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for the Open Raadsinformatie Elasticsearch API integration.
+    | This API provides access to municipal council documents, meetings, and
+    | agenda items from 300+ Dutch municipalities and provinces.
+    |
+    | API docs: https://github.com/openstate/open-raadsinformatie
+    |
+    */
+
+    'raadsinformatie' => [
+        'enabled' => env('ORI_SYNC_ENABLED', false),
+        'base_url' => env('ORI_BASE_URL', 'https://api.openraadsinformatie.nl/v1/elastic'),
+        'timeout' => env('ORI_TIMEOUT', 30),
+        'batch_size' => env('ORI_SYNC_BATCH_SIZE', 100),
+        'delay_between_requests' => env('ORI_SYNC_DELAY', 200),
+        'indices' => env('ORI_INDICES', 'ori_*'), // Glob pattern for indices to search
+    ],
+
     'gemini' => [
         'api_key' => env('GEMINI_API_KEY'),
         'model' => env('GEMINI_MODEL', 'gemini-2.0-flash-exp'),
