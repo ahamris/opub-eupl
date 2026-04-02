@@ -222,6 +222,21 @@ readonly class RaadsinformatieSyncService
             $classification = $classification[0] ?? null;
         }
 
+        // Build source URL — link back to original document
+        $sourceUrl = null;
+        $sources = $source['sources'] ?? [];
+        if (! empty($sources)) {
+            // ORI sources field contains URLs to original council information systems
+            $sourceUrl = is_array($sources) ? ($sources[0]['url'] ?? $sources[0] ?? null) : $sources;
+            if (is_array($sourceUrl)) {
+                $sourceUrl = $sourceUrl['url'] ?? json_encode($sourceUrl);
+            }
+        }
+        if (! $sourceUrl && $esId) {
+            // Fallback: link to ORI search by ID
+            $sourceUrl = 'https://api.openraadsinformatie.nl/v1/elastic/ori_*/_search?q=_id:' . $esId;
+        }
+
         // Store ORI-specific metadata
         $metadata = [
             'ori_source' => 'raadsinformatie',
@@ -231,6 +246,20 @@ readonly class RaadsinformatieSyncService
             'ori_classification' => $source['classification'] ?? null,
             'ori_organization_id' => $source['organization_id'] ?? null,
             'ori_sources' => $source['sources'] ?? null,
+        ];
+
+        $docData = [
+            'title' => $title,
+            'description' => $description,
+            'content' => $content,
+            'publication_date' => $publicationDate,
+            'document_type' => $documentType,
+            'category' => $classification,
+            'organisation' => $organisation,
+            'metadata' => $metadata,
+            'source_url' => $sourceUrl,
+            'source_type' => 'raadsinformatie',
+            'synced_at' => now(),
         ];
 
         // Check if we already have this document
@@ -248,17 +277,7 @@ readonly class RaadsinformatieSyncService
                     return 'skipped';
                 }
 
-                $existing->update([
-                    'title' => $title,
-                    'description' => $description,
-                    'content' => $content,
-                    'publication_date' => $publicationDate,
-                    'document_type' => $documentType,
-                    'category' => $classification,
-                    'organisation' => $organisation,
-                    'metadata' => $metadata,
-                    'synced_at' => now(),
-                ]);
+                $existing->update($docData);
 
                 return 'updated';
             }
@@ -266,15 +285,7 @@ readonly class RaadsinformatieSyncService
 
         OpenOverheidDocument::create([
             'external_id' => $externalId,
-            'title' => $title,
-            'description' => $description,
-            'content' => $content,
-            'publication_date' => $publicationDate,
-            'document_type' => $documentType,
-            'category' => $classification,
-            'organisation' => $organisation,
-            'metadata' => $metadata,
-            'synced_at' => now(),
+            ...$docData,
         ]);
 
         return 'created';

@@ -79,6 +79,140 @@ class GeminiService
     }
 
     /**
+     * Generate a short description (korte omschrijving) from title + content.
+     * Used when source data lacks a description.
+     */
+    public function generateDescriptionShort(string $title, ?string $content = null): ?string
+    {
+        if (empty(trim($title)) && empty(trim($content ?? ''))) {
+            return null;
+        }
+
+        $inputText = "Titel: {$title}";
+        if ($content) {
+            $inputText .= "\n\nInhoud: " . mb_substr($content, 0, 2000);
+        }
+
+        $cacheKey = 'gemini:desc_short:' . md5($inputText);
+
+        return Cache::remember($cacheKey, $this->cacheTtl, function () use ($inputText) {
+            $prompt = <<<PROMPT
+Schrijf een korte, begrijpelijke samenvatting van dit overheidsdocument in maximaal 2 zinnen.
+Gebruik eenvoudige taal (B1-niveau). Geen jargon. Maximaal 200 karakters.
+
+{$inputText}
+
+Geef alleen de korte omschrijving terug:
+PROMPT;
+
+            return $this->generateText($prompt, 100);
+        });
+    }
+
+    /**
+     * Generate a long description (lange omschrijving) from title + content.
+     * Provides a more detailed summary when source data is sparse.
+     */
+    public function generateDescriptionLong(string $title, ?string $content = null, ?string $description = null): ?string
+    {
+        $inputText = "Titel: {$title}";
+        if ($description) {
+            $inputText .= "\nKorte omschrijving: {$description}";
+        }
+        if ($content) {
+            $inputText .= "\n\nInhoud: " . mb_substr($content, 0, 4000);
+        }
+
+        if (empty(trim($title)) && empty(trim($content ?? ''))) {
+            return null;
+        }
+
+        $cacheKey = 'gemini:desc_long:' . md5($inputText);
+
+        return Cache::remember($cacheKey, $this->cacheTtl, function () use ($inputText) {
+            $prompt = <<<PROMPT
+Schrijf een uitgebreide, begrijpelijke samenvatting van dit overheidsdocument.
+Maximaal 300 woorden. Gebruik eenvoudige taal (B1-niveau).
+Leg uit wat het document inhoudt, voor wie het relevant is, en wat de belangrijkste punten zijn.
+
+{$inputText}
+
+Geef alleen de lange omschrijving terug:
+PROMPT;
+
+            return $this->generateText($prompt, 600);
+        });
+    }
+
+    /**
+     * Extract subjects/topics (onderwerpen) from document text.
+     * Returns an array of topic strings.
+     */
+    public function extractSubjects(string $text, ?string $title = null, int $maxSubjects = 5): array
+    {
+        if (empty(trim($text)) && empty(trim($title ?? ''))) {
+            return [];
+        }
+
+        $inputText = '';
+        if ($title) {
+            $inputText .= "Titel: {$title}\n\n";
+        }
+        $inputText .= mb_substr($text, 0, 3000);
+
+        $cacheKey = 'gemini:subjects:' . md5($inputText);
+
+        $subjectsJson = Cache::remember($cacheKey, $this->cacheTtl, function () use ($inputText, $maxSubjects) {
+            $prompt = <<<PROMPT
+Analyseer dit Nederlandse overheidsdocument en bepaal de {$maxSubjects} belangrijkste onderwerpen/thema's.
+
+Kies onderwerpen uit deze lijst als ze van toepassing zijn (maar je mag ook andere relevante onderwerpen toevoegen):
+- Bestuur en organisatie
+- Bouwen en wonen
+- Cultuur en recreatie
+- Economie en ondernemen
+- Financien
+- Gezondheid en zorg
+- Internationaal
+- Landbouw en visserij
+- Migratie en integratie
+- Natuur en milieu
+- Onderwijs en wetenschap
+- Openbare orde en veiligheid
+- Recht
+- Ruimte en infrastructuur
+- Sociale zekerheid
+- Verkeer en vervoer
+- Werk en loopbaan
+
+{$inputText}
+
+Retourneer als JSON array van strings, bijvoorbeeld: ["Natuur en milieu", "Bouwen en wonen"]
+Geef alleen de JSON array terug:
+PROMPT;
+
+            return $this->generateText($prompt, 150);
+        });
+
+        if (empty($subjectsJson)) {
+            return [];
+        }
+
+        $subjects = json_decode($subjectsJson, true);
+
+        if (json_last_error() === JSON_ERROR_NONE && is_array($subjects)) {
+            return array_slice($subjects, 0, $maxSubjects);
+        }
+
+        // Fallback: split by comma
+        $subjects = preg_split('/[,;\n]/', $subjectsJson);
+        $subjects = array_map('trim', $subjects);
+        $subjects = array_filter($subjects, fn ($s) => ! empty($s));
+
+        return array_slice($subjects, 0, $maxSubjects);
+    }
+
+    /**
      * Extract keywords from text
      */
     public function extractKeywords(string $text, int $maxKeywords = 10): array

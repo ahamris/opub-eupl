@@ -22,23 +22,31 @@ class OpenOverheidDocument extends Model
         'document_type',
         'category',
         'theme',
+        'subjects',
         'organisation',
         'metadata',
+        'source_url',
+        'source_type',
         'synced_at',
         'typesense_synced_at',
         'ai_enhanced_title',
         'ai_enhanced_description',
+        'ai_description_short',
+        'ai_description_long',
         'ai_summary',
         'ai_keywords',
+        'ai_subjects',
         'ai_enhanced_at',
     ];
 
     protected $casts = [
         'metadata' => \App\Casts\UnicodeJson::class,
+        'subjects' => 'array',
         'publication_date' => 'date',
         'synced_at' => 'datetime',
         'typesense_synced_at' => 'datetime',
         'ai_keywords' => 'array',
+        'ai_subjects' => 'array',
         'ai_enhanced_at' => 'datetime',
     ];
 

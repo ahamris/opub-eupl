@@ -364,6 +364,24 @@ readonly class OpenOverheidSyncService
 
         $normalizedMetadata = $this->normalizeMetadataForDatabase($documentData);
 
+        // Build source URL to original document on open.overheid.nl
+        $sourceUrl = null;
+        $pid = $document['pid'] ?? null;
+        if ($pid) {
+            $sourceUrl = $pid;
+        } elseif ($externalId) {
+            $sourceUrl = 'https://open.overheid.nl/documenten/' . $externalId;
+        }
+
+        // Extract subjects/themes as array
+        $subjects = [];
+        $themas = $classificatie['themas'] ?? [];
+        foreach ($themas as $thema) {
+            if (isset($thema['label'])) {
+                $subjects[] = $thema['label'];
+            }
+        }
+
         $data = [
             'external_id' => $externalId,
             'title' => $title,
@@ -373,8 +391,11 @@ readonly class OpenOverheidSyncService
             'document_type' => $documentType,
             'category' => $category,
             'theme' => $theme,
+            'subjects' => ! empty($subjects) ? $subjects : null,
             'organisation' => $organisation,
             'metadata' => $normalizedMetadata,
+            'source_url' => $sourceUrl,
+            'source_type' => 'open_overheid',
             'synced_at' => now(),
         ];
 
