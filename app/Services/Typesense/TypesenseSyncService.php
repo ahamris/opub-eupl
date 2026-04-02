@@ -29,89 +29,45 @@ class TypesenseSyncService
 
     /**
      * Sync pending documents to Typesense (for queue job - processes limited batch)
-     *
-     * @param  int  $limit  Maximum number of documents to process per run
-     * @return array{total: int, synced: int, errors: int}
      */
     public function syncPending(int $limit = 100): array
     {
         if (! config('open_overheid.typesense.enabled', true)) {
             Log::channel('typesense_errors')->info('Typesense sync is disabled');
-
             return ['total' => 0, 'synced' => 0, 'errors' => 0];
         }
 
-        // Mark sync as running
         \Illuminate\Support\Facades\Cache::put('typesense_sync_running', true, 300);
         \Illuminate\Support\Facades\Cache::put('typesense_sync_started_at', now(), 300);
 
         try {
-            // Query documents that need Typesense sync
             $documents = OpenOverheidDocument::needsTypesenseSync()
                 ->limit($limit)
                 ->get();
 
             if ($documents->isEmpty()) {
-                Log::channel('typesense_errors')->info('No documents to sync to Typesense');
-                
-                // Mark sync as complete
                 \Illuminate\Support\Facades\Cache::forget('typesense_sync_running');
-
                 return ['total' => 0, 'synced' => 0, 'errors' => 0];
             }
 
-            $totalPending = $documents->count();
-            Log::channel('typesense_errors')->info("Syncing {$totalPending} documents to Typesense (batch limit: {$limit})");
+            $result = $this->batchIndex($documents);
 
-            $synced = 0;
-            $errors = 0;
-
-            foreach ($documents as $document) {
-                try {
-                    $this->indexDocument($document);
-                    $document->update(['typesense_synced_at' => now()]);
-                    $synced++;
-                } catch (\Exception $e) {
-                    Log::channel('typesense_errors')->error('Typesense index error', [
-                        'external_id' => $document->external_id,
-                        'error' => $e->getMessage(),
-                    ]);
-                    $errors++;
-                }
-            }
-
-            Log::channel('typesense_errors')->info('Typesense sync batch completed', [
-                'total' => $totalPending,
-                'synced' => $synced,
-                'errors' => $errors,
-            ]);
-
-            return [
-                'total' => $totalPending,
-                'synced' => $synced,
-                'errors' => $errors,
-            ];
+            return $result;
         } finally {
-            // Mark sync as complete after a short delay (in case another batch is queued)
             \Illuminate\Support\Facades\Cache::put('typesense_sync_running', false, 60);
         }
     }
 
     /**
      * Sync all pending documents to Typesense
-     *
-     * @param  \Illuminate\Console\Command|null  $command
-     * @return array{total: int, synced: int, errors: int}
      */
     public function syncToTypesense($command = null): array
     {
         if (! config('open_overheid.typesense.enabled', true)) {
             Log::channel('typesense_errors')->info('Typesense sync is disabled');
-
             return ['total' => 0, 'synced' => 0, 'errors' => 0];
         }
 
-        // Mark sync as running
         \Illuminate\Support\Facades\Cache::put('typesense_sync_running', true, 600);
         \Illuminate\Support\Facades\Cache::put('typesense_sync_started_at', now(), 600);
 
@@ -119,13 +75,10 @@ class TypesenseSyncService
             $totalPending = OpenOverheidDocument::needsTypesenseSync()->count();
 
             if ($totalPending === 0) {
-                Log::channel('typesense_errors')->info('No documents to sync to Typesense');
                 if ($command) {
                     $command->info('All documents are already synced.');
                 }
-                
                 \Illuminate\Support\Facades\Cache::forget('typesense_sync_running');
-
                 return ['total' => 0, 'synced' => 0, 'errors' => 0];
             }
 
@@ -141,47 +94,28 @@ class TypesenseSyncService
             $batchSize = 100;
             $processed = 0;
 
-            $documents = OpenOverheidDocument::needsTypesenseSync()
-                ->lazyById($batchSize);
-
             if ($command) {
                 $bar = $command->getOutput()->createProgressBar($totalPending);
                 $bar->setFormat(' %current%/%max% [%bar%] %percent:3s%% %elapsed:6s% %memory:6s%');
                 $bar->start();
             }
 
-            foreach ($documents as $document) {
-                try {
-                    $this->indexDocument($document);
-                    $document->update(['typesense_synced_at' => now()]);
-                    $synced++;
-                    $processed++;
+            // Process in batches for bulk import
+            OpenOverheidDocument::needsTypesenseSync()
+                ->chunk($batchSize, function ($documents) use (&$synced, &$errors, &$processed, $totalPending, $command, &$bar) {
+                    $result = $this->batchIndex($documents);
+                    $synced += $result['synced'];
+                    $errors += $result['errors'];
+                    $processed += $documents->count();
 
                     if ($command) {
-                        $this->updateProgressBar($bar, $processed, $totalPending, $errors, $command);
-                        $bar->advance();
+                        $bar->advance($documents->count());
                     }
-                } catch (\Exception $e) {
-                    Log::channel('typesense_errors')->error('Typesense index error', [
-                        'external_id' => $document->external_id,
-                        'error' => $e->getMessage(),
-                    ]);
-                    $errors++;
-                    $processed++;
-
-                    if ($command) {
-                        $this->updateProgressBar($bar, $processed, $totalPending, $errors, $command);
-                        $bar->advance();
-                    }
-                }
-            }
+                });
 
             if ($command) {
                 $bar->finish();
-                $command->newLine();
-                // Clear the custom message line
-                $command->getOutput()->write("\r\033[K");
-                $command->newLine();
+                $command->newLine(2);
             }
 
             Log::channel('typesense_errors')->info('Typesense sync completed', [
@@ -196,23 +130,102 @@ class TypesenseSyncService
                 'errors' => $errors,
             ];
         } finally {
-            // Mark sync as complete
             \Illuminate\Support\Facades\Cache::put('typesense_sync_running', false, 60);
         }
     }
 
     /**
-     * Index a single document
+     * Batch index documents using Typesense's import API.
+     * Much faster than individual upserts — sends all docs in one HTTP call.
      */
-    protected function indexDocument(OpenOverheidDocument $document): void
+    protected function batchIndex($documents): array
     {
-        // Ensure collection exists
         $this->ensureCollectionExists();
 
+        $jsonLines = [];
+        $docMap = []; // Track which documents are in this batch
+
+        foreach ($documents as $document) {
+            $data = $this->buildDocumentData($document);
+            $jsonLines[] = json_encode($data);
+            $docMap[] = $document;
+        }
+
+        if (empty($jsonLines)) {
+            return ['total' => 0, 'synced' => 0, 'errors' => 0];
+        }
+
+        $synced = 0;
+        $errors = 0;
+
+        try {
+            // Use Typesense bulk import (JSONL format) with upsert action
+            $importData = implode("\n", $jsonLines);
+            $results = $this->client->collections[$this->collection]->documents->import($importData, ['action' => 'upsert']);
+
+            // Parse results — each line is a JSON response for the corresponding document
+            $resultLines = is_string($results) ? explode("\n", trim($results)) : $results;
+
+            foreach ($resultLines as $i => $resultLine) {
+                $result = is_string($resultLine) ? json_decode($resultLine, true) : $resultLine;
+
+                if (isset($result['success']) && $result['success']) {
+                    $synced++;
+                    if (isset($docMap[$i])) {
+                        $docMap[$i]->update(['typesense_synced_at' => now()]);
+                    }
+                } else {
+                    $errors++;
+                    $errorMsg = $result['error'] ?? 'Unknown error';
+                    Log::channel('typesense_errors')->error('Typesense batch import error', [
+                        'external_id' => $docMap[$i]->external_id ?? 'unknown',
+                        'error' => $errorMsg,
+                    ]);
+                    // Still mark as synced to prevent infinite retry loops for permanent errors
+                    if (isset($docMap[$i]) && str_contains($errorMsg, 'not found in the schema')) {
+                        $docMap[$i]->update(['typesense_synced_at' => now()]);
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            Log::channel('typesense_errors')->error('Typesense batch import failed, falling back to individual upserts', [
+                'error' => $e->getMessage(),
+                'batch_size' => count($jsonLines),
+            ]);
+
+            // Fallback: try individual upserts
+            foreach ($docMap as $document) {
+                try {
+                    $data = $this->buildDocumentData($document);
+                    $this->client->collections[$this->collection]->documents->upsert($data);
+                    $document->update(['typesense_synced_at' => now()]);
+                    $synced++;
+                } catch (\Exception $e2) {
+                    Log::channel('typesense_errors')->error('Typesense individual upsert also failed', [
+                        'external_id' => $document->external_id,
+                        'error' => $e2->getMessage(),
+                    ]);
+                    $errors++;
+                }
+            }
+        }
+
+        return [
+            'total' => count($docMap),
+            'synced' => $synced,
+            'errors' => $errors,
+        ];
+    }
+
+    /**
+     * Build the Typesense document data array from an Eloquent model.
+     */
+    protected function buildDocumentData(OpenOverheidDocument $document): array
+    {
         $url = $this->extractUrl($document);
         $publicationDestination = $this->extractPublicationDestination($url);
 
-        $data = [
+        return [
             'id' => (string) $document->id,
             'external_id' => $document->external_id,
             'title' => $document->title ?? '',
@@ -231,16 +244,6 @@ class TypesenseSyncService
                 ? $document->synced_at->timestamp
                 : 0,
         ];
-
-        try {
-            $this->client->collections[$this->collection]->documents->upsert($data);
-        } catch (\Exception $e) {
-                Log::channel('typesense_errors')->error('Typesense upsert failed', [
-                    'external_id' => $document->external_id,
-                    'error' => $e->getMessage(),
-                ]);
-            throw $e;
-        }
     }
 
     /**
@@ -277,7 +280,6 @@ class TypesenseSyncService
             return $parsed['host'];
         }
 
-        // If URL doesn't have a scheme, try to extract domain from the string
         if (preg_match('/^(?:https?:\/\/)?([^\/]+)/', $url, $matches)) {
             return $matches[1];
         }
@@ -293,7 +295,6 @@ class TypesenseSyncService
         try {
             $this->client->collections[$this->collection]->retrieve();
         } catch (\Exception $e) {
-            // Collection doesn't exist, create it
             if (str_contains($e->getMessage(), 'Not Found')) {
                 $this->createCollection();
             } else {
@@ -327,16 +328,6 @@ class TypesenseSyncService
             'default_sorting_field' => 'publication_date',
         ];
 
-        // Natural language search disabled - Typesense is pure search only
-        // AI search is premium-only feature via chat interface
-        // $nlConfig = config('open_overheid.typesense.natural_language_search', []);
-        // if (! empty($nlConfig['enabled']) && ! empty($nlConfig['api_key']) && ! empty($nlConfig['model'])) {
-        //     $schema['natural_language_search'] = [
-        //         'enabled' => true,
-        //         'model' => $nlConfig['model'],
-        //     ];
-        // }
-
         try {
             $this->client->collections->create($schema);
             Log::channel('typesense_errors')->info("Created Typesense collection: {$this->collection}");
@@ -346,40 +337,5 @@ class TypesenseSyncService
             ]);
             throw $e;
         }
-    }
-
-    /**
-     * Update progress bar with error count and ETA in colors
-     */
-    protected function updateProgressBar($bar, int $processed, int $total, int $errors, $command): void
-    {
-        if ($processed === 0 || ! $command) {
-            return;
-        }
-
-        // Calculate ETA based on average time per document
-        $elapsed = time() - $bar->getStartTime();
-        $eta = $elapsed > 0 && $processed > 0 && $processed < $total
-            ? (int) (($elapsed / $processed) * ($total - $processed))
-            : 0;
-
-        $etaFormatted = $eta > 0 ? gmdate('H:i:s', $eta) : '--:--:--';
-
-        // Build status line with colors (on a new line below progress bar)
-        $statusLine = "\n"; // Move to new line
-        $statusLine .= "\033[K"; // Clear line
-
-        // Errors in red
-        if ($errors > 0) {
-            $statusLine .= "\033[31mErrors: {$errors}\033[0m  ";
-        }
-
-        // ETA in orange/yellow (38;5;208 = orange)
-        $statusLine .= "\033[38;5;208mETA: {$etaFormatted}\033[0m";
-
-        // Move cursor back up one line
-        $statusLine .= "\033[1A";
-
-        $command->getOutput()->write($statusLine);
     }
 }

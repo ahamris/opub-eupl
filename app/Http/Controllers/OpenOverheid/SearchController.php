@@ -298,7 +298,7 @@ class SearchController extends Controller
             $sources = [];
             if (! empty($documentsForAI)) {
                 try {
-                    $geminiService = app(\App\Services\AI\GeminiService::class);
+                    $geminiService = app(\App\Services\AI\OllamaService::class);
                     $aiResponse = $geminiService->answerQuestion($query, $documentsForAI);
                     $aiAnswer = $aiResponse['answer'] ?? null;
                     $sources = $aiResponse['sources'] ?? [];
@@ -374,7 +374,7 @@ class SearchController extends Controller
                 $sources = [];
                 if (! empty($documentsForAI)) {
                     try {
-                        $geminiService = app(\App\Services\AI\GeminiService::class);
+                        $geminiService = app(\App\Services\AI\OllamaService::class);
                         $aiResponse = $geminiService->answerQuestion($query, $documentsForAI);
                         $aiAnswer = $aiResponse['answer'] ?? null;
                         $sources = $aiResponse['sources'] ?? [];

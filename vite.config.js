@@ -11,6 +11,7 @@ export default defineConfig({
                 "resources/css/admin.css",
                 "resources/js/admin.js",
                 "resources/js/tiptap.js",
+                "resources/js/spa/app.tsx",
             ],
             refresh: true,
         }),

@@ -1,0 +1,390 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OPub API",
+    "description": "API voor het zoeken, ophalen en aanleveren van Nederlandse overheidsdocumenten. Bevat AI-verrijkte metadata (samenvattingen, trefwoorden) en een chat interface.",
+    "version": "2.0.0",
+    "contact": { "name": "OPub", "url": "https://opub.nl" }
+  },
+  "servers": [
+    { "url": "https://opub.nl/api/v2", "description": "Productie" }
+  ],
+  "security": [{ "ApiKey": [] }],
+  "paths": {
+    "/search": {
+      "get": {
+        "summary": "Zoek documenten",
+        "description": "Doorzoek 645.000+ overheidsdocumenten via Typesense full-text search met facets en filters.",
+        "tags": ["Zoeken"],
+        "parameters": [
+          { "name": "q", "in": "query", "required": true, "schema": { "type": "string" }, "description": "Zoekterm" },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "per_page", "in": "query", "schema": { "type": "integer", "default": 20, "maximum": 50 } },
+          { "name": "organisation", "in": "query", "schema": { "type": "string" }, "description": "Filter op organisatie" },
+          { "name": "theme", "in": "query", "schema": { "type": "string" }, "description": "Filter op thema" },
+          { "name": "category", "in": "query", "schema": { "type": "string" }, "description": "Filter op informatiecategorie" },
+          { "name": "document_type", "in": "query", "schema": { "type": "string" }, "description": "Filter op documenttype" },
+          { "name": "date_from", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "date_to", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["relevance", "date_desc", "date_asc"] } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Zoekresultaten",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SearchResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/documents/{id}": {
+      "get": {
+        "summary": "Document ophalen",
+        "description": "Haal een document op met volledige metadata, AI-samenvatting en trefwoorden.",
+        "tags": ["Documenten"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "External ID (bv. oep-ob-...)" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Document details",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Document" } } }
+          },
+          "404": { "description": "Niet gevonden" }
+        }
+      }
+    },
+    "/dossiers": {
+      "get": {
+        "summary": "Dossiers ophalen",
+        "tags": ["Dossiers"],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "per_page", "in": "query", "schema": { "type": "integer", "default": 20 } }
+        ],
+        "responses": {
+          "200": { "description": "Dossierlijst", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedDocuments" } } } }
+        }
+      }
+    },
+    "/dossiers/{id}": {
+      "get": {
+        "summary": "Dossier met gerelateerde documenten",
+        "tags": ["Dossiers"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Dossier details", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Dossier" } } } },
+          "404": { "description": "Niet gevonden" }
+        }
+      }
+    },
+    "/chat/send": {
+      "post": {
+        "summary": "Chat bericht sturen",
+        "description": "Stuur een vraag en ontvang een AI-antwoord gebaseerd op gevonden overheidsdocumenten.",
+        "tags": ["Chat"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["message"],
+                "properties": {
+                  "message": { "type": "string", "maxLength": 1000 },
+                  "conversation_id": { "type": "string", "nullable": true, "description": "Bestaand gesprek voortzetten" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "AI antwoord",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChatResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat/conversations": {
+      "get": {
+        "summary": "Gesprekken ophalen",
+        "tags": ["Chat"],
+        "responses": {
+          "200": {
+            "description": "Lijst van gesprekken",
+            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Conversation" } } } }
+          }
+        }
+      }
+    },
+    "/chat/conversations/{id}/messages": {
+      "get": {
+        "summary": "Berichten van een gesprek",
+        "tags": ["Chat"],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": {
+          "200": { "description": "Berichten", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ChatMessage" } } } } }
+        }
+      }
+    },
+    "/chat/conversations/{id}": {
+      "delete": {
+        "summary": "Gesprek verwijderen",
+        "tags": ["Chat"],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Verwijderd" } }
+      }
+    },
+    "/ingest": {
+      "post": {
+        "summary": "Document aanleveren",
+        "description": "Push een nieuw document of update een bestaand document. Ideaal voor externe bronnen en scrapers.",
+        "tags": ["Ingest"],
+        "security": [{ "ApiKey": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/IngestDocument" },
+              "example": {
+                "external_id": "custom-doc-001",
+                "title": "Besluit gemeenteraad Amsterdam",
+                "description": "Besluit over verkeersveiligheid binnenstad",
+                "publication_date": "2026-03-15",
+                "organisation": "Gemeente Amsterdam",
+                "category": "Besluiten",
+                "theme": "Verkeer",
+                "source": "gemeente-amsterdam-scraper",
+                "metadata": { "url": "https://example.com/doc/001" }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Document bijgewerkt" },
+          "201": { "description": "Nieuw document aangemaakt" },
+          "422": { "description": "Validatie fout" }
+        }
+      }
+    },
+    "/ingest/batch": {
+      "post": {
+        "summary": "Documenten batch aanleveren",
+        "description": "Push meerdere documenten tegelijk (max 100 per request).",
+        "tags": ["Ingest"],
+        "security": [{ "ApiKey": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["documents"],
+                "properties": {
+                  "documents": { "type": "array", "maxItems": 100, "items": { "$ref": "#/components/schemas/IngestDocument" } },
+                  "source": { "type": "string", "description": "Naam van de bron/scraper" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch resultaat",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BatchResult" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ingest/{external_id}": {
+      "delete": {
+        "summary": "Document verwijderen",
+        "tags": ["Ingest"],
+        "security": [{ "ApiKey": [] }],
+        "parameters": [{ "name": "external_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": {
+          "200": { "description": "Verwijderd" },
+          "404": { "description": "Niet gevonden" }
+        }
+      }
+    },
+    "/stats": {
+      "get": {
+        "summary": "Platform statistieken",
+        "tags": ["Platform"],
+        "responses": {
+          "200": { "description": "Statistieken", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Stats" } } } }
+        }
+      }
+    },
+    "/settings": {
+      "get": {
+        "summary": "Site instellingen",
+        "tags": ["Platform"],
+        "responses": { "200": { "description": "Instellingen" } }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKey": {
+        "type": "apiKey",
+        "name": "X-OPUB-API-KEY",
+        "in": "header",
+        "description": "API key voor schrijf-operaties (ingest). Lees-operaties zijn publiek."
+      }
+    },
+    "schemas": {
+      "SearchResponse": {
+        "type": "object",
+        "properties": {
+          "hits": { "type": "array", "items": { "$ref": "#/components/schemas/SearchHit" } },
+          "found": { "type": "integer" },
+          "page": { "type": "integer" },
+          "per_page": { "type": "integer" },
+          "total_pages": { "type": "integer" },
+          "search_time_ms": { "type": "integer" },
+          "facets": { "type": "array" }
+        }
+      },
+      "SearchHit": {
+        "type": "object",
+        "properties": {
+          "external_id": { "type": "string" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "organisation": { "type": "string" },
+          "publication_date": { "type": "string", "format": "date", "nullable": true },
+          "document_type": { "type": "string" },
+          "category": { "type": "string" },
+          "theme": { "type": "string" }
+        }
+      },
+      "Document": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "external_id": { "type": "string" },
+          "title": { "type": "string" },
+          "ai_enhanced_title": { "type": "string", "nullable": true },
+          "description": { "type": "string", "nullable": true },
+          "ai_summary": { "type": "string", "nullable": true, "description": "AI-gegenereerde samenvatting in B1-Nederlands" },
+          "ai_keywords": { "type": "array", "items": { "type": "string" }, "nullable": true },
+          "organisation": { "type": "string" },
+          "publication_date": { "type": "string", "format": "date" },
+          "document_type": { "type": "string" },
+          "category": { "type": "string" },
+          "theme": { "type": "string" },
+          "metadata": { "type": "object" },
+          "synced_at": { "type": "string", "format": "date-time" },
+          "ai_enhanced_at": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "PaginatedDocuments": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/SearchHit" } },
+          "total": { "type": "integer" },
+          "page": { "type": "integer" },
+          "per_page": { "type": "integer" },
+          "total_pages": { "type": "integer" }
+        }
+      },
+      "Dossier": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Document" },
+          { "type": "object", "properties": { "members": { "type": "array", "items": { "$ref": "#/components/schemas/SearchHit" } } } }
+        ]
+      },
+      "ChatResponse": {
+        "type": "object",
+        "properties": {
+          "answer": { "type": "string", "description": "AI-gegenereerd antwoord" },
+          "conversation_id": { "type": "string" },
+          "sources": { "type": "array", "items": { "$ref": "#/components/schemas/Source" } }
+        }
+      },
+      "Source": {
+        "type": "object",
+        "properties": {
+          "num": { "type": "integer" },
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "organisation": { "type": "string" },
+          "date": { "type": "string" },
+          "url": { "type": "string" }
+        }
+      },
+      "Conversation": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ChatMessage": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "enum": ["user", "ai"] },
+          "text": { "type": "string" },
+          "answer": { "type": "string", "nullable": true },
+          "sources": { "type": "array", "items": { "$ref": "#/components/schemas/Source" }, "nullable": true }
+        }
+      },
+      "IngestDocument": {
+        "type": "object",
+        "required": ["external_id", "title"],
+        "properties": {
+          "external_id": { "type": "string", "description": "Unieke document identifier" },
+          "title": { "type": "string", "maxLength": 1000 },
+          "description": { "type": "string", "nullable": true },
+          "content": { "type": "string", "nullable": true, "description": "Volledige documentinhoud" },
+          "publication_date": { "type": "string", "format": "date", "nullable": true },
+          "document_type": { "type": "string", "nullable": true },
+          "category": { "type": "string", "nullable": true },
+          "theme": { "type": "string", "nullable": true },
+          "organisation": { "type": "string", "nullable": true },
+          "metadata": { "type": "object", "nullable": true },
+          "source": { "type": "string", "nullable": true, "description": "Naam van de aanleverende bron" }
+        }
+      },
+      "BatchResult": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string" },
+          "created": { "type": "integer" },
+          "updated": { "type": "integer" },
+          "errors": { "type": "integer" },
+          "total": { "type": "integer" },
+          "details": { "type": "array", "items": { "type": "object" } }
+        }
+      },
+      "Stats": {
+        "type": "object",
+        "properties": {
+          "total_documents": { "type": "integer" },
+          "total_enriched": { "type": "integer" },
+          "latest_sync": { "type": "string", "format": "date-time" },
+          "organisations": { "type": "array" },
+          "themes": { "type": "array" }
+        }
+      }
+    }
+  }
+}

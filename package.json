@@ -9,17 +9,22 @@
     "devDependencies": {
         "@tailwindcss/forms": "^0.5.2",
         "@tailwindcss/vite": "^4.1.18",
+        "@types/react": "^19.2.14",
+        "@types/react-dom": "^19.2.3",
+        "@vitejs/plugin-react": "^6.0.1",
         "alpinejs": "^3.15.3",
         "axios": "^1.11.0",
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^2.0.0",
         "tailwindcss": "^4.1.18",
+        "typescript": "^6.0.2",
         "vite": "^7.0.7"
     },
     "dependencies": {
         "@algolia/autocomplete-js": "^1.19.4",
         "@algolia/autocomplete-theme-classic": "^1.19.4",
         "@alpinejs/focus": "^3.15.3",
+        "@tailwindcss/typography": "^0.5.19",
         "@tailwindplus/elements": "^1.0.20",
         "@tiptap/core": "^3.15.0",
         "@tiptap/extension-link": "^3.15.1",
@@ -31,9 +36,16 @@
         "@tiptap/extension-text-align": "^3.15.1",
         "@tiptap/extension-underline": "^3.15.1",
         "@tiptap/starter-kit": "^3.15.0",
+        "@untitledui/icons": "^0.0.22",
         "apexcharts": "^5.3.6",
         "flatpickr": "^4.6.13",
+        "motion": "^12.38.0",
         "quill": "^2.0.3",
+        "react": "^19.2.4",
+        "react-aria-components": "^1.16.0",
+        "react-dom": "^19.2.4",
+        "react-router": "^7.13.2",
+        "tailwind-merge": "^3.5.0",
         "typesense-instantsearch-adapter": "^2.9.0"
     }
 }

@@ -89,27 +89,9 @@ class RequireOpubApiKey
                 });
 
                 if (! $hasDbClients) {
-                // Fallback: env/config list (legacy)
-                $allowedKeys = config('opub_api.keys', []);
-
-                if (empty($allowedKeys)) {
-                    return response()->json([
-                        'message' => 'Public API is not configured.',
-                    ], 403);
-                }
-
-                foreach ($allowedKeys as $allowed) {
-                    if (is_string($allowed) && $allowed !== '' && hash_equals($allowed, $apiKey)) {
-                        return $next($request);
-                    }
-                }
-
-                return response()->json([
-                    'message' => 'Unauthorized.',
-                ], 401);
-            }
-
-                $hash = hash('sha256', $apiKey);
+                    // No DB clients, fall through to legacy key check below
+                } else {
+                    $hash = hash('sha256', $apiKey);
 
                 /** @var ApiClient|null $client */
                 try {
@@ -167,6 +149,10 @@ class RequireOpubApiKey
             }
 
             return $response;
+                }
+            }
+        } catch (\Throwable $e) {
+            \Log::error('API middleware error', ['error' => $e->getMessage()]);
         }
 
         // Fallback: env/config list (legacy)
@@ -189,6 +175,7 @@ class RequireOpubApiKey
             'message' => 'Unauthorized.',
         ], 401);
     }
+
 
     private function extractOriginHost(Request $request): ?string
     {

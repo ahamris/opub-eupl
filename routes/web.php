@@ -1,58 +1,42 @@
 <?php
 
-use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ContactController;
-use App\Http\Controllers\OpenOverheid\DocumentController;
-use App\Http\Controllers\OpenOverheid\DossierController;
-use App\Http\Controllers\OpenOverheid\ReportController;
-use App\Http\Controllers\OpenOverheid\SearchController;
-use App\Http\Controllers\OpenOverheid\ThemaController;
-use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TypesenseGuiController;
 use Illuminate\Support\Facades\Route;
 
-// Open Overheid routes
-Route::get('/', [SearchController::class, 'searchPage'])->name('home');
-Route::get('/zoek', [SearchController::class, 'searchPage'])->name('zoek');
-Route::get('/zoeken', [SearchController::class, 'searchResults'])->name('zoeken');
-Route::get('/open-overheid/search', [SearchController::class, 'index']);
-Route::get('/open-overheid/documents/{id}', [DocumentController::class, 'show'])->name('document.view');
-Route::get('/v2026', [SearchController::class, 'v2026LandingPage'])->name('v2026');
-Route::get('/new', [SearchController::class, 'newLandingPage'])->name('new');
-Route::get('/over', [SearchController::class, 'aboutPage'])->name('over');
-Route::get('/contact', [SearchController::class, 'contactPage'])->name('contact');
+/*
+|--------------------------------------------------------------------------
+| SPA Frontend (React + UntitledUI)
+|--------------------------------------------------------------------------
+|
+| De React SPA handelt alle publieke pagina's af.
+| Client-side routing via React Router.
+|
+*/
+
+// Contact form POST (consumed by SPA)
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 Route::post('/subscriptions', [ContactController::class, 'storeSubscription'])->name('subscriptions.store');
-Route::get('/chat', [SearchController::class, 'chatPage'])->name('chat');
-Route::get('/api/live-search', [SearchController::class, 'liveSearch'])->name('api.live-search');
-Route::get('/api/fast-search', [SearchController::class, 'fastSearch'])->name('api.fast-search');
-Route::get('/api/autocomplete', [SearchController::class, 'autocomplete'])->name('api.autocomplete');
-Route::post('/api/natural-language-search', [SearchController::class, 'naturalLanguageSearch'])->name('api.natural-language-search');
-Route::get('/verwijzingen', [SearchController::class, 'referencesPage'])->name('verwijzingen');
 
-// Report routes
-Route::get('/rapporten', [ReportController::class, 'index'])->name('reports.index');
-Route::get('/in-cijfers', [ReportController::class, 'index'])->name('reports.index'); // Alias
-Route::get('/rapporten/search', [ReportController::class, 'searchOrganisation'])->name('reports.search');
-Route::get('/rapporten/{organisation}', [ReportController::class, 'show'])->name('reports.show');
+// Chat API (session-based, used by SPA)
+Route::post('/chat/send', [\App\Http\Controllers\ChatController::class, 'send'])->name('chat.send');
+Route::get('/chat/conversations', [\App\Http\Controllers\ChatController::class, 'conversations'])->name('chat.conversations');
+Route::get('/chat/conversations/{id}/messages', [\App\Http\Controllers\ChatController::class, 'messages'])->name('chat.messages');
+Route::delete('/chat/conversations/{id}', [\App\Http\Controllers\ChatController::class, 'deleteConversation'])->name('chat.delete');
 
-// Thema routes
-Route::get('/themas', [ThemaController::class, 'index'])->name('themas.index');
+// Legacy API endpoints (still used by some components)
+Route::get('/api/live-search', [\App\Http\Controllers\OpenOverheid\SearchController::class, 'liveSearch'])->name('api.live-search');
+Route::get('/api/fast-search', [\App\Http\Controllers\OpenOverheid\SearchController::class, 'fastSearch'])->name('api.fast-search');
+Route::get('/api/autocomplete', [\App\Http\Controllers\OpenOverheid\SearchController::class, 'autocomplete'])->name('api.autocomplete');
+Route::post('/api/natural-language-search', [\App\Http\Controllers\OpenOverheid\SearchController::class, 'naturalLanguageSearch'])->name('api.natural-language-search');
 
-// Dossier routes
-Route::get('/dossiers', [DossierController::class, 'index'])->name('dossiers.index');
-Route::get('/dossiers/{id}', [DossierController::class, 'show'])->name('dossiers.show');
-Route::post('/dossiers/{id}/enhance', [DossierController::class, 'enhance'])->name('dossiers.enhance');
-Route::get('/dossiers/{id}/summary', [DossierController::class, 'getSummary'])->name('dossiers.summary');
-Route::get('/dossiers/{id}/audio', [DossierController::class, 'getAudio'])->name('dossiers.audio');
+/*
+|--------------------------------------------------------------------------
+| User Authentication & Dashboard
+|--------------------------------------------------------------------------
+*/
 
-// Blog routes
-Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
-Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
-
-
-// User Authentication & Dashboard Routes
 Route::prefix('account')->name('user.')->group(function () {
     Route::middleware('guest')->group(function () {
         Route::get('login', [\App\Http\Controllers\User\AuthController::class, 'showLogin'])->name('login');
@@ -60,14 +44,12 @@ Route::prefix('account')->name('user.')->group(function () {
         Route::get('register', [\App\Http\Controllers\User\AuthController::class, 'showRegister'])->name('register');
         Route::post('register', [\App\Http\Controllers\User\AuthController::class, 'register']);
     });
-    
+
     Route::middleware('auth')->group(function () {
         Route::post('logout', [\App\Http\Controllers\User\AuthController::class, 'logout'])->name('logout');
         Route::get('dashboard', [\App\Http\Controllers\User\DashboardController::class, 'index'])->name('dashboard');
         Route::get('subscriptions', [\App\Http\Controllers\User\DashboardController::class, 'subscriptions'])->name('subscriptions');
         Route::delete('subscriptions/{subscription}', [\App\Http\Controllers\User\DashboardController::class, 'destroySubscription'])->name('subscription.destroy');
-        
-        // Berichtenbox routes
         Route::get('berichtenbox', [\App\Http\Controllers\User\DashboardController::class, 'berichtenbox'])->name('berichtenbox');
         Route::get('berichtenbox/archief', [\App\Http\Controllers\User\DashboardController::class, 'berichtenboxArchief'])->name('berichtenbox.archief');
         Route::get('berichtenbox/prullenbak', [\App\Http\Controllers\User\DashboardController::class, 'berichtenboxPrullenbak'])->name('berichtenbox.prullenbak');
@@ -75,21 +57,17 @@ Route::prefix('account')->name('user.')->group(function () {
     });
 });
 
-// Static Page routes
-Route::get('/pagina/{slug}', [PageController::class, 'show'])->name('page.show');
+/*
+|--------------------------------------------------------------------------
+| Authenticated Routes (Profile, Typesense GUI)
+|--------------------------------------------------------------------------
+*/
 
-// Dashboard route
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
-// Authenticated routes
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Typesense GUI routes (protected)
     Route::prefix('tsgui')->group(function () {
         Route::get('/', [TypesenseGuiController::class, 'index'])->name('tsgui.index');
         Route::post('/collections', [TypesenseGuiController::class, 'createCollection'])->name('tsgui.collection.create');
@@ -103,3 +81,32 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+/*
+|--------------------------------------------------------------------------
+| API Documentation
+|--------------------------------------------------------------------------
+*/
+
+
+// Named route aliases for Blade view compatibility
+Route::get("/chat-page", function () { return view("spa"); })->name("chat");
+Route::get("/zoeken-page", function () { return view("spa"); })->name("zoeken");
+Route::get("/zoek-page", function () { return view("spa"); })->name("zoek");
+
+Route::get('/api/docs', function () { return view('swagger'); })->name('api.docs');
+Route::get('/api/v2/openapi.json', function () { return response()->file(public_path('api-docs.json')); });
+
+/*
+|--------------------------------------------------------------------------
+| SPA Catch-All (MUST be last)
+|--------------------------------------------------------------------------
+|
+| Alle niet-gematchte routes worden door de React SPA afgehandeld.
+| React Router doet de client-side routing.
+|
+*/
+
+Route::get('/{any?}', function () {
+    return view('spa');
+})->where('any', '^(?!api|admin|livewire|storage|tsgui|account).*$')->name('home');

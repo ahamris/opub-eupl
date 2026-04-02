@@ -1,341 +1,304 @@
 @extends('layouts.chat')
 
-@section('title', 'Chat met Open Overheid - Vraag het Open.Overheid.nl')
+@section('title', 'Chat met Open Overheid')
+
+@push('styles')
+<style>
+    :root { --chat-blue: #2563eb; --chat-blue-dark: #1d4ed8; }
+    .chat-wrap { display:flex; flex:1; min-height:0; height:100%; }
+    .chat-main { display:flex; flex-direction:column; flex:1; min-width:0; background:#ffffff; }
+    .chat-msgs { flex:1; overflow-y:auto; padding:24px 16px; }
+    .chat-msgs-inner { max-width:768px; margin:0 auto; }
+
+    /* Sidebar */
+    .chat-side { width:260px; background:#f8fafc; border-left:1px solid #e2e8f0; display:flex; flex-direction:column; flex-shrink:0; }
+    .chat-side.is-hidden { display:none; }
+    .chat-side-head { padding:14px 16px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; justify-content:space-between; }
+    .chat-side-list { flex:1; overflow-y:auto; padding:8px; }
+    .conv-btn { display:flex; align-items:center; gap:8px; width:100%; padding:8px 10px; border-radius:8px; border:none; background:none; cursor:pointer; font-size:13px; color:#334155; text-align:left; transition:background .1s; }
+    .conv-btn:hover { background:#e2e8f0; }
+    .conv-btn.is-active { background:#dbeafe; color:#1d4ed8; }
+    .conv-del { opacity:0; margin-left:auto; padding:4px; border:none; background:none; cursor:pointer; color:#94a3b8; border-radius:4px; flex-shrink:0; }
+    .conv-btn:hover .conv-del { opacity:1; }
+    .conv-del:hover { color:#ef4444; background:#fee2e2; }
+
+    /* Messages */
+    .msg-row { display:flex; gap:12px; margin-bottom:20px; }
+    .msg-row.is-user { flex-direction:row-reverse; }
+    .msg-avatar { width:32px; height:32px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:14px; }
+    .msg-avatar.ai { background:linear-gradient(135deg,#2563eb,#7c3aed); color:#fff; }
+    .msg-avatar.user { background:#e2e8f0; color:#475569; }
+    .msg-bubble { max-width:75%; padding:12px 16px; font-size:14px; line-height:1.65; }
+    .msg-bubble.ai { background:#f1f5f9; color:#1e293b; border-radius:2px 16px 16px 16px; }
+    .msg-bubble.user { background:#2563eb; color:#fff; border-radius:16px 2px 16px 16px; }
+    .msg-bubble.ai p { margin:0 0 8px; } .msg-bubble.ai p:last-child { margin:0; }
+    .msg-actions { display:flex; gap:2px; margin-top:6px; }
+    .msg-actions button { padding:4px; border:none; background:none; cursor:pointer; color:#94a3b8; border-radius:4px; }
+    .msg-actions button:hover { color:#475569; background:#e2e8f0; }
+
+    /* Loading dots */
+    .dots { display:flex; gap:4px; padding:8px 0; }
+    .dots span { width:7px; height:7px; background:#2563eb; border-radius:50%; animation:dotbounce 1.2s infinite; }
+    .dots span:nth-child(2) { animation-delay:.15s; }
+    .dots span:nth-child(3) { animation-delay:.3s; }
+    @keyframes dotbounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
+
+    /* Input */
+    .chat-input-wrap { border-top:1px solid #e2e8f0; padding:12px 16px; background:#fff; }
+    .chat-input-inner { max-width:768px; margin:0 auto; }
+    .input-box { display:flex; align-items:flex-end; gap:8px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:6px 6px 6px 16px; transition:border-color .15s; }
+    .input-box:focus-within { border-color:#2563eb; background:#fff; }
+    .input-box textarea { flex:1; border:none; outline:none; resize:none; background:transparent; font-size:14px; line-height:1.5; max-height:120px; padding:6px 0; font-family:inherit; color:#1e293b; }
+    .input-box textarea::placeholder { color:#94a3b8; }
+    .send-btn { width:36px; height:36px; border-radius:8px; border:none; background:#2563eb; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background .15s; }
+    .send-btn:hover { background:#1d4ed8; }
+    .send-btn:disabled { opacity:.35; cursor:not-allowed; }
+    .chat-input-hint { text-align:center; font-size:11px; color:#94a3b8; margin-top:6px; }
+
+    /* Welcome */
+    .welcome { display:flex; flex-direction:column; align-items:center; justify-content:center; flex:1; padding:40px 20px; }
+    .welcome-icon { width:52px; height:52px; background:linear-gradient(135deg,#2563eb,#7c3aed); border-radius:14px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
+    .welcome h2 { font-size:22px; font-weight:600; color:#0f172a; margin:0 0 6px; }
+    .welcome p { font-size:14px; color:#64748b; margin:0 0 28px; }
+    .suggestions { display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; max-width:460px; }
+    .sug-btn { text-align:left; padding:14px 16px; border:1px solid #e2e8f0; border-radius:10px; background:#fff; cursor:pointer; transition:all .15s; }
+    .sug-btn:hover { border-color:#2563eb; background:#eff6ff; }
+    .sug-btn strong { display:block; font-size:13px; font-weight:500; color:#0f172a; }
+    .sug-btn span { display:block; font-size:11px; color:#94a3b8; margin-top:2px; }
+
+    /* Top bar */
+    .chat-topbar { display:flex; align-items:center; justify-content:space-between; padding:8px 16px; border-bottom:1px solid #e2e8f0; background:#fff; }
+    .topbar-btn { display:inline-flex; align-items:center; gap:5px; padding:6px 10px; font-size:12px; font-weight:500; border:1px solid #e2e8f0; border-radius:8px; background:#fff; color:#2563eb; cursor:pointer; transition:all .1s; }
+    .topbar-btn:hover { background:#eff6ff; border-color:#bfdbfe; }
+    .topbar-icon { padding:6px; border:none; background:none; cursor:pointer; color:#64748b; border-radius:6px; }
+    .topbar-icon:hover { background:#f1f5f9; }
+
+    @keyframes spin { to { transform:rotate(360deg); } }
+    /* Sources */
+    .src-list { margin-top:10px; }
+    .src-label { font-size:11px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
+    .src-card { display:flex; align-items:center; gap:10px; padding:8px 12px; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:4px; text-decoration:none; color:inherit; transition:all .15s; }
+    .src-card:hover { border-color:#2563eb; background:#eff6ff; }
+    .src-num { width:22px; height:22px; border-radius:50%; background:#2563eb; color:#fff; font-size:11px; font-weight:600; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .src-info { flex:1; min-width:0; }
+    .src-title { display:block; font-size:13px; font-weight:500; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .src-card:hover .src-title { color:#1d4ed8; }
+    .src-meta { display:block; font-size:11px; color:#94a3b8; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .src-arrow { flex-shrink:0; color:#cbd5e1; }
+    .src-card:hover .src-arrow { color:#2563eb; }
+
+    @media(max-width:768px) {
+        .chat-side { position:fixed; right:0; top:0; bottom:0; z-index:50; box-shadow:-4px 0 24px rgba(0,0,0,.08); }
+        .suggestions { grid-template-columns:1fr; }
+    }
+</style>
+@endpush
 
 @section('content')
-    <!-- Chat Container -->
-    <div class="flex flex-col flex-1 min-h-0 bg-[var(--color-surface)]" x-data="chatInterface()">
-        
-        <!-- Chat Messages Area (Scrollable) -->
-        <div class="chat-messages px-4 sm:px-6 lg:px-8 py-4 scrollbar-hide" x-ref="messagesContainer">
-            <div class="max-w-3xl mx-auto min-h-full flex flex-col" :class="messages.length === 0 ? 'justify-center' : 'justify-start'">
-                
-                <!-- Welcome Message -->
+<div class="chat-wrap" x-data="chatApp()">
+
+    <div class="chat-main">
+        <!-- Top bar -->
+        <div class="chat-topbar">
+            <button class="topbar-btn" @click="startNewChat()">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Nieuw gesprek
+            </button>
+            <button class="topbar-icon" @click="sidebarOpen = !sidebarOpen" title="Gesprekken">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h10M4 18h7"/></svg>
+            </button>
+        </div>
+
+        <!-- Messages area -->
+        <div class="chat-msgs" x-ref="msgs">
+            <div class="chat-msgs-inner" style="min-height:100%; display:flex; flex-direction:column;" :style="messages.length === 0 ? 'justify-content:center' : ''">
+
+                <!-- Welcome -->
                 <template x-if="messages.length === 0">
-                    <div class="py-10 text-center sm:text-left">
-                        <div class="flex flex-col sm:flex-row items-center gap-6 mb-8">
-                            <div class="flex items-center justify-center w-16 h-16 rounded-full bg-[var(--color-primary-light)] shrink-0">
-                                <svg class="w-10 h-10 text-[var(--color-primary)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h2 class="text-2xl sm:text-3xl font-semibold text-[var(--color-on-surface)]">
-                                    Waarmee kan ik je helpen?
-                                </h2>
-                                <p class="text-base text-[var(--color-on-surface-variant)] mt-2 max-w-xl">
-                                    Stel je vraag over overheidsdocumenten in gewone taal. Ik zoek door duizenden bronnen om je het juiste antwoord te geven.
-                                </p>
-                            </div>
+                    <div class="welcome">
+                        <div class="welcome-icon">
+                            <svg width="26" height="26" fill="none" stroke="#fff" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                         </div>
-                        
-                        <!-- Suggested Questions Grid -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto sm:mx-0">
-                            <button 
-                                @click="askQuestion('Wat zijn de regels voor parkeervergunningen?')"
-                                class="text-left p-4 rounded-xl bg-[var(--color-surface)] border border-[var(--color-outline-variant)] hover:bg-[var(--color-surface-variant)] hover:border-[var(--color-outline-variant)] transition-all duration-200 group"
-                            >
-                                <span class="block text-sm font-medium text-[var(--color-on-surface)] mb-1">Parkeervergunningen</span>
-                                <span class="block text-xs text-[var(--color-on-surface-variant)] group-hover:text-[var(--color-on-surface)]">Wat zijn de regels?</span>
-                            </button>
-                            <button 
-                                @click="askQuestion('Hoe vraag ik een uitkering aan?')"
-                                class="text-left p-4 rounded-xl bg-[var(--color-surface)] border border-[var(--color-outline-variant)] hover:bg-[var(--color-surface-variant)] hover:border-[var(--color-outline-variant)] transition-all duration-200 group"
-                            >
-                                <span class="block text-sm font-medium text-[var(--color-on-surface)] mb-1">Uitkering aanvragen</span>
-                                <span class="block text-xs text-[var(--color-on-surface-variant)] group-hover:text-[var(--color-on-surface)]">Hoe werkt het proces?</span>
-                            </button>
-                            <button 
-                                @click="askQuestion('Wanneer zijn de schoolvakanties?')"
-                                class="text-left p-4 rounded-xl bg-[var(--color-surface)] border border-[var(--color-outline-variant)] hover:bg-[var(--color-surface-variant)] hover:border-[var(--color-outline-variant)] transition-all duration-200 group"
-                            >
-                                <span class="block text-sm font-medium text-[var(--color-on-surface)] mb-1">Schoolvakanties</span>
-                                <span class="block text-xs text-[var(--color-on-surface-variant)] group-hover:text-[var(--color-on-surface)]">Wanneer zijn ze dit jaar?</span>
-                            </button>
-                            <button 
-                                @click="askQuestion('Zoek documenten over duurzaamheid')"
-                                class="text-left p-4 rounded-xl bg-[var(--color-surface)] border border-[var(--color-outline-variant)] hover:bg-[var(--color-surface-variant)] hover:border-[var(--color-outline-variant)] transition-all duration-200 group"
-                            >
-                                <span class="block text-sm font-medium text-[var(--color-on-surface)] mb-1">Duurzaamheid</span>
-                                <span class="block text-xs text-[var(--color-on-surface-variant)] group-hover:text-[var(--color-on-surface)]">Zoek relevante documenten</span>
-                            </button>
+                        <h2>Vraag het Open Overheid</h2>
+                        <p>Doorzoek 645.000+ overheidsdocumenten met AI</p>
+                        <div class="suggestions">
+                            <template x-for="q in suggestions" :key="q.t">
+                                <button class="sug-btn" @click="ask(q.q)">
+                                    <strong x-text="q.t"></strong>
+                                    <span x-text="q.s"></span>
+                                </button>
+                            </template>
                         </div>
                     </div>
                 </template>
 
-                <!-- Chat Messages -->
-                <div class="space-y-6 py-4">
-                    <template x-for="(message, index) in messages" :key="index">
-                        <div class="flex flex-col gap-4">
-                            <!-- User Message -->
-                            <div x-show="message.type === 'user'" class="flex justify-end">
-                                <div class="max-w-[85%] sm:max-w-[75%] bg-[var(--color-primary)] text-white px-5 py-3.5 rounded-2xl rounded-tr-sm shadow-sm">
-                                    <p class="text-sm sm:text-base whitespace-pre-wrap" x-text="message.text"></p>
+                <!-- Messages -->
+                <template x-for="(m, i) in messages" :key="i">
+                    <div>
+                        <template x-if="m.type === 'user'">
+                            <div class="msg-row is-user">
+                                <div class="msg-avatar user">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                 </div>
+                                <div class="msg-bubble user" x-text="m.text"></div>
                             </div>
-
-                            <!-- AI Message -->
-                            <div x-show="message.type === 'ai'" class="flex gap-3 max-w-full">
-                                <div class="shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-dark)] flex items-center justify-center mt-1 shadow-sm">
-                                    <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                    </svg>
+                        </template>
+                        <template x-if="m.type === 'ai'">
+                            <div class="msg-row">
+                                <div class="msg-avatar ai">
+                                    <svg width="16" height="16" fill="none" stroke="#fff" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                                 </div>
-                                <div class="flex-1 min-w-0 space-y-3">
-                                    <!-- Loading State -->
-                                    <div x-show="message.loading" class="flex items-center gap-1.5 py-3">
-                                        <div class="w-2 h-2 bg-[var(--color-primary)] rounded-full animate-bounce" style="animation-delay: 0s"></div>
-                                        <div class="w-2 h-2 bg-[var(--color-primary)] rounded-full animate-bounce" style="animation-delay: 0.15s"></div>
-                                        <div class="w-2 h-2 bg-[var(--color-primary)] rounded-full animate-bounce" style="animation-delay: 0.3s"></div>
-                                    </div>
-
-                                    <!-- Answer Content -->
-                                    <div x-show="!message.loading" class="text-[var(--color-on-surface)]">
-                                        <!-- Main Answer -->
-                                        <div x-show="message.answer">
-                                            <div class="text-sm sm:text-base leading-relaxed whitespace-pre-wrap" x-html="formatAnswerWithSources(message.answer)"></div>
-                                            
-                                            <!-- Actions -->
-                                            <div class="flex items-center gap-1 mt-3">
-                                                <button 
-                                                    @click="copyToClipboard(message.answer)" 
-                                                    class="p-1.5 rounded-lg text-[var(--color-on-surface-variant)] hover:bg-[var(--color-surface-variant)] hover:text-[var(--color-on-surface)] transition-colors"
-                                                    title="Kopieer antwoord"
-                                                >
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                                </button>
-                                                <button class="p-1.5 rounded-lg text-[var(--color-on-surface-variant)] hover:bg-[var(--color-surface-variant)] hover:text-[var(--color-on-surface)] transition-colors" title="Nuttig">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"></path></svg>
-                                                </button>
-                                                <button class="p-1.5 rounded-lg text-[var(--color-on-surface-variant)] hover:bg-[var(--color-surface-variant)] hover:text-[var(--color-on-surface)] transition-colors" title="Niet nuttig">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5"></path></svg>
+                                <div style="flex:1; min-width:0;">
+                                    <template x-if="m.loading">
+                                        <div class="dots"><span></span><span></span><span></span></div>
+                                    </template>
+                                    <template x-if="!m.loading">
+                                        <div>
+                                            <div class="msg-bubble ai" x-text="m.answer || m.text"></div>
+                                            <!-- Sources -->
+                                            <template x-if="m.sources && m.sources.length > 0">
+                                                <div class="src-list">
+                                                    <div class="src-label">Bronnen</div>
+                                                    <template x-for="s in m.sources" :key="s.id">
+                                                        <a :href="s.url" class="src-card">
+                                                            <span class="src-num" x-text="s.num"></span>
+                                                            <div class="src-info">
+                                                                <span class="src-title" x-text="s.title"></span>
+                                                                <span class="src-meta">
+                                                                    <span x-show="s.organisation" x-text="s.organisation"></span>
+                                                                    <span x-show="s.organisation && s.date"> · </span>
+                                                                    <span x-show="s.date" x-text="s.date"></span>
+                                                                </span>
+                                                            </div>
+                                                            <svg class="src-arrow" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                                        </a>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                            <div class="msg-actions" x-show="m.answer">
+                                                <button @click="copy(m.answer)" title="Kopieer">
+                                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                                                 </button>
                                             </div>
                                         </div>
-
-                                        <!-- Sources -->
-                                        <template x-if="message.sources && message.sources.length > 0">
-                                            <div class="mt-4 pt-4 border-t border-[var(--color-outline-variant)]">
-                                                <h4 class="text-xs font-semibold text-[var(--color-on-surface-variant)] uppercase tracking-wider mb-3">Gebruikte bronnen</h4>
-                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                                    <template x-for="(source, idx) in message.sources" :key="idx">
-                                                        <a :href="source.url" target="_blank" class="flex items-start gap-3 p-3 rounded-lg border border-[var(--color-outline-variant)] hover:bg-[var(--color-surface-variant)] transition-colors group">
-                                                            <span class="shrink-0 flex items-center justify-center w-5 h-5 rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] text-xs font-medium" x-text="idx + 1"></span>
-                                                            <div class="min-w-0">
-                                                                <p class="text-sm font-medium text-[var(--color-on-surface)] truncate group-hover:text-[var(--color-primary)] transition-colors" x-text="source.title"></p>
-                                                                <p class="text-xs text-[var(--color-on-surface-variant)] truncate" x-text="source.organisation || 'Open Overheid'"></p>
-                                                            </div>
-                                                        </a>
-                                                    </template>
-                                                </div>
-                                            </div>
-                                        </template>
-
-                                        <!-- Search Results (Fallback) -->
-                                        <template x-if="!message.answer && message.results && message.results.length > 0">
-                                            <div class="space-y-3">
-                                                <p class="text-sm text-[var(--color-on-surface)]" x-text="message.text"></p>
-                                                <div class="grid gap-3">
-                                                    <template x-for="(result, idx) in message.results" :key="idx">
-                                                        <a :href="'/open-overheid/documents/' + result.id" class="block p-4 rounded-lg border border-[var(--color-outline-variant)] hover:border-[var(--color-primary)] transition-colors">
-                                                            <h4 class="text-sm font-semibold text-[var(--color-primary)] mb-1" x-text="result.title"></h4>
-                                                            <p class="text-xs text-[var(--color-on-surface-variant)] line-clamp-2" x-text="result.description"></p>
-                                                        </a>
-                                                    </template>
-                                                </div>
-                                            </div>
-                                        </template>
-
-                                        <!-- No results message -->
-                                        <template x-if="!message.answer && (!message.results || message.results.length === 0) && !message.loading">
-                                            <p class="text-sm text-[var(--color-on-surface)]" x-text="message.text"></p>
-                                        </template>
-                                    </div>
+                                    </template>
                                 </div>
                             </div>
-                        </div>
-                    </template>
-                </div>
+                        </template>
+                    </div>
+                </template>
+
             </div>
         </div>
 
-        <!-- Input Area (Fixed at bottom within flex) -->
-        <div class="chat-input bg-[var(--color-surface)] border-t border-[var(--color-outline-variant)] p-3 sm:p-4">
-            <div class="max-w-3xl mx-auto">
-                <!-- Input Container -->
-                <div class="relative flex items-end gap-2 bg-[var(--color-surface)] rounded-md border border-[var(--color-outline-variant)] transition-colors focus-within:border-[var(--color-primary)]">
-                    <textarea 
-                        x-ref="promptInput"
-                        x-model="inputText"
-                        @keydown.enter.prevent="if(!$event.shiftKey) sendMessage()"
-                        @input="$el.style.height = 'auto'; $el.style.height = Math.min($el.scrollHeight, 120) + 'px'"
-                        rows="1"
-                        placeholder="Stel je vraag..."
-                        class="w-full bg-transparent border-0 focus:ring-0 resize-none py-3 px-4 text-sm text-[var(--color-on-surface)] placeholder:text-[var(--color-on-surface-variant)] max-h-[120px] overflow-y-auto scrollbar-hide"
-                        style="min-height: 44px;"
-                    ></textarea>
-                    
-                    <button 
-                        @click="sendMessage()"
-                        :disabled="!inputText.trim() || loading"
-                        class="shrink-0 p-2 m-1.5 rounded-md bg-[var(--color-primary)] text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--color-primary-dark)] transition-colors"
-                    >
-                        <svg x-show="!loading" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 12h12M12 6l6 6-6 6" />
-                        </svg>
-                        <div x-show="loading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+        <!-- Input -->
+        <div class="chat-input-wrap">
+            <div class="chat-input-inner">
+                <div class="input-box">
+                    <textarea x-ref="inp" x-model="text"
+                        @keydown.enter.prevent="if(!$event.shiftKey) send()"
+                        @input="$el.style.height='auto'; $el.style.height=Math.min($el.scrollHeight,120)+'px'"
+                        rows="1" placeholder="Stel je vraag over overheidsdocumenten..."
+                        style="min-height:36px;"></textarea>
+                    <button class="send-btn" @click="send()" :disabled="!text.trim() || busy">
+                        <svg x-show="!busy" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        <div x-show="busy" style="width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;"></div>
                     </button>
                 </div>
-                <p class="text-center text-xs text-[var(--color-on-surface-variant)] mt-2">
-                    AI kan fouten maken. Controleer belangrijke informatie.
-                </p>
+                <div class="chat-input-hint">AI kan fouten maken &middot; Controleer belangrijke informatie</div>
             </div>
         </div>
     </div>
+
+    <!-- Sidebar -->
+    <div class="chat-side" :class="{ 'is-hidden': !sidebarOpen }">
+        <div class="chat-side-head">
+            <span style="font-size:13px; font-weight:600; color:#0f172a;">Gesprekken</span>
+            <button @click="sidebarOpen=false" style="padding:4px; border:none; background:none; cursor:pointer; color:#94a3b8;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="chat-side-list">
+            <template x-if="convos.length === 0">
+                <div style="text-align:center; padding:32px 12px; color:#94a3b8; font-size:12px;">Geen opgeslagen gesprekken</div>
+            </template>
+            <template x-for="c in convos" :key="c.id">
+                <button class="conv-btn" :class="{ 'is-active': curConvo === c.id }" @click="loadConvo(c.id)">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="flex-shrink:0; opacity:.4;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                    <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" x-text="c.title"></span>
+                    <button class="conv-del" @click.stop="delConvo(c.id)" title="Verwijder">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </button>
+            </template>
+        </div>
+    </div>
+
+</div>
 @endsection
 
 @push('scripts')
 <script>
-function chatInterface() {
+function chatApp() {
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
     return {
         messages: [],
-        inputText: '',
-        loading: false,
-        
+        text: '',
+        busy: false,
+        sidebarOpen: window.innerWidth >= 1024,
+        convos: [],
+        curConvo: null,
+        suggestions: [
+            { t:'Parkeervergunningen', s:'Wat zijn de regels?', q:'Wat zijn de regels voor parkeervergunningen?' },
+            { t:'Duurzaamheid', s:'Recente besluiten', q:'Wat zijn recente besluiten over duurzaamheid?' },
+            { t:'Uitkering aanvragen', s:'Hoe werkt het proces?', q:'Hoe vraag ik een uitkering aan?' },
+            { t:'WOO-verzoeken', s:'Hoe dien ik er een in?', q:'Hoe dien ik een WOO-verzoek in?' },
+        ],
+
         init() {
-            // Scroll to bottom on new messages
-            this.$watch('messages', () => {
-                this.$nextTick(() => {
-                    if (this.$refs.messagesContainer) {
-                        this.$refs.messagesContainer.scrollTop = this.$refs.messagesContainer.scrollHeight;
-                    }
-                });
-            });
+            this.$watch('messages', () => this.$nextTick(() => {
+                const el = this.$refs.msgs; if(el) el.scrollTop = el.scrollHeight;
+            }));
+            this.fetchConvos();
         },
-        
-        askQuestion(question) {
-            this.inputText = question;
-            this.sendMessage();
+
+        async fetchConvos() {
+            try { const r = await fetch('/chat/conversations'); if(r.ok) this.convos = await r.json(); } catch(e){}
         },
-        
-        async sendMessage() {
-            if (!this.inputText.trim() || this.loading) {
-                return;
-            }
-            
-            const userMessage = this.inputText.trim();
-            this.inputText = '';
-            
-            // Reset textarea height
-            if (this.$refs.promptInput) {
-                this.$refs.promptInput.style.height = '44px';
-            }
-            
-            // Add user message
-            this.messages.push({
-                type: 'user',
-                text: userMessage,
-                timestamp: new Date(),
-            });
-            
-            // Add loading AI message
-            const aiMessageIndex = this.messages.length;
-            this.messages.push({
-                type: 'ai',
-                text: '',
-                loading: true,
-                results: [],
-                totalFound: 0,
-                query: userMessage,
-                timestamp: new Date(),
-            });
-            
-            this.loading = true;
-            
+        async loadConvo(id) {
+            try { const r = await fetch('/chat/conversations/'+id+'/messages'); if(r.ok) { this.messages = await r.json(); this.curConvo = id; } } catch(e){}
+        },
+        async delConvo(id) {
+            if(!confirm('Gesprek verwijderen?')) return;
+            try { await fetch('/chat/conversations/'+id,{method:'DELETE',headers:{'X-CSRF-TOKEN':csrf}}); this.convos=this.convos.filter(c=>c.id!==id); if(this.curConvo===id) this.startNewChat(); } catch(e){}
+        },
+        startNewChat() { this.messages=[]; this.curConvo=null; this.$nextTick(()=>this.$refs.inp?.focus()); },
+        ask(q) { this.text=q; this.send(); },
+        copy(t) { if(t) navigator.clipboard.writeText(t).catch(()=>{}); },
+
+        async send() {
+            if(!this.text.trim()||this.busy) return;
+            const msg = this.text.trim();
+            this.text = '';
+            if(this.$refs.inp) this.$refs.inp.style.height='36px';
+
+            this.messages.push({type:'user', text:msg});
+            const idx = this.messages.length;
+            this.messages.push({type:'ai', text:'', answer:null, loading:true});
+            this.busy = true;
+
             try {
-                const response = await fetch('{{ route("api.natural-language-search") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    },
-                    body: JSON.stringify({
-                        query: userMessage,
-                        limit: 6,
-                    }),
+                const r = await fetch('/chat/send', {
+                    method:'POST',
+                    headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':csrf},
+                    body: JSON.stringify({message:msg, conversation_id:this.curConvo}),
                 });
-                
-                const data = await response.json();
-                
-                // Update AI message with results and answer
-                this.messages[aiMessageIndex] = {
-                    type: 'ai',
-                    text: data.found > 0 
-                        ? `Ik heb ${data.found} document${data.found !== 1 ? 'en' : ''} gevonden die relevant zijn voor je vraag.`
-                        : 'Ik heb geen documenten gevonden die direct relevant zijn voor je vraag. Probeer je vraag anders te formuleren.',
-                    loading: false,
-                    answer: data.answer || null,
-                    sources: data.sources || [],
-                    results: data.hits || [],
-                    totalFound: data.found || 0,
-                    query: userMessage,
-                    timestamp: new Date(),
-                };
-            } catch (error) {
-                console.error('Search error:', error);
-                this.messages[aiMessageIndex] = {
-                    type: 'ai',
-                    text: 'Er is een fout opgetreden bij het zoeken. Probeer het later opnieuw.',
-                    loading: false,
-                    answer: null,
-                    sources: [],
-                    results: [],
-                    totalFound: 0,
-                    query: userMessage,
-                    timestamp: new Date(),
-                };
-            } finally {
-                this.loading = false;
-            }
-        },
-        
-        copyToClipboard(text) {
-            if (!text) return;
-            navigator.clipboard.writeText(text).then(() => {
-                // Could add a toast notification here
-            }).catch(err => {
-                console.error('Failed to copy:', err);
-            });
-        },
-        
-        formatTime(date) {
-            if (!date) return '';
-            const d = new Date(date);
-            return d.toLocaleTimeString('nl-NL', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            });
-        },
-        
-        formatDate(dateString) {
-            if (!dateString) return '';
-            const date = new Date(dateString);
-            return date.toLocaleDateString('nl-NL', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            });
-        },
-        
-        formatAnswerWithSources(answer) {
-            if (!answer) return '';
-            return answer
-                .replace(/(document|Document|volgens|Volgens|in|In)\s+(\d+)/gi, (match, word, num) => {
-                    return `${word} <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[var(--color-primary)] text-white text-xs font-medium mx-0.5 align-middle">${num}</span>`;
-                })
-                .replace(/\b([1-5])\b(?=\s+(staan|vermeldt|volgens|document|bron|bronnen))/gi, (match, num) => {
-                    return `<span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[var(--color-primary)] text-white text-xs font-medium mx-0.5 align-middle">${num}</span>`;
-                });
+                const d = await r.json();
+                this.messages[idx] = {type:'ai', text:'', answer:d.answer||'Geen antwoord ontvangen.', loading:false, sources:d.sources||[]};
+                if(d.conversation_id) { this.curConvo=d.conversation_id; this.fetchConvos(); }
+            } catch(e) {
+                this.messages[idx] = {type:'ai', text:'Er ging iets mis. Probeer opnieuw.', answer:null, loading:false};
+            } finally { this.busy=false; }
         },
     };
 }
