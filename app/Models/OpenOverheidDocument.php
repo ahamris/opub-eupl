@@ -31,6 +31,7 @@ class OpenOverheidDocument extends Model
         'ai_summary',
         'ai_keywords',
         'ai_enhanced_at',
+        'embedding_generated_at',
     ];
 
     protected $casts = [
@@ -40,6 +41,7 @@ class OpenOverheidDocument extends Model
         'typesense_synced_at' => 'datetime',
         'ai_keywords' => 'array',
         'ai_enhanced_at' => 'datetime',
+        'embedding_generated_at' => 'datetime',
     ];
 
     /**

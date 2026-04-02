@@ -324,6 +324,7 @@ class TypesenseSyncService
                 ['name' => 'url', 'type' => 'string'],
                 ['name' => 'publication_destination', 'type' => 'string', 'facet' => true],
                 ['name' => 'synced_at', 'type' => 'int64', 'sort' => true],
+                ['name' => 'embedding', 'type' => 'float[]', 'num_dim' => 768, 'optional' => true],
             ],
             'default_sorting_field' => 'publication_date',
         ];

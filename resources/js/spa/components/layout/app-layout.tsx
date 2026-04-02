@@ -1,6 +1,7 @@
 import { Outlet, Link, useLocation } from "react-router";
-import { SearchLg, MessageChatCircle, Folder, Home01, Menu01, XClose, BarChart01, BookOpen01, Mail01, Bell01 } from "@untitledui/icons";
+import { SearchLg, MessageChatCircle, Folder, Home01, Menu01, XClose, BarChart01, BookOpen01, Mail01, Bell01, User01, LogIn01 } from "@untitledui/icons";
 import { useState } from "react";
+import { useAuth } from "../../providers/auth-provider";
 
 const NAV = [
   { to: "/", label: "Home", icon: Home01 },
@@ -14,6 +15,7 @@ const NAV = [
 export function AppLayout() {
   const { pathname } = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, loading: authLoading } = useAuth();
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -40,6 +42,25 @@ export function AppLayout() {
             })}
             <div className="w-px h-5 bg-gray-200 mx-1" />
             <Link to="/contact" className="px-2.5 py-1.5 rounded-md text-[13px] font-medium text-gray-400 hover:text-gray-900 hover:bg-gray-50 transition-colors">Contact</Link>
+            <div className="w-px h-5 bg-gray-200 mx-1" />
+            {!authLoading && (
+              user ? (
+                <Link to="/mijn-account"
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-colors ${
+                    pathname.startsWith("/mijn-account") ? "bg-blue-50 text-blue-700" : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                  }`}>
+                  <div className="w-5 h-5 rounded-full bg-brand-700 flex items-center justify-center">
+                    <span className="text-white text-[9px] font-bold">{user.name.charAt(0)}{user.last_name.charAt(0)}</span>
+                  </div>
+                  {user.name}
+                </Link>
+              ) : (
+                <Link to="/inloggen"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[13px] font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-colors">
+                  <LogIn01 className="w-3.5 h-3.5" /> Inloggen
+                </Link>
+              )
+            )}
           </nav>
 
           <button className="md:hidden p-2 text-gray-500" onClick={() => setMobileOpen(!mobileOpen)}>

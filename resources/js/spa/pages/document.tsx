@@ -1,16 +1,28 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router";
-import { ArrowLeft, Calendar, Building01, Tag01, File06 } from "@untitledui/icons";
-import { api, type DocumentResponse } from "../lib/api";
+import { ArrowLeft, Calendar, Building01, Tag01, File06, Stars02 } from "@untitledui/icons";
+import { api, type DocumentResponse, type SimilarResponse } from "../lib/api";
 
 export function DocumentPage() {
   const { id } = useParams<{ id: string }>();
   const [doc, setDoc] = useState<DocumentResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [similar, setSimilar] = useState<SimilarResponse["similar"]>([]);
+  const [similarLoading, setSimilarLoading] = useState(false);
 
   useEffect(() => {
     if (!id) return;
     api.document(id).then(setDoc).catch(() => {}).finally(() => setLoading(false));
+  }, [id]);
+
+  // Load similar documents after the main doc loads
+  useEffect(() => {
+    if (!id) return;
+    setSimilarLoading(true);
+    api.similar(id)
+      .then((r) => setSimilar(r.similar || []))
+      .catch(() => {})
+      .finally(() => setSimilarLoading(false));
   }, [id]);
 
   if (loading) {
@@ -55,10 +67,13 @@ export function DocumentPage() {
       {/* Meta */}
       <div className="flex flex-wrap items-center gap-3 mt-3 text-sm text-text-tertiary">
         {doc.organisation && (
-          <span className="flex items-center gap-1.5">
+          <Link
+            to={`/organisaties/${encodeURIComponent(doc.organisation)}`}
+            className="flex items-center gap-1.5 hover:text-text-brand-secondary transition-colors"
+          >
             <Building01 className="w-4 h-4 text-fg-quaternary" />
             {doc.organisation}
-          </span>
+          </Link>
         )}
         {doc.publication_date && (
           <span className="flex items-center gap-1.5">
@@ -125,6 +140,59 @@ export function DocumentPage() {
           </div>
         )}
       </div>
+
+      {/* Similar documents */}
+      {similar.length > 0 && (
+        <div className="mt-8 pt-6 border-t border-border-secondary">
+          <div className="flex items-center gap-2 mb-4">
+            <Stars02 className="w-4 h-4 text-purple-500" />
+            <h2 className="text-sm font-semibold text-text-primary">Gerelateerde documenten</h2>
+            <span className="text-xs text-text-quaternary">(op basis van AI-analyse)</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {similar.map((s) => (
+              <Link
+                key={s.external_id}
+                to={`/open-overheid/documents/${s.external_id}`}
+                className="p-3 rounded-lg border border-border-secondary hover:border-border-brand hover:bg-bg-primary_hover transition duration-100 ease-linear"
+              >
+                <h3 className="text-sm font-medium text-text-primary line-clamp-2 leading-snug">{s.title}</h3>
+                {s.description && (
+                  <p className="text-xs text-text-tertiary mt-1 line-clamp-2">{s.description}</p>
+                )}
+                <div className="flex items-center gap-2 mt-2">
+                  {s.organisation && (
+                    <span className="text-xs text-text-quaternary truncate">{s.organisation}</span>
+                  )}
+                  {s.publication_date && (
+                    <span className="text-xs text-text-quaternary">
+                      {new Date(s.publication_date).toLocaleDateString("nl-NL")}
+                    </span>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {similarLoading && (
+        <div className="mt-8 pt-6 border-t border-border-secondary">
+          <div className="flex items-center gap-2 mb-4">
+            <Stars02 className="w-4 h-4 text-purple-500" />
+            <h2 className="text-sm font-semibold text-text-primary">Gerelateerde documenten</h2>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="p-3 rounded-lg border border-border-secondary animate-pulse">
+                <div className="h-4 bg-bg-secondary rounded w-3/4 mb-2" />
+                <div className="h-3 bg-bg-secondary rounded w-full mb-1" />
+                <div className="h-3 bg-bg-secondary rounded w-1/2" />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

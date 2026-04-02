@@ -20,6 +20,9 @@ Route::prefix('v2')->group(function () {
     Route::get('dossiers/{id}', [ApiV2Controller::class, 'dossier']);
     Route::get('stats', [ApiV2Controller::class, 'stats']);
     Route::get('settings', [ApiV2Controller::class, 'settings']);
+    Route::get('organisations/{name}', [ApiV2Controller::class, 'organisation']);
+    Route::get('documents/{id}/similar', [ApiV2Controller::class, 'similar']);
+    Route::post('woo-verzoek', [ApiV2Controller::class, 'wooVerzoek']);
 
     // Chat (session-based)
     Route::middleware('web')->group(function () {

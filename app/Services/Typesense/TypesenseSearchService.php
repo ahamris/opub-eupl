@@ -2,6 +2,7 @@
 
 namespace App\Services\Typesense;
 
+use App\Services\AI\EmbeddingService;
 use Illuminate\Support\Facades\Log;
 use Typesense\Client;
 
@@ -58,19 +59,18 @@ class TypesenseSearchService
             $searchParams['highlight_full_fields'] = 'title';
             $searchParams['snippet_threshold'] = 30;
             
-            // Enable typo tolerance for better search experience
-            if (! isset($options['typo_tolerance'])) {
-                $searchParams['typo_tolerance'] = 'auto';
-            }
+            // Typo tolerance
+            $searchParams['typo_tolerance'] = $options['typo_tolerance'] ?? 'auto';
 
-            // Enable prefix matching for instant search
-            if (! isset($options['prefix'])) {
-                $searchParams['prefix'] = 'true';
-            }
+            // Prefix matching
+            $searchParams['prefix'] = $options['prefix'] ?? 'true';
 
-            // Enable infix matching for better results
-            if (! isset($options['infix'])) {
-                $searchParams['infix'] = 'off';
+            // Infix matching
+            $searchParams['infix'] = $options['infix'] ?? 'off';
+
+            // Synonyms
+            if (isset($options['enable_synonyms'])) {
+                $searchParams['enable_synonyms'] = $options['enable_synonyms'];
             }
 
             // Add filters
@@ -104,6 +104,12 @@ class TypesenseSearchService
             $searchParams['prioritize_exact_match'] = true;
             $searchParams['prioritize_token_position'] = true;
 
+            // Grouping
+            if (isset($options['group_by'])) {
+                $searchParams['group_by'] = $options['group_by'];
+                $searchParams['group_limit'] = $options['group_limit'] ?? 3;
+            }
+
             // Natural language search disabled - Typesense is pure search only
             // AI search is premium-only feature via chat interface
             // if (! empty($options['natural_language_search'])) {
@@ -123,6 +129,7 @@ class TypesenseSearchService
                 'page' => $results['page'] ?? 1,
                 'search_time_ms' => $results['search_time_ms'] ?? 0,
                 'facet_counts' => $results['facet_counts'] ?? [],
+                'grouped_hits' => $results['grouped_hits'] ?? [],
             ];
         } catch (\Exception $e) {
             Log::channel('typesense_errors')->error('Typesense search error', [
@@ -211,6 +218,128 @@ class TypesenseSearchService
                 'error' => $e->getMessage(),
             ]);
             throw $e;
+        }
+    }
+
+    /**
+     * Semantic/hybrid search: keyword + vector combined.
+     * Uses multi_search to handle large vector_query payloads.
+     */
+    public function semanticSearch(string $query, array $options = []): array
+    {
+        try {
+            $embedding = app(EmbeddingService::class)->embed($query);
+
+            if (!$embedding) {
+                return $this->search($query, $options);
+            }
+
+            $searchParams = [
+                'collection' => $this->collection,
+                'q' => $query,
+                'query_by' => 'title,description,content',
+                'per_page' => $options['per_page'] ?? 20,
+                'page' => $options['page'] ?? 1,
+                'vector_query' => 'embedding:(' . json_encode($embedding) . ', k:' . (($options['per_page'] ?? 20) * 2) . ')',
+                'search_cutoff_ms' => $options['search_cutoff_ms'] ?? 200,
+                'highlight_full_fields' => 'title',
+                'snippet_threshold' => 30,
+                'typo_tolerance' => 'auto',
+                'prefix' => 'true',
+                'prioritize_exact_match' => true,
+                'prioritize_token_position' => true,
+                'exclude_fields' => 'embedding',
+                'facet_by' => $options['facet_by'] ?? 'document_type,theme,organisation,category',
+                'max_facet_values' => $options['max_facet_values'] ?? 100,
+            ];
+
+            if (isset($options['filter_by'])) {
+                $searchParams['filter_by'] = $options['filter_by'];
+            }
+            if (isset($options['sort_by'])) {
+                $searchParams['sort_by'] = $options['sort_by'];
+            }
+
+            $response = $this->client->multiSearch->perform(
+                ['searches' => [$searchParams]],
+                []
+            );
+
+            $results = $response['results'][0] ?? [];
+
+            return [
+                'hits' => $results['hits'] ?? [],
+                'found' => $results['found'] ?? 0,
+                'page' => $results['page'] ?? 1,
+                'search_time_ms' => $results['search_time_ms'] ?? 0,
+                'facet_counts' => $results['facet_counts'] ?? [],
+            ];
+        } catch (\Exception $e) {
+            Log::channel('typesense_errors')->error('Typesense semantic search error', [
+                'query' => $query,
+                'error' => $e->getMessage(),
+            ]);
+
+            return $this->search($query, $options);
+        }
+    }
+
+    /**
+     * Find similar documents by embedding vector of a given document.
+     */
+    public function findSimilar(string $documentId, int $limit = 5): array
+    {
+        try {
+            // Try to get embedding from Typesense
+            $doc = $this->getDocument($documentId);
+
+            $embedding = $doc['embedding'] ?? null;
+
+            // If no stored embedding, generate one on the fly
+            if (empty($embedding) && $doc) {
+                $embService = app(EmbeddingService::class);
+                $text = $embService->buildDocumentText(
+                    $doc['title'] ?? '',
+                    $doc['description'] ?? null
+                );
+                $embedding = $embService->embed($text);
+            }
+
+            if (empty($embedding)) {
+                return ['hits' => [], 'found' => 0];
+            }
+
+            $k = min($limit + 1, 100);
+
+            $response = $this->client->multiSearch->perform(
+                ['searches' => [[
+                    'collection' => $this->collection,
+                    'q' => '*',
+                    'vector_query' => 'embedding:(' . json_encode($embedding) . ', k:' . $k . ')',
+                    'exclude_fields' => 'embedding,content',
+                    'per_page' => $k,
+                ]]],
+                []
+            );
+
+            $results = $response['results'][0] ?? [];
+
+            // Filter out the source document
+            $hits = array_filter($results['hits'] ?? [], fn($h) => ($h['document']['id'] ?? '') !== $documentId);
+            $hits = array_values(array_slice($hits, 0, $limit));
+
+            return [
+                'hits' => $hits,
+                'found' => count($hits),
+                'search_time_ms' => $results['search_time_ms'] ?? 0,
+            ];
+        } catch (\Exception $e) {
+            Log::channel('typesense_errors')->error('Typesense find similar error', [
+                'document_id' => $documentId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['hits' => [], 'found' => 0];
         }
     }
 

@@ -19,8 +19,32 @@ use Illuminate\Support\Facades\Route;
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 Route::post('/subscriptions', [ContactController::class, 'storeSubscription'])->name('subscriptions.store');
 
+// SPA Auth API (session-based JSON endpoints)
+Route::post('/auth/login', [\App\Http\Controllers\Api\AuthApiController::class, 'login'])->name('auth.api.login');
+Route::post('/auth/register', [\App\Http\Controllers\Api\AuthApiController::class, 'register'])->name('auth.api.register');
+Route::get('/auth/user', [\App\Http\Controllers\Api\AuthApiController::class, 'user'])->name('auth.api.user');
+Route::post('/auth/logout', [\App\Http\Controllers\Api\AuthApiController::class, 'logout'])->name('auth.api.logout');
+Route::middleware('auth')->group(function () {
+    Route::put('/auth/profile', [\App\Http\Controllers\Api\AuthApiController::class, 'updateProfile'])->name('auth.api.profile');
+    Route::put('/auth/password', [\App\Http\Controllers\Api\AuthApiController::class, 'changePassword'])->name('auth.api.password');
+    Route::get('/auth/subscriptions', [\App\Http\Controllers\Api\AuthApiController::class, 'subscriptions'])->name('auth.api.subscriptions');
+    Route::patch('/auth/subscriptions/{id}/toggle', [\App\Http\Controllers\Api\AuthApiController::class, 'toggleSubscription'])->name('auth.api.subscription.toggle');
+    Route::delete('/auth/subscriptions/{id}', [\App\Http\Controllers\Api\AuthApiController::class, 'deleteSubscription'])->name('auth.api.subscription.delete');
+
+    // Organisation claim
+    Route::post('/auth/claim-organisation', [\App\Http\Controllers\Api\AuthApiController::class, 'claimOrganisation'])->name('auth.api.claim');
+    Route::put('/auth/organisation/{id}', [\App\Http\Controllers\Api\AuthApiController::class, 'updateOrganisation'])->name('auth.api.organisation.update');
+});
+
+// Subscription / Attendering (public endpoints)
+Route::post('/api/subscriptions', [\App\Http\Controllers\SubscriptionController::class, 'store'])->name('subscription.store.api');
+Route::post('/api/subscriptions/resend', [\App\Http\Controllers\SubscriptionController::class, 'resendVerification'])->name('subscription.resend');
+Route::get('/attendering/verify/{token}', [\App\Http\Controllers\SubscriptionController::class, 'verify'])->name('subscription.verify');
+Route::get('/attendering/unsubscribe/{id}/{hash}', [\App\Http\Controllers\SubscriptionController::class, 'unsubscribe'])->name('subscription.unsubscribe');
+
 // Chat API (session-based, used by SPA)
 Route::post('/chat/send', [\App\Http\Controllers\ChatController::class, 'send'])->name('chat.send');
+Route::post('/chat/stream', [\App\Http\Controllers\ChatController::class, 'stream'])->name('chat.stream');
 Route::get('/chat/conversations', [\App\Http\Controllers\ChatController::class, 'conversations'])->name('chat.conversations');
 Route::get('/chat/conversations/{id}/messages', [\App\Http\Controllers\ChatController::class, 'messages'])->name('chat.messages');
 Route::delete('/chat/conversations/{id}', [\App\Http\Controllers\ChatController::class, 'deleteConversation'])->name('chat.delete');

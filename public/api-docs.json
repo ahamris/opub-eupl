@@ -2,38 +2,57 @@
   "openapi": "3.1.0",
   "info": {
     "title": "OPub API",
-    "description": "API voor het zoeken, ophalen en aanleveren van Nederlandse overheidsdocumenten. Bevat AI-verrijkte metadata (samenvattingen, trefwoorden) en een chat interface.",
-    "version": "2.0.0",
-    "contact": { "name": "OPub", "url": "https://opub.nl" }
+    "description": "API voor het zoeken, ophalen en aanleveren van Nederlandse overheidsdocumenten. Bevat AI-verrijkte metadata (samenvattingen, trefwoorden), semantisch zoeken, organisatieprofielen en een chat interface.\n\n## Features\n- **645.000+ documenten** doorzoekbaar via full-text en semantisch zoeken\n- **AI-verrijkte metadata** met samenvattingen, trefwoorden (B1-niveau)\n- **20 synoniemsets** voor Nederlandse overheidsterminologie\n- **4.403 bestuursorganen** met contactgegevens uit organisaties.overheid.nl\n- **Vector search** voor gerelateerde documenten\n- **RAG-gebaseerde chat** met bronvermelding",
+    "version": "2.1.0",
+    "contact": { "name": "OPub", "url": "https://opub.nl" },
+    "license": { "name": "EUPL 1.2", "url": "https://eupl.eu" }
   },
   "servers": [
     { "url": "https://opub.nl/api/v2", "description": "Productie" }
   ],
   "security": [{ "ApiKey": [] }],
+  "tags": [
+    { "name": "Zoeken", "description": "Full-text en semantisch zoeken in overheidsdocumenten" },
+    { "name": "Documenten", "description": "Documenten ophalen en gerelateerde documenten" },
+    { "name": "Organisaties", "description": "Bestuursorganen en organisatieprofielen" },
+    { "name": "Dossiers", "description": "Dossiers met gerelateerde documenten" },
+    { "name": "Chat", "description": "AI-chat over overheidsdocumenten (RAG)" },
+    { "name": "Ingest", "description": "Documenten aanleveren (API key vereist)" },
+    { "name": "Platform", "description": "Statistieken en instellingen" },
+    { "name": "Woo", "description": "Wet open overheid verzoeken" }
+  ],
   "paths": {
     "/search": {
       "get": {
         "summary": "Zoek documenten",
-        "description": "Doorzoek 645.000+ overheidsdocumenten via Typesense full-text search met facets en filters.",
+        "description": "Doorzoek 645.000+ overheidsdocumenten via full-text search met facets, filters, groepering en optioneel semantisch zoeken.\n\nGebruik `q=*` voor het ophalen van recente publicaties zonder zoekterm.\n\n**Synoniemen** zijn actief: 'woo' vindt ook 'wet open overheid', 'tk' vindt 'tweede kamer', etc.",
         "tags": ["Zoeken"],
         "parameters": [
-          { "name": "q", "in": "query", "required": true, "schema": { "type": "string" }, "description": "Zoekterm" },
+          { "name": "q", "in": "query", "required": true, "schema": { "type": "string" }, "description": "Zoekterm. Gebruik `*` voor alle documenten." },
           { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
-          { "name": "per_page", "in": "query", "schema": { "type": "integer", "default": 20, "maximum": 50 } },
-          { "name": "organisation", "in": "query", "schema": { "type": "string" }, "description": "Filter op organisatie" },
-          { "name": "theme", "in": "query", "schema": { "type": "string" }, "description": "Filter op thema" },
-          { "name": "category", "in": "query", "schema": { "type": "string" }, "description": "Filter op informatiecategorie" },
-          { "name": "document_type", "in": "query", "schema": { "type": "string" }, "description": "Filter op documenttype" },
-          { "name": "date_from", "in": "query", "schema": { "type": "string", "format": "date" } },
-          { "name": "date_to", "in": "query", "schema": { "type": "string", "format": "date" } },
-          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["relevance", "date_desc", "date_asc"] } }
+          { "name": "per_page", "in": "query", "schema": { "type": "integer", "default": 20, "maximum": 100 } },
+          { "name": "organisation", "in": "query", "schema": { "type": "string" }, "description": "Filter op organisatie (pipe-separated voor meerdere: `org1|org2`)" },
+          { "name": "theme", "in": "query", "schema": { "type": "string" }, "description": "Filter op thema (pipe-separated)" },
+          { "name": "category", "in": "query", "schema": { "type": "string" }, "description": "Filter op informatiecategorie (pipe-separated)" },
+          { "name": "document_type", "in": "query", "schema": { "type": "string" }, "description": "Filter op documenttype (pipe-separated)" },
+          { "name": "date_from", "in": "query", "schema": { "type": "string", "format": "date" }, "description": "Publicatiedatum vanaf" },
+          { "name": "date_to", "in": "query", "schema": { "type": "string", "format": "date" }, "description": "Publicatiedatum tot" },
+          { "name": "sort", "in": "query", "schema": { "type": "string", "enum": ["relevance", "date_desc", "date_asc", "modified_desc", "modified_asc"] }, "description": "Sorteervolgorde" },
+          { "name": "semantic", "in": "query", "schema": { "type": "boolean", "default": false }, "description": "Activeer hybride keyword + vector zoeken (AI-gebaseerd)" },
+          { "name": "group_by", "in": "query", "schema": { "type": "string", "enum": ["organisation", "theme", "category", "document_type"] }, "description": "Groepeer resultaten per veld" },
+          { "name": "exact", "in": "query", "schema": { "type": "boolean", "default": false }, "description": "Exacte woordovereenkomst (geen typo-correctie of synoniemen)" }
         ],
         "responses": {
           "200": {
-            "description": "Zoekresultaten",
+            "description": "Zoekresultaten (flat of gegroepeerd)",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/SearchResponse" }
+                "schema": {
+                  "oneOf": [
+                    { "$ref": "#/components/schemas/SearchResponse" },
+                    { "$ref": "#/components/schemas/GroupedSearchResponse" }
+                  ]
+                }
               }
             }
           }
@@ -49,11 +68,82 @@
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "External ID (bv. oep-ob-...)" }
         ],
         "responses": {
-          "200": {
-            "description": "Document details",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Document" } } }
-          },
+          "200": { "description": "Document details", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Document" } } } },
           "404": { "description": "Niet gevonden" }
+        }
+      }
+    },
+    "/documents/{id}/similar": {
+      "get": {
+        "summary": "Gerelateerde documenten",
+        "description": "Vind semantisch gerelateerde documenten op basis van AI-vectoranalyse. Gebruikt nomic-embed-text embeddings voor nearest-neighbor search.",
+        "tags": ["Documenten"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" }, "description": "External ID van het brondocument" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Gerelateerde documenten",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SimilarResponse" }
+              }
+            }
+          },
+          "404": { "description": "Document niet gevonden" }
+        }
+      }
+    },
+    "/organisations/{name}": {
+      "get": {
+        "summary": "Organisatieprofiel (organisatiekaart)",
+        "description": "Haal een organisatieprofiel op met contactgegevens, statistieken, publicatietijdlijn, thema's en recente documenten. Bevat bestuursorgaan-data uit organisaties.overheid.nl indien beschikbaar.",
+        "tags": ["Organisaties"],
+        "parameters": [
+          { "name": "name", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Organisatienaam (URL-encoded)" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organisatieprofiel",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrganisationResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/woo-verzoek": {
+      "post": {
+        "summary": "Woo-verzoek indienen",
+        "description": "Dien een Wet open overheid verzoek in voor een specifieke organisatie. Het verzoek wordt geregistreerd en de Woo-contactgegevens worden teruggegeven.",
+        "tags": ["Woo"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/WooVerzoek" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Verzoek ontvangen",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "message": { "type": "string" },
+                    "woo_email": { "type": "string", "nullable": true, "description": "E-mailadres voor Woo-verzoeken bij deze organisatie" },
+                    "contact_id": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -65,18 +155,14 @@
           { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
           { "name": "per_page", "in": "query", "schema": { "type": "integer", "default": 20 } }
         ],
-        "responses": {
-          "200": { "description": "Dossierlijst", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedDocuments" } } } }
-        }
+        "responses": { "200": { "description": "Dossierlijst", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/PaginatedDocuments" } } } } }
       }
     },
     "/dossiers/{id}": {
       "get": {
         "summary": "Dossier met gerelateerde documenten",
         "tags": ["Dossiers"],
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
         "responses": {
           "200": { "description": "Dossier details", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Dossier" } } } },
           "404": { "description": "Niet gevonden" }
@@ -86,7 +172,7 @@
     "/chat/send": {
       "post": {
         "summary": "Chat bericht sturen",
-        "description": "Stuur een vraag en ontvang een AI-antwoord gebaseerd op gevonden overheidsdocumenten.",
+        "description": "Stuur een vraag en ontvang een AI-antwoord gebaseerd op gevonden overheidsdocumenten (RAG). Gebruikt Typesense voor documentretrieval en Ollama LLM voor antwoordgeneratie.",
         "tags": ["Chat"],
         "requestBody": {
           "required": true,
@@ -104,14 +190,7 @@
           }
         },
         "responses": {
-          "200": {
-            "description": "AI antwoord",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ChatResponse" }
-              }
-            }
-          }
+          "200": { "description": "AI antwoord", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ChatResponse" } } } }
         }
       }
     },
@@ -120,10 +199,7 @@
         "summary": "Gesprekken ophalen",
         "tags": ["Chat"],
         "responses": {
-          "200": {
-            "description": "Lijst van gesprekken",
-            "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Conversation" } } } }
-          }
+          "200": { "description": "Lijst van gesprekken", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Conversation" } } } } }
         }
       }
     },
@@ -132,9 +208,7 @@
         "summary": "Berichten van een gesprek",
         "tags": ["Chat"],
         "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
-        "responses": {
-          "200": { "description": "Berichten", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ChatMessage" } } } } }
-        }
+        "responses": { "200": { "description": "Berichten", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/ChatMessage" } } } } } }
       }
     },
     "/chat/conversations/{id}": {
@@ -148,7 +222,7 @@
     "/ingest": {
       "post": {
         "summary": "Document aanleveren",
-        "description": "Push een nieuw document of update een bestaand document. Ideaal voor externe bronnen en scrapers.",
+        "description": "Push een nieuw document of update een bestaand document. Vereist API key.",
         "tags": ["Ingest"],
         "security": [{ "ApiKey": [] }],
         "requestBody": {
@@ -164,8 +238,7 @@
                 "organisation": "Gemeente Amsterdam",
                 "category": "Besluiten",
                 "theme": "Verkeer",
-                "source": "gemeente-amsterdam-scraper",
-                "metadata": { "url": "https://example.com/doc/001" }
+                "source": "gemeente-amsterdam-scraper"
               }
             }
           }
@@ -179,8 +252,7 @@
     },
     "/ingest/batch": {
       "post": {
-        "summary": "Documenten batch aanleveren",
-        "description": "Push meerdere documenten tegelijk (max 100 per request).",
+        "summary": "Documenten batch aanleveren (max 100)",
         "tags": ["Ingest"],
         "security": [{ "ApiKey": [] }],
         "requestBody": {
@@ -192,22 +264,13 @@
                 "required": ["documents"],
                 "properties": {
                   "documents": { "type": "array", "maxItems": 100, "items": { "$ref": "#/components/schemas/IngestDocument" } },
-                  "source": { "type": "string", "description": "Naam van de bron/scraper" }
+                  "source": { "type": "string" }
                 }
               }
             }
           }
         },
-        "responses": {
-          "200": {
-            "description": "Batch resultaat",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/BatchResult" }
-              }
-            }
-          }
-        }
+        "responses": { "200": { "description": "Batch resultaat", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/BatchResult" } } } } }
       }
     },
     "/ingest/{external_id}": {
@@ -216,19 +279,15 @@
         "tags": ["Ingest"],
         "security": [{ "ApiKey": [] }],
         "parameters": [{ "name": "external_id", "in": "path", "required": true, "schema": { "type": "string" } }],
-        "responses": {
-          "200": { "description": "Verwijderd" },
-          "404": { "description": "Niet gevonden" }
-        }
+        "responses": { "200": { "description": "Verwijderd" }, "404": { "description": "Niet gevonden" } }
       }
     },
     "/stats": {
       "get": {
         "summary": "Platform statistieken",
+        "description": "Totaal documenten, AI-verrijkte documenten, laatste sync, top organisaties, thema's, maandelijkse publicaties en categorieën.",
         "tags": ["Platform"],
-        "responses": {
-          "200": { "description": "Statistieken", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Stats" } } } }
-        }
+        "responses": { "200": { "description": "Statistieken", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Stats" } } } } }
       }
     },
     "/settings": {
@@ -258,12 +317,38 @@
           "per_page": { "type": "integer" },
           "total_pages": { "type": "integer" },
           "search_time_ms": { "type": "integer" },
-          "facets": { "type": "array" }
+          "facets": { "type": "array" },
+          "semantic": { "type": "boolean" }
+        }
+      },
+      "GroupedSearchResponse": {
+        "type": "object",
+        "properties": {
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "group_key": { "type": "string", "description": "Waarde van het group_by veld" },
+                "found": { "type": "integer", "description": "Totaal documenten in deze groep" },
+                "hits": { "type": "array", "items": { "$ref": "#/components/schemas/SearchHit" } }
+              }
+            }
+          },
+          "found": { "type": "integer" },
+          "page": { "type": "integer" },
+          "per_page": { "type": "integer" },
+          "total_pages": { "type": "integer" },
+          "search_time_ms": { "type": "integer" },
+          "facets": { "type": "array" },
+          "semantic": { "type": "boolean" },
+          "group_by": { "type": "string" }
         }
       },
       "SearchHit": {
         "type": "object",
         "properties": {
+          "id": { "type": "string" },
           "external_id": { "type": "string" },
           "title": { "type": "string" },
           "description": { "type": "string" },
@@ -271,7 +356,80 @@
           "publication_date": { "type": "string", "format": "date", "nullable": true },
           "document_type": { "type": "string" },
           "category": { "type": "string" },
-          "theme": { "type": "string" }
+          "theme": { "type": "string" },
+          "vector_distance": { "type": "number", "nullable": true, "description": "Cosine afstand (0=identiek, alleen bij semantic search)" }
+        }
+      },
+      "SimilarResponse": {
+        "type": "object",
+        "properties": {
+          "document": { "type": "string", "description": "External ID van het brondocument" },
+          "similar": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "external_id": { "type": "string" },
+                "title": { "type": "string" },
+                "description": { "type": "string" },
+                "organisation": { "type": "string" },
+                "publication_date": { "type": "string", "format": "date" },
+                "theme": { "type": "string" },
+                "vector_distance": { "type": "number", "nullable": true }
+              }
+            }
+          },
+          "search_time_ms": { "type": "integer" }
+        }
+      },
+      "OrganisationResponse": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "total_documents": { "type": "integer" },
+          "total_enriched": { "type": "integer" },
+          "themes": { "type": "array", "items": { "type": "object", "properties": { "theme": { "type": "string" }, "count": { "type": "integer" } } } },
+          "categories": { "type": "array", "items": { "type": "object", "properties": { "category": { "type": "string" }, "count": { "type": "integer" } } } },
+          "monthly_publications": { "type": "array", "items": { "type": "object", "properties": { "month": { "type": "string" }, "count": { "type": "integer" } } } },
+          "bestuursorgaan": { "$ref": "#/components/schemas/Bestuursorgaan" },
+          "recent_documents": { "type": "array", "items": { "$ref": "#/components/schemas/SearchHit" } }
+        }
+      },
+      "Bestuursorgaan": {
+        "type": "object",
+        "nullable": true,
+        "description": "Bestuursorgaan-data uit organisaties.overheid.nl (indien gevonden)",
+        "properties": {
+          "id": { "type": "integer" },
+          "slug": { "type": "string" },
+          "naam": { "type": "string" },
+          "afkorting": { "type": "string", "nullable": true },
+          "type": { "type": "string", "description": "Bv. Gemeente, Ministerie, Inspectie, Agentschap" },
+          "logo_url": { "type": "string", "nullable": true },
+          "beschrijving": { "type": "string", "nullable": true },
+          "bezoekadres": { "type": "string", "nullable": true },
+          "postadres": { "type": "string", "nullable": true },
+          "woo_adres": { "type": "string", "nullable": true },
+          "woo_email": { "type": "string", "nullable": true },
+          "telefoon": { "type": "string", "nullable": true },
+          "email": { "type": "string", "nullable": true },
+          "website": { "type": "string", "nullable": true },
+          "contactformulier_url": { "type": "string", "nullable": true },
+          "is_woo_plichtig": { "type": "boolean" },
+          "woo_url": { "type": "string", "nullable": true },
+          "relatie_ministerie": { "type": "string", "nullable": true },
+          "is_claimed": { "type": "boolean" }
+        }
+      },
+      "WooVerzoek": {
+        "type": "object",
+        "required": ["organisation", "naam", "email", "onderwerp", "omschrijving"],
+        "properties": {
+          "organisation": { "type": "string", "description": "Naam van de organisatie" },
+          "naam": { "type": "string", "maxLength": 255 },
+          "email": { "type": "string", "format": "email" },
+          "onderwerp": { "type": "string", "maxLength": 500 },
+          "omschrijving": { "type": "string", "maxLength": 5000 }
         }
       },
       "Document": {
@@ -381,8 +539,10 @@
           "total_documents": { "type": "integer" },
           "total_enriched": { "type": "integer" },
           "latest_sync": { "type": "string", "format": "date-time" },
-          "organisations": { "type": "array" },
-          "themes": { "type": "array" }
+          "organisations": { "type": "array", "items": { "type": "object", "properties": { "organisation": { "type": "string" }, "count": { "type": "integer" } } } },
+          "themes": { "type": "array", "items": { "type": "object", "properties": { "theme": { "type": "string" }, "count": { "type": "integer" } } } },
+          "monthly_publications": { "type": "array", "items": { "type": "object", "properties": { "month": { "type": "string" }, "count": { "type": "integer" } } } },
+          "top_categories": { "type": "array", "items": { "type": "object", "properties": { "category": { "type": "string" }, "count": { "type": "integer" } } } }
         }
       }
     }

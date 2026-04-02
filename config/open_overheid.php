@@ -66,6 +66,12 @@ return [
         ],
     ],
 
+    'embeddings' => [
+        'enabled' => env('EMBEDDINGS_ENABLED', true),
+        'model' => env('EMBEDDINGS_MODEL', 'nomic-embed-text'),
+        'dimensions' => (int) env('EMBEDDINGS_DIMENSIONS', 768),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Gemini AI Configuration
