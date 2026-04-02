@@ -18,6 +18,7 @@ Het formaat is gebaseerd op [Keep a Changelog](https://keepachangelog.com/nl/1.1
 - **Pagina-inrichting wireframes** — Document detail, dossier tijdlijn, zoekresultaat kaarten, organisatie pagina
 - **Feedback module plan** — 1-5 sterren rating, opmerkingen, testimonials (UntitledUI Social Cards 03)
 - **Blog pagina's plan** — SPA blog overzicht en artikel detail (backend bestaat al)
+- **ARCHITECTURE.md** — Reference architecture met stack versies, netwerk topologie, migratie plan admin Blade/Livewire → React
 - **CHANGELOG.md** — Dit bestand
 
 ### Gewijzigd

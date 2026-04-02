@@ -75,14 +75,20 @@ Zie [SAFEAGILE.md](SAFEAGILE.md) voor het volledige SAFe Agile plan met epics, u
 
 ## Technische stack
 
-| Component | Technologie |
-|---|---|
-| **Backend** | Laravel 12 (PHP 8.4) |
-| **Frontend** | Livewire, React 19, TypeScript, Tailwind CSS v4 |
-| **Zoekmachine** | Typesense |
-| **AI** | Ollama + Geitje-7b (lokaal, sovereign) |
-| **Database** | PostgreSQL |
-| **Licentie** | EUPL-1.2 |
+| Component | Technologie | Versie |
+|---|---|---|
+| **Frontend** | React + TypeScript + Tailwind CSS + Vite | 19.2 / 6.0 / 4.1 / 7.2 |
+| **UI** | React Aria Components + UntitledUI Icons | 1.16 / 0.0.22 |
+| **Backend** | Laravel (PHP) | 12.49 (PHP 8.4) |
+| **Admin** | Blade + Livewire (migratie naar React gepland) | Livewire 3.7 |
+| **Database** | PostgreSQL (primair + secundair) + Redis | 16+ / 7+ |
+| **Zoekmachine** | Typesense (full-text + vector) | 0.25+ |
+| **AI** | Ollama + Geitje-7b + nomic-embed-text (lokaal, sovereign) | Tesla T4 GPU |
+| **Charts** | ApexCharts | 5.3 |
+| **Deployment** | Ploi + Nginx | |
+| **Licentie** | EUPL-1.2 | |
+
+Zie [ARCHITECTURE.md](ARCHITECTURE.md) voor de volledige reference architecture, netwerk topologie en migratie plannen.
 
 ## Installatie
 
