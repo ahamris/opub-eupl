@@ -273,6 +273,13 @@ CREATE TABLE open_overheid_documents (
     -- Sortering
     publication_date        DATE,                    -- Publicatiedatum
 
+    -- === BRONBEHEER & WOO-CLASSIFICATIE ===
+    source                  VARCHAR(100),            -- Databron (open_overheid, ingest_api, etc.)
+    source_id               VARCHAR(255),            -- Uniek ID binnen de bron
+    source_url              VARCHAR(2000),           -- Directe link naar origineel
+    woo_status              VARCHAR(20) DEFAULT 'unknown', -- woo / woo_related / non_woo / unknown
+    ingested_by             VARCHAR(255),            -- Organisatie/API client die aanleverde
+
     -- AI verrijkte velden (Geitje-7b)
     ai_enhanced_title       TEXT,                    -- Vereenvoudigde titel (B1)
     ai_summary              TEXT,                    -- Samenvatting (2-3 zinnen)
@@ -308,6 +315,8 @@ CREATE INDEX idx_category ON open_overheid_documents(category);
 CREATE INDEX idx_theme ON open_overheid_documents(theme);
 CREATE INDEX idx_organisation ON open_overheid_documents(organisation);
 CREATE INDEX idx_media_type ON open_overheid_documents(media_type);
+CREATE INDEX idx_source ON open_overheid_documents(source);
+CREATE INDEX idx_woo_status ON open_overheid_documents(woo_status);
 CREATE INDEX idx_synced_at ON open_overheid_documents(synced_at);
 CREATE INDEX idx_typesense_synced_at ON open_overheid_documents(typesense_synced_at);
 CREATE INDEX idx_ai_enhanced_at ON open_overheid_documents(ai_enhanced_at);
@@ -335,9 +344,12 @@ CREATE INDEX idx_search_vector ON open_overheid_documents USING GIN(search_vecto
     {"name": "category",                "type": "string",   "facet": true},
     {"name": "theme",                   "type": "string",   "facet": true},
     {"name": "organisation",            "type": "string",   "facet": true},
+    {"name": "woo_status",              "type": "string",   "facet": true},
+    {"name": "source",                  "type": "string",   "facet": true},
     {"name": "publication_destination", "type": "string",   "facet": true},
 
     {"name": "url",                     "type": "string"},
+    {"name": "source_url",             "type": "string",   "optional": true},
     {"name": "publication_date",        "type": "int64",    "sort": true},
     {"name": "synced_at",              "type": "int64",    "sort": true},
 
@@ -373,6 +385,8 @@ interface SearchHit {
   media_type: string;          // Type/formaat (pdf, video, audio, etc.)
   category: string;            // Categorie
   theme: string;               // Onderwerp
+  woo_status: string;          // woo / woo_related / non_woo / unknown
+  source: string;              // Databron (open_overheid, ingest_api, etc.)
   vector_distance?: number;    // Afstand bij semantic search
 }
 ```
@@ -394,6 +408,10 @@ interface DocumentResponse {
   media_type: string | null;         // Type/formaat (pdf, video, audio, etc.)
   category: string;                  // Categorie
   theme: string;                     // Onderwerp
+  woo_status: string;                // woo / woo_related / non_woo / unknown
+  source: string;                    // Databron
+  source_url: string | null;         // Directe link naar origineel
+  ingested_by: string | null;        // Wie leverde het aan
   metadata: Record<string, any>;     // Volledige metadata (JSONB)
   synced_at: string;                 // Laatste sync
   ai_enhanced_at: string | null;     // Wanneer verrijkt
@@ -413,6 +431,8 @@ interface SearchResponse {
   facets: {
     document_type: FacetCount[];   // Documenttype verdeling (classificatie)
     media_type: FacetCount[];       // Type/formaat verdeling (pdf, video, etc.)
+    woo_status: FacetCount[];       // Woo-status verdeling
+    source: FacetCount[];           // Databron verdeling
     organisation: FacetCount[];     // Organisatie verdeling
     theme: FacetCount[];            // Onderwerp verdeling
     category: FacetCount[];         // Categorie verdeling
@@ -444,6 +464,11 @@ document.classificatiecollectie
   .documentsoorten[0]          →  document_type           →  document_type (facet)→  document_type
 document.format / MIME /
   bestandsextensie             →  media_type              →  media_type (facet)   →  media_type
+(bron identifier)              →  source                  →  source (facet)       →  source
+(bron document ID)             →  source_id               →  (niet in Typesense)  →  (niet in response)
+document.weblocatie/pid        →  source_url              →  source_url           →  source_url
+(o.b.v. bron + categorie)     →  woo_status              →  woo_status (facet)   →  woo_status
+(API client / systeem)         →  ingested_by             →  (niet in Typesense)  →  ingested_by
 document.verantwoordelijke
   .label                       →  organisation            →  organisation (facet) →  organisation
 versies[0]
@@ -458,6 +483,365 @@ document.weblocatie/pid        →  metadata->weblocatie    →  url            
 
 --- EMBEDDING (nomic-embed-text) ---
                                   embedding_generated_at  →  embedding (float[768])→ (niet in response)
+```
+
+---
+
+## Databronnen & Woo-classificatie
+
+### Woo vs. Niet-Woo
+
+> **Kritiek onderscheid**: Niet alle documenten in oPub zijn Woo-documenten. Het platform haalt data uit meerdere bronnen. Het moet voor de gebruiker altijd duidelijk zijn of een document onder de Wet open overheid (Woo) valt of niet.
+
+| Classificatie | Betekenis | Bron | Voorbeeld |
+|---------------|-----------|------|-----------|
+| `woo` | Verplichte Woo-publicatie door bestuursorgaan | open.overheid.nl, Ingest API (bestuursorgaan) | Woo-besluit, Woo-verzoek, Convenant |
+| `woo_related` | Gerelateerd aan Woo maar niet zelf een Woo-document | Ingest API, handmatige upload | Jaarverslag, beleidsnotitie, onderzoeksrapport |
+| `non_woo` | Geen Woo-document | Externe bronnen, Ingest API | Nieuwsbericht, persverklaring, dataset |
+| `unknown` | Nog niet geclassificeerd | Bulk import, legacy data | Documenten zonder categorie |
+
+### Nieuwe Velden voor Bronbeheer
+
+| Veld | DB Kolom | Type | Doel |
+|------|----------|------|------|
+| **Databron** | `source` | VARCHAR(100) | Waar het document vandaan komt |
+| **Bron ID** | `source_id` | VARCHAR(255) | Uniek ID binnen de bron (naast `external_id`) |
+| **Woo-classificatie** | `woo_status` | VARCHAR(20) | `woo` / `woo_related` / `non_woo` / `unknown` |
+| **Bron URL** | `source_url` | VARCHAR(2000) | Directe link naar origineel document |
+| **Aangeleverd door** | `ingested_by` | VARCHAR(255) | Organisatie/API client die het aanleverde |
+
+### Geregistreerde Databronnen
+
+| Source ID | Naam | Type | Woo Default | Frequentie | Status |
+|-----------|------|------|-------------|-----------|--------|
+| `open_overheid` | Open Overheid (Rijksoverheid) | Pull (API) | `woo` | Dagelijks 02:00 | ✅ Live |
+| `ingest_api` | Ingest API (bestuursorganen) | Push (REST) | `woo` | Realtime | ✅ Live |
+| `manual_upload` | Handmatige upload (portaal) | Push (form) | `woo_related` | Ad-hoc | 📋 Gepland |
+| `gemeente_api` | Gemeente Open Data API's | Pull (API) | `woo` | Dagelijks | 📋 Gepland |
+| `provincies` | Provinciale Open Data | Pull (API) | `woo` | Dagelijks | 📋 Gepland |
+| `waterschappen` | Waterschappen publicaties | Pull (API) | `woo` | Wekelijks | 📋 Gepland |
+| `rijksoverheid_nl` | Rijksoverheid.nl (nieuwsberichten) | Pull (scrape) | `non_woo` | Dagelijks | 📋 Gepland |
+| `officielebekendmakingen` | Officiële Bekendmakingen | Pull (API) | `woo_related` | Dagelijks | 📋 Gepland |
+| `wetten_overheid` | Wetten.overheid.nl | Pull (API) | `non_woo` | Wekelijks | 📋 Gepland |
+| `cvdr` | Centrale Voorziening Decentrale Regelgeving | Pull (API) | `non_woo` | Wekelijks | 📋 Gepland |
+| `external_import` | Bulk CSV/JSON import | Push (CLI) | `unknown` | Ad-hoc | 📋 Gepland |
+
+### ETL per Databron — Universeel Patroon
+
+Elke databron volgt hetzelfde patroon, ongeacht formaat:
+
+```
+┌─────────────────────────┐
+│  BRON (eigen formaat)   │
+│                         │
+│  Open Overheid → JSON   │
+│  Gemeente → XML/JSON    │
+│  CSV import → CSV       │
+│  Handmatig → Formulier  │
+│  Scrape → HTML          │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────────────────────────────────┐
+│  SOURCE ADAPTER (per bron)                          │
+│                                                     │
+│  Verantwoordelijkheid:                              │
+│  1. Ophalen van data in bronformaat                 │
+│  2. Opslaan volledige response → metadata (JSONB)   │
+│  3. Mapping naar snelle dataset velden              │
+│  4. Bepalen woo_status                              │
+│  5. Detecteren media_type                           │
+│  6. Zetten van source + source_id                   │
+└────────────┬────────────────────────────────────────┘
+             │
+             ▼
+┌─────────────────────────────────────────────────────┐
+│  GENORMALISEERD DOCUMENT                            │
+│  (altijd dezelfde structuur, ongeacht bron)         │
+│                                                     │
+│  external_id    ← source:source_id (uniek)          │
+│  title          ← gemapped vanuit bron              │
+│  description    ← gemapped vanuit bron              │
+│  content        ← gemapped vanuit bron              │
+│  category       ← gemapped + genormaliseerd         │
+│  theme          ← gemapped + genormaliseerd         │
+│  organisation   ← gemapped + genormaliseerd         │
+│  document_type  ← gemapped + genormaliseerd         │
+│  media_type     ← gedetecteerd (MIME/ext/AI)        │
+│  publication_date ← gemapped vanuit bron            │
+│  source         ← bron identifier                   │
+│  source_id      ← origineel ID in bron              │
+│  source_url     ← link naar origineel               │
+│  woo_status     ← bepaald door adapter              │
+│  ingested_by    ← API client / systeem              │
+│  metadata       ← volledige bron-response           │
+└────────────┬────────────────────────────────────────┘
+             │
+             ▼
+        PostgreSQL → Typesense → AI Verrijking → Embeddings
+```
+
+### Source Adapter — Mapping per Bron
+
+#### Open Overheid (huidige bron)
+```
+API veld                              →  Snelle dataset veld
+──────────────────────────────────────────────────────────
+document.id                           →  source_id
+"open_overheid"                       →  source
+"open_overheid:{document.id}"         →  external_id
+document.titelcollectie.officieleTitel→  title
+document.omschrijvingen[0]            →  description
+(niet beschikbaar)                    →  content
+classificatiecollectie
+  .informatiecategorieen[0].label     →  category
+  .themas[0].label                    →  theme
+  .documentsoorten[0].label           →  document_type
+document.verantwoordelijke.label      →  organisation
+versies[0].openbaarmakingsdatum       →  publication_date
+document.weblocatie                   →  source_url
+"woo"                                 →  woo_status
+MIME van weblocatie                    →  media_type
+(hele response)                       →  metadata
+```
+
+#### Gemeente Open Data API (voorbeeld toekomstige bron)
+```
+API veld                              →  Snelle dataset veld
+──────────────────────────────────────────────────────────
+record.id                             →  source_id
+"gemeente_{gemeente_naam}"            →  source
+"gemeente_{naam}:{record.id}"         →  external_id
+record.titel                          →  title
+record.samenvatting                   →  description
+record.inhoud                         →  content
+record.categorie                      →  category
+record.thema                          →  theme
+record.documentsoort                  →  document_type
+gemeente_naam                         →  organisation
+record.datum                          →  publication_date
+record.url                            →  source_url
+bepaald o.b.v. categorie              →  woo_status
+record.mime_type / extensie           →  media_type
+(hele response)                       →  metadata
+```
+
+#### CSV/Bulk Import (voorbeeld)
+```
+CSV kolom                             →  Snelle dataset veld
+──────────────────────────────────────────────────────────
+id (of rijnummer)                     →  source_id
+"csv_import_{bestandsnaam}"           →  source
+"csv_{bestand}:{id}"                  →  external_id
+titel                                 →  title
+omschrijving                          →  description
+inhoud                                →  content
+categorie                             →  category
+thema                                 →  theme
+documenttype                          →  document_type
+organisatie                           →  organisation
+datum                                 →  publication_date
+url                                   →  source_url
+"unknown" (handmatig verrijken)       →  woo_status
+(afgeleid van url/bestand)            →  media_type
+{hele CSV rij als JSON}               →  metadata
+```
+
+---
+
+## Pagina-inrichting — Detail & Document Pagina's
+
+### Zoekresultaat Kaart (ResultCard)
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  ┌────┐                                                      │
+│  │ PDF│  Titel van het document (max 2 regels)               │
+│  └────┘  Korte omschrijving van het document, afgekapt       │
+│          op maximaal 2 regels tekst...                       │
+│                                                              │
+│  🏛 Gemeente Amsterdam  ·  📅 15 maart 2025  ·  📄 Besluit  │
+│                                                              │
+│  [Woo]  [Ruimte en infrastructuur]  [2j. Onderzoeksrapporten]│
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+| Element | Veld | Nieuw | Toelichting |
+|---------|------|-------|-------------|
+| Type icoon | `media_type` | ★ | PDF/Video/Audio/Excel icoon links van titel |
+| Titel | `title` | | Vetgedrukt, max 2 regels |
+| Omschrijving | `description` | | Grijs, max 2 regels |
+| Organisatie | `organisation` | | Met Building icoon, klikbaar naar org pagina |
+| Datum | `publication_date` | | Geformatteerd (dd mmmm yyyy) |
+| Documenttype | `document_type` | | Met File icoon |
+| Woo badge | `woo_status` | ★ | Groen "Woo" badge als `woo`, grijs "Niet-Woo" als `non_woo` |
+| Thema badge | `theme` | | Blauw badge |
+| Categorie badge | `category` | | Grijs badge |
+
+### Document Detailpagina — Volledige Indeling
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│  ← Terug naar zoekresultaten                                        │
+│                                                                      │
+│  [Woo-document]  [PDF]  [Bron: open.overheid.nl ↗]                  │
+│                                                                      │
+│  ═══════════════════════════════════════════════════════════════════  │
+│  Titel van het Document                                              │
+│  (ai_enhanced_title als beschikbaar, anders title)                   │
+│  ═══════════════════════════════════════════════════════════════════  │
+│                                                                      │
+│  ┌─────────────────────────────────────────────────────────────────┐ │
+│  │  METADATA KAART                                                 │ │
+│  │                                                                 │ │
+│  │  🏛 Organisatie    Gemeente Amsterdam  (klikbaar)               │ │
+│  │  📅 Publicatie     15 maart 2025                                │ │
+│  │  📄 Documenttype   Woo-besluit                                  │ │
+│  │  🎞 Formaat        PDF Document                                 │ │
+│  │  📂 Categorie      2j. Onderzoeksrapporten                     │ │
+│  │  🏷 Thema          Ruimte en infrastructuur                     │ │
+│  │  📊 Woo-status     ✅ Woo-document (verplichte publicatie)      │ │
+│  │  🔗 Bron           open.overheid.nl/documenten/oep-...  ↗      │ │
+│  │  🔄 Gesynchroniseerd  2 april 2026 14:30                       │ │
+│  └─────────────────────────────────────────────────────────────────┘ │
+│                                                                      │
+│  ┌─────────────────────────────────────────────────────────────────┐ │
+│  │  AI SAMENVATTING                                        🤖     │ │
+│  │                                                                 │ │
+│  │  Dit document betreft een besluit van de gemeente Amsterdam     │ │
+│  │  over een omgevingsvergunning voor de bouw van een woning-      │ │
+│  │  complex aan de Herengracht. Het besluit is genomen op basis    │ │
+│  │  van de Omgevingswet.                                          │ │
+│  │                                                                 │ │
+│  │  Sleutelwoorden:                                               │ │
+│  │  [omgevingsvergunning] [woningbouw] [herengracht] [amsterdam]  │ │
+│  │  [omgevingswet]                                                │ │
+│  └─────────────────────────────────────────────────────────────────┘ │
+│                                                                      │
+│  ┌─────────────────────────────────────────────────────────────────┐ │
+│  │  OMSCHRIJVING                                                   │ │
+│  │                                                                 │ │
+│  │  Volledige beschrijving van het document zoals aangeleverd      │ │
+│  │  door de bron...                                                │ │
+│  └─────────────────────────────────────────────────────────────────┘ │
+│                                                                      │
+│  ┌─────────────────────── ACTIES ──────────────────────────────────┐ │
+│  │                                                                 │ │
+│  │  [🤖 Vraag de AI]  [📥 Bekijk origineel ↗]  [📋 Kopieer link] │ │
+│  │  [📧 Deel via email]  [⭐ Bewaar als favoriet]                  │ │
+│  └─────────────────────────────────────────────────────────────────┘ │
+│                                                                      │
+│  ┌─────────────────────────────────────────────────────────────────┐ │
+│  │  GERELATEERDE DOCUMENTEN                              🤖 AI   │ │
+│  │                                                                 │ │
+│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐           │ │
+│  │  │ [PDF] Titel  │ │ [DOC] Titel  │ │ [PDF] Titel  │           │ │
+│  │  │ Omschrijving │ │ Omschrijving │ │ Omschrijving │           │ │
+│  │  │ Org · Datum  │ │ Org · Datum  │ │ Org · Datum  │           │ │
+│  │  └──────────────┘ └──────────────┘ └──────────────┘           │ │
+│  └─────────────────────────────────────────────────────────────────┘ │
+│                                                                      │
+│  ┌─────────────────────────────────────────────────────────────────┐ │
+│  │  DOSSIER (als onderdeel van een dossier)                       │ │
+│  │                                                                 │ │
+│  │  Dit document is onderdeel van dossier "Omgevingsvergunning    │ │
+│  │  Herengracht 123" met 5 gerelateerde documenten:               │ │
+│  │                                                                 │ │
+│  │  📄 15-01-2025  Aanvraag omgevingsvergunning                   │ │
+│  │  📄 20-02-2025  Zienswijze bewonerscommissie                   │ │
+│  │  📄 01-03-2025  Reactie op zienswijze                → dit doc │ │
+│  │  📄 15-03-2025  Besluit omgevingsvergunning                    │ │
+│  │  📄 01-04-2025  Publicatie in Staatscourant                    │ │
+│  └─────────────────────────────────────────────────────────────────┘ │
+│                                                                      │
+│  ┌─────────────────────────────────────────────────────────────────┐ │
+│  │  RUWE METADATA (inklapbaar)                                    │ │
+│  │                                                                 │ │
+│  │  ▶ Bekijk volledige metadata (JSON)                            │ │
+│  └─────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+### Pagina Secties — Gedetailleerd
+
+| # | Sectie | Velden | Nieuw | Prioriteit |
+|---|--------|--------|-------|-----------|
+| 1 | **Terugknop** | Navigatie naar vorige pagina | | Must |
+| 2 | **Status badges** | `woo_status`, `media_type`, bron link | ★ | Must |
+| 3 | **Titel** | `ai_enhanced_title` → fallback `title` | | Bestaat |
+| 4 | **Metadata kaart** | organisatie, datum, type, formaat, categorie, thema, woo-status, bron, sync datum | ★ media_type, woo_status, source_url | Must |
+| 5 | **AI Samenvatting** | `ai_summary`, `ai_keywords` (klikbaar) | | Bestaat |
+| 6 | **Omschrijving** | `description` / `content` | | Bestaat |
+| 7 | **Acties** | Vraag AI, Bekijk origineel, Kopieer, Deel, Favoriet | ★ Bekijk origineel, Favoriet | Should |
+| 8 | **Gerelateerde documenten** | API similar() met media_type icoon | ★ icoon | Bestaat |
+| 9 | **Dossier tijdlijn** | `metadata.documentrelaties` chronologisch | ★ Nieuw | Should |
+| 10 | **Ruwe metadata** | `metadata` als inklapbare JSON viewer | ★ Nieuw | Could |
+
+### Organisatie Detailpagina — Aanvullingen
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│  Gemeente Amsterdam                                                  │
+│  [Woo-plichtig ✅]  [1.234 documenten]  [Bron: open.overheid.nl]    │
+│                                                                      │
+│  ┌─────────────────────────────────────────────────────────────────┐ │
+│  │  DOCUMENT VERDELING NAAR TYPE (formaat)                 Nieuw  │ │
+│  │                                                                 │ │
+│  │  📄 PDF          ████████████████████████  892  (72%)          │ │
+│  │  📝 Word         ████████                  187  (15%)          │ │
+│  │  📊 Excel        ████                       98   (8%)          │ │
+│  │  🌐 HTML         ██                         42   (3%)          │ │
+│  │  🎥 Video        █                          15   (1%)          │ │
+│  └─────────────────────────────────────────────────────────────────┘ │
+│                                                                      │
+│  ┌─────────────────────────────────────────────────────────────────┐ │
+│  │  WOO-STATUS VERDELING                                   Nieuw  │ │
+│  │                                                                 │ │
+│  │  ✅ Woo-documenten     1.100  (89%)                            │ │
+│  │  🔗 Woo-gerelateerd      102   (8%)                            │ │
+│  │  ⚪ Niet-Woo              32   (3%)                            │ │
+│  └─────────────────────────────────────────────────────────────────┘ │
+│                                                                      │
+│  (bestaande secties: stats, charts, recente documenten)              │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+### Dossier Detailpagina — Eigen Weergave
+
+> Dossiers krijgen een eigen pagina-indeling (niet hergebruik van DocumentPage)
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│  ← Terug naar collecties                                             │
+│                                                                      │
+│  DOSSIER                                                             │
+│  Omgevingsvergunning Herengracht 123                                 │
+│  Gemeente Amsterdam  ·  5 documenten  ·  jan 2025 — apr 2025        │
+│                                                                      │
+│  ┌─────────────────────────────────────────────────────────────────┐ │
+│  │  AI DOSSIER-SAMENVATTING                                🤖    │ │
+│  │                                                                 │ │
+│  │  Dit dossier bevat alle documenten rond de aanvraag en          │ │
+│  │  verlening van een omgevingsvergunning voor woningbouw...       │ │
+│  └─────────────────────────────────────────────────────────────────┘ │
+│                                                                      │
+│  ┌─────────────────── TIJDLIJN ───────────────────────────────────┐ │
+│  │                                                                 │ │
+│  │  ● 15-01-2025  📄 Aanvraag omgevingsvergunning          [Woo] │ │
+│  │  │                                                              │ │
+│  │  ● 20-02-2025  📄 Zienswijze bewonerscommissie          [Woo] │ │
+│  │  │                                                              │ │
+│  │  ● 01-03-2025  📄 Reactie op zienswijze                 [Woo] │ │
+│  │  │                                                              │ │
+│  │  ● 15-03-2025  📄 Besluit omgevingsvergunning           [Woo] │ │
+│  │  │                                                              │ │
+│  │  ● 01-04-2025  🌐 Publicatie in Staatscourant           [Woo] │ │
+│  │                                                                 │ │
+│  └─────────────────────────────────────────────────────────────────┘ │
+│                                                                      │
+│  [🤖 Vraag de AI over dit dossier]  [📥 Exporteer dossier]         │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
 ---

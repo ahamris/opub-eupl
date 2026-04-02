@@ -27,24 +27,51 @@ Onze doelstellingen:
 
 ### Huidige functionaliteiten
 
-- Doorzoeken van 641.000+ actief openbaar gemaakte overheidsdocumenten
-- Full-text zoeken met filters en facetten via Typesense
-- REST API voor zoeken, ophalen en aanleveren van documenten
-- AI-verrijking van documenten met samenvattingen en metadata (sovereign, lokaal via Ollama)
-- AI-chatfunctie op basis van het Nederlandse taalmodel Geitje
-- Dashboarding met publicatievolumes en trends per organisatie
-- Automatische synchronisatie met open.overheid.nl
-- Attenderingsfunctie voor nieuwe publicaties
+- Doorzoeken van 645.000+ actief openbaar gemaakte overheidsdocumenten
+- Full-text zoeken met faceted filters (organisatie, thema, categorie, documenttype) en URL state sync
+- Semantic search via vector embeddings (nomic-embed-text, 768-dim)
+- REST API v2 voor zoeken, ophalen en aanleveren van documenten (Swagger)
+- AI-verrijking: vereenvoudigde titels, samenvattingen en keywords (sovereign, lokaal via Ollama + Geitje-7b)
+- AI-chatfunctie met streaming (SSE), bronverwijzingen, follow-up suggesties en export (PDF/JSON/XML/MD)
+- Dashboarding met publicatievolumes, top organisaties, thema's en categorieën (ApexCharts)
+- Organisatiepagina's met statistieken, charts en bestuursorgaan-informatie
+- Automatische synchronisatie met open.overheid.nl (dagelijks)
+- Attenderingsfunctie: zoekabonnementen met e-mailverificatie en frequentiekeuze
+- Authenticatie: registratie, login, account beheer, abonnementen overzicht
+- Dossiers/collecties: overzicht en doorklik naar gerelateerde documenten
+
+### Data-architectuur
+
+Elk document heeft een **snelle dataset** (geïndexeerd, doorzoekbaar) en **volledige metadata** (JSONB, ongewijzigd uit de bron):
+
+| Snelle dataset | Doel |
+|----------------|------|
+| Titel, korte/lange omschrijving | Doorzoekbaar (FTS + Typesense) |
+| Categorie, thema, organisatie, documenttype | Facet filters |
+| Media type (PDF, video, audio, etc.) | Formaat/drager classificatie |
+| Woo-status (woo / woo_related / non_woo) | Juridische classificatie |
+| Sleutelwoorden (AI), samenvatting (AI) | AI-verrijkte metadata |
+| Bron verwijzing, bron URL | Traceerbaarheid naar origineel |
+
+Zie [METADATA.md](METADATA.md) voor het volledige schema, ETL pipeline en veld mapping.
 
 ### Roadmap
 
-- Uitbreiding naar alle publicatietypen (wet- en regelgeving, beleidsnotities, onderzoeksrapporten)
-- Koppeling met aanvullende overheidsbronnen en registers
-- Verbeterde AI-analyse en classificatie van documenten
-- Geavanceerde zoek- en filtermogelijkheden
-- Gebruikersbeheer en persoonlijke dossiers
-- Integratie met bestaande overheidsinfrastructuur (developer.overheid.nl)
-- Meertalige ondersteuning
+Zie [SAFEAGILE.md](SAFEAGILE.md) voor het volledige SAFe Agile plan met epics, user stories en sprint planning.
+
+**PI-1 (Q2 2026):**
+- Data-inrichting: Woo-classificatie, media types, multi-source bronbeheer
+- Feedback & review module (1-5 sterren, testimonials)
+- Blog pagina's (SPA)
+- Document detailpagina herinrichting (Woo badges, media iconen, metadata kaart, acties)
+- Dossier eigen pagina met tijdlijn
+- Dark mode
+- WCAG 2.1 AA compliance
+
+**PI-2 (Q3 2026):**
+- Multi-source adapter framework (gemeenten, Officiële Bekendmakingen, bulk import)
+- Bestuursorgaanportaal (document upload, API keys, compliance rapportage)
+- Analytics & rapportage
 
 ## Technische stack
 
@@ -131,9 +158,12 @@ Volledige API-documentatie is beschikbaar via Swagger UI op [opub.nl/api/docs](h
 | `GET` | `/api/v2/search?q=...` | Zoeken met filters en facetten |
 | `GET` | `/api/v2/documents/{id}` | Document ophalen met metadata |
 | `GET` | `/api/v2/stats` | Platformstatistieken |
+| `GET` | `/api/v2/documents/{id}/similar` | Vergelijkbare documenten (vector) |
+| `GET` | `/api/v2/dossiers` | Dossiers/collecties |
+| `GET` | `/api/v2/organisations/{name}` | Organisatie detail + stats |
 | `POST` | `/api/v2/ingest` | Document aanleveren |
 | `POST` | `/api/v2/ingest/batch` | Batch aanlevering (max 100) |
-| `POST` | `/api/v2/chat/send` | AI-chat bericht |
+| `POST` | `/api/v2/chat/send` | AI-chat bericht (streaming) |
 
 ### Aansluiten als bestuursorgaan
 

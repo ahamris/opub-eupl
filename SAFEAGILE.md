@@ -85,16 +85,84 @@
 
 | # | Epic | WSJF | Status | PI |
 |---|------|------|--------|-----|
+| E0 | Data-inrichting & Woo-classificatie | 36 | 📋 | PI-1 S1 |
 | E1 | Feedback & Review Module | 34 | 📋 | PI-1 S1 |
 | E2 | Blog Pagina's (SPA) | 30 | 📋 | PI-1 S1 |
 | E3 | Dark Mode | 28 | 📋 | PI-1 S2 |
-| E4 | Document & Zoek Polish | 26 | 📋 | PI-1 S1-S2 |
+| E4 | Document & Zoek Polish + Detailpagina's | 26 | 📋 | PI-1 S1-S2 |
 | E5 | Testimonials & Social Proof | 24 | 📋 | PI-1 S2 |
 | E6 | Gebruikersportaal Uitbreiden | 20 | 📋 | PI-1 S3 |
 | E7 | Kennisbank Dynamisch | 18 | 📋 | PI-1 S3 |
-| E8 | Bestuursorgaanportaal | 16 | 📋 | PI-2 |
-| E9 | WCAG 2.1 AA Compliance | 14 | 📋 | PI-2 |
-| E10 | Geavanceerd (Multi-model, Federatie) | 10 | ❌ | PI-3+ |
+| E8 | Multi-source Ingest & Adapters | 17 | 📋 | PI-2 |
+| E9 | Bestuursorgaanportaal | 16 | 📋 | PI-2 |
+| E10 | WCAG 2.1 AA Compliance | 14 | 📋 | PI-2 |
+| E11 | Geavanceerd (Multi-model, Federatie) | 10 | ❌ | PI-3+ |
+
+---
+
+## EPIC 0: Data-inrichting & Woo-classificatie ★ NIEUW
+**Business Value**: Fundament voor ALLES. Zonder correcte data-inrichting is elke feature gebouwd op drijfzand. Woo/niet-Woo onderscheid is essentieel voor vertrouwen en juridische correctheid.
+**Referentie**: Zie [METADATA.md](METADATA.md) voor volledig schema en veld mapping.
+
+### Feature 0.1: Database Uitbreiding (Bronbeheer + Woo)
+| # | User Story | Acceptatiecriteria | SP | Sprint | Status |
+|---|------------|-------------------|-----|--------|--------|
+| 0.1.1 | Als systeem wil ik per document de databron opslaan | Migration: `source` (VARCHAR 100), `source_id` (VARCHAR 255), `source_url` (VARCHAR 2000) kolommen toevoegen | 3 | S1 | 📋 |
+| 0.1.2 | Als systeem wil ik per document de Woo-status bijhouden | Migration: `woo_status` (VARCHAR 20, default 'unknown'), `ingested_by` (VARCHAR 255) kolommen toevoegen | 2 | S1 | 📋 |
+| 0.1.3 | Als systeem wil ik het mediatype per document opslaan | Migration: `media_type` (VARCHAR 100) kolom toevoegen | 1 | S1 | 📋 |
+| 0.1.4 | Als systeem wil ik alle bestaande open.overheid documenten backfillen | Command: set `source='open_overheid'`, `woo_status='woo'`, `source_url` uit metadata, `media_type` detectie | 5 | S1 | 📋 |
+| 0.1.5 | Als systeem wil ik nieuwe velden in Eloquent model registreren | `$fillable`, `$casts` bijwerken, scopes voor `woo_status`, `source`, `media_type` | 2 | S1 | 📋 |
+
+**Subtotaal**: 13 SP
+
+### Feature 0.2: Typesense Schema Uitbreiding
+| # | User Story | Acceptatiecriteria | SP | Sprint | Status |
+|---|------------|-------------------|-----|--------|--------|
+| 0.2.1 | Als systeem wil ik `media_type`, `woo_status`, `source` als facets in Typesense | Schema update: 3 nieuwe facet velden toevoegen aan collectie | 3 | S1 | 📋 |
+| 0.2.2 | Als systeem wil ik `source_url` opslaan in Typesense | Schema update: `source_url` als string veld | 1 | S1 | 📋 |
+| 0.2.3 | Als systeem wil ik alle bestaande documenten re-syncen naar Typesense | Re-sync command met nieuwe velden, batch verwerking | 3 | S1 | 📋 |
+
+**Subtotaal**: 7 SP
+
+### Feature 0.3: API Response Uitbreiding
+| # | User Story | Acceptatiecriteria | SP | Sprint | Status |
+|---|------------|-------------------|-----|--------|--------|
+| 0.3.1 | Als API consumer wil ik `woo_status`, `media_type`, `source`, `source_url` in zoekresultaten | SearchHit uitbreiden met nieuwe velden | 2 | S1 | 📋 |
+| 0.3.2 | Als API consumer wil ik facets voor `woo_status`, `media_type`, `source` | Facets toevoegen aan search response | 2 | S1 | 📋 |
+| 0.3.3 | Als API consumer wil ik `woo_status`, `source`, `source_url`, `ingested_by` in document detail | DocumentResponse uitbreiden | 1 | S1 | 📋 |
+
+**Subtotaal**: 5 SP
+
+### Feature 0.4: Frontend TypeScript & Zoek UI
+| # | User Story | Acceptatiecriteria | SP | Sprint | Status |
+|---|------------|-------------------|-----|--------|--------|
+| 0.4.1 | Als ontwikkelaar wil ik TypeScript interfaces bijwerken | `SearchHit`, `DocumentResponse` uitbreiden in api.ts | 1 | S1 | 📋 |
+| 0.4.2 | Als burger wil ik filteren op Woo-status in de zoeksidebar | Woo filter: "Woo-documenten", "Woo-gerelateerd", "Niet-Woo" met counts | 3 | S1 | 📋 |
+| 0.4.3 | Als burger wil ik filteren op mediatype in de zoeksidebar | Mediatype filter met iconen: PDF, Word, Video, etc. met counts | 3 | S1 | 📋 |
+| 0.4.4 | Als burger wil ik filteren op databron | Bron filter: "Open Overheid", "Ingest API", etc. met counts | 2 | S2 | 📋 |
+
+**Subtotaal**: 9 SP
+
+### Feature 0.5: Ingest API Uitbreiding
+| # | User Story | Acceptatiecriteria | SP | Sprint | Status |
+|---|------------|-------------------|-----|--------|--------|
+| 0.5.1 | Als bestuursorgaan wil ik bij ingest de woo_status meegeven | Ingest API: `woo_status` veld accepteren (optioneel, default 'woo') | 1 | S1 | 📋 |
+| 0.5.2 | Als bestuursorgaan wil ik het mediatype meegeven of laten detecteren | Ingest API: `media_type` veld (optioneel), auto-detectie uit URL/content-type als niet meegegeven | 3 | S1 | 📋 |
+| 0.5.3 | Als systeem wil ik de `source` en `ingested_by` automatisch zetten bij ingest | `source='ingest_api'`, `ingested_by` uit API client naam | 1 | S1 | 📋 |
+| 0.5.4 | Als systeem wil ik de `source_url` opslaan bij ingest | Ingest API: `source_url` veld accepteren (optioneel) | 1 | S1 | 📋 |
+
+**Subtotaal**: 6 SP
+
+### Feature 0.6: ETL Sync Aanpassen
+| # | User Story | Acceptatiecriteria | SP | Sprint | Status |
+|---|------------|-------------------|-----|--------|--------|
+| 0.6.1 | Als systeem wil ik bij open.overheid sync automatisch source-velden zetten | `source='open_overheid'`, `source_id` uit API doc ID, `woo_status='woo'` | 2 | S1 | 📋 |
+| 0.6.2 | Als systeem wil ik het mediatype detecteren bij sync | MIME-type uit bron URL / content-type header / extensie | 3 | S2 | 📋 |
+| 0.6.3 | Als systeem wil ik `source_url` extraheren uit metadata bij sync | `metadata.document.weblocatie` of `metadata.document.pid` → `source_url` | 1 | S1 | 📋 |
+
+**Subtotaal**: 6 SP
+
+**Epic 0 Totaal**: 46 SP (Sprint 1-2)
 
 ---
 
@@ -198,21 +266,56 @@
 
 ---
 
-## EPIC 4: Document & Zoek Polish
-**Business Value**: Kleine verbeteringen die de dagelijkse ervaring significant verbeteren.
+## EPIC 4: Document & Zoek Polish + Detailpagina's
+**Business Value**: De document detailpagina is waar de gebruiker uiteindelijk belandt. Dit moet de meest informatieve en bruikbare pagina van het platform zijn.
+**Referentie**: Zie [METADATA.md](METADATA.md) sectie "Pagina-inrichting" voor wireframes.
 
-### Feature 4.1: Ontbrekende Details
+### Feature 4.1: Document Detailpagina Herinrichting
 | # | User Story | Acceptatiecriteria | SP | Sprint | Status |
 |---|------------|-------------------|-----|--------|--------|
-| 4.1.1 | Als burger wil ik een link naar het origineel op open.overheid.nl | Externe link button op document pagina, opent in nieuw tabblad | 2 | S1 | 📋 |
-| 4.1.2 | Als burger wil ik highlighted zoektermen in resultaten | Bold/highlight van matches in titel en beschrijving (Typesense highlight) | 3 | S1 | 📋 |
-| 4.1.3 | Als burger wil ik "Vraag de AI over dit document" op de document pagina | Knop → opent /chat met document-ID + titel als context query | 3 | S1 | 📋 |
-| 4.1.4 | Als burger wil ik collecties doorzoeken en filteren | Zoekbalk + organisatie filter op collectiepagina | 5 | S2 | 📋 |
-| 4.1.5 | Als burger wil ik "geen resultaten" suggesties zien | Bij 0 resultaten: spelling suggesties, bredere zoekterm, AI suggestie | 3 | S2 | 📋 |
+| 4.1.1 | Als burger wil ik direct zien of het een Woo-document is | Woo-status badge bovenaan: groen "Woo-document", geel "Woo-gerelateerd", grijs "Niet-Woo" | 2 | S1 | 📋 |
+| 4.1.2 | Als burger wil ik het mediatype zien met icoon | Media type badge met UntitledUI File Icon (PDF, Word, Video, etc.) | 2 | S1 | 📋 |
+| 4.1.3 | Als burger wil ik een link naar het originele document | `source_url` als "Bekijk origineel" button, opent nieuw tabblad, toont domeinnaam | 2 | S1 | 📋 |
+| 4.1.4 | Als burger wil ik een complete metadata kaart | Kaart met: organisatie (klikbaar), datum, documenttype, formaat, categorie, thema, woo-status, bron, sync datum | 5 | S1 | 📋 |
+| 4.1.5 | Als burger wil ik acties uitvoeren op het document | Actie-balk: "Vraag de AI", "Bekijk origineel", "Kopieer link", "Deel via email", "Bewaar als favoriet" | 5 | S2 | 📋 |
+| 4.1.6 | Als burger wil ik de ruwe metadata kunnen inzien | Inklapbare JSON viewer onderaan de pagina (voor ontwikkelaars/journalisten) | 3 | S2 | 📋 |
 
-**Subtotaal**: 16 SP
+**Subtotaal**: 19 SP
 
-**Epic 4 Totaal**: 16 SP (Sprint 1-2)
+### Feature 4.2: Dossier Detailpagina (Eigen Weergave)
+> Dossiers krijgen een EIGEN pagina (niet hergebruik van DocumentPage)
+
+| # | User Story | Acceptatiecriteria | SP | Sprint | Status |
+|---|------------|-------------------|-----|--------|--------|
+| 4.2.1 | Als burger wil ik een dossier als tijdlijn zien | Chronologische tijdlijn van alle documenten in het dossier, met datum, titel, mediatype icoon, Woo badge | 8 | S2 | 📋 |
+| 4.2.2 | Als burger wil ik een dossier-samenvatting zien | AI-gegenereerde samenvatting van het gehele dossier (als verrijkt) | 3 | S3 | 📋 |
+| 4.2.3 | Als burger wil ik dossier-metadata zien | Organisatie, aantal documenten, datumbereik, thema/categorie | 2 | S2 | 📋 |
+| 4.2.4 | Als burger wil ik "Vraag de AI over dit dossier" | Knop → opent chat met dossier context | 3 | S3 | 📋 |
+| 4.2.5 | Als burger wil ik een dossier exporteren | Export als PDF rapport / JSON / CSV | 5 | S3 | 📋 |
+| 4.2.6 | Als router wil ik een aparte dossier route | `/collecties/:id` → DossierPage (niet meer DocumentPage) | 2 | S2 | 📋 |
+
+**Subtotaal**: 23 SP
+
+### Feature 4.3: Zoekresultaat Kaarten Verrijken
+| # | User Story | Acceptatiecriteria | SP | Sprint | Status |
+|---|------------|-------------------|-----|--------|--------|
+| 4.3.1 | Als burger wil ik het mediatype icoon zien per zoekresultaat | File-type icoon (PDF/Word/Video/etc.) links van de titel | 2 | S1 | 📋 |
+| 4.3.2 | Als burger wil ik de Woo-status badge zien per zoekresultaat | Groen/geel/grijs Woo badge naast categorie en thema | 2 | S1 | 📋 |
+| 4.3.3 | Als burger wil ik highlighted zoektermen in resultaten | Bold/highlight van matches in titel en beschrijving | 3 | S1 | 📋 |
+| 4.3.4 | Als burger wil ik "geen resultaten" suggesties zien | Bij 0 resultaten: spelling suggesties, bredere zoekterm, AI suggestie | 3 | S2 | 📋 |
+
+**Subtotaal**: 10 SP
+
+### Feature 4.4: Organisatie Pagina Verrijken
+| # | User Story | Acceptatiecriteria | SP | Sprint | Status |
+|---|------------|-------------------|-----|--------|--------|
+| 4.4.1 | Als burger wil ik de document formaat-verdeling zien per organisatie | Staafdiagram: PDF x%, Word x%, Video x%, etc. | 3 | S3 | 📋 |
+| 4.4.2 | Als burger wil ik de Woo-status verdeling zien per organisatie | Donut chart: Woo x%, Woo-gerelateerd x%, Niet-Woo x% | 3 | S3 | 📋 |
+| 4.4.3 | Als burger wil ik collecties doorzoeken en filteren | Zoekbalk + organisatie filter op collectiepagina | 5 | S2 | 📋 |
+
+**Subtotaal**: 11 SP
+
+**Epic 4 Totaal**: 63 SP (Sprint 1-3)
 
 ---
 
@@ -267,7 +370,35 @@
 
 ---
 
-## EPIC 8: Bestuursorgaanportaal
+## EPIC 8: Multi-source Ingest & Adapters ★ NIEUW
+**Business Value**: Hoe meer bronnen, hoe completer het platform. Elke bron volgt hetzelfde adapter-patroon → genormaliseerd document.
+**Referentie**: Zie [METADATA.md](METADATA.md) sectie "ETL per Databron — Universeel Patroon"
+
+### Feature 8.1: Source Adapter Framework
+| # | User Story | Acceptatiecriteria | SP | Sprint | Status |
+|---|------------|-------------------|-----|--------|--------|
+| 8.1.1 | Als systeem wil ik een abstract SourceAdapter interface | PHP interface: `extract()`, `transform()`, `getSource()`, `getDefaultWooStatus()` | 5 | S5 | 📋 |
+| 8.1.2 | Als systeem wil ik de bestaande OpenOverheid sync refactoren naar adapter | `OpenOverheidAdapter implements SourceAdapter`, bestaande logica behouden | 5 | S5 | 📋 |
+| 8.1.3 | Als systeem wil ik een generiek sync command per adapter | `php artisan source:sync {adapter} --recent --from --to` | 3 | S5 | 📋 |
+| 8.1.4 | Als admin wil ik zien welke bronnen actief zijn en hun sync status | Admin dashboard: per bron: naam, laatste sync, docs count, status | 5 | S6 | 📋 |
+
+**Subtotaal**: 18 SP
+
+### Feature 8.2: Geplande Adapters
+| # | User Story | Acceptatiecriteria | SP | Sprint | Status |
+|---|------------|-------------------|-----|--------|--------|
+| 8.2.1 | Als systeem wil ik gemeente Open Data API's aansluiten | `GemeenteAdapter`: mapping van gemeente API formaat → genormaliseerd document | 8 | S6 | 📋 |
+| 8.2.2 | Als systeem wil ik Officiële Bekendmakingen aansluiten | `OfficielebekendmakingenAdapter`: mapping + woo_status='woo_related' | 8 | S7 | 📋 |
+| 8.2.3 | Als systeem wil ik CSV/JSON bulk import ondersteunen | `BulkImportAdapter`: CLI command, kolom mapping, woo_status='unknown' default | 5 | S6 | 📋 |
+| 8.2.4 | Als systeem wil ik media_type auto-detectie per adapter | MIME-type uit header, extensie, of AI classificatie — gedeelde utility | 3 | S5 | 📋 |
+
+**Subtotaal**: 24 SP
+
+**Epic 8 Totaal**: 42 SP (Sprint 5-7, PI-2)
+
+---
+
+## EPIC 9: Bestuursorgaanportaal
 **Business Value**: Kernproduct voor overheden — directe klantwaarde.
 
 ### Feature 8.1: Organisatie Dashboard
@@ -304,89 +435,104 @@
 
 ## SPRINT PLANNING — PI-1
 
-### Sprint 1 (Week 1-2) — "Feedback & Blog Foundation" | ~40 SP
+### Sprint 1 (Week 1-2) — "Data Foundation & Detailpagina's" | ~42 SP
+
+> Data-inrichting EERST. Zonder correcte velden is elke UI gebouwd op drijfzand.
 
 | Item | Epic | SP | MoSCoW |
 |------|------|----|--------|
-| Feedback widget (floating button + modal) | E1 | 3 | Must |
-| Sterren rating component (1-5) | E1 | 3 | Must |
-| Feedback opmerking textarea | E1 | 2 | Must |
-| Feedback type dropdown | E1 | 2 | Must |
-| Email veld (optioneel) | E1 | 1 | Must |
-| Geen-auth feedback + honeypot | E1 | 2 | Must |
-| Bestuursorgaan feedback categorie | E1 | 1 | Should |
-| Feedback database migration + model | E1 | 3 | Must |
-| Spam preventie (rate limiting) | E1 | 2 | Must |
-| Blog overzichtspagina (/blog) | E2 | 5 | Must |
-| Blog categorie filter | E2 | 3 | Must |
-| Blog paginering | E2 | 2 | Must |
-| Blog artikel detailpagina (/blog/:slug) | E2 | 5 | Must |
+| **DATA-INRICHTING** | | | |
+| DB migration: source, source_id, source_url, woo_status, ingested_by, media_type | E0 | 6 | Must |
+| Backfill bestaande docs: source='open_overheid', woo_status='woo', source_url, media_type | E0 | 5 | Must |
+| Eloquent model: $fillable, $casts, scopes | E0 | 2 | Must |
+| Typesense schema: media_type, woo_status, source facets + re-sync | E0 | 7 | Must |
+| API response: nieuwe velden in search + document + facets | E0 | 5 | Must |
+| TypeScript interfaces bijwerken (api.ts) | E0 | 1 | Must |
+| Ingest API: woo_status, media_type, source_url accepteren | E0 | 3 | Must |
+| ETL sync: source-velden automatisch zetten + source_url extractie | E0 | 3 | Must |
+| **DETAILPAGINA'S** | | | |
+| Woo-status badge op document pagina | E4 | 2 | Must |
+| Media type icoon op document pagina | E4 | 2 | Must |
+| "Bekijk origineel" link (source_url) | E4 | 2 | Must |
+| Woo + media_type icoon op zoekresultaat kaarten | E4 | 4 | Must |
+| **Totaal** | | **42** | |
+
+### Sprint 2 (Week 3-4) — "Feedback, Blog & Filters" | ~43 SP
+
+| Item | Epic | SP | MoSCoW |
+|------|------|----|--------|
+| **FEEDBACK MODULE** | | | |
+| Feedback widget (floating button + modal + sterren + opmerking) | E1 | 8 | Must |
+| Feedback type dropdown + email (optioneel) + honeypot | E1 | 4 | Must |
+| Feedback DB migration + model + spam preventie | E1 | 5 | Must |
+| **BLOG** | | | |
+| Blog overzichtspagina + categorie filter + paginering | E2 | 8 | Must |
+| Blog artikel detailpagina + leestijd | E2 | 6 | Must |
 | Blog API endpoints + routing | E2 | 4 | Must |
-| Leestijd berekening | E2 | 1 | Should |
-| Link naar open.overheid.nl | E4 | 2 | Must |
-| **Totaal** | | **41** | |
-
-### Sprint 2 (Week 3-4) — "Social Proof & Dark Mode" | ~40 SP
-
-| Item | Epic | SP | MoSCoW |
-|------|------|----|--------|
-| Admin feedback overzicht | E1 | 5 | Must |
-| Feedback markeren + labels | E1 | 3 | Should |
-| Feedback dashboard (scores, trends) | E1 | 3 | Should |
-| Homepage testimonial sectie (masonry grid) | E1/E5 | 5 | Must |
-| Testimonial kaart component (sterren, quote, auteur) | E5 | 5 | Must |
-| Feedback → testimonial promotie (admin) | E1 | 3 | Should |
-| Testimonials API endpoint | E5 | 2 | Must |
-| Aggregate review stats op homepage | E1 | 2 | Should |
-| Dark mode toggle + systeemdetectie | E3 | 5 | Must |
+| **ZOEK FILTERS** | | | |
+| Woo-status filter in zoeksidebar | E0 | 3 | Must |
+| Media type filter in zoeksidebar (met iconen) | E0 | 3 | Must |
 | Highlighted zoektermen in resultaten | E4 | 3 | Should |
-| "Vraag de AI over dit document" knop | E4 | 3 | Should |
-| Blog gerelateerde artikelen | E2 | 3 | Should |
-| Blog social share knoppen | E2 | 2 | Could |
 | **Totaal** | | **44** | |
 
-### Sprint 3 (Week 5-6) — "Dark Mode Complete & Gebruikersportaal" | ~38 SP
+### Sprint 3 (Week 5-6) — "Social Proof, Dark Mode & Document Detail" | ~42 SP
 
 | Item | Epic | SP | MoSCoW |
 |------|------|----|--------|
+| **TESTIMONIALS** | | | |
+| Homepage testimonial sectie (masonry grid, UntitledUI) | E5 | 5 | Must |
+| Testimonial kaart component (sterren, quote, auteur) | E5 | 5 | Must |
+| Testimonials API endpoint | E5 | 2 | Must |
+| Admin feedback overzicht + labels + promotie naar testimonial | E1 | 8 | Should |
+| **DARK MODE** | | | |
+| Dark mode toggle + systeemdetectie | E3 | 5 | Must |
 | Dark mode alle pagina's testen + fixen | E3 | 8 | Must |
-| Dark mode charts (ApexCharts theme) | E3 | 3 | Must |
-| Admin testimonials CRUD | E5 | 5 | Should |
+| **DOCUMENT DETAIL** | | | |
+| Complete metadata kaart (alle velden incl. woo, media_type) | E4 | 5 | Must |
+| Actie-balk (Vraag AI, Bekijk origineel, Kopieer, Deel) | E4 | 5 | Should |
+| **Totaal** | | **43** | |
+
+### Sprint 4 (Week 7-8) — "Dossiers, Portaal & Content" | ~40 SP
+
+| Item | Epic | SP | MoSCoW |
+|------|------|----|--------|
+| **DOSSIER PAGINA** | | | |
+| Dossier tijdlijn weergave (chronologisch, met iconen + badges) | E4 | 8 | Must |
+| Dossier metadata + aparte route (/collecties/:id → DossierPage) | E4 | 4 | Must |
+| Dossier AI-samenvatting | E4 | 3 | Should |
+| "Vraag AI over dit dossier" knop | E4 | 3 | Should |
+| **GEBRUIKERSPORTAAL** | | | |
 | Favorieten (document markeren + lijst) | E6 | 5 | Should |
 | Opgeslagen zoekopdrachten | E6 | 5 | Should |
-| Collectie zoeken + filteren | E4 | 5 | Should |
+| **ORGANISATIE PAGINA** | | | |
+| Formaat-verdeling chart (PDF/Word/Video etc.) | E4 | 3 | Should |
+| Woo-status verdeling chart | E4 | 3 | Should |
+| **OVERIG** | | | |
+| Dark mode charts (ApexCharts theme) | E3 | 3 | Should |
+| Blog gerelateerde artikelen + social share | E2 | 5 | Could |
+| **Totaal** | | **42** | |
+
+### Sprint 5 (Week 9-10) — "WCAG, Kennisbank & Inklapbare Metadata" | ~40 SP
+
+| Item | Epic | SP | MoSCoW |
+|------|------|----|--------|
+| **WCAG** | | | |
+| Keyboard navigatie audit + fixes | E10 | 5 | Must |
+| Screenreader compatibiliteit | E10 | 5 | Must |
+| Kleurcontrast check | E10 | 3 | Must |
+| Skip-to-content + heading hiërarchie | E10 | 2 | Must |
+| **DOCUMENT DETAIL** | | | |
+| Inklapbare JSON metadata viewer | E4 | 3 | Should |
+| Dossier export (PDF/JSON/CSV) | E4 | 5 | Should |
 | "Geen resultaten" suggesties | E4 | 3 | Should |
+| **KENNISBANK** | | | |
 | Kennisbank dynamische artikelen | E7 | 3 | Could |
-| **Totaal** | | **37** | |
-
-### Sprint 4 (Week 7-8) — "Engagement & Content" | ~36 SP
-
-| Item | Epic | SP | MoSCoW |
-|------|------|----|--------|
-| Activiteiten overzicht (account) | E6 | 5 | Should |
-| Notificatie-voorkeuren | E6 | 3 | Should |
 | Swagger viewer in kennisbank | E7 | 5 | Could |
-| Dynamische evenementen | E7 | 3 | Could |
-| API code voorbeelden | E7 | 5 | Could |
-| Uitgelicht blog artikel (hero) | E2 | 3 | Should |
-| Chat gesprek zoeken in sidebar | — | 5 | Could |
-| Performance audit + optimalisatie | — | 5 | Should |
-| **Buffer/bugfix** | | 2 | |
-| **Totaal** | | **36** | |
-
-### Sprint 5 (Week 9-10) — "Compliance & Portaal Start" | ~38 SP
-
-| Item | Epic | SP | MoSCoW |
-|------|------|----|--------|
-| Keyboard navigatie audit + fixes | E9 | 5 | Must |
-| Screenreader compatibiliteit | E9 | 5 | Must |
-| Kleurcontrast check | E9 | 3 | Must |
-| Skip-to-content + heading hiërarchie | E9 | 2 | Must |
-| Bestuursorgaan dashboard (basis) | E8 | 8 | Should |
-| Document upload formulier | E8 | 8 | Should |
-| API key management UI | E8 | 5 | Should |
-| **Buffer** | | 2 | |
-| **Totaal** | | **38** | |
+| **OVERIG** | | | |
+| Databron filter in zoeksidebar | E0 | 2 | Should |
+| Feedback dashboard (scores, trends, NPS) | E1 | 3 | Should |
+| **Buffer** | | 1 | |
+| **Totaal** | | **40** | |
 
 ---
 
@@ -394,25 +540,25 @@
 
 | Sprint | Focus | Key Items |
 |--------|-------|-----------|
-| S6 | Bestuursorgaanportaal | Woo-compliance rapportage, medewerker uitnodigen, webhook settings |
-| S7 | Analytics & Rapportage | Zoekanalytics, gebruikersgedrag (anoniem), API usage monitoring |
-| S8 | Multi-model AI | Taaldetectie, model routing, Gemma2/Llama voor Engels |
-| S9 | Tijdslijn & Dossier | Visuele document tijdslijn, AI dossier-samenvatting |
-| S10 | OPPR Instantie | Multi-tenant setup, Rijkshuisstijl, eigen Typesense collectie |
+| S6 | Source Adapter Framework | Abstract interface, OpenOverheid refactor, generiek sync command |
+| S7 | Gemeente + Bulk Import Adapters | GemeenteAdapter, BulkImportAdapter, media_type auto-detectie |
+| S8 | Bestuursorgaanportaal | Organisatie dashboard, document upload, API key management |
+| S9 | Woo-compliance & Analytics | Compliance rapportage, zoekanalytics, API usage monitoring |
+| S10 | Multi-model AI & OPPR | Taaldetectie, model routing, OPPR instantie setup |
 
 ---
 
 ## VELOCITY & BURNDOWN PI-1
 
 ```
-Sprint    Focus                      Planned SP    Cumulative    Done
-S1        Feedback & Blog            41            41            📋
-S2        Social Proof & Dark Mode   44            85            📋
-S3        Dark Mode & Portaal        37            122           📋
-S4        Engagement & Content       36            158           📋
-S5        Compliance & Portaal       38            196           📋
-──────────────────────────────────────────────────────────
-PI-1 Total: ~196 SP in 10 weken
+Sprint    Focus                              Planned SP    Cumulative    Done
+S1        Data Foundation & Detailpagina's   42            42            📋
+S2        Feedback, Blog & Filters           44            86            📋
+S3        Social Proof, Dark Mode & Detail   43            129           📋
+S4        Dossiers, Portaal & Content        42            171           📋
+S5        WCAG, Kennisbank & Polish          40            211           📋
+──────────────────────────────────────────────────────────────────
+PI-1 Total: ~211 SP in 10 weken
 ```
 
 ---
